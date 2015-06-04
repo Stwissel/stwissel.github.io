@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>NotesSensei's Blog - SSL in Domino agents</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!--[if lt IE 9]>
+		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+<meta name="ROBOTS" content="FOLLOW, NOIMAGEINDEX" />
+<meta name="DC.Title" content="NotesSensei's Weblog - SSL in Domino agents" />
+<meta name="Author" content="Stephan H. Wissel" />
+<meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
+<meta name="description"
+	content="Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins" />
+<meta name="Keywords"
+	content="lotus,domino,quickplace,sametime,blog,template,blogging,blogger,notes,r6,r5,raven,k-station,nsf,ntf,websphere,agile,sdlc,j2ee,.net,personcentric,singapore,twins" />
+<meta name="Abstract"
+	content="Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins" />
+<meta name="ICBM" content="1.2994, 103.8425" />
+<meta name="Copyright"
+	content="2007,2015 Stephan H. Wissel - Creative commons licence" />
+<meta HTTP-EQUIV="Content-Language" content="en" />
+<meta property="fb:admins" content="567103136" />
+<meta property="fb:app_id" content="219323514774289">
+<meta property="og:title"
+	content="wissel.net - SSL in Domino agents" />
+<meta property="og:type" content="blog" />
+<meta property="og:url" content="http://www.wissel.net/blog" />
+<meta property="og:image"
+	content="http://www.wissel.net/blog/skin/OrangeKeys.css/$File/wisselnet.gif" />
+<meta property="og:site_name" content="wissel.net" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<meta name="twitter:site" content="@notessensei" />
+<meta name="twitter:card" content="summary" />
+<meta name="xing:author"
+	content="https://www.xing.com/profile/StephanH_Wissel" />
+
+<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
+<!-- link href='http://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' / -->
+<link href='http://fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
+
+
+<link rel="stylesheet" href="/blog/css/markdown.css" />
+<link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="http://feeds.feedburner.com/Wisselnet" />
+<link rel="alternate" type="application/rss+xml" title="RSS Comments Feed" href="http://feeds.feedburner.com/Wisselnet-Comments" />
+
+<meta name="Revisit-After" content="90 Days" />
+</head>
+<body>
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<a class="btn btn-navbar" data-toggle="collapse"
+				data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+				class="icon-bar"></span> <span class="icon-bar"></span>
+			</a> <a class="brand" href="/">wissel.net</a>
+			<div class="nav-collapse">
+				<ul class="nav">
+					<li><a href="/index.html">Home</a></li>
+					<li class="active"><a href="/blog">Blog</a></li>
+					<li><a href="/blog/series.html">Series</a></li>
+					<li><a href="/blog/downloads/">Downloads</a></li>
+					<li><a href="/blog/categories/Cycling.html">Cycling</a></li>
+					<li><a href="/blog/imprint.html">About / Imprint</a></li>
+				</ul>
+				<form action="http://www.google.com/cse" id="cse-search-box"
+					class="navbar-search pull-right">
+					<div>
+						<input type="hidden" name="cx"
+							value="partner-pub-4562257798204150:muo14ionenw" /> <input
+							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
+							name="q" class="search-query span2" placeholder="Search" />
+						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+<div class="navbar-spacer"></div>
+
+
+	<div class="container">
+
+    		<!-- Masthead
+		================================================== -->
+		<br />
+		<header>
+			<div id="mainsmall"  class="hero-unit">
+				<h2>wissel.net</h2>
+				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+			</div>
+		</header>
+
+    <!--[if lt IE 10]>
+  <div style='border: 1px solid #F7941D; background: #FEEFDA; text-align: center; clear: both; height: 75px; position: relative;'>
+    <div style='position: absolute; right: 3px; top: 3px; font-family: courier new; font-weight: bold;'><a href='#' onclick='javascript:this.parentNode.parentNode.style.display="none"; return false;'><img src='http://www.ie6nomore.com/files/theme/ie6nomore-cornerx.jpg' style='border: none;' alt='Close this notice'/></a></div>
+    <div style='width: 640px; margin: 0 auto; text-align: left; padding: 0; overflow: hidden; color: black;'>
+      <div style='width: 75px; float: left;'><img src='http://www.ie6nomore.com/files/theme/ie6nomore-warning.jpg' alt='Warning!'/></div>
+      <div style='width: 275px; float: left; font-family: Arial, sans-serif;'>
+        <div style='font-size: 14px; font-weight: bold; margin-top: 12px;'>You are using an outdated browser</div>
+        <div style='font-size: 12px; margin-top: 6px; line-height: 12px;'>For a better experience using this site, please upgrade to a modern web browser.</div>
+      </div>
+      <div style='width: 75px; float: left;'><a href='http://www.firefox.com' target='_blank'><img src='http://www.ie6nomore.com/files/theme/ie6nomore-firefox.jpg' style='border: none;' alt='Get Firefox'/></a></div>
+      <div style='width: 75px; float: left;'><a href='http://www.browserforthebetter.com/download.html' target='_blank'><img src='http://www.ie6nomore.com/files/theme/ie6nomore-ie8.jpg' style='border: none;' alt='Get Internet Explorer 11'/></a></div>
+      <div style='width: 73px; float: left;'><a href='http://www.apple.com/safari/download/' target='_blank'><img src='http://www.ie6nomore.com/files/theme/ie6nomore-safari.jpg' style='border: none;' alt='Get Safari'/></a></div>
+      <div style='float: left;'><a href='http://www.google.com/chrome' target='_blank'><img src='http://www.ie6nomore.com/files/theme/ie6nomore-chrome.jpg' style='border: none;' alt='Get Google Chrome'/></a></div>
+    </div>
+  </div>
+<![endif]-->
+
+
+		<ul class="breadcrumb">
+			<li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+			<li><a href="/blog/2007/">2007</a> <span
+				class="divider">/</span></li>
+			<li>
+			<a href="/blog/2007/08/">August</a>
+			</li>
+			<li class="pull-right">
+			<span class="divider">|</span><a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Thursday</a>
+			</li>
+		</ul>
+
+		<div class="row-fluid">
+			<div class="span12">
+				
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2007/08/db2-as-mysql-storage-engine.html"><i class="icon-hand-left"></i>DB/2 as MySQL storage engine</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+					<span class="divider">|</span>
+					<li><a href="/blog/2007/08/flying-towards-a-typhoon.html">Flying towards a Typhoon<i class="icon-hand-right"></i></a>
+					</li>
+				</ul>
+
+				<article class="well well-raised">
+					<h1>
+						<small>SSL in Domino agents</small>
+					</h1>
+					<hr />
+					<div>This is a follow-up post to an 
+<a href="http://www-10.lotus.com/ldd/nd6forum.nsf/0/ea5a5ae592deee2085256dd6002f0c81?OpenDocument">older thread on Notes.net</a>. Configuring SSL and reading from remote locations can be a headache... unless you stand on shoulders of giants. Here are the steps that worked for me. While they are designed for R7 upwards with a JVM 1.4++ they also will work in R6 with the optional SUN SSL packages (just read the older post for configuration). 
+<br /> 
+<br /> 
+<b>Update:</b> The class didn't process HTTPPost correctly, so I updated the code, changes in bold. 
+<br /> 
+<br />What do you need: 
+<br />1) Apache Commons 
+<a href="http://www.ibiblio.org/maven/commons-httpclient/jars/commons-httpclient-3.0.1.jar">HTTP Client</a> 
+<br />2) Apache 
+<a href="http://commons.apache.org/downloads/download_logging.cgi">Logging library</a> (and 
+<a href="http://commons.apache.org/downloads/download_codec.cgi">codecs</a>) 
+<br />3) EasySSL Classes ( 
+<a href="http://svn.apache.org/viewvc/jakarta/httpcomponents/oac.hc3x/trunk/src/contrib/org/apache/commons/httpclient/contrib/ssl/EasySSLProtocolSocketFactory.java?view=log">EasySSL</a>, 
+<a href="http://svn.apache.org/viewvc/jakarta/httpcomponents/oac.hc3x/trunk/src/contrib/org/apache/commons/httpclient/contrib/ssl/EasyX509TrustManager.java">EasyTrustManager</a>) 
+<br /> 
+<br /> 
+<b>Update</b> (Thx John): Above links don't work anymore. EasyTrustManager can be found 
+<a href="http://lmgtfy.com/?q=EasyX509TrustManager.java">here</a> and 
+<a href="http://www.koders.com/java/fid410B035705E1C8FC151D90C33F5599AB59F03704.aspx">here</a>. EasySLL 
+<a href="http://lmgtfy.com/?q=EasySSLProtocolSocketFactory.java">here</a> and 
+<a href="http://www.koders.com/java/fid22A749424D86D13C8E8530A62ADC9689E7DC6F67.aspx">here</a>. 
+<br />Traversing the broken URL above leads to the &quot;readme pointing&quot; to the 
+<a href="http://svn.apache.org/repos/asf/httpcomponents/oac.hc3x/trunk/src/contrib/org/apache/commons/httpclient/contrib/ssl/">new home</a> 
+<a href="http://www.syfy.com/battlestar/index.php"> 
+ <strike>
+   called earth 
+ </strike></a>. A wildcard redirect would have been nice. 
+<br /> 
+<br />Once you have that a few simple lines of code will do. Note: you don't even need to configure SSL (but you 
+<b>SHOULD </b>understand the security implications of NOT configuring it). 
+<br />This post is also 
+<a href="http://www-10.lotus.com/ldd/nd6forum.nsf/DateAllThreadedweb/62966f41c9274e758525732e005aa253?OpenDocument">available on Notes.net.</a> (or whatever it is called now). 
+<br /> 
+<br />Here is the class .../** 
+<br />&nbsp;* &nbsp;(C) 2007 Stephan H. Wissel 
+<br />&nbsp;* &nbsp;This code is for demonstration purposes only and no assertion 
+<br />&nbsp;* &nbsp;is made about the fitness or reliability for any business purpose 
+<br />&nbsp;*/ 
+<br /> 
+<b>import</b> java.io.IOException; 
+<br /> 
+<br /> 
+<b>import</b> org.apache.commons.httpclient.HttpClient; 
+<br /> 
+<b>import</b> org.apache.commons.httpclient.HttpException; 
+<br /> 
+<b>import</b> org.apache.commons.httpclient.HttpMethod; 
+<br /> 
+<b>import</b> 
+<b> org.apache.commons.httpclient.HttpStatus;</b> 
+<br /> 
+<b>import</b> org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory; 
+<br /> 
+<b>import</b> org.apache.commons.httpclient.methods.GetMethod; 
+<br /> 
+<b>import</b> org.apache.commons.httpclient.methods.PostMethod; 
+<br /> 
+<b>import</b> org.apache.commons.httpclient.protocol.Protocol; 
+<br /> 
+<b>import</b> org.apache.commons.logging.Log; 
+<br /> 
+<b>import</b> org.apache.commons.logging.LogFactory; 
+<br /> 
+<b>import</b> 
+<b> org.apache.commons.httpclient.methods.RequestEntity;</b> 
+<br /> 
+<b>import</b> 
+<b> org.apache.commons.httpclient.methods.StringRequestEntity;</b> 
+<br /> 
+<br /> 
+<b>public</b> 
+<b>class</b> HttpsCommonFetcher { 
+<br /> 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; /** Log object for this class. */ 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; 
+<b>private</b> 
+<b>static</b> 
+<b>final</b> Log 
+<i>LOG</i> = LogFactory. 
+<i>getLog</i>(HttpsCommonFetcher. 
+<b>class</b>); 
+<br /> 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; 
+<b>public</b> String getContentFromHTTP(String xRequest, String targetURL; String method) { 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; String result = 
+<b>null</b>; 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; HttpMethod httpMethod = 
+<b>null</b>; 
+<br /> 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // This implementation uses the HTTP Common client from the 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // Apache jakarta Project. See: 
+<a href="http://jakarta.apache.org/httpcomponents/index.html">http://jakarta.apache.org/httpcomponents/index.html</a> 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // and 
+<a href="http://jakarta.apache.org/commons/httpclient/sslguide.html">http://jakarta.apache.org/commons/httpclient/sslguide.html</a> 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // We use the EasySSL Implementation to avoid SSL configuration stress 
+<br /> 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; String hostwithoutSSL = 
+<b>this</b>.targetURL.substring(8); 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+<i>LOG</i>.info(hostwithoutSSL); 
+<br /> 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // We use the simple SSL methods that doesn't compare with the keystore remove the 2 lines if you intend to config SSL 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Protocol myhttps = 
+<b>new</b> Protocol(&quot;https&quot;, 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+<b>new</b> EasySSLProtocolSocketFactory(), 443); 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Protocol. 
+<i>registerProtocol</i>(&quot;https&quot;, myhttps); 
+<br /> 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; HttpClient httpclient = 
+<b>new</b> HttpClient(); 
+<br /> 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // Here would be the optional Proxy code &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // httpclient.getHostConfiguration().setProxy(pHost, pPort); 
+<br /> 
+<b>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;if</b> 
+<b> (method.qualsIgnoreCase(</b> 
+<b>&quot;POST&quot;</b> 
+<b>)) {</b> 
+<br /> 
+<b>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </b> 
+<b>// We only support get and post and if it is not POST it is GET</b> 
+<br /> 
+<b>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; PostMethod pm = </b> 
+<b>new</b> 
+<b> PostMethod(</b> 
+<b>this</b> 
+<b>.</b> 
+<b>targetURL</b> 
+<b>);</b> 
+<br /> 
+<b>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </b> 
+<b>// Populate the body of the request</b> 
+<br /> 
+<b>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; RequestEntity entity = </b> 
+<b>new</b> 
+<b> StringRequestEntity(xRequest);</b> 
+<br /> 
+<b>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; pm.setRequestEntity(entity);</b> 
+<br /> 
+<b>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; httpMethod = (HttpMethod) pm;</b> 
+<br /> 
+<b>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } </b> 
+<b>else</b> 
+<b> {</b> 
+<br /> 
+<b>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; httpMethod = </b> 
+<b>new</b> 
+<b> GetMethod(</b> 
+<b>this</b> 
+<b>.</b> 
+<b>targetURL</b> 
+<b>);</b> 
+<br /> 
+<b>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</b> 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // Make sure we follow eventual redirects 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; httpMethod.setFollowRedirects( 
+<b>true</b>); 
+<br /> 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // Now we retrieve the stuff 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+<b>try</b> { 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+<b>int</b> 
+<b> statusCode = httpclient.executeMethod(httpMethod);</b> 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // Here we have the result already 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+<i>LOG</i>.info(httpMethod.getStatusLine()); 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+<b>if</b> 
+<b> (statusCode == HttpStatus.</b> 
+<b><i>SC_OK</i></b> 
+<b>) {</b> 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // Directly read it into a String ... creates a warning in 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // HTTPClient but is what we would do anyway. 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result = httpMethod.getResponseBodyAsString(); 
+<br /> 
+<b>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } </b> 
+<b>else</b> 
+<b> {</b> 
+<br /> 
+<b>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result = </b> 
+<b>&quot;&lt;error&gt;&quot;</b> 
+<b> + httpMethod.getStatusLine() + </b> 
+<b>&quot;&lt;/error&gt;&quot;</b> 
+<b>;</b> 
+<br /> 
+<b>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</b> 
+<br /> 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } 
+<b>catch</b> (HttpException e) { 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+<i>LOG</i>.error(e); 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } 
+<b>catch</b> (IOException e) { 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+<i>LOG</i>.error(e); 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } 
+<b>finally</b> { 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; httpMethod.releaseConnection(); 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+<b>return</b> result; 
+<br />&nbsp; &nbsp; &nbsp; &nbsp; } 
+<br />}</div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2007-08-05 12:00
+<span class="divider">|</span>
+<a href="/blog/2007/08/ssl-in-domino-agents.html#comments">Comments (1)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Thursday</a> 
+
+						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2007/08/ssl-in-domino-agents.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="SSL in Domino agents"></div>
+						<script type="text/javascript">
+							var permaLink = "http://www.notessensei.com/blog/2007/08/ssl-in-domino-agents.html";
+						</script>
+					</p>
+
+				</article>
+				<a name="comments"></a>
+				<div class="well well-raised" style="text-align : center">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_321EC4CAAB3FC6054825732E005E0A14" type="button">
+		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
+	            </button>
+	            </div>
+				<div id="commentform_321EC4CAAB3FC6054825732E005E0A14"  class="collapse"></div>
+				<div class="well well-raised">
+					<h4>Comments</h4>
+					<ol id="commentList">
+						<li>
+<img src="http://www.gravatar.com/avatar/dfa088288c2d0d5818aff16eaf1b7869.jpg?s=88" class="gravatarimg" />
+							posted by <b>John Smart</b> on <i>Thursday 17 September 2009 AD - 07:06 Singapore Time</i>:<br /> <html>
+ <head></head>
+ <body>
+  I'm working on a ND7 server (don't ask) and I'm trying this but I'm having a heck of a time finding EasySSL and EasyTrustManager code. The links no longer work. Can you please update or reply?
+ </body>
+</html>
+							<hr style="clear : both" />
+						</li> 					</ol>
+				</div>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2007/08/db2-as-mysql-storage-engine.html"><i class="icon-hand-left"></i>DB/2 as MySQL storage engine</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+					<span class="divider">|</span>
+					<li><a href="/blog/2007/08/flying-towards-a-typhoon.html">Flying towards a Typhoon<i class="icon-hand-right"></i></a>
+					</li>
+				</ul>
+
+			</div>
+		</div>
+	</div>
+<!-- Footer	================================================== -->
+	<footer>
+		<div class="container">
+			<div class="row">
+				<div class="span2">
+					<h4>About Me</h4>
+					<p>
+						I am the "IBM Cloud Development Advocate" for IBM
+						Asean. I'm based in Singapore.
+						<g:plusone size="small" href="http://www.wissel.net/blog"></g:plusone>
+					</p>
+					<script
+						src="http://stackoverflow.com/users/flair/131021.js?theme=default"
+						type="text/javascript"></script>
+				</div>
+				<div class="span2">
+					<h4>Contact</h4>
+					<ul>
+						<li><a href="https://www.twitter.com/notessensei">Twitter</a></li>
+						<li><a href="https://plus.google.com/+StephanWissel/about" rel="author" style="text-decoration: none;">
+						    <img src="https://ssl.gstatic.com/images/icons/gplus-16.png" alt="" style="border: 0; width: 16px; height: 16px;" /> Google+</a>
+						   (<a href="https://plus.google.com/+StephanWissel/posts">posts</a>)</li>
+						<li><a href="skype//:notessensei?chat">Skype</a></li>
+						<li><a href="/blog/2010/04/communicating-with-ibmers-and-lotus-professionals-using-sametime.html"
+							   title="Many ways to use Sametime, no own Sametime server required">Sametime</a></li>
+						<li><a href="http://www.ibm.com/contact/employees/servlets/lookup?lastname=Wissel&firstname=Stephan">IBM</a></li>
+						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+						<li><a href="https://www.xing.com/profile/StephanH_Wissel">XING</a></li>
+						<li><a href="https://astore.amazon.com/wissenetblog-20">Amazon Store</a></li>
+						<li><a href="https://kindle.amazon.com/profile/Stephan-H--Wissel/1659300">Amazon Kindle</a></li>
+						<li><a href="http://notessensei.spreadshirt.com/">NotesSensei's Spreadshirt shop</a></li>
+						<li><a href="http://about.me/stephan.wissel/#" title="Another identity site, nothing much here">About Me</a></li>
+					</ul>
+				</div>
+				<div class="span8">
+					<h4>Disclaimer</h4>
+					<p>This site is in no way affiliated, endorsed, sanctioned,
+						supported, nor enlightened by Lotus Software nor IBM Corporation.
+						I may be an employee, but the opinions, theories, facts, etc.
+						presented here are my own and are in now way given in any official
+						capacity. In short, these are my words and this is my site, not
+						IBM's - and don't even begin to think otherwise.</p>
+					<p>
+						<b>&copy; 2003 - 2015 Stephan H. Wissel - some rights reserved</b> as
+						listed here: <a rel="license"
+							href="http://creativecommons.org/licenses/by-nc-sa/3.0/"><img
+							alt="Creative Commons License" style="border-width: 0"
+							src="http://i.creativecommons.org/l/by-nc-sa/3.0/88x31.png" /></a>
+						Unless otherwise labeled by its originating author, the content
+						found on this site is made available under the terms of an <a
+							href="http://creativecommons.org/licenses/by-nc-sa/3.0/"
+							target="_blank"
+							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
+							Creative Commons License</a>, with the exception that no rights are
+						granted -- since they are not mine to grant -- in any logo,
+						graphic design, trademarks or trade names of any type. Code
+						samples and code downloads on this site are, unless otherwise
+						labeled, made available under an <a
+							href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache
+							2.0</a> license. Other license models are available on written
+						request and written confirmation.
+					</p>
+				</div>
+			</div>
+		</div>
+	</footer>
+
+	<script type="text/javascript">
+		var permaLink = "http://www.wissel.net/blog/2007/08/ssl-in-domino-agents.html";
+	</script>
+		<script type="text/javascript" src="/blog/js/jquery.min.js"></script>
+	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
+	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+	<script type="text/javascript" src="/blog/js/jquery.fittext.js"></script>
+	<script type="text/javascript" src="/blog/js/main.js"></script>
+    <script type="text/javascript" src="/blog/js2/shCore.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushJava.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushJScript.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushXml.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushBash.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>  
+    <script type="text/javascript">
+		SyntaxHighlighter.all();
+    </script>
+	<script src="http://www.google-analytics.com/urchin.js" type="text/javascript"></script>
+	<script type="text/javascript">
+	
+		_uacct = "UA-72033-1";
+		urchinTracker();
+	</script>
+	<script type="text/javascript" src="http://feeds.feedburner.com/~s/Wisselnet?i=http://www.wissel.net/blog" charset="utf-8"></script>
+
+		<script src="/blog/js2/mustache.js"></script>
+	<script src="/blog/js2/comments.js"></script>
+	<script type="text/javascript" src="/blog/js2/Markdown.Converter.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Sanitizer.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Editor.js"></script>
+	<script type="text/javascript" src="http://www.google.com/recaptcha/api/js/recaptcha_ajax.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			renderComment("6LcUOewSAAAAACAI4zVcGFVkGWmp0sUH5gabwy1q", "321EC4CAAB3FC6054825732E005E0A14");
+		});
+	</script>
+
+</body>
+</html>

@@ -1,0 +1,557 @@
+Option Public
+Option Declare
+Const MAX_ITEMSIZE = 32000
+
+'/**
+' *
+' * FieldAccess is a universal class to manage large amount of values put into text fields
+' * (text, names, readers, authors etc.
+' * it manages these large amount by splitting values into multiple fields to overcome
+' * the 32k size limit. New fields are created as needed.
+' * Good for about 62500 entries
+' *
+' * v0.1 2009-03-20 : notessensei@sg.ibm.com
+' * v0.2 2009-08-16 : removed the maximum number of entries per field
+' *                   and replaced with a size calculation
+' *
+' *
+' **/
+
+'// Important: This class doesn't contain production quality error handling, you need to add
+'// that for production use. Use OpenLog for best results!
+
+Public Class FieldAccess
+	Private AccessFieldName As String 'The base name for the current field
+	Private maxNumOfFields As Integer 'Limit the number of fields, to avoid mising data in views	
+	Private maxTotal As Integer 'The maximum number of names in total
+	Private curTotal As Integer 'The current number of entries
+	Private maxSize As Long 'How big can the sum of all entries be
+	Private curSize As Long 'How big is the current list
+	Private curFieldMembers List As String 'The list of current field entries
+	Private fieldCount As Integer 'The current number of fields
+	Private initialized As Boolean 'Has the list of names been initialized
+	Private doc As NotesDocument 'The current document
+	Private fieldType As Integer 'Text, names, reader, author
+	
+	Sub new(curDoc As NotesDocument, Fieldname As String, NotesItemType As Integer)
+		Set Me.doc = curDoc
+		Me.AccessFieldName = Fieldname
+		Me.maxNumOfFields = 10 'Adjust as needed
+		Me.maxSize = Me.maxNumOfFields * MAX_ITEMSIZE 'One could argue that is too low
+		Me.curSize = 0 'Not initialized yes
+		Me.initialized = False
+		Me.fieldType = 0 'No special type
+	End Sub
+	
+	'Need to set the field Name
+	Public Property Set fieldName As String
+		If Me.AccessFieldName <> fieldName Then
+			Me.AccessFieldName = fieldName
+			Me.initialized = False
+		End If
+	End Property
+	
+	Public Property Get FieldName As String
+		fieldName = Me.AccessFieldName
+	End Property
+	
+	'How many entries are in the field right now
+	Public Property Get count As Integer
+		If Not Me.initialized Then
+			Me.initializeFields
+		End If
+		count = Me.curTotal
+	End Property
+	
+	'Add a entry to the value list
+	Public Sub addEntry(entryToAdd As String)
+		If Not Me.initialized Then
+			Me.initializeFields
+		End If
+		
+		If Not Iselement(Me.curFieldMembers(entryToAdd)) Then
+			If Me.maxSize < Me.curSize + Len(entryToAdd) Then
+				Error 8000 'We throw an error
+			Else
+				Me.curFieldMembers(entryToAdd) = entryToAdd
+				Me.curTotal = Me.curTotal + 1
+				Me.curSize = Me.curSize + Len(entryToAdd)
+			End If
+		End If	
+	End Sub
+	
+	'Bulk adding of entries. Suitable to pull in entries from getItemValues
+	Public Sub addEntries(entriesToAdd As Variant)
+		Dim oneEntryToAdd As String
+		If Not Isarray(entriesToAdd) Then
+			Error 8001 'We won't process something that's not an array
+		End If
+		Forall curEntry In entriesToAdd
+			oneEntryToAdd = curEntry
+			Call Me.addEntry(oneEntryToAdd)
+		End Forall	
+	End Sub
+	
+	'Entry to remove. Is removed from thefields if exist. If the entry
+	'doesn't exist no error is raised
+	Public Sub removeEntry(entryToRemove As String)
+		If Not Me.initialized Then
+			Me.initializeFields
+		End If		
+		If Iselement(Me.curFieldMembers(entryToRemove)) Then
+			Erase Me.curFieldMembers(entryToRemove)
+			Me.curTotal = Me.curTotal - 1
+			Me.curSize = Me.curSize - Len(entryToRemove)
+		End If	
+	End Sub
+	
+	'Bulk removal of Entries. Suitable to pull in values from getItemValues
+	Public Sub removeEntries(entriesToRemove As Variant)
+		Dim oneEntryToRemove As String
+		If Not Isarray(entriesToRemove) Then
+			Error 8001 'We won't process something that's not an array
+		End If
+		Forall curEntry In entriesToRemove
+			oneEntryToRemove = curEntry
+			Call Me.removeEntry(oneEntryToRemove)
+		End Forall	
+	End Sub
+	
+	
+	'Checks the fields for the existance of and entry
+	Public Function containsValue(valueToLookup As String) As Integer
+		If Not Me.initialized Then
+			Me.initializeFields
+		End If
+		containsValue = Iselement(Me.curFieldMembers(valueToLookup))
+	End Function
+	
+	'Saves the changes in fields back to the document
+	Public Sub saveField
+		Dim curFieldCount As Integer
+		Dim tmpCount As Integer
+		Dim tmpTotal As Integer		
+		Dim tmpMax As Integer
+		Dim curEntries() As String
+		
+		Dim curSize As Long
+		
+		'We save the values 32k at a time and
+		'into fields and remove fields we don't need anymore
+		
+		curSize = 0
+		tmpCount = -1 'The counter gets incremented before the first value is written
+		curFieldCount = 1 'We want FieldName_1 as first field!
+		ReDim curEntries(1000) 'Preset to 1000 entries to avoid many redim
+		ForAll curEntry In Me.curFieldMembers
+			If curSize + Len(curEntry) > MAX_ITEMSIZE Then
+				'We need to write out the current field and reset the array
+				ReDim Preserve curEntries(tmpCount)
+				Call Me.SaveToField(curEntries, curFieldCount)
+				ReDim curEntries(1000)
+				tmpCount = 0
+				curSize = 0
+				curFieldCount = curFieldCount + 1
+			Else
+			'We increment the counter here to make sure
+			'We don't overshoot at the end
+			tmpCount = tmpCount + 1				
+			End If
+			
+			If UBound(curEntries) < tmpCount Then
+				'We ran out of space and need to extend
+				'Redim preserve is "expensive", so we use increments
+				'of 100
+				ReDim Preserve curEntries(UBound(curEntries)+100)
+			End If
+			
+			'Save the value and record the size
+			curEntries(tmpCount) = curEntry
+			curSize = curSize + Len(curEntry)
+		
+		End ForAll
+		
+		'We must not forget the last one!
+		If curSize > 0 Then
+				ReDim Preserve curEntries(tmpCount)
+				Call Me.SaveToField(curEntries, curFieldCount)			
+		End If
+		
+		'Remove field we might not need anymore
+		Call Me.RemoveFields(curFieldCount+1)
+		Me.fieldCount = curFieldCount
+		
+	End Sub
+	
+	'Saves one field
+	Private Sub SaveToField(curVals As Variant, fieldCountOffset As Integer)
+		Dim fieldName As String
+		Dim newField As NotesItem
+		fieldName = Me.AccessFieldName + "_" + Trim(Cstr(fieldCountOffset))
+		If doc.HasItem(fieldName) Then
+			Call doc.RemoveItem(fieldName)
+		End If
+		Set newField = New NotesItem(doc,fieldName,curVals,Me.FieldType)
+	End Sub
+	
+	'Removes fields we don't need
+	Private Sub removeFields(startCount As Integer)
+		Dim fieldName As String
+		Dim newField As NotesItem
+		Dim i As Integer
+		i = startCount
+		
+		'We remove fields until we dont have one with
+		'the suffix any more
+		Do While True
+			fieldName = Me.AccessFieldName + "_" + Trim(CStr(i))
+			If doc.HasItem(fieldName) Then
+				Call doc.RemoveItem(fieldName)
+			Else
+				Exit do
+			End If			
+		Loop 
+	End Sub
+	
+	
+	'Initialize the fields
+	Private Sub initializeFields
+		Dim namesField As NotesItem
+		Dim i As Integer
+		Dim curEntry As String
+		Dim curVals As Variant
+		If doc.HasItem(Me.AccessFieldName) Then
+			Me.curTotal = 0
+			'//TODO:Full check for missing 1st field
+			i = 1
+			Do While True
+				curEntry = Me.AccessFieldName+"_"+Trim(Cstr(i))
+				If Not doc.HasItem(curEntry) Then
+					i = i-1 'We overcounted one, so we step back
+					Exit Do
+				End If
+				curVals = doc.GetItemValue(curEntry)
+				'Save the names into a list for processing
+				Forall member In curVals
+					If Not Iselement(curFieldMembers(member)) Then
+						curFieldMembers(member) = member
+						Me.curTotal = Me.curTotal + 1
+						Me.curSize = Me.curSize + Len(member)
+					End If					
+				End Forall				
+				i = i + 1
+			Loop
+			Me.fieldCount = 1
+		Else
+			Me.fieldCount = 0
+			Me.curTotal = 0
+		End If
+		
+		Me.initialized = True
+	End Sub	
+	
+End Class
+
+
+
+'/**
+' *
+' * ReaderAccess is a universal class to manage large amount of reader names in a document
+' * it manages these large amount by splitting reader names into multiple fields to overcome
+' * the 32k size limit. New fields are created as needed.
+' * Reader access is tricky since there is a 32k limit for ALL reader fields in a form
+' * Good for 62500 entries
+' *
+' * v0.1 2009-03-20 : notessensei@sg.ibm.com
+' *
+' *
+' *
+' **/
+
+Public Class ReaderAccess As FieldAccess
+	
+	Sub New(curDoc As NotesDocument, Fieldname As String, NotesItemType As Integer)
+		'The base class runs first, so we only need to add the changes
+		Me.AccessFieldName = "DocReaders"
+		Me.fieldType = READERS 'Reader field. Might get overwritten by Name if too many entries
+	End Sub
+	
+	
+	%REM
+		Sub saveField overwrites FieldAccess.SaveField
+		Description: 'Saves the changes in fields back to the document
+		There are 2 cases:
+		Case 1: Less then 32k -> Works like FieldAccess
+		Case 2: More than 32k -> We save multiple Names field and
+		                         Populate one group per field and record the summary
+		        The group creation migh be done by this class or an extra class in a
+		        background agent. Depending on the access to NAB                         
+		
+	%END REM
+	Public Sub saveField
+		Dim rgh As ReaderGroupsHandler
+	
+		'First we remove the access field name since it either is not needed
+		'or will be replaced later on
+		If me.doc.Hasitem(AccessFieldName) Then
+			Me.doc.Removeitem(AccessFieldName)
+		End If
+		
+		If curSize < MAX_ITEMSIZE Then
+			Call FieldAccess..saveField()
+			'The document might have just dropped below the size
+			'so we check if we have a status which would be the
+			'indicator for a pre-existing group, which we would remove
+			'thereafter
+			If me.doc.Hasitem(AccessFieldName+"_status") Then
+				Set rgh = New ReaderGroupsHandler(me.doc.Universalid)
+				Call rgh.removeObsoleteGroups(1)	
+			End If
+			Exit sub
+		End If
+		
+		'We save the fields, but as name fields and generate the group names
+		'and save these into ONE name field
+		Me.fieldType = NAMES
+		Call FieldAccess..saveField()
+		
+		'Now we have multiple fields in the document of type NAMES. We
+		'need To generate a group for each of them and add that group to one
+		'reader field  
+		Dim i As Integer 'the counter
+		Dim workFieldName As String
+		Dim allGroupNames() As String
+		Dim newMembers As Variant
+		i = 1 'We have GroupName_1 as start group
+		ReDim allGroupNames(50) 'We shrink it before we update the item
+		Set rgh = New ReaderGroupsHandler(me.doc.Universalid)
+		Do While True
+			workFieldName = AccessFieldName + "_" + CStr(i)
+			If Not me.doc.Hasitem(workFieldName) Then
+				Exit Do
+			End If
+			newMembers = me.doc.Getitemvalue(workFieldName)
+			'Increase the groups if neede
+			If UBound(allGroupNames) < i Then
+				ReDim Preserve allGroupNames(UBound(allGroupNames)+10)
+			End If
+			allGroupNames(i-1) = rgh.updateGroup(newMembers, i)
+			i = i + 1
+		Loop
+		
+		'Shrink the groupName field
+		ReDim Preserve allGroupNames(i-1)
+		
+		'Write out the reader field
+		Dim newField As NotesItem
+		Set newField = New NotesItem(me.doc,AccessFieldName,allGroupNames,READERS)
+	End Sub
+	
+End Class
+%REM
+	Class FieldAccessFactory
+	Description: Creates an FieldAccess Class based on the field Type provided
+%END REM
+Public Class FieldAccessFactory
+	
+	Private doc As NotesDocument
+	
+	%REM
+		Sub New
+		Description: Create a new factory for the current document
+	%END REM
+	Public Sub New (curDoc As NotesDocument)
+		Set me.doc = curDoc
+	End Sub
+	
+	%REM
+		Function getFieldAccess
+		Description: Returns a FieldAccess class bases on the requested
+		field type. Currently only READER fields return a special type
+	%END REM
+	Public Function getFieldAccess(FieldName As String, FieldType As Integer) As FieldAccess
+		
+		Dim result As FieldAccess
+		
+		Select Case FieldType
+		Case READERS
+			Set result = New ReaderAccess(me.doc, FieldName, FieldType)
+		Case Else
+			Set result = New FieldAccess(me.doc, FieldName, FieldType)
+		End Select	
+		 
+		 Set getFieldAccess = result
+	End Function
+	
+End Class
+
+
+%REM
+	Class ReaderGroupsHandler
+	Description: The object access the public name and address book
+	and creates, alters or deletes Groups base on a naming scheme. It doesn't
+	need to be the primary name and address book and access could be via mail-in
+	into an auxiliary database
+%END REM
+Public Class ReaderGroupsHandler
+	
+	Private docID As String 'The identificaton for the document/group
+	Private applicationPrefix As String 'The prefix for the application
+	Private NAB As NotesDatabase 'The name and addressbook to use (names.nsf)
+	Private groupView As NotesView 'The view to look for the groups ($Groups)
+	Private changeRequestMailInName As String
+	Private nabEditorAccess As Boolean
+	Private db As NotesDatabase
+	
+	%REM
+		Sub New
+		Description: Create a new handler that is already aware of
+		the document name to be handled
+	%END REM
+	Sub New(curDocumentID As String)
+		me.docID = curDocumentID
+		Call me.initializeDefaultValues()
+	End Sub
+	
+	%REM
+		Function initializeDefaultValues
+		Description: Gets the application-prefix for this
+		application as well as the NAB and the mailin name for name changes
+		Short of having a value in the config document
+		we use the replicaid
+	%END REM
+	Private Sub initializeDefaultValues
+		'The prefix consist out of OrgPrefix, AppPrefix, AppID
+		Dim s As New NotesSession
+		Dim config As NotesDocument
+		Dim curUser As NotesName
+		Dim groupStartKey As String 'Usually a # or $ to get them away from the usernames
+		Dim appID As String 'A value from the config Documet or the replicaID
+		Set curUser = New NotesName(s.Username)
+		groupStartKey = "#" + curUser.Organization+".apps."
+		Set db = s.Currentdatabase
+		Set config = db.Getprofiledocument("Config")
+		If config.Hasitem("AppID") Then
+			appID = config.Getitemvalue("AppID")(0)
+		Else
+			appID = db.Replicaid
+		End If
+		
+		me.applicationPrefix = groupStartKey + appID + ".readers."
+		
+		If config.hasItem("NABName") Then
+			Set me.NAB = New NotesDatabase(db.Server,config.Getitemvalue("NABName")(0))
+		Else
+			Set me.NAB = New NotesDatabase(db.Server,"names.nsf")
+		End If
+		
+		'TODO: error handling
+		If Not me.NAB.Isopen Then
+			Call me.NAB.Open("", "")
+		End If
+		
+		If me.NAB.Queryaccess(s.Username) < ACLLEVEL_EDITOR Then
+			me.nabEditorAccess = false	
+		Else
+			me.nabEditorAccess = true
+		End If
+		
+		If config.Hasitem("changeRequestMailInName") Then
+			changeRequestMailInName = config.Getitemvalue("changeRequestMailInName")
+		Else
+			changeRequestMailInName = "GroupNameChangeRequests"
+		End If
+		
+	End Sub
+	
+	%REM
+		Function updateGroup
+		Description: Updates one group at a time
+		and returns the exact group name
+	%END REM
+	Public Function updateGroup(NewMembers As Variant, currentNumber As Integer) As String
+		Dim groupName As String
+		Dim groupDoc As NotesDocument
+		groupName = me.applicationPrefix+me.docID+"_"+CStr(currentNumber)
+		
+		If me.nabEditorAccess Then
+			'Manipulate the group directly
+			Set GroupDoc = me.getGroupDoc(GroupName)
+			If GroupDoc Is Nothing Then
+				'Create a new group document
+				Set GroupDoc = New NotesDocument(me.NAB)
+				Call GroupDoc.Replaceitemvalue("Form","Group")
+				Call GroupDoc.Replaceitemvalue("ListName",groupName)
+				Call GroupDoc.Replaceitemvalue("GroupType","2") 'ACL only
+				Call GroupDoc.Replaceitemvalue("ListCategory","DBReadAccess")
+				Call GroupDoc.Replaceitemvalue("ListDescription","Read access group for nsf:"+db.Title+"; document:"+me.docID+"; don't touch!")
+				Call GroupDoc.Computewithform(true, False)
+			End If
+			Call GroupDoc.Replaceitemvalue("Members", "NewMembers")
+			Call GroupDoc.Save(true, True)
+		Else
+			'File a change request via mail-in
+			Call me.createChangeRequest("Update", groupName, NewMembers)
+		End If
+		
+		'We return the groupName for processing in the calling class
+		updateGroup = groupName
+	End Function
+	
+	%REM
+		Sub removeObsoleteGroups
+		Description: Removes obsolete groups when number of people
+		has changed or documents get removed
+	%END REM
+	Public Sub removeObsoleteGroups(startGroupNumber As Integer)
+		Dim groupName As String
+		Dim workGroupName As String
+		Dim workDoc As NotesDocument
+		groupName = me.applicationPrefix+me.docID
+		If me.nabEditorAccess Then
+			'Remove the groups directly
+			workGroupName = groupName + "_" + CStr(startGroupNumber)
+			Set workDoc = me.getGroupDoc(workGroupName)
+			Do Until workDoc Is Nothing
+				Call workDoc.Remove(true)
+				startGroupNumber = startGroupNumber + 1
+				workGroupName = groupName + "_" + CStr(startGroupNumber)
+				Set workDoc = me.getGroupDoc(workGroupName)
+			Loop
+		Else
+			'Remove via change request
+			Call me.createChangeRequest("Delete", groupName, startGroupNumber)
+		End If
+	End Sub
+	
+	%REM
+		Sub createChangeRequest
+		Description: Creates a mail-in request for create/update or deletion of groups
+	%END REM
+	Private Sub createChangeRequest(RequestType As String, GroupName As String, Members As Variant)
+		Dim mail As NotesDocument
+		Dim s As New NotesSession
+		Set mail = New NotesDocument(me.db)
+		Call mail.Replaceitemvalue("Form", "ChangeRequest")
+		Call mail.Replaceitemvalue("RequestType",RequestType)
+		Call mail.Replaceitemvalue("ReplicaID",me.db.Replicaid)
+		Call mail.Replaceitemvalue("UniversalID",docID)
+		Call mail.Replaceitemvalue("Requestor", s.Username)
+		Call mail.Replaceitemvalue("GroupName",GroupName)
+		Call mail.Replaceitemvalue("Members", Members) 'Members can be the users to add/update or the start number for removal
+		'We only SEND, we don't SAVE this request
+		Call mail.Send(false, me.changeRequestMailInName )
+	End Sub
+	
+	%REM
+		Function getGroupDoc
+		Description: Comments for Function
+	%END REM
+	Private Function getGroupDoc(groupName As String) As NotesDocument
+		If me.groupView Is Nothing Then
+			Set me.groupView = me.db.Getview("($VIMGroups)")
+		End If
+		Set getGroupDoc = me.groupView.Getdocumentbykey(groupName, true)
+	End Function
+	
+End Class
