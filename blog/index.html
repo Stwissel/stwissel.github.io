@@ -120,6 +120,71 @@
 			<div class="span9">
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2015/06/random-insights-in-bluemix-development.html">Random insights in Bluemix development (a.k.a Die Leiden des Jungen W)</a></small>
+					</h1>
+					<hr />
+					<div>Each platform comes with it's own little challenges, things that work differently than you expect. Those little things can easily steal a few hours. This post collects some of my random insights: 
+<ul> 
+ <li><h3>Development cycle</h3> I'm a big fan of <a href="/blog/d6plinks/SHWL-9TS9C3?Open">offline development</a>. My preferred way is to use a local git repository and push my code to <a href="https://hub.jazz.net/">Bluemix DevOps service</a> to handle compilation and deployment. It comes with a few caveats 
+  <ul> 
+   <li>When you do anything beyond basic <b>Java</b>, you want to use <a href="http://maven.apache.org">Apache Maven</a>. The dependency management is worth the learning curve. If you started with the Java boilerplate, you end up with an ANT project. Take some time, to not only mavenize it, but adjust the directories to follow the maven standards. This involves shuffling a few files around (<code>/src</code> vs. <code>/src/main/java</code> and <code>/bin</code> vs. <code>/target/main/java</code> for starters) and edit the pom.xml to remove the custom path</li> 
+   <li>Make sure you clear out the path in the build job on Devops, maven already deploys to target. If you have specified target in Devops, you end with the code in target/target and the deploy task won't find anything</li> 
+   <li>Learn about the <a href="https://developer.ibm.com/wasdev/websphere-liberty/">liberty profile</a> and its available feature, so you can properly specify <code>&lt;scope&gt;provided&lt;/scope&gt;</code> in the POM.xml</li> 
+   <li>In node.js, when you manually install a module in <code>node_modules</code>, that isn't pulled from a repository through an entry in <code>package.json</code>, that module will not be visible to standard build and deploy, since (surprise surprise) node_modules are excluded from version control and build checkout.<br /> Now there are a bunch of workarounds described, but I'll sum it up: don't bother. Either you move your module into a repository DevOps can reach or you build the application locally and use <code>cf push</code></li> 
+   <li><code>manifest.yml</code> is your friend. Learn about it. Especially the path command. When deploying a maven build your path will be <code>/target/[name-of-app]-[maven-version].war</code></li> 
+   <li>You can specify a buildpack and environment parameters in a manifest. Works like a charm. However removing them from the manifest has no effect. You have to manually unset the values using the cf tool. Also the buildpack needs to be reset manually, so be careful there!</li> 
+  </ul> </li> 
+ <li><h3>Services</h3> The <i>automagical</i> configuration of services is one of the things to love in Bluemix. This especially holds true for Java 
+  <ul> 
+   <li>The samples suggest to use the <code>VCAP_SERVICES</code> environment variable to get credentials and urls for your services. In short: don't. The Java Liberty build pack does a nice job making the values available though JNDI or Spring. So simply use those. To make sure that <code>Java:comp/env</code> can see them properly, don't forget to reference them in <code>web.xml</code></li> 
+   <li>In diversion from this: I found the <a href="https://developer.ibm.com/messaging/2015/05/22/getting-started-with-java-apps-using-the-mq-light-service-for-bluemix/">mqLite Java classes</a> less stressful that configuring JMS via JNDI. The developers did a good job making that library too work automagical on Bluemix.</li> 
+   <li>For some services (e.g. JAX-RS 2.0 client; <a href="">BlueMix SSO</a>) you do have to touch the server.xml. The two methods are <a href="https://www.ng.bluemix.net/docs/starters/liberty/index.html#optionsforpushinglibertyapplications__PackagedServer">a packaged server</a> or <a href="https://www.ng.bluemix.net/docs/starters/liberty/index.html#optionsforpushinglibertyapplications__ServerDirectory">a server directory</a>. The former requires a local liberty profile installed, so I prefer the later. It is actually easier than it sounds. In your (Maven) project, you create new directories <code>DefaultServer/apps</code>. You create/edit the server.xml in the DefaultServer directory. Then check for your maven plugin in <code>pom.xml</code> and change the output directory (in bold):<br /> <pre class="brush:xml">
+&lt;plugin&gt;
+  &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+  &lt;artifactId&gt;maven-war-plugin&lt;/artifactId&gt;
+  &lt;version&gt;2.3&lt;/version&gt;
+  &lt;configuration&gt;
+    &lt;failOnMissingWebXml&gt;false&lt;/failOnMissingWebXml&gt;
+    &lt;warName&gt;${artifactId}&lt;/warName&gt;
+    <b>&lt;outputDirectory&gt;${basedir}/defaultServer/apps&lt;/outputDirectory&gt;</b>
+  &lt;/configuration&gt;
+&lt;/plugin&gt;
+</pre><br /> Then you can deploy your application using <code>mvn install</code> and <code>cf push [appname\ -p defaultServer</code>. These two commands work in DevOps too! </li> 
+   <li>The SSO service is &quot;Single Sign <b>On</b>&quot;, there is no real &quot;Single Sign <b>Out</b>&quot;. That's not an issue specific to Bluemix, but something all SSO solutions struggle with, just to be clear what to expect. The login dialog is ugly, but fully customizable. The nature of SSO (Corporate and/or a public provider) makes it a minimal provider: identity only, no roles, attributes or groups. In the spirit of micro services: build a rest based service for that</li> 
+  </ul> </li> 
+ <li><h3>Node-RED</h3> While it is advertised as IoT tool, there is much more to this little gem 
+  <ul> 
+   <li>Node-RED runs on Bluemix, your local PC or even a Rasberry Pi. For the later head over to <a href="http://thethingbox.io/">The Thingbox</a> to get your ready OS image</li> 
+   <li>Node-RED can be easily expanded, there are tons of ready modules at <a href="http://flows.nodered.org/">Node-RED flows</a>. Not all are suitable for Bluemix (e.g. the ones talking Bluetooth), but a local Node-RED can easily talk to a Bluemix Node-RED making it easy for applications to run distributed</li> 
+   <li>My little favourite: connect a HTTP post input directly to a Cloudant output. Node-RED converts the encoded form into a JSON object you can drop into the database as is. You might want to add a small <a href="http://stackoverflow.com/questions/23593878/node-js-equivalent-for-gson-json-creation">filter</a> (a compute node) to avoid data contamination</li> 
+  </ul> </li> 
+ <!--
+<li><h3></h3>
+<ul>
+<li></li>
+<li></li>
+</ul>
+</li>
+--> 
+</ul> As usual YMMV</div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2015-06-29 03:31
+<span class="divider">|</span>
+<a href="/blog/2015/06/random-insights-in-bluemix-development.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
+
+						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/06/random-insights-in-bluemix-development.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Random insights in Bluemix development (a.k.a Die Leiden des Jungen W)"></div>
+						<script type="text/javascript">
+							var permaLink = "http://www.notessensei.com/blog/2015/06/random-insights-in-bluemix-development.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2015/06/investigating-jndi.html">Investigating JNDI</a></small>
 					</h1>
 					<hr />
@@ -783,52 +848,6 @@ categories:  <a href="/blog/categories/CouchDB.html">CouchDB</a>  <a href="/blog
 						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Develop local, deploy (cloud) global - Java and CouchDB"></div>
 						<script type="text/javascript">
 							var permaLink = "http://www.notessensei.com/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2015/01/double-o-bike-light-review.html">Double-O Bike Light Review</a></small>
-					</h1>
-					<hr />
-					<div>I backed the 
-<a href="http://www.double-o-light.com/">Double-O</a> bike light 
-<a href="https://www.kickstarter.com/projects/1238747394/double-o-a-simple-safe-secure-bike-light">Kickstarter project</a> and use them for a while now. This is my verdict: 
-<br /> 
-<b>TL:TR</b> Highly functional light with clever features, some teething problems 
-<br /> If you like to ride through the unlit woods at night, Double-O isn't for you, but 
-<a href="http://www.alibaba.com/product-detail/TrustFire-2014-new-version-D013-led_1825412435.html" title="but that would be a violation of almost every traffic accessory rule almost everywhere">that would</a>. 
-<br /> It is a commuter light with a rather clever design. 
-<br /> 
-<img src="/blog/images/2015/DoubleO.jpg" border="0" alt="DoubleO front and back open" /> 
-<h3>The Good</h3> 
-<ul> 
- <li>It is huge. With the LED arranged in a circle you get a big patch of light, a much bigger surface than the bike lights you commonly find in the market. That alone improves visibility quite a bit.</li> 
- <li>Two of the 3 light modes are what you would expect: blinking and steady. The third one I haven't seen elsewhere: the odd and even numbered LED blink alternate. This is quite clever. Someone looking at it (that's: the other traffic participants) sees something moving, creating similar attention as blinking, but for the rider it is a steady light since the same number of LED is on at any given time. That's especially useful for the front light lighting the path (to some extend) in front of you.</li> 
- <li>The case is sturdy and the threaded cover that you use to screw it open and close (to change batteries) reliably keeps moisture out (trust me, my environment has <a href="http://www.tropicalstormrisk.com/">plenty of that</a></li> 
- <li>The rubber band mechanism and the rubberised back making fixing the light at a handlebar or a seat stem very fast and reliable. My package even included a set of spare rubbers</li> 
- <li>Locking the lights with your bike lock works as advertised (but someone could steal the batteries if they get what it hanging there)</li> 
- <li>The low power LED lights make the batteries last quite long</li> 
-</ul> 
-<h3>The Bad</h3> The 
-<a href="https://www.youtube.com/watch?v=FILOdesRcFM">original specifications</a> proposed to use USB chargable fixed batteries and a magnetic fix for the light. The rechargable option was abandoned in favour of longer lasting standard batteries (and rechargeable battery in the Kickstarter delivery). While I generally understand the design decision for a general market offering, I would have found USB charging suiting my personal style (I'm used to have a zoo to be charged after my rides: The Garmin, the Bluetooth entertainment, the phone and the 
-<a href="http://www.life-beam.com/">helmet</a>). 
-<br /> The rubber band to fix the light at the bike works and it more efficient to produce, but the magnet solution has a way bigger cool factor. Also: When there's no pipe (read saddle stem) available or you want to fix it at your pannier rack, the rubber isn't the best fit. Eventually Double-O might release the fixtures design files, so I can print one for my purpose. 
-<h3>The Ugly</h3> The battery holding mechanism (see the picture above) is flimsy. For a hipster ride that might be sufficient, but in a little rugged environment where I ride (kerbstone jumps, potholes, very uneven surface, the occasional trail) the vibrations make the batteries move, in my case even to the extend of bending the electrical contract latches. The batteries loose contact and the light goes off (or won't switch on). 
-<br /> I haven't found a solution, but I'm contemplating using a rubber ring around battery and latch or hold the pieces in place using a little dense sponge rubber.</div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2015-01-10 09:27
-<span class="divider">|</span>
-<a href="/blog/2015/01/double-o-bike-light-review.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/After hours.html">After hours</a>  <a href="/blog/categories/Cycling.html">Cycling</a> 
-
-						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/01/double-o-bike-light-review.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Double-O Bike Light Review"></div>
-						<script type="text/javascript">
-							var permaLink = "http://www.notessensei.com/blog/2015/01/double-o-bike-light-review.html";
 						</script>
 					</p>
 </p>
