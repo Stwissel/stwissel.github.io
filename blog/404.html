@@ -275,7 +275,7 @@
   <ul> 
    <li>The samples suggest to use the <code>VCAP_SERVICES</code> environment variable to get credentials and urls for your services. In short: don't. The Java Liberty build pack does a nice job making the values available though JNDI or Spring. So simply use those. To make sure that <code>Java:comp/env</code> can see them properly, don't forget to reference them in <code>web.xml</code></li> 
    <li>In diversion from this: I found the <a href="https://developer.ibm.com/messaging/2015/05/22/getting-started-with-java-apps-using-the-mq-light-service-for-bluemix/">mqLite Java classes</a> less stressful that configuring JMS via JNDI. The developers did a good job making that library too work automagical on Bluemix.</li> 
-   <li>For some services (e.g. JAX-RS 2.0 client; <a href="">BlueMix SSO</a>) you do have to touch the server.xml. The two methods are <a href="https://www.ng.bluemix.net/docs/starters/liberty/index.html#optionsforpushinglibertyapplications__PackagedServer">a packaged server</a> or <a href="https://www.ng.bluemix.net/docs/starters/liberty/index.html#optionsforpushinglibertyapplications__ServerDirectory">a server directory</a>. The former requires a local liberty profile installed, so I prefer the later. It is actually easier than it sounds. In your (Maven) project, you create new directories <code>DefaultServer/apps</code>. You create/edit the server.xml in the DefaultServer directory. Then check for your maven plugin in <code>pom.xml</code> and change the output directory (in bold):<br /> <pre class="brush:xml">
+   <li>For some services (e.g. JAX-RS 2.0 client; <a href="">BlueMix SSO</a>) you do have to touch the server.xml.<br /> The two methods are <a href="https://www.ng.bluemix.net/docs/starters/liberty/index.html#optionsforpushinglibertyapplications__PackagedServer">a packaged server</a> or <a href="https://www.ng.bluemix.net/docs/starters/liberty/index.html#optionsforpushinglibertyapplications__ServerDirectory">a server directory</a>. The former requires a local liberty profile installed, so I prefer the later. It is actually easier than it sounds. In your (Maven) project, you create new directories <code>DefaultServer</code> and <code>DefaultServer/apps</code> (case sensitive!). You create/edit the server.xml in the DefaultServer directory. Then check for your maven plugin in <code>pom.xml</code> and change the output directory (in bold):<br /> <pre class="brush:xml">
 &lt;plugin&gt;
   &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
   &lt;artifactId&gt;maven-war-plugin&lt;/artifactId&gt;
@@ -286,7 +286,7 @@
     <b>&lt;outputDirectory&gt;${basedir}/defaultServer/apps&lt;/outputDirectory&gt;</b>
   &lt;/configuration&gt;
 &lt;/plugin&gt;
-</pre><br /> Then you can deploy your application using <code>mvn install</code> and <code>cf push [appname\ -p defaultServer</code>. These two commands work in DevOps too! </li> 
+</pre><br /> Then you can deploy your application using <code>mvn install</code> and <code>cf push [appname] -p defaultServer</code>. These two commands work in DevOps too! </li> 
    <li>The SSO service is &quot;Single Sign <b>On</b>&quot;, there is no real &quot;Single Sign <b>Out</b>&quot;. That's not an issue specific to Bluemix, but something all SSO solutions struggle with, just to be clear what to expect. The login dialog is ugly, but fully customizable. The nature of SSO (Corporate and/or a public provider) makes it a minimal provider: identity only, no roles, attributes or groups. In the spirit of micro services: build a rest based service for that</li> 
   </ul> </li> 
  <li><h3>Node-RED</h3> While it is advertised as IoT tool, there is much more to this little gem 
@@ -334,7 +334,7 @@ categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a>
 <a href="https://github.com/cloudfoundry/ibm-websphere-liberty-buildpack">Websphere Java Liberty Buildpack</a>, which is the one Bluemix uses for Java by default, does handle that for you 
 <i>automagic</i> and all Bluemix services turn into discoverable JNDI objects. So far in theory. I found myself in the tricky situation to check what services are actually there. So I wrote some code that turns the available JNDI objects into a JSON string. 
 <br /> 
-<pre class="brush : java">
+<pre class="brush:java">
     @GET
     @Path(&quot;/jndi&quot;)
     @Produces(MediaType.APPLICATION_JSON)
