@@ -197,7 +197,7 @@
  <a data-weight="1" href="/blog/categories/angular.js.html">angular.js</a>
  <a data-weight="1" href="/blog/categories/Apache.html">apache</a>
  <a data-weight="4" href="/blog/categories/Blog.html">blog</a>
- <a data-weight="6" href="/blog/categories/Bluemix.html">bluemix</a>
+ <a data-weight="7" href="/blog/categories/Bluemix.html">bluemix</a>
  <a data-weight="4" href="/blog/categories/Buddhakids.html">buddhakids</a>
  <a data-weight="69" href="/blog/categories/Business.html">business</a>
  <a data-weight="29" href="/blog/categories/Buying Broadband.html">buying broadband</a>
@@ -257,6 +257,73 @@
 			</div>
 			<article class="well well-raised span8">
 				<h1>
+					<small><a href="/blog/2015/07/validating-json-object.html">Validating JSON object</a></small>
+				</h1>
+				<hr />
+				<div>One of the nice tools for rapid application development in Bluemix is 
+<a href="http://nodered.org/">Node-RED</a> which escapted from IBM research. One passes a 
+<code>msg</code> JSON object between nodes that process (mostly) the 
+<code>msg.payload</code> property. A feature I like a lot is the ability to use a http input node that can listen to a 
+<code>POST</code> on an URL and automatically translates the posted form into a JSON object. 
+<br /> The conversion runs non-discriminatory, so any field that is added to the form will end up in the JSON object. 
+<br /> In a real world application that's not a good idea, an object shouldn't have unexpected properties. I had 
+<a href="http://stackoverflow.com/questions/23593878/node-js-equivalent-for-gson-json-creation">asked before</a>, so it wasn't too hard to derive a function I could use in Node-RED: 
+<br /> 
+<pre class="brush : js">
+this.deepclean = function(template, candidate, hasBeenCleaned) {
+			var cleandit = false;
+			
+			for (var prop in candidate) {
+				
+				if (template.hasOwnProperty(prop)) {
+					// We need to check strict clean and recursion
+					var tProp = template[prop];
+					var cProp = candidate[prop];
+					
+					// Case 1: strict checking and types are different
+					if (this.strictclean &amp;&amp; ((typeof tProp) !== (typeof cProp))) {
+						delete candidate[prop];
+						cleandit = true;
+						
+					// Case 2: both are objects - recursion needed	
+					} else if (((typeof tProp) === &quot;object&quot;) &amp;&amp; ((typeof cProp) === &quot;object&quot;)) {
+						cleandit = node.deepclean(tProp, cProp, (hasBeenCleaned || cleandit));
+						candidate[prop] = cProp;
+					}
+				
+				// Case 3: property is not there	
+				} else {
+					delete candidate[prop];
+					cleandit = true;
+				}
+			}
+			
+			return (hasBeenCleaned || cleandit);			
+		}
+</pre> The function is called with the template object and the incoming object and the initial parameter 
+<code>false</code>. While the function could be easily used inside a function node, the better option is to wrap it into a node of its own, so it is easy to use anywhere. The details how to do that 
+<a href="http://nodered.org/docs/creating-nodes/">can be found</a> on the Node-RED website. The easiest way to try the function: add your Node-RED project to version control, download 
+<a href="/blog/downloads/2015/objectcleaner.zip">the object cleaner node</a> and unzip it into the nodes directory. Works in Bluemix and in a local Node-RED installation. 
+<br /> As usual: YMMV</div>
+				<hr />
+				
+				<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2015-07-12 01:45
+<span class="divider">|</span>
+<a href="/blog/2015/07/validating-json-object.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
+
+						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/07/validating-json-object.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Validating JSON object"></div>
+						<script type="text/javascript">
+							var permaLink = "http://www.notessensei.com/blog/2015/07/validating-json-object.html";
+						</script>
+					</p>
+
+			</article>
+			<article class="well well-raised span8">
+				<h1>
 					<small><a href="/blog/2015/06/random-insights-in-bluemix-development.html">Random insights in Bluemix development (a.k.a Die Leiden des Jungen W)</a></small>
 				</h1>
 				<hr />
@@ -310,7 +377,7 @@
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 2015-06-29 03:31
 <span class="divider">|</span>
-<a href="/blog/2015/06/random-insights-in-bluemix-development.html#comments">Comments (0)</a>
+<a href="/blog/2015/06/random-insights-in-bluemix-development.html#comments">Comments (1)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
 
@@ -502,57 +569,6 @@ categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a>
 						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/05/your-api-needs-a-plan-aka-api-management.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Your API needs a plan (a.k.a. API Management)"></div>
 						<script type="text/javascript">
 							var permaLink = "http://www.notessensei.com/blog/2015/05/your-api-needs-a-plan-aka-api-management.html";
-						</script>
-					</p>
-
-			</article>
-			<article class="well well-raised span8">
-				<h1>
-					<small><a href="/blog/2015/05/the-rise-of-javascript-and-docker.html">The Rise of JavaScript and Docker</a></small>
-				</h1>
-				<hr />
-				<div>I loosely used JavaScript in this headline to refers to a set of technologies: 
-<a href="https://nodejs.org/">node.js</a>, 
-<a href="https://www.meteor.com/">Meteor</a>, 
-<a href="https://angularjs.org/">Angular.js</a> ( or 
-<a href="https://github.com/facebook/react">React.js</a>). They share a communality with 
-<a href="https://www.docker.com/">Docker</a> that explains their (pun intended) meteoric rise. 
-<br /> Lets take a step back: 
-<br /> JavaScript on the server isn't exactly new. The first server side JavaScript was 
-<a href="http://en.wikipedia.org/wiki/Rhino_%28JavaScript_engine%29">implemented 1998</a> and the 
-<a href="http://en.wikipedia.org/wiki/Union_mount">Union mount</a>, that made Docker possible, is from 1990. Client side JavaScript frameworks are plenty too. So what made the mentioned ones so successful? 
-<br /> I make the claim that it is 
-<b>machine readable community</b>. This is where these tools differ. node.js is inseparable from its packet manager npm. Docker is unimaginable without its registry and Angular/React (as well as jquery) live on cushions of myriads of plug-ins and extensions. While the registries/repositories are native to Docker and node.js, the front-ends take advantage of tools like 
-<a href="http://bower.io/">Bower</a> and 
-<a href="http://yeoman.io/">Yeoman</a>, that make all the packaged feel native. 
-<br /> These registries aren't read-only, which is a huge point. Providing the means of direct contribution and/or branching on GitHub the process of contribution and consumption became two way. The mere 
-<i>possibility</i> to &quot;give back&quot; created a stronger sense of belonging (even if that sense might not be fully concious). 
-<br /> 
-<b>machine readable community</b> is a natural evolution born out of the open source spirit. For decades developers have collaborated using chat ( 
-<a href="http://en.wikipedia.org/wiki/Internet_Relay_Chat">IRC</a> anyone), discussion boards, 
-<a href="http://stackoverflow.com/">Q &amp; A sites</a> and 
-<a href="http://sourceforge.net/">code sharing</a> places. With the emergence of 
-<a href="http://en.wikipedia.org/wiki/Git_%28software%29">GIT</a> and 
-<a href="https://www.github/.com/">GitHub</a> as de facto standard for code sharing the community was ready. 
-<br /> The direct access from scripts and configurations to source repository replaced the flow of &quot;human vetting, human download, human unpack and copy to the right location&quot; with: &quot;specify what you need and the machine will know where to get it&quot;. Even this idea wasn't new. In the Java the 
-<a href="http://en.wikipedia.org/wiki/Apache_Maven">Maven</a> plug-in provided that functionality since 
-<a href="https://maven.apache.org/docs/history.html">2002</a>. 
-<br /> The big difference now: Maven wasn't native to Java, as it required a change of habit. Things are done differently with it than without. npm on the other hand is &quot;how you do things in node.js&quot;. Configuring a docker container is done using the registry (and you have to put in extra effort if you want to avoid that). 
-<br /> So all the new tooling use repositories as &quot;this is how it works&quot; and complement human readable community with 
-<b>machine readable community</b>. Of course, there is technical merit too - but that has been discussed elsewhere in great length.</div>
-				<hr />
-				
-				<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2015-05-09 01:25
-<span class="divider">|</span>
-<a href="/blog/2015/05/the-rise-of-javascript-and-docker.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/Software.html">Software</a> 
-
-						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/05/the-rise-of-javascript-and-docker.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="The Rise of JavaScript and Docker"></div>
-						<script type="text/javascript">
-							var permaLink = "http://www.notessensei.com/blog/2015/05/the-rise-of-javascript-and-docker.html";
 						</script>
 					</p>
 

@@ -120,6 +120,72 @@
 			<div class="span9">
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2015/07/validating-json-object.html">Validating JSON object</a></small>
+					</h1>
+					<hr />
+					<div>One of the nice tools for rapid application development in Bluemix is 
+<a href="http://nodered.org/">Node-RED</a> which escapted from IBM research. One passes a 
+<code>msg</code> JSON object between nodes that process (mostly) the 
+<code>msg.payload</code> property. A feature I like a lot is the ability to use a http input node that can listen to a 
+<code>POST</code> on an URL and automatically translates the posted form into a JSON object. 
+<br /> The conversion runs non-discriminatory, so any field that is added to the form will end up in the JSON object. 
+<br /> In a real world application that's not a good idea, an object shouldn't have unexpected properties. I had 
+<a href="http://stackoverflow.com/questions/23593878/node-js-equivalent-for-gson-json-creation">asked before</a>, so it wasn't too hard to derive a function I could use in Node-RED: 
+<br /> 
+<pre class="brush : js">
+this.deepclean = function(template, candidate, hasBeenCleaned) {
+			var cleandit = false;
+			
+			for (var prop in candidate) {
+				
+				if (template.hasOwnProperty(prop)) {
+					// We need to check strict clean and recursion
+					var tProp = template[prop];
+					var cProp = candidate[prop];
+					
+					// Case 1: strict checking and types are different
+					if (this.strictclean &amp;&amp; ((typeof tProp) !== (typeof cProp))) {
+						delete candidate[prop];
+						cleandit = true;
+						
+					// Case 2: both are objects - recursion needed	
+					} else if (((typeof tProp) === &quot;object&quot;) &amp;&amp; ((typeof cProp) === &quot;object&quot;)) {
+						cleandit = node.deepclean(tProp, cProp, (hasBeenCleaned || cleandit));
+						candidate[prop] = cProp;
+					}
+				
+				// Case 3: property is not there	
+				} else {
+					delete candidate[prop];
+					cleandit = true;
+				}
+			}
+			
+			return (hasBeenCleaned || cleandit);			
+		}
+</pre> The function is called with the template object and the incoming object and the initial parameter 
+<code>false</code>. While the function could be easily used inside a function node, the better option is to wrap it into a node of its own, so it is easy to use anywhere. The details how to do that 
+<a href="http://nodered.org/docs/creating-nodes/">can be found</a> on the Node-RED website. The easiest way to try the function: add your Node-RED project to version control, download 
+<a href="/blog/downloads/2015/objectcleaner.zip">the object cleaner node</a> and unzip it into the nodes directory. Works in Bluemix and in a local Node-RED installation. 
+<br /> As usual: YMMV</div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2015-07-12 01:45
+<span class="divider">|</span>
+<a href="/blog/2015/07/validating-json-object.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
+
+						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/07/validating-json-object.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Validating JSON object"></div>
+						<script type="text/javascript">
+							var permaLink = "http://www.notessensei.com/blog/2015/07/validating-json-object.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2015/06/random-insights-in-bluemix-development.html">Random insights in Bluemix development (a.k.a Die Leiden des Jungen W)</a></small>
 					</h1>
 					<hr />
@@ -172,7 +238,7 @@
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 2015-06-29 03:31
 <span class="divider">|</span>
-<a href="/blog/2015/06/random-insights-in-bluemix-development.html#comments">Comments (0)</a>
+<a href="/blog/2015/06/random-insights-in-bluemix-development.html#comments">Comments (1)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
 
@@ -787,67 +853,6 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/03/xpages-xml-document-datasource-take-2.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="XPages XML Document DataSource - Take 2"></div>
 						<script type="text/javascript">
 							var permaLink = "http://www.notessensei.com/blog/2015/03/xpages-xml-document-datasource-take-2.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html">Develop local, deploy (cloud) global - Java and CouchDB</a></small>
-					</h1>
-					<hr />
-					<div>Leaving the cosy world of 
-<a href="http://www-03.ibm.com/software/products/en/ibmdominodesigner">Domino Designer</a> behind, venturing into 
-<a href="http://www.bluemix.net">IBM Bluemix</a>, Java and 
-<a href="https://cloudant.com/">Cloudant</a>, I'm challenged with a new set of task to master. Spoiled by Notes where 
-<code>Ctrl+O</code> gives you instant access to any application, regardless of being stored locally or on a server I struggled a little with my usual practise of 
-<h3>develop local, deploy (Bluemix) global</h3> The task at hand is to develop a Java 
-<a href="https://developer.ibm.com/wasdev/blog/2013/03/29/introducing_the_liberty_profile/">Liberty</a> based application, that uses CouchDB/Cloudant as its NoSQL data store. I want to be able to develop/test the application while being completely 
-<a href="http://offlinefirst.org/">offline</a> and deploy it to Bluemix. I don't want any code to have conditions offline/online, but rather use configuration of the runtimes for it. 
-<br /> Luckily I have access to 
-<a href="https://twitter.com/Sai_Vennam">really smart developers</a> (thx Sai), so I succeeded. 
-<br /> This is what I found out, I needed to do. The list serves as reference for myself and others living in a latency/bandwidth challenged environment. 
-<ol> 
- <li><b>Read</b>: There are a number of articles around, that contain bits and pieces of the information required. In no specific order: 
-  <ul> 
-   <li>Refresh on Java <a href="http://docs.oracle.com/cd/E19857-01/820-1639/bhano/index.html">Naming References and Binding Information</a></li> 
-   <li>Sai Vennam introduces <a href="https://developer.ibm.com/bluemix/2014/07/08/cloudant_on_bluemix/">Cloudant on Bluemix</a></li> 
-   <li><a href="http://www-01.ibm.com/support/knowledgecenter/SSAW57_8.5.5/com.ibm.websphere.wlp.nd.doc/ae/twlp_setup.html?cp=SSAW57_8.5.5%2F1-6-0">Setting up the liberty profile</a></li> 
-   <li><a href="https://www-01.ibm.com/support/knowledgecenter/was_beta_liberty/com.ibm.websphere.wlp.nd.multiplatform.doc/ae/twlp_couchdb_create.html">Cloudant in the liberty profile</a></li> 
-  </ul> </li> 
- <li><b>Install</b>: This is a big jump forward. No more looking for older versions, but rather bleeding edge. Tools of the trade: 
-  <ul> 
-   <li><a href="http://git-scm.com/">GIT</a>. When you are on Windows or Mac, try the nice GUI of <a href="http://sourcetreeapp.com/">SourceTree</a>, and don't forget to learn <a href="https://github.com/nvie/gitflow">git-flow</a> (best explained <a href="https://www.atlassian.com/git/">here</a>)</li> 
-   <li>A current version of the <a href="http://eclipse.org/downloads/">Eclipse IDE</a> (Luna at the time of writing, the Java edition suffices)</li> 
-   <li>The <a href="https://developer.ibm.com/wasdev/downloads/liberty-profile-beta/">liberty profile beta</a>. The Beta is necessary, since it contains some of the features, notably couchdb, which are available in Bluemix by default. Use the option to drag the link onto your running Eclipse client</li> 
-   <li><a href="http://maven.apache.org/">Maven</a> - the Java way to resolve dependencies (guess where bower and npm got their ideas from)</li> 
-   <li><a href="http://curl.haxx.se/">CURL</a> (that's my little command line ninja stuff, you can get away without it)</li> 
-   <li>Apache <a href="http://couchdb.apache.org/">CouchDB</a></li> 
-  </ul> </li> 
- <li><b>Configure</b>: Java loves indirection. So there are a few moving parts as well (details below) 
-  <ul> 
-   <li>The Cloudant service in Bluemix</li> 
-   <li>The JNDI name in the web.xml. Bluemix will discover the Cloudant service and create the matching entries in the server.xml automagically</li> 
-   <li>A local profile for a server running the Liberty 9.0 profile</li> 
-   <li>The configuration for the local CouchDB in the local server.xml</li> 
-   <li>Replication between your local CouchDB instance and the Cloudant server database (if you want to keep the data in sync)</li> 
-  </ul> </li> 
-</ol> The flow of the data access looks like this 
-<br /> 
-<img src="/blog/images/2015/BlueMixLocal.jpg" border="0" alt="Develop local, deploy global" /></div>
-					<hr />
- <a href="/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2015-03-03 12:14
-<span class="divider">|</span>
-<a href="/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/CouchDB.html">CouchDB</a>  <a href="/blog/categories/Java.html">Java</a>  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
-
-						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Develop local, deploy (cloud) global - Java and CouchDB"></div>
-						<script type="text/javascript">
-							var permaLink = "http://www.notessensei.com/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html";
 						</script>
 					</p>
 </p>
