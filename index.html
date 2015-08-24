@@ -120,6 +120,90 @@
 			<div class="span9">
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2015/08/let-there-be-a-light-angular-nodered-and-websockets.html">Let there be a light - Angular, nodeRED and Websockets</a></small>
+					</h1>
+					<hr />
+					<div><a hred="http://nodered.org">NodeRED</a> has conquered a place in my permanent toolbox. I run an instance in Bluemix, on my local machine and on a 
+<a href="http://thethingbox.io/">Raspberry PI</a>. I build a little demo where a light connected to a 
+<a href="https://www.particle.io/">Particle</a> lights up based on an event reaching a NodeRED instance. However I don't carry my IoT gear every time (got lots of funny looks at airport security for it), but I still want to demo the app. The NodeRED side is easy. I just added a websocket output node and the server side is ready to roll. 
+<br /> 
+<img src="/blog/images/2015/websocketout.png" border="0" alt="Web socket in NodeRED" /> 
+<br /> On the browser side I decided to use 
+<a href="https://angularjs.org/">angular.js</a> and one of its web socket libraries 
+<a href="https://github.com/wilk/ng-websocket">ng-websocket</a>. The application code is just about 50 lines, so here it goes: 
+<br /> 
+<pre class="brush : js">
+'use strict';
+
+var websocketEndpoint = 'wss://'+Window.location.hostname+'/ws/bulb';
+
+console.log('Application loading ...');
+// Declare app level module which depends on views, and components
+var myApp = angular.module('myApp', ['ngWebsocket','ngRoute']);
+
+
+myApp.config(['$routeProvider', function($routeProvider) {
+    console.log('Routes loading... ');
+    $routeProvider.when('/bulbon', {
+        templateUrl: 'bulbs/bulb-on.html'
+    }).when('/bulboff', {
+        templateUrl: 'bulbs/bulb-off.html'
+    }).when('/bulbunknown', {
+        templateUrl: 'bulbs/bulb-unknown.html'
+    }).otherwise({redirectTo: '/bulbunknown'});
+}]);
+
+myApp.run(function ($websocket, $location) {
+    console.log('run');
+    var ws = $websocket.$new({
+        url: websocketEndpoint,
+        reconnect: true
+    }); // instance of ngWebsocket, handled by $websocket service
+
+    ws.$on('$open', function () {
+        console.log('Websocket connection open');
+    });
+
+    ws.$on('$message', function (data) {
+        console.log('data arrived');
+        console.log(data);
+        var newlocation = '#/bulbunknown';
+        if (data.bulb === 1) {
+            newlocation = '#/bulbon';
+        } else if (data.bulb === 0) {
+            newlocation = '#/bulboff';
+        }
+
+        window.location = newlocation;
+    });
+
+    ws.$on('$close', function () {
+        console.log('Websocket connection closed');
+    });
+});
+
+console.log('Done');
+</pre> 
+<br /> The HTML is simple. I split it into the main file and 3 status files. One could easily put the statuses into a script template section or inside the app.</div>
+					<hr />
+ <a href="/blog/2015/08/let-there-be-a-light-angular-nodered-and-websockets.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2015-08-24 10:20
+<span class="divider">|</span>
+<a href="/blog/2015/08/let-there-be-a-light-angular-nodered-and-websockets.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/angular.js.html">angular.js</a>  <a href="/blog/categories/NodeRED.html">NodeRED</a>  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
+
+						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/08/let-there-be-a-light-angular-nodered-and-websockets.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Let there be a light - Angular, nodeRED and Websockets"></div>
+						<script type="text/javascript">
+							var permaLink = "http://www.notessensei.com/blog/2015/08/let-there-be-a-light-angular-nodered-and-websockets.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2015/08/identiy-in-the-age-of-cloud.html">Identiy in the age of cloud</a></small>
 					</h1>
 					<hr />
@@ -147,7 +231,10 @@
  <li>The rule engine or other services use a profile service to lookup user properties. This is where group memberships and roles live.<br /> One could succumb to the temptation to let that service depend on an LDAP corporate directory, only to realise that the guardians will lock him down (again). The better approach is the profile service synchronises properties that are maintained in other systems and presents the union of them to requesting applications</li> 
  <li>So a key difference between the IdP and the profile service: the IdP has one task and one only, it performs that through lookups. The profile service provides profile information (in different combinations) that it obtained through direct entry or synchronisation</li> 
  <li>The diagram is a high level one, the rule engine and profile service might themselves be composed of multiple micro services. This is beyond this article</li> 
-</ul> As usual YMMV</div>
+</ul> Another way to look at it is the distinction between Who &amp; What 
+<br /> 
+<a href="/blog/images/2015/SignonCloud.jpg" title="Click for a larger image"> <img src="/blog/images/2015/SignonCloud-small.jpg" border="0" alt="The who and what of identity" /> </a> 
+<br /> As usual YMMV</div>
 					<hr />
 					<p><p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -155,7 +242,7 @@ Stephan H Wissel</a> on 2015-08-23 10:01
 <span class="divider">|</span>
 <a href="/blog/2015/08/identiy-in-the-age-of-cloud.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
+categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a>  <a href="/blog/categories/Cloud Computing.html">Cloud Computing</a> 
 
 						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/08/identiy-in-the-age-of-cloud.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Identiy in the age of cloud"></div>
 						<script type="text/javascript">
@@ -321,7 +408,7 @@ Stephan H Wissel</a> on 2015-07-12 01:45
 <span class="divider">|</span>
 <a href="/blog/2015/07/validating-json-object.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
+categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a>  <a href="/blog/categories/NodeRED.html">NodeRED</a> 
 
 						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/07/validating-json-object.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Validating JSON object"></div>
 						<script type="text/javascript">
@@ -628,84 +715,6 @@ categories:  <a href="/blog/categories/Software.html">Software</a>
 					</p>
 </p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2015/04/cloud-what-is-your-exit-strategy.html">Cloud with a chance of TAR balls (or: what is your exit strategy)</a></small>
-					</h1>
-					<hr />
-					<div>Cloud computing is here to stay, since it does have 
-<a href="https://www.google.com/search?q=Advantages+of+cloud+computing">many benefits</a>. However even unions made &quot; 
-<a href="http://en.wikipedia.org/wiki/Marriage_vows#Roman_Catholic">until death do us part</a>&quot; come with 
-<a href="http://legal-dictionary.thefreedictionary.com/prenuptial+agreement">wagers</a> these days. So it is prudent for your cloud strategy to contemplate an exit strategy. 
-<br /> Such a strategy depends on the flavour of cloud you have chosen (IaaS, PaaS, SaaS, BaaS) and might require to adjust the way you on-board in the first place. Let me shed some light on the options: 
-<h4>IaaS</h4> When renting virtual machines from a 
-<a href="http://aws.amazon.com/">book seller</a>, a complete box from 
-<a href="https://www.hetzner.de/en/">classic hosting provider</a> or a mix of bare metal and virtual boxes from 
-<a href="http://www.softlayer.com/">IBM</a>, the machine part is easy: can you copy the VM image over the network (SSH, HTTPS, SFTP) to a new location? When you have a bare metal box, that won't work (there isn't a VM after all), so you need a classic &quot;move everything inside&quot; strategy. 
-<br /> If you drank the 
-<a href="https://www.docker.com/">Docker cool aid</a>, the task might be just be broken down into managable junks, thanks to the containers. Be aware: Docker welds you to a choice of host operating systems (and Windows isn't currently on the host list). 
-<br /> There are secondary considerations: how easy is it, to switch the value-added services like: DNS, CDN, Management console etc. on/off or to another vendor? 
-<h4>PaaS</h4> Here you need to look separately at runtime and the services you use. Runtimes like Java, JavaScript, Phython or PHP tend to be offered by almost all vendors. dotNet and C# not so much. When your cloud platform vendor has embraced an 
-<a href="http://cloudfoundry.org/">open standard</a>, it is most likely, that you can deploy your application code elsewhere too, including back into your own data center or a bunch of rented IaaS devices. 
-<br /> It get a little more complicated when you look at the services. 
-<br /> First look at persistence: is your data stored in a vendor propriety database? If yes, you probably can export it, but need to switch to a different database when switching cloud vendors. This means you need to alter your code and retest (but you do that with 
-<a href="http://en.wikipedia.org/wiki/Continuous_integration">CI anyway</a>?). So before your jump onto 
-<a href="http://azure.microsoft.com/en-us/services/documentdb/">DocumentDB</a> or 
-<a href="http://aws.amazon.com/dynamodb/">DynamoDB</a> (which run in a single vendor's PaaS only), you might want to checkout 
-<a href="https://www.mongodb.org/">MongoDB</a>, 
-<a href="http://couchdb.apache.org/">CouchDB</a> (and its commercial siblings 
-<a href="https://cloudant.com/">Cloudant</a> or 
-<a href="http://www.couchbase.com/">Couchbase</a>) , 
-<a href="http://redis.io/">Redis</a> or 
-<a href="http://orientdb.com/orientdb/">OrientDB</a> which run in multiple vendor environments. 
-<br /> The same applies to SQL databases and blob stores. This is not a recommendation for a specific technology (SQL vs. NoSQL or Vendor A vs. Vendor B), but an aspect you must consider in your cloud strategy. 
-<br /> The next check point are the services you use. Here you have to distinguish between common services, that are offered by multiple cloud vendors: DNS, auto scaling, messaging (MQ and eMail) etc. and services specific to one vendor (like 
-<a href="http://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/">IBM's Watson</a>). 
-<br /> Taking a stand &quot; 
-<i>If a service isn't offered by multiple vendors, we won't use it</i>&quot; can help you avoid a lock-in and will ensure that you 
-<a href="/blog/d6plinks/SHWL-9SF9D9">stifle your innovation</a> too. After all, you use a service, not for the sake of the service, but to solve a business problem and to innovate. 
-<br /> The more sensible approach would be to check if you can limit your exposure to a vendor to that special services only, should you decide to move on. This gives you the breathing space to then look for alternatives. Adding a market watch to see how alternatives might evolve improves your hedging. 
-<br /> Services are the &quot; 
-<i>Damned if you do, damned if you don't</i>&quot; area of PaaS. All vendors scramble to provide top performance and availability for the common platform and distinction in the services on top of that. 
-<br /> After all one big plus of the PaaS environment are the services that enable &quot; 
-<i>composable businesses</i>&quot; - and save you the headache to code them yourself. IMHO the best risk mitigation, and incidentally state of the art, is a sound 
-<a href="http://searchcloudapplications.techtarget.com/definition/API-management">API management</a> a.k.a 
-<a href="http://martinfowler.com/articles/microservices.html">Microservices</a>. 
-<br /> Once you are there, you will learn, that a classic 
-<a href="http://microservices.io/patterns/monolithic.html">Monolithic Architecture</a> isn't cloud native (Those architectures survive inside of Virtual Machines) - but that's a story for another time. 
-<h4>SaaS</h4> Here you deal with applications like 
-<a href="http://www.ibm.com/software/products/en/ibm-connections-cloud-s1">IBM Connections Cloud S1</a>, 
-<a href="https://www.google.com/work/apps/business/">Google Apps for Work</a>, 
-<a href="https://products.office.com/en-us/business/compare-office-365-for-business-plans">Microsoft Office 365</a>, 
-<a href="www.salesforce.com">Salesforce</a>, 
-<a href="http://go.sap.com/solution/cloud.html">SAP SaaS</a> but also 
-<a href="https://slack.com/">Slack</a>, 
-<a href="https://basecamp.com/">Basecamp</a>, 
-<a href="https://github.com/">Github</a> and gazillions more. 
-<br /> Some of them (e.g. eMail or documents) have open standard or industry dominating formats. Here you need to make sure, you get the data out in that format. I like the way Google is approaching this task. They offer 
-<a href="https://www.google.com/settings/takeout">Google Takeout</a>, that tries to stick to standard formats and offers all data, any time for export. 
-<br /> Other have at least machine readable formats like CSV, JSON, XML. The nice challenge: getting data out is only half the task. Is your new destination capable of taking them back in? 
-<h4>BaaS</h4> In a business process as a service (BaaS) the same considerations as the SaaS environment come to play: can I export data in a machine-readable, preferably industry standard format. E.g. you used a payroll service and want to bring it back inhouse or move to a different service provider. You need to make sure your master data can be exported and that you have the reports for historical records. When covered in reports, you might get away without transactional data. Typical formats are: CSV, JSON, XML 
-<br /> 
-<br /> As you can see, not rocket science, but a lot to consider. For all options the same: do you have what it takes to move? Is there enough bandwidth (physical and mental) to pull it off? So don't get carried away with the 
-<a href="https://www.google.com/search?q=move+to+IBM+cloud">wedding preparations</a> and check your 
-<a href="http://www.latin-dictionary.org/Quidquid_agis,_prudenter_agas_et_respice_finem!">prenuptials</a>.</div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2015-04-12 04:15
-<span class="divider">|</span>
-<a href="/blog/2015/04/cloud-what-is-your-exit-strategy.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/Cloud Computing.html">Cloud Computing</a> 
-
-						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/04/cloud-what-is-your-exit-strategy.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Cloud with a chance of TAR balls (or: what is your exit strategy)"></div>
-						<script type="text/javascript">
-							var permaLink = "http://www.notessensei.com/blog/2015/04/cloud-what-is-your-exit-strategy.html";
-						</script>
-					</p>
-</p>
-				</article>
 			</div>
 
 			<div class="span3">
@@ -782,6 +791,7 @@ categories:  <a href="/blog/categories/Cloud Computing.html">Cloud Computing</a>
 						<li ><a href="/blog/categories/Mac.html">mac</a></li>
 						<li ><a href="/blog/categories/Mobile.html">mobile</a></li>
 						<li ><a href="/blog/categories/nginx.html">nginx</a></li>
+						<li ><a href="/blog/categories/NodeRED.html">nodered</a></li>
 						<li ><a href="/blog/categories/Nokia.html">nokia</a></li>
 						<li ><a href="/blog/categories/Omnisophie.html">omnisophie</a></li>
 						<li ><a href="/blog/categories/OpenSource.html">opensource</a></li>
