@@ -1,0 +1,489 @@
+%REM
+	Library ComparisonTools
+	Created Mar 25, 2011 by Stephan H Wissel
+	(CC) 2011 BY NC SA http://creativecommons.org/licenses/by-nc-sa/3.0/
+	Description: Compare a save copy of a database with one containing later changes
+%END REM
+Option Public
+Option Declare
+
+
+%REM
+	Class CompareEnging
+	Description: Helps comparing databases
+%END REM
+Public Class CompareEnging
+	
+	Private SourceServer As String
+	Private SourceDBName As String
+	Private TargetServer As String
+	Private TargetDBName As String
+	
+	Private s As NotesSession
+	Private reportDB As NotesDatabase
+	Private sourceDB As NotesDatabase
+	Private targetDB As NotesDatabase
+	
+	Private excludedForms List As String
+	Private excludedFields List As String
+	
+	Private out As NotesStream
+	
+	Private eMailChangeDocument As Boolean 
+	Private documentOnlyChangedFields As Boolean
+	
+	%REM
+		Sub New
+		Description: Get going
+	%END REM
+	Sub New(sServer As String, sDB As String, tServer As String, tDB As String)
+		
+		me.SourceServer = sServer
+		me.SourceDBName = sDB
+		me.TargetServer = tServer
+		me.TargetDBName = tDB
+		
+		Set me.s = New NotesSession
+		Set me.reportDB = s.Currentdatabase
+		
+		'Default: document only changes, don't eMail
+		me.eMailChangeDocument = false 
+		me.reportOnlyChangedFields = true
+		
+		'You might need to change this
+		Call me.addExcludedField("$UpdatedBy")
+		Call me.addExcludedField("$Revisions")
+		Call me.addExcludedField("Form")
+	End Sub
+	
+	%REM
+		Property Set reportOnlyChangedFields
+		Description: When set to true only changed fields are reported
+	%END REM
+	Public Property Set reportOnlyChangedFields As Boolean
+		me.documentOnlyChangedFields = reportOnlyChangedFields
+	End Property
+	
+	%REM
+		Property Set eMailResults
+		Description: If true sends one eMail for every changed document
+	%END REM
+	Public Property Set eMailResults As Boolean
+		Me.reportOnlyChangedFields = eMailResults
+	End Property
+	
+	%REM
+		Sub addExcludedForm
+		Description: Add a form to the list of forms to exclude
+	%END REM
+	Public Sub addExcludedForm(formName As String)
+		me.excludedForms(formName) = formName
+	End Sub
+	
+	%REM
+		Sub addExcludedField
+		Description: Adds a field to be excluded from comparison
+	%END REM
+	Public Sub addExcludedField(fieldName As String)
+		me.excludedFields(fieldName)= fieldName
+	End Sub
+	
+	%REM
+		Function fixTextforHTML
+		Description: Makes content pretty for HTML
+	%END REM
+	Private Function fixTextforHTML(orgText As String) As String
+		Dim result As String
+		result = ReplaceSubstring(orgText, "<", "&lt;")
+		result = ReplaceSubstring(result, ">", "&gt;")
+		fixTextforHTML = ReplaceSubstring(result, ";", "; ")
+	End Function
+	
+	%REM
+		Function report
+		Description: Run the report
+	%END REM
+	Public Function report
+		
+		Dim i As long
+		
+		Set me.sourceDB = New NotesDatabase(me.SourceServer,me.SourceDBName)
+		Set me.targetDB = New NotesDatabase(me.TargetServer,me.TargetDBName)
+		
+		If Not sourceDB.Isopen Then 
+			Call sourceDB.Open("", "")
+		End If
+		If Not targetDB.Isopen then
+			Call targetDB.Open("","")
+		End If
+		
+		If Not (sourceDB.Isopen And targetDB.Isopen) Then
+			MsgBox "Can't open the databases"
+			report = false
+			Exit function
+		End If
+		
+		
+		Dim sDocCol As NotesDocumentCollection
+		Dim sDoc As NotesDocument
+		
+		Set sDocCol = sourceDB.Alldocuments
+		Set sDoc = sDocCol.Getfirstdocument()
+		
+		i = 1
+		
+		Do Until sDoc Is Nothing
+			Call me.compareSourceDoc(Sdoc, targetDB)	
+			Set sDoc = sDocCol.Getnextdocument(sDoc)
+			i = i + 1
+			If i mod 100 = 0 Then
+				Print CStr(i) + " docs processed"
+				i = 1
+			End If
+		Loop
+		
+		Call reportNewDocuments(targetDB)
+		
+	End Function
+	
+	%REM
+		Sub reportNewDocuments
+		Description: Comments for Sub
+	%END REM
+	Sub reportNewDocuments(targetDB As NotesDatabase)
+		Dim tDocCol As NotesDocumentCollection
+		Dim tDoc As NotesDocument
+		Dim i As Integer
+		
+		Set tDocCol = targetDB.Alldocuments
+		Set tDoc = tDocCol.Getfirstdocument()
+		i = i
+		Do Until tDoc Is Nothing
+			Call compareTargetDoc(tDoc)
+			Set tDoc = tDocCol.Getnextdocument(tDoc)
+			i = i + 1
+			If i Mod 100 = 0 Then
+				Print CStr(i) + " docs processed"
+				i = 1
+			End If
+		Loop
+		
+	End Sub
+	
+	%REM
+		Sub compareTargetDoc
+		Description: Comments for Sub
+	%END REM
+	Sub compareTargetDoc(tDoc As NotesDocument)
+		Dim unid As String
+		Dim curForm As String
+		Dim orgDoc As NotesDocument
+		
+		On Error GoTo Err_compareTargetDoc
+		
+		unid = tDoc.Universalid
+		curForm = tDoc.form(0)
+		If Not IsElement(me.excludedForms(curForm)) Then
+			Set orgDoc = me.sourceDB.Getdocumentbyunid(unid)
+			If orgDoc Is Nothing Then
+				Call documentSingleDoc(tDoc,"New Document report")
+			End If
+		End If
+		
+Exit_compareTargetDoc:
+		Exit Sub
+		
+Err_compareTargetDoc:
+		'We end here since it didn't find the new ones
+		Call documentSingleDoc(tDoc,"New Document report")
+		Resume exit_compareTargetDoc
+		
+	End Sub
+	
+	%REM
+		Sub compareSourceDoc
+		Description: Finds if a document is new, deleted or updated
+	%END REM
+	Sub compareSourceDoc(sDoc As NotesDocument, tDB As NotesDatabase)
+		
+		On Error GoTo Err_compareSourceDoc
+		
+		Dim unid As String
+		Dim curForm As String
+		Dim tDoc As NotesDocument
+		
+		unid = sDoc.Universalid
+		curForm = sDoc.form(0)
+		If Not IsElement(me.excludedForms(curForm)) Then
+			Set tDoc = tDb.Getdocumentbyunid(unid)
+			Call compareTwoDocuments(sDoc,tDoc)
+		End if
+Exit_compareSourceDoc:
+		Exit Sub
+		
+Err_compareSourceDoc:
+		'We get here it didn't find a document
+		Call documentSingleDoc(sDoc,"Deleted Document report")
+		Resume Exit_compareSourceDoc
+		
+	End Sub
+	
+	%REM
+		Function documentDeletedDoc
+		Description: Comments for Function
+	%END REM
+	Function documentSingleDoc(doc As NotesDocument, txtStatus As String)
+		
+		Dim mime As NotesMIMEEntity
+		Dim header As NotesMIMEHeader
+		Dim body As NotesMIMEEntity
+		Dim oddRow As Boolean
+		Dim curItem As NotesItem
+		Dim newDoc As NotesDocument
+		
+		Set newDoc = New NotesDocument(me.reportDB)
+		newDoc.form = "Memo"
+		newDoc.Status = txtStatus
+		newDoc.changes = 1
+		
+		s.ConvertMIME = False ' Do not convert MIME to rich text
+		
+		Call newDoc.ReplaceItemValue("Form","Memo")
+		Set mime = newDoc.CreateMIMEEntity
+		Set header = mime.CreateHeader("Subject")
+		Set body = mime.CreateChildEntity
+		Call header.SetHeaderVal(txtStatus+": "+doc.form(0))
+		
+		If out Is Nothing then
+			Set out = s.CreateStream
+		End If
+		Call out.Truncate()
+		oddRow = True
+		out.WriteText(|<style>|)
+		out.WriteText(|table {width : 100%; padding : 3px; border-left : 1px solid gray; border-top : 1px solid gray} |)
+		out.WriteText(|body, th, td {text-align : left, font-family : Verdana, Arial, sans-serif} |)
+		out.WriteText(|th {background-color : #FFCCCC} |)
+		out.WriteText(|h1 {background-color : #FF9999; border-bottom : 2px black; font-family : Arial, sans-serif; font-size : large} |)
+		out.WriteText(|td, th { border-bottom : 1px solid gray; border-right : 1px solid gray} |)
+		out.WriteText(|</style>|)
+		out.WriteText(|<h1>|)
+		out.WriteText(|<a href="|)
+		out.WriteText(doc.Notesurl)
+		out.WriteText(|" title="Notes Link to document">|)
+		out.WriteText(doc.form(0))
+		out.WriteText(|</a>|)
+		out.WriteText(|</h1>|)
+		out.WriteText(|<table width="100%"><tr><th>Field</th><th>Value</th></tr>|)
+		ForAll oneItem In doc.Items
+			Set curItem = oneItem
+			If oddRow Then
+				out.WriteText(|<tr><td>|)
+				oddRow = False
+			Else
+				out.WriteText(|<tr style="background-color : #EEEEEE"><td>|)
+				oddRow = True
+			End If
+			out.WriteText(curItem.name)
+			out.WriteText(|</td><td>|)
+			out.WriteText(fixTextforHTML(curItem.Text))		
+			out.WriteText(|</td></tr>|)
+		End ForAll
+		out.WriteText("</table>")
+		out.Position = 0
+		Call body.SetContentFromText(out,"text/html; charset=UTF-8", ENC_IDENTITY_7BIT)
+		Call newDoc.Save(true, false)
+		If me.eMailChangeDocument Then
+			Call newDoc.Send(false, s.Username)
+		End If
+		s.ConvertMIME = True ' Restore conversion
+		
+	End Function
+	
+	%REM
+		Sub compareTwoDocuments
+		Description: Compares 2 documents and saves the result if needed
+	%END REM
+	Public Sub compareTwoDocuments(sDoc As NotesDocument, tDoc As NotesDocument)
+		Dim mime As NotesMIMEEntity
+		Dim header As NotesMIMEHeader
+		Dim body As NotesMIMEEntity
+		Dim oddRow As Boolean
+		Dim curItem As NotesItem
+		Dim newItem As NotesItem
+		Dim newDoc As NotesDocument
+		Dim changes As Integer
+		Dim newValue As String
+		Dim completedFields List As String
+		Dim rowCounter As integer
+		
+		Set newDoc = New NotesDocument(me.reportDB)
+		newDoc.form = "Memo"
+		newDoc.Status = "Change report"
+		changes = 0
+		
+		s.ConvertMIME = False ' Do not convert MIME to rich text
+		
+		Call newDoc.ReplaceItemValue("Form","Memo")
+		Set mime = newDoc.CreateMIMEEntity
+		Set header = mime.CreateHeader("Subject")
+		Set body = mime.CreateChildEntity
+		Call header.SetHeaderVal("Change Status: "+sdoc.form(0))
+		
+		If out Is Nothing Then
+			Set out = s.CreateStream
+		End If
+		Call out.Truncate()
+		
+		oddRow = True
+		out.WriteText(|<style>|)
+		out.WriteText(|table {width : 100%; padding : 3px; border-left : 1px solid gray; border-top : 1px solid gray} |)
+		out.WriteText(|body, th, td {text-align : left, font-family : Verdana, Arial, sans-serif} |)
+		out.WriteText(|th {background-color : #FFCCCC} |)
+		out.WriteText(|h1 {background-color : #FF9999; border-bottom : 2px black; font-family : Arial, sans-serif; font-size : large} |)
+		out.WriteText(|td, th { border-bottom : 1px solid gray; border-right : 1px solid gray} |)
+		out.WriteText(|</style>|)
+		out.WriteText(|<h1>|)
+		out.WriteText(sdoc.form(0))
+		out.WriteText(" - ")
+		out.WriteText(sdoc.Universalid)
+		out.WriteText(|</h1>|)
+		rowcounter = 0
+		out.WriteText(|<table width="100%"><tr><th style="width : 180px">Field</th><th>Old</th><th>New</th></tr>|)
+		ForAll oneItem In sDoc.Items
+			Set curItem = oneItem
+			completedFields(curItem.Name) = curItem.Name
+			
+			If Not IsElement(me.excludedFields(curItem.Name)) Then
+				If tDoc.Hasitem(curItem.Name) Then
+					Set newItem = tDoc.Getfirstitem(curItem.Name)
+					newValue = newItem.Text
+				Else
+					newValue = ""
+				End If
+				
+				If curItem.Text <> newValue Then
+					changes = changes + 1
+					If oddRow Then
+						out.WriteText(|<tr style="background-color : #FFCCFF"><td>|)
+						oddRow = False
+					Else
+						out.WriteText(|<tr style="background-color : #FF9966"><td>|)
+						oddRow = True
+					End If
+					out.WriteText(curItem.name)
+					out.WriteText(|</td><td>|)
+					out.WriteText(fixTextforHTML(curItem.Text))		
+					out.WriteText(|</td><td>|)
+					out.Writetext(fixTextforHTML(newValue))
+					out.WriteText(|</td></tr>|)
+				ElseIf Not me.documentOnlyChangedFields then 'This is for values that have not changed
+					If oddRow Then
+						out.WriteText(|<tr style="background-color : #EEEEFF"><td>|)
+						oddRow = False
+					Else
+						out.WriteText(|<tr style="background-color : #FFFFEE"><td>|)
+						oddRow = True
+					End If
+					out.WriteText(curItem.name)
+					out.WriteText(|</td><td colspan="2">|)
+					out.WriteText(fixTextforHTML(curItem.Text))		
+					out.WriteText(|</td></tr>|)
+				End If
+			End If
+			rowcounter = rowcounter + 1
+			'Split table into smaller units
+			If rowcounter > 100 Then
+				rowcounter = 0
+				out.WriteText(|</table>|)
+				out.WriteText(|<table width="100%"><tr><th>Field</th><th>Old</th><th>New</th></tr>|)
+			End If
+		End ForAll
+		
+		ForAll nextItem In tDoc.Items
+			Set curItem = nextItem
+			If Not IsElement(completedFields(curItem.Name)) Then
+				If Not IsElement(me.excludedFields(curItem.Name)) then
+				changes = changes + 1
+				If oddRow Then
+					out.WriteText(|<tr><td>|)
+					oddRow = False
+				Else
+					out.WriteText(|<tr style="background-color : #EEEEEE"><td>|)
+					oddRow = True
+				End If
+				out.WriteText(curItem.name)
+				out.WriteText(|</td><td>|)
+				out.WriteText("./.")		
+				out.WriteText(|</td><td>|)
+				out.Writetext(curItem.Text)
+				out.WriteText(|</td></tr>|)
+			End If
+			End if
+		End ForAll
+		
+		out.WriteText("</table>")
+		out.WriteText("<h2> Changes found:")
+		out.WriteText(CStr(changes))
+		out.WriteText("</h2>")
+		out.Position = 0
+		If changes > 0 then
+			newDoc.changes = changes
+			Call body.SetContentFromText(out,"text/html; charset=UTF-8", ENC_IDENTITY_7BIT)
+			Call newDoc.Save(True, False)
+			If me.eMailChangeDocument Then
+				Call newDoc.Send(False, s.Username)
+			End If
+			
+		End If
+		
+		s.ConvertMIME = True ' Restore conversion
+		
+	End Sub
+	
+End Class
+
+
+Function ReplaceSubstring(sourcestr As String, fromstr As String, tostr As String) As String
+   ' This function replaces characters in a string. Take all the occurrences of "fromstr"
+   ' in the source string and replace them with "tostr"
+   Dim tempstr As String
+   Dim convstr As String
+   Dim i As Long
+   Dim length As Long
+   tempstr = sourcestr
+   If Len(fromstr) = 0 Then
+      ReplaceSubstring = sourcestr
+      Exit Function
+   End If
+   If InStr(tostr, fromstr) <> 0 Then ' If, for example, "\" is being replaced with "\\"
+      ' Find a character (or set) that is not in the source string.
+      ' Try the extended characters (over 128 ASCII)
+      i = 128
+      length = 1
+      convstr = ""
+      While convstr = ""
+         If InStr(tempstr, String$(length, Chr$(i))) = 0 Then convstr = String$(length, Chr$(i))
+         i = i + 1
+         If i = 256 Then ' If all the extended characters were in there
+            length = length + 1 ' Start over, but try 2 extended characters (or 3 or 4)
+            i = 128
+         End If
+      Wend
+      ' Go through tempstr twice - once replacing fromstr with the computed
+      ' string, then replacing the computed string with tostr
+      While InStr(tempstr, fromstr) <> 0
+         tempstr = Left(tempstr, InStr(tempstr, fromstr)-1) & convstr _
+         & Mid(tempstr, InStr(tempstr, fromstr)+Len(fromstr))
+      Wend
+      While InStr(tempstr, convstr) <> 0
+         tempstr = Left(tempstr, InStr(tempstr, convstr)-1) & tostr _
+         & Mid(tempstr, InStr(tempstr, convstr)+Len(convstr))
+      Wend
+   Else ' It's a normal replace substring call - fromstr is not part of tostr
+      While InStr(tempstr, fromstr) <> 0
+         tempstr = Left(tempstr, InStr(tempstr, fromstr)-1) & tostr _
+         & Mid(tempstr, InStr(tempstr, fromstr)+Len(fromstr))
+      Wend
+   End If
+   ReplaceSubstring = tempstr
+End Function
