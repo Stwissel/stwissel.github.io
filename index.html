@@ -19,7 +19,7 @@
 	content="Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins" />
 <meta name="ICBM" content="1.2994, 103.8425" />
 <meta name="Copyright"
-	content=",2015 Stephan H. Wissel - Creative commons licence 2.0" />
+	content=",2015 Stephan H. Wissel - Creative commons licence" />
 <meta HTTP-EQUIV="Content-Language" content="en" />
 <meta property="fb:admins" content="567103136" />
 <meta property="fb:app_id" content="219323514774289">
@@ -120,6 +120,73 @@
 			<div class="span9">
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2015/11/the-lowdown-on-notes-application-web-and-mobile-enablement.html">The lowdown on Notes application web and mobile enablement</a></small>
+					</h1>
+					<hr />
+					<div>There are millions (if not billions) of lines of code written for the Notes client in small, large, simple, complex, epidermal and business critical applications. With the rise of browsers, tablets and mobile devices there is a need to web and mobile enable these applications, not at least since IBM won't let the C code of the Notes client run on iOS (which it could). 
+<br /> Whether we like it or not, that body of code can be considered 
+<a href="http://martinfowler.com/bliki/TechnicalDebt.html">technical debt</a>. 
+<br />&nbsp; The strategy I see is mostly the same: classify applications by size, business criticality and perceived complexity. Then retire as much as possible and start a pilot for one (either insignificant or overly complex - mostly both) application using XPages. From there it goes nowhere. 
+<br /> Guess what. There's a better way. 
+<br /> Keep the part where you decide if an application can be retired. If you need to retain read access you could check out 
+<a href="http://ldcvia.com/">LDC Via</a>, who remove the need to maintain a Domino infrastructure for those applications. 
+<br /> Then go and 
+<a href="/blog/d6plinks/SHWL-9GP4XG">collect evidence</a> (I know 
+<a rel="nofollow" href="http://www.amazon.com/gp/product/B005DI8XS0/ref=as_li_tl?ie=UTF8&amp;camp=1789&amp;creative=390957&amp;creativeASIN=B005DI8XS0&amp;linkCode=as2&amp;tag=wisselnetblog-20&amp;linkId=M64D7EF4ECQ3B3S2">evidence based management</a> 
+<img src="http://ir-na.amazon-adsystem.com/e/ir?t=wisselnetblog-20&amp;l=as2&amp;o=1&amp;a=B005DI8XS0" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" /> isn't in fashion right now). There are elements in Notes that translate easily into web or mobile, parts that are hard and some stuff browsers can't do. 
+<br /> Collect how much you use of those, it makes decisions easier. 
+<h3>Design element and difficulty</h3> 
+<ul> 
+ <li><b>View navigation</b>:<br /> generally easy, its just data and Domino makes an excellent server for JSON data (I would render my own style, not the <code>?ReadViewEntries&amp;Outputformat=JSON</code>, but that's another story) </li> 
+ <li><b>Categorised views</b>:<br /> medium. The twisties we got so used to in Notes are not a native construct on the web (show me one that was web native). But with a little effort you can devise interaction patterns, go peek here. </li> 
+ <li><b>View actions</b>:<br /> HARD. They can be anything. Worst when code for front-end and back-end classes get mixed </li> 
+ <li><b>Forms (read mode)</b>:<br /> Easy to medium. You could simply open a form using a browser and see something - or craft some XPage to show </li> 
+ <li><b>Forms (edit mode)</b>:<br /> medium to hard (see below): You need to get your validation right and all the nice Hide-when conditions </li> 
+ <li><b>RichText</b>:<br /> HARD to impossible. <code>RichText != HTML</code> (and that's not even <code>!==</code>). For rendering you want to have <a href="http://www.geniisoft.com/showcase.nsf/AppsFidelity">Ben's enhancements</a> as a start. RichText can contain attachments, wild formatting, OLE objects, Sections, Hidden stuff, tabbed or timed tables etc. All that doesn't really translate to HTML. To really know how RichText was used in your application and organisation you need to scan the actual data and analyse how RichText was used in each application </li> 
+ <li><b>Code in forms</b>:<br /> HARD. There is no LotusScript running in your browser, so you need to rewrite that logic. So better to know how many functions and lines of code you are looking at. Do your <a href="/blog/d6plinks/SHWL-9GP4XG">CoCoMo analysis</a>. Code in fields (on enter/exit) needs to be re-though (nice word for retired) </li> 
+ <li><b>Attachments</b>:<br /> TEDIOUS. HTML doesn't know attachments, so you have to bridge between user expectations: can put an attachment anywhere in the text and the storage reality of HTML: simulate this by placing an image and a link. You might consider adding webDAV for a round trip editing experience </li> 
+ <li><b>Reader &amp; Author fields</b>:<br /> Easy. Works </li> 
+ <li><b>Encryption and Signature</b>:<br /> (popular in approval applications) wait for Domino 9.0.2 - it supposedly will work there </li> 
+ <li><b>Business Logic in hide-when formula</b>:<br /> hard to find in Domino designer, DXL to the rescue </li> 
+</ul> This list is probably not complete, but you get the gist 
+<h3>The approach</h3> I would advocate (after the retirement of old applications): 
+<ul> 
+ <li>Look at the whole application portfolio, not just one pilot. The best analogy: remember how long it took to drive your first 100m in a car (and I'm not talking about the 18 years wait to come of age). You had to take driving lessons (at least in civilized countries you have to), learn for the test, get a car (bargin with a parent?). So it took you around 20-40h, lets say: 20h. So you conclude to get to the supermarket, 3 km away it will take you 600h - so driving is out, you rather walk. Same applied to the &quot;pilot&quot;. The first application is the hardest, so your experience wih it will screw the estimations.<br /> Furhermore looking at all applications gives you new synery potential and efficiency of scale</li> 
+ <li>Create one module that handles view navigation for all applications (that probably would be a OSGi plug-in)<br /> When initially opening a document, it would point to a notes:// URL (you could have a little icon indicating that). Within a few weeks you have a working application giving some access to your Notes data (I would use JSON, AngularJS and Ionic for that app)</li> 
+ <li>Next generate the forms using <a href="http://angular-formly.com/">angular-formly</a> or some <a href="https://mustache.github.io/">{{mustache}}</a> templates, so you have read-only access (DXL and XSLT skills come in handy)</li> 
+ <li>Add a &quot;request&quot; functionality that lists the functions (Action buttons) an application once had, let users propose &quot;I want this&quot;, so you get some priorities sorted out</li> 
+ <li>Transit to <a href="/blog/d6plinks/SHWL-A3QHEL">contemporary development</a> with a Domino backend</li> 
+ <li>Do not fall into the trap: must look and work like a Notes client (we had that with the Java applets in R5 - last century). If someone is happy with the look of the Notes client - give them the <a href="http://www-10.lotus.com/ldd/dominowiki.nsf/xpDocViewer.xsp?lookupName=Notes+9.0.1+Browser+Plug-in#action=openDocument&amp;content=catcontent&amp;ct=prodDoc" title="the artist formerly known as Browser plug-in">IBM Client access plugin</a> (PC only)</li> 
+</ul> 
+<h3>Why no magic button?</h3> You could ask: why doesn't IBM provide this as an automatic module? After all they wrote LotusScript, the formula language and the Notes client. The short answer: IBM tried, we even had a prototype of LotusScript running on the JVM. The Notes client is such an incredible forgiving environment, any quality and mix of code &quot;simply runs&quot;™. I've seen code happily running (yes I'm talking about you 8000-lines-function) that was a melange of unspeakables. 
+<br /> Browsers on the other hand are fragile and unforgiving (not talking about 
+<a href="https://en.wikipedia.org/wiki/Quirks_mode">quirks mode</a> here). Any attempt to automate that never reached the stage of &quot;point-and-shoot&quot; - so it will not become an offering. 
+<h3>Why not just default and rewrite?</h3> Good idea. Until you look closer. Domino's 
+<a href="/blog/d6plinks/SHWL-9EQEPZ">declarative security</a> (ACL, Reader and Author fields anyone) is hard to replicate. The schema free Domino NoSQL store does neither map to Sharepoint nor an RDBMS (CouchDB could work), so you suddenly deal with data migration - a nightmare that can eat 80% of your total project cost. Lastly, the incremental approach outlined here allows to continue to use the applications (and eventually enhance them along the way), so disruption is minimised. Also the working Notes client provides a fallback for missing or malfunctioning features, this substantially lowers application risks. 
+<h3>Business partners to the rescue</h3> You are not alone on this journey. 
+<a href="http://www-304.ibm.com/partnerworld/wps/bplocator/landing">IBM business partners</a> and 
+<a href="http://www-01.ibm.com/software/lotus/services/">IBM Software Services for Collaboration</a> are here to help. If you like the approach &quot;I see Notes as one huge pool&quot;, you might want to talk to 
+<a href="http://redpilldevelopment.com/">Redpill</a>, they perfected this approach. 
+<br /> 
+<br /> As usual YMMV.</div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2015-11-03 11:00
+<span class="divider">|</span>
+<a href="/blog/2015/11/the-lowdown-on-notes-application-web-and-mobile-enablement.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a> 
+
+						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/11/the-lowdown-on-notes-application-web-and-mobile-enablement.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="The lowdown on Notes application web and mobile enablement"></div>
+						<script type="text/javascript">
+							var permaLink = "http://www.notessensei.com/blog/2015/11/the-lowdown-on-notes-application-web-and-mobile-enablement.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2015/10/domino-grunt-json-and-yeoman.html">Domino, Extlib, GRUNT, JSON and Yeoman</a></small>
 					</h1>
 					<hr />
@@ -152,7 +219,7 @@
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 2015-10-30 09:08
 <span class="divider">|</span>
-<a href="/blog/2015/10/domino-grunt-json-and-yeoman.html#comments">Comments (0)</a>
+<a href="/blog/2015/10/domino-grunt-json-and-yeoman.html#comments">Comments (2)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/XPages.html">XPages</a> 
 
@@ -645,48 +712,6 @@ categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a>  <a href="/blog
 						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/06/investigating-jndi.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Investigating JNDI"></div>
 						<script type="text/javascript">
 							var permaLink = "http://www.notessensei.com/blog/2015/06/investigating-jndi.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2015/06/adventures-with-node-red.html">Adventures with Node-RED</a></small>
-					</h1>
-					<hr />
-					<div><a href="http://nodered.org/">Node-RED</a> is a project that succesfully escaped &quot;ET&quot; - not the alien but IBM's 
-<a href="ibm.com/blogs/et">Emerging Technology</a> group. Build on top of node.js, Node-RED runs in many places, including the 
-<a href="http://thethingbox.io/">Rasberry PI</a> and IBM 
-<a href="http://www.bluemix.net/">Bluemix</a>. 
-<br /> In Node-RED the flow between nodes is graphically represented by lines you drag between them, requiring just a little scripting to get them going. 
-<br /> The interesting part are the nodes that 
-<a href="https://www.npmjs.com/browse/keyword/node-red">are available</a> (unless you fancy to write 
-<a href="http://nodered.org/docs/creating-nodes/">your own</a>): A large array of 
-<a href="http://flows.nodered.org/">ready made flows</a> with nodes and sample applications makes Node-RED extremly flexible (I wonder if it would make sense to build a workflow engine with it). In case you don't find a node you fancy, you can 
-<a href="http://nodered.org/docs/creating-nodes/">build your own</a>. Not all nodes are created equal, so you need to check what works. When you run Node-RED on Bluemix, you won't get access to hardware like serial port or Bluetooth, but you gain a DNS addressable IP endpoint (you are not limited to http(s)). Furthermore, IBM provides direct access to the IBM IoT cloud, that takes the headache out of device configuration by providing an 
-<a href="https://developer.ibm.com/iotfoundation/">extensive library</a> of device libraries. 
-<br /> So how to 
-<a href="http://nodered.org/docs/getting-started/adding-nodes.html">get additional nodes</a>, own or others, onto Bluemix? Here are the steps: 
-<ol> 
- <li>create a new application with the IoT Boilerplate</li> 
- <li>link that application to version control on <a href="https://hub.jazz.net/">hub.jazz.net</a></li> 
- <li>clone the repository locally <code>git clone ...</code></li> 
- <li>edit the package.json and add the item you would like to add</li> 
- <li>commit and push the changes back to jazzhub and let &quot;build and deploy&quot; sort it out</li> 
-</ol></div>
-					<hr />
- <a href="/blog/2015/06/adventures-with-node-red.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2015-06-02 06:42
-<span class="divider">|</span>
-<a href="/blog/2015/06/adventures-with-node-red.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
-
-						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/06/adventures-with-node-red.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Adventures with Node-RED"></div>
-						<script type="text/javascript">
-							var permaLink = "http://www.notessensei.com/blog/2015/06/adventures-with-node-red.html";
 						</script>
 					</p>
 </p>
