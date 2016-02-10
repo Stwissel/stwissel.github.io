@@ -120,6 +120,86 @@
 			<div class="span9">
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2016/01/the-quick-and-dirty-domino-cloudant-export.html">The quick and dirty Domino Cloudant export</a></small>
+					</h1>
+					<hr />
+					<div>Moving data out of Domino never has been hard with all the APIs available. The challenge always has been: move them where? Ignoring for a second 
+<a href="/blog/d6plinks/SHWL-9EQEPZ">all security considerations</a>, the challenge is to find a target structure that matches the Domino model. Neither 
+<a href="https://en.wikipedia.org/wiki/SharePoint">flat table storage</a> nor 
+<a href="https://en.wikipedia.org/wiki/Relational_database_management_system">RDBMS</a> fit that very well. 
+<br /> A close contender is 
+<a href="https://www.mongodb.org/">MongoDB</a> which is used in one compelling 
+<a href="http://ldcvia.com/">Notes retirement offering</a>. However the closest match in concept and structure is 
+<a href="http://couchdb.apache.org/">Apache CouchDB</a>, not surprisingly due to its 
+<a href="http://damienkatz.net/2005/01/formula-engine-rewrite.html">heritage and origin</a>. 
+<br /> It is maintained by a team led by the highly skilled 
+<a href="http://writing.jan.io/">Jan&nbsp;Lehnardt</a> and of course there are 
+<a href="http://stackoverflow.com/questions/167716/what-is-the-difference-between-couchdb-and-lotus-notes">differences to Notes</a>. 
+<br /> But the fit is good enough. Using the lightweight 
+<a href="http://ektorp.org/">Java library</a> 
+<a href="http://www.ikea.com/sg/en/catalog/categories/series/07488/">Ektorp</a> exporting a set of documents from Notes to CouchDB is a breeze. The core class is a simple mapping of a Notes document to a JSON structure: 
+<br /> 
+<pre class="brush: java">
+package com.notessensei.export;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Vector;
+
+import lotus.domino.Document;
+import lotus.domino.Item;
+import lotus.domino.NotesException;
+
+public class NotesJsonDoc {
+	public static String ID_FIELD = &quot;_id&quot;;
+	public static String REV_FIELD = &quot;_rev&quot;;
+	
+	private Map&lt;String, String&gt; content = new HashMap&lt;String, String&gt;();
+	
+	@SuppressWarnings(&quot;rawtypes&quot;)
+	public NotesJsonDoc(Document source) throws NotesException {
+		Vector allItems = source.getItems();
+		for (Object itemObject : allItems) {
+			Item item = (Item) itemObject;
+			this.content.put(item.getName(), item.getText());
+		}
+		this.content.put(ID_FIELD, source.getUniversalID());
+	}
+	
+	public Map&lt;String, String&gt; getContent() {
+		return this.content;
+	}
+	
+	public NotesJsonDoc setRevision(String revision) {
+		this.content.put(REV_FIELD, revision);
+		return this;
+	}
+	
+	public String getId() {
+		return this.content.get(ID_FIELD);
+	}
+}
+</pre> 
+<br /></div>
+					<hr />
+ <a href="/blog/2016/01/the-quick-and-dirty-domino-cloudant-export.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2016-01-21 01:45
+<span class="divider">|</span>
+<a href="/blog/2016/01/the-quick-and-dirty-domino-cloudant-export.html#comments">Comments (1)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
+
+						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2016/01/the-quick-and-dirty-domino-cloudant-export.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="The quick and dirty Domino Cloudant export"></div>
+						<script type="text/javascript">
+							var permaLink = "http://www.notessensei.com/blog/2016/01/the-quick-and-dirty-domino-cloudant-export.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2016/01/the-3c-of-leader-leader-clarity-competence-control.html">The 3C of leader - leader: Clarity, Competence, Control</a></small>
 					</h1>
 					<hr />
@@ -584,90 +664,6 @@ categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a>
 						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/08/theres-a-plug-in-for-that-getting-started-with-cf-plug-ins.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="There&apos;s a plug-in for that! Getting started with Cloud Foundry plug-ins"></div>
 						<script type="text/javascript">
 							var permaLink = "http://www.notessensei.com/blog/2015/08/theres-a-plug-in-for-that-getting-started-with-cf-plug-ins.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2015/08/let-there-be-a-light-angular-nodered-and-websockets.html">Let there be a light - Angular, nodeRED and Websockets</a></small>
-					</h1>
-					<hr />
-					<div><a hred="http://nodered.org">NodeRED</a> has conquered a place in my permanent toolbox. I run an instance in Bluemix, on my local machine and on a 
-<a href="http://thethingbox.io/">Raspberry PI</a>. I build a little demo where a light connected to a 
-<a href="https://www.particle.io/">Particle</a> lights up based on an event reaching a NodeRED instance. However I don't carry my IoT gear every time (got lots of funny looks at airport security for it), but I still want to demo the app. The NodeRED side is easy. I just added a websocket output node and the server side is ready to roll. 
-<br /> 
-<img src="/blog/images/2015/websocketout.png" border="0" alt="Web socket in NodeRED" /> 
-<br /> On the browser side I decided to use 
-<a href="https://angularjs.org/">angular.js</a> and one of its web socket libraries 
-<a href="https://github.com/wilk/ng-websocket">ng-websocket</a>. The application code is just about 50 lines, so here it goes: 
-<br /> 
-<pre class="brush : js">
-'use strict';
-
-var websocketEndpoint = 'wss://'+window.location.hostname+'/ws/bulb';
-
-console.log('Application loading ...');
-// Declare app level module which depends on views, and components
-var myApp = angular.module('myApp', ['ngWebsocket','ngRoute']);
-
-
-myApp.config(['$routeProvider', function($routeProvider) {
-    console.log('Routes loading... ');
-    $routeProvider.when('/bulbon', {
-        templateUrl: 'bulbs/bulb-on.html'
-    }).when('/bulboff', {
-        templateUrl: 'bulbs/bulb-off.html'
-    }).when('/bulbunknown', {
-        templateUrl: 'bulbs/bulb-unknown.html'
-    }).otherwise({redirectTo: '/bulbunknown'});
-}]);
-
-myApp.run(function ($websocket, $location) {
-    console.log('run');
-    var ws = $websocket.$new({
-        url: websocketEndpoint,
-        reconnect: true
-    }); // instance of ngWebsocket, handled by $websocket service
-
-    ws.$on('$open', function () {
-        console.log('Websocket connection open');
-    });
-
-    ws.$on('$message', function (data) {
-        console.log('data arrived');
-        console.log(data);
-        var newlocation = '#/bulbunknown';
-        if (data.bulb === 1) {
-            newlocation = '#/bulbon';
-        } else if (data.bulb === 0) {
-            newlocation = '#/bulboff';
-        }
-
-        window.location = newlocation;
-    });
-
-    ws.$on('$close', function () {
-        console.log('Websocket connection closed');
-    });
-});
-
-console.log('Done');
-</pre> 
-<br /> The HTML is simple. I split it into the main file and 3 status files. One could easily put the statuses into a script template section or inside the app.</div>
-					<hr />
- <a href="/blog/2015/08/let-there-be-a-light-angular-nodered-and-websockets.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2015-08-24 10:20
-<span class="divider">|</span>
-<a href="/blog/2015/08/let-there-be-a-light-angular-nodered-and-websockets.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/angular.js.html">angular.js</a>  <a href="/blog/categories/NodeRED.html">NodeRED</a>  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
-
-						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/08/let-there-be-a-light-angular-nodered-and-websockets.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Let there be a light - Angular, nodeRED and Websockets"></div>
-						<script type="text/javascript">
-							var permaLink = "http://www.notessensei.com/blog/2015/08/let-there-be-a-light-angular-nodered-and-websockets.html";
 						</script>
 					</p>
 </p>
