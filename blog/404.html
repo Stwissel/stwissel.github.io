@@ -214,7 +214,7 @@
  <a data-weight="12" href="/blog/categories/IBM.html">ibm</a>
  <a data-weight="30" href="/blog/categories/IBM - Lotus.html">ibm - lotus</a>
  <a data-weight="6" href="/blog/categories/IBM Connections.html">ibm connections</a>
- <a data-weight="151" href="/blog/categories/IBM Notes.html">ibm notes</a>
+ <a data-weight="153" href="/blog/categories/IBM Notes.html">ibm notes</a>
  <a data-weight="15" href="/blog/categories/Intercultural.html">intercultural</a>
  <a data-weight="3" href="/blog/categories/Java.html">java</a>
  <a data-weight="2" href="/blog/categories/Learning.html">learning</a>
@@ -245,7 +245,7 @@
  <a data-weight="191" href="/blog/categories/Show-N-Tell Thursday.html">show-n-tell thursday</a>
  <a data-weight="73" href="/blog/categories/Singapore.html">singapore</a>
  <a data-weight="3" href="/blog/categories/SocialBusiness.html">socialbusiness</a>
- <a data-weight="184" href="/blog/categories/Software.html">software</a>
+ <a data-weight="185" href="/blog/categories/Software.html">software</a>
  <a data-weight="8" href="/blog/categories/SYWTBADD.html">sywtbadd</a>
  <a data-weight="33" href="/blog/categories/Technology.html">technology</a>
  <a data-weight="37" href="/blog/categories/Thoughts.html">thoughts</a>
@@ -257,6 +257,135 @@
  <a data-weight="4" href="/blog/categories/Writing Chinese.html">writing chinese</a>
  <a data-weight="120" href="/blog/categories/XPages.html">xpages</a>
 			</div>
+			<article class="well well-raised span8">
+				<h1>
+					<small><a href="/blog/2016/02/vertx-and-domino.html">Vert.x and Domino</a></small>
+				</h1>
+				<hr />
+				<div>A while ago 
+<a href="/blog/d6plinks/SHWL-9M4EVT">I shared</a> how to use 
+<a href="http://vertx.io/">vert.x</a> with a Notes client, which ultimately let me put 
+<a href="/blog/d6plinks/SHWL-9PF3PZ">an Angular face</a> on my inbox and inspired the 
+<a href="https://www.openntf.org/main.nsf/project.xsp?r=project/CrossWorlds">CrossWorlds</a> project. 
+<br /> I revisited vert.x which is now 3.2.1 and no longer beta. On a Domino Linux server (I don't have Windows) and on a Mac Notes client the JVM is 64 Bit, which makes the configuration easier (no -w32 switch, no download of an additional JVM). The obligatory 
+<code>HelloWorld</code> verticle ran quite nicely with my manually. However it wouldn't run, when the Domino ran using a startup script. 
+<br /> The simple reason: to be able to access the Domino instance the vert.x verticle needs to run with the same user as the Domino server. 
+<code>su</code> into the user doesn't do the trick - and of course you can't login into my server with the id that runs Domino. The solution was to turn 
+<a href="https://www.linkedin.com/in/danielnashed">to the expert</a> and his outstanding 
+<a href="https://www.nashcom.de/nshweb/pages/startscript.htm">Linux boot script</a>. Using the 
+<code>/etc/sysconfig/rc_domino_config_*</code> file you can simply define the behavior of your Domino startup and shutdown experience. Mine looks like this (I use &quot;domino&quot; as my standard user, not &quot;notes&quot;): 
+<h3>rc_domino_config_domino</h3> 
+<pre class="brush: bash">
+LOTUS=/opt/ibm/domino
+DOMINO_DATA_PATH=/home/domino/notesdata
+DOMINO_SHUTDOWN_TIMEOUT=600
+DOMINO_CONFIGURED=&quot;yes&quot;
+BROADCAST_SHUTDOWN_MESSAGE=&quot;yes&quot;
+DOMINO_REMOVE_TEMPFILES=&quot;yes&quot;
+DOMINO_POST_STARTUP_SCRIPT=/home/domino/scripts/launch_vertx
+DOMINO_PRE_SHUTDOWN_SCRIPT=/home/domino/scripts/stop_vertx
+</pre> 
+<br /> I have installed vert.x using 
+<a href="https://www.npmjs.com/">npm</a> using the full stack. With node.js installed, all you need is 
+<code>sudo npm install vertx3-full</code>. Of course there are more conservative ways to install, vert.x, this may be an exercise left to the reader. I didn't use any of the environment variables exposed by the standard boot script to keep it independent. The script itself is just a few lines: 
+<h3>launch_vertx</h3> 
+<pre class="brush: bash">
+#!/bin/sh
+# Starts the vert.x tasks that talks to Domino
+DOMINO_HOME=/opt/ibm/domino/notes/latest/linux
+export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+export VERTX_HOME=/usr/lib/node_modules/vertx3-full/vertx
+export DYLD_LIBRARY_PATH=$DOMINO_HOME
+export LD_LIBRARY_PATH=$DOMINO_HOME
+export CLASSPATH=.:$DOMINO_HOME/jvm/lib/ext/Notes.jar:$CLASSPATH
+export NOTES_ENV=SERVER
+vertx start com.ibm.issc.verseu.VerseLauncher -cp /home/domino/scripts/verseu.jar --vertx-id domino
+</pre> 
+<br /> The shutdown script is short and sweet. Since I used an vertx-id, I can use that to shut down the verticle without knowing or caring for its startclass name: 
+<h3>stop_vertx</h3> 
+<pre class="brush: bash">
+#!/bin/sh
+# Stops the vert.x tasks that talks to Domino
+export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+export VERTX_HOME=/usr/lib/node_modules/vertx3-full/vertx
+vertx stop domino
+</pre> 
+<br /> Next step: write some actual code beyond &quot;Hello World&quot;. 
+<br /> As usual YMMV</div>
+				<hr />
+				
+				<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2016-02-18 06:07
+<span class="divider">|</span>
+<a href="/blog/2016/02/vertx-and-domino.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a> 
+
+						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2016/02/vertx-and-domino.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Vert.x and Domino"></div>
+						<script type="text/javascript">
+							var permaLink = "http://www.notessensei.com/blog/2016/02/vertx-and-domino.html";
+						</script>
+					</p>
+
+			</article>
+			<article class="well well-raised span8">
+				<h1>
+					<small><a href="/blog/2016/02/developer-or-coder-part-1.html">Developer or Coder? -Part 1</a></small>
+				</h1>
+				<hr />
+				<div>Based on 
+<a href="/blog/d6plinks/SHWL-A48J7S/">recent article</a> I was asked: &quot; 
+<i>So how would you train a developer, to be a real developer, not just a coder?</i>&quot;. Interesting question. Regardless of language or platform (maybe short of COBOL, where you visit retirement homes a lot), each training path has large commonalities. 
+<br /> Below I outline a training path for a web developer. I'm quite opinionated about tools and frameworks to use, but wide open about tools to know. The list doesn't represent a recommended sequence, that would be a subject of an entire different discussion:</div>
+				<hr />
+				 <a href="/blog/2016/02/developer-or-coder-part-1.html">Read more</a> 
+				<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2016-02-13 12:42
+<span class="divider">|</span>
+<a href="/blog/2016/02/developer-or-coder-part-1.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/Software.html">Software</a> 
+
+						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2016/02/developer-or-coder-part-1.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Developer or Coder? -Part 1"></div>
+						<script type="text/javascript">
+							var permaLink = "http://www.notessensei.com/blog/2016/02/developer-or-coder-part-1.html";
+						</script>
+					</p>
+
+			</article>
+			<article class="well well-raised span8">
+				<h1>
+					<small><a href="/blog/2016/02/disecting-a-mail-ui.html">Disecting a mail UI</a></small>
+				</h1>
+				<hr />
+				<div>At Connect 2016 
+<a href="https://www.linkedin.com/in/jeschick">Jeff</a> announced that there will be an IBM Verse Client for Domino on premises. Domino customers are used to an high amount of flexibility, so the tempation will arise to customize the Verse experience. 
+<br /> However this ability is nothing that has been announced in any IBM roadmap. So any considerations are purely theoretical. What is the interface of Verse made of. WIthout reverse engineering, just by looking at it, one could come to the following conclusion: 
+<br /> 
+<img src="/blog/images/2016/VerseUILarge.png" border="0" alt="A possible structure of the VerseUI" /> 
+<br /> This looks quite managable and lean. Now if all these components are Widgets (if build in Dojo) or Directives (if build in AngularJS) or Components (an upcoming 
+<a href="https://www.w3.org/TR/NOTE-HTMLComponents">HTML standard</a>) it wouldn't be too hard to envision customization abilities. 
+<br /> Using the excellent 
+<a href="https://addons.mozilla.org/en-US/firefox/addon/tilt/">Tilt Extension</a> for Firefox one can visualize how the different web clients are structured.</div>
+				<hr />
+				 <a href="/blog/2016/02/disecting-a-mail-ui.html">Read more</a> 
+				<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2016-02-13 01:24
+<span class="divider">|</span>
+<a href="/blog/2016/02/disecting-a-mail-ui.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a> 
+
+						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2016/02/disecting-a-mail-ui.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Disecting a mail UI"></div>
+						<script type="text/javascript">
+							var permaLink = "http://www.notessensei.com/blog/2016/02/disecting-a-mail-ui.html";
+						</script>
+					</p>
+
+			</article>
 			<article class="well well-raised span8">
 				<h1>
 					<small><a href="/blog/2016/01/the-quick-and-dirty-domino-cloudant-export.html">The quick and dirty Domino Cloudant export</a></small>
@@ -380,163 +509,6 @@ categories:  <a href="/blog/categories/Business.html">Business</a>  <a href="/bl
 						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2016/01/the-3c-of-leader-leader-clarity-competence-control.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="The 3C of leader - leader: Clarity, Competence, Control"></div>
 						<script type="text/javascript">
 							var permaLink = "http://www.notessensei.com/blog/2016/01/the-3c-of-leader-leader-clarity-competence-control.html";
-						</script>
-					</p>
-
-			</article>
-			<article class="well well-raised span8">
-				<h1>
-					<small><a href="/blog/2016/01/mess-with-the-bluemix-colors.html">Mess with the Bluemix Colors</a></small>
-				</h1>
-				<hr />
-				<div>The Bluemix designers consider their color scheme: robust, decent and unobstrusive. However not everybody likes the dark colors ( 
-<a href="https://www.youtube.com/watch?v=eogpIG53Cis">some do</a>). Stylish to the rescue. It comes in 
-<a href="https://addons.mozilla.org/en-US/firefox/addon/stylish/">Firefox</a> and 
-<a href="https://chrome.google.com/webstore/detail/stylish/fjnbnpbmkenffdnngjfgmeleoegfcffe?hl=en">Chrome flavours</a>. It requires a custom style sheet and it might take you a while to figure things out. So use this for starters: 
-<br /> 
-<pre class="brush: css">
- .dashboardArtifactCreationSection .tile,
- .cloudOESpaceLabel,
- .tile-container .tile,
- .bluemix-global-header,
- .bluemix-global-header .bluemix-nav-list,
- .NavTree2,
- .cloudOEActionBarDockedNavArea,
- .cloudOEActionBarSelector,
- .cloudOEAppDetails .cloudOEActionBarDockedNavArea,
- .inner,
- .cloudOEAppDetails .cloudOEActionBarNavigationTreeNode,
- .d-category-section .category-header,
- .dijitInputContainer,
- .cloudOEActionBarContentArea .cloudOEFilterBar .cloudOESearchBox .dijitInputField,
- .cloudOEActionBarContentArea .cloudOEFilterBar .cloudOESearchBox input,
- .cloudOEActionBarContentArea .cloudOEFilterBar .cloudOESearchBox .dijitTextBox,
- .d-docked-nav-area .d-nav-container,
- .nav-category,
- .cloudOEAppActivity,
- .appDetailsOverview_Health .tile-segmented,
- .appDetailsOverview_EstimateCost {
-    background-color: #3366ff;
-    color: #fff;
-}
-  body {
-  background-color: white;
-  }
-  header {
-    background-color: #6677CC;
-  }
-  
-  .cloudOEStoreFront,
-  .catalog-message-pane,
-  .catalog-container {
-    background-color:  #65C4FF;
-    color: black;
-  }
-  
-   .cloudOEDockedOpenNav {
-    background-color:  #4dc4ff;
-     color: black;
-   }
-</pre> Now go and 
-<a href="http://paletton.com/">pick nice colors</a>. 
-<br /> As usual YMMV</div>
-				<hr />
-				
-				<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2016-01-08 11:57
-<span class="divider">|</span>
-<a href="/blog/2016/01/mess-with-the-bluemix-colors.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
-
-						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2016/01/mess-with-the-bluemix-colors.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Mess with the Bluemix Colors"></div>
-						<script type="text/javascript">
-							var permaLink = "http://www.notessensei.com/blog/2016/01/mess-with-the-bluemix-colors.html";
-						</script>
-					</p>
-
-			</article>
-			<article class="well well-raised span8">
-				<h1>
-					<small><a href="/blog/2015/12/mail-archive-with-apache-couchdb-ibm-cloudant-part-1.html">Mail archive with Apache CouchDB / IBM Cloudant - Part 1</a></small>
-				</h1>
-				<hr />
-				<div>Like it or not, your eMail turned into the archive of your (working) past. One of the challenges with this archive is the tendency to switch eMail systems from time to time. IBM Notes won't open your Outlook PSD file, nor would Outlook open your Notes NSF database. 
-<br /> So a vendor and format neutral solution is required. The obvious choice here is MIME, which is for one, the format any message crossing the internet is encoded in, secondly all eMail applications support MIME - to some extend. Just storing each message into a directory structure isn't a good solution either, since navigation and search leave much to be desired, so some more work is needed. 
-<br /> Of course open standards tend to be ambiguous enough to allow different interpretation or the implementation of propriety extension. MIME is no exception. You can send any type of attachments, including malicious payloads, which are encoded and outside the MIME standard. 
-<br /> So looking at an archival solution here is my list of requirements: 
-<ul> 
- <li>Needs to be able to store MIME messages</li> 
- <li>Mime headers an other id fields need to be captured in database fields</li> 
- <li>Need to be able to sync on different locations for backup/availability</li> 
- <li>Need to be able to provide navigation access by sorted, filtered lists</li> 
- <li>Interface to do some analytics</li> 
- <li>Full text search</li> 
- <li>HTML and text content should be displayed directly, all other types should be listed as attachments</li> 
- <li>Inline images (href / src in the html content pointing to other mime parts) need to be dealt with</li> 
- <li>Import capabilities</li> 
- <li>Source code for inspection available, OpenSource if possible</li> 
-</ul> Looking at the requirement, I concluded: I got a clear idea what I want to have, but I haven't found it. The logical next step: Let's build it.</div>
-				<hr />
-				 <a href="/blog/2015/12/mail-archive-with-apache-couchdb-ibm-cloudant-part-1.html">Read more</a> 
-				<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2015-12-24 12:42
-<span class="divider">|</span>
-<a href="/blog/2015/12/mail-archive-with-apache-couchdb-ibm-cloudant-part-1.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a>  <a href="/blog/categories/IBM Notes.html">IBM Notes</a> 
-
-						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/12/mail-archive-with-apache-couchdb-ibm-cloudant-part-1.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Mail archive with Apache CouchDB / IBM Cloudant - Part 1"></div>
-						<script type="text/javascript">
-							var permaLink = "http://www.notessensei.com/blog/2015/12/mail-archive-with-apache-couchdb-ibm-cloudant-part-1.html";
-						</script>
-					</p>
-
-			</article>
-			<article class="well well-raised span8">
-				<h1>
-					<small><a href="/blog/2015/11/automated-tests-in-bluemix-build-and-deploy.html">Automated Tests in Bluemix Build and Deploy</a></small>
-				</h1>
-				<hr />
-				<div>Bluemix is a beautiful environment for 
-<a href="http://www.agilemanifesto.org/">agile software development</a>. Its 
-<a href="https://hub.jazz.net/docs/deploy/">build and deploy</a> capability ensure continious delivery, so you can focus on code. A well run project requires automatic 
-<a href="https://en.wikipedia.org/wiki/Software_testing">testing</a> (starting with 
-<a href="https://en.wikipedia.org/wiki/Unit_testing">unit tests</a> up to 
-<a href="https://en.wikipedia.org/wiki/Integration_testing">integration testing</a>). 
-<br /> You can configure this in the 
-<i>Build and Deploy</i> pipeline, so your project looks like this: 
-<br /> 
-<img src="/blog/images/2015/FullSuccessFullPipe.png" border="0" alt="A fully working pipeline" /> 
-<br /> While you could argue: &quot; 
-<i>I run my tests local</i>&quot;, you might encounter the situation where you use the online editor and you then depend on the tests running in Bluemix. Setting up build and deploy is 
-<a href="https://hub.jazz.net/docs/deploy/">well documented</a> and straight forward. 
-<p style="margin : 5px; padding : 5px; border : 1px solid red"><b>Tip</b>: For Java projects you should use Maven or Gradle build, so your library dependencies are properly resolved. For Node.js projects a &quot;simple&quot; build would suffice, however using <code>npm install</code> would make the stage fail if your <code>package.json</code> has an issue, so you don't run later stages and fail there</p> However the documentation for the test stage simply states: &quot; 
-<i>If you want to require that certain conditions are met, include test jobs before or after your build and deploy jobs. Test jobs are highly customizable. For example, you might run tests on your project code and a deployed instance of your app. </i>&quot;. That's a little &quot; 
-<i>thin</i>&quot;. 
-<br /> Inspecting the test job screen itself, we can learn that we have different testing options 
-<br /> 
-<img src="/blog/images/2015/TestOptions.png" border="0" alt="Choices for testing" /> 
-<br /> I specifically like the 
-<a href="https://saucelabs.com/">Sauce labs</a> integration and the ability to run a code, security and vulnerability scan (So a real pipeline might have up to 4 distinct test stages). However the screen for &quot;simple&quot; tests, where unit tests go, isn't particularily helpful: 
-<br /> 
-<img src="/blog/images/2015/EmptyTestOptions.png" border="0" alt="The helpful test screen" /> 
-<br /> So lets shed some light on the inner workings.</div>
-				<hr />
-				 <a href="/blog/2015/11/automated-tests-in-bluemix-build-and-deploy.html">Read more</a> 
-				<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2015-11-26 10:43
-<span class="divider">|</span>
-<a href="/blog/2015/11/automated-tests-in-bluemix-build-and-deploy.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
-
-						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/11/automated-tests-in-bluemix-build-and-deploy.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Automated Tests in Bluemix Build and Deploy"></div>
-						<script type="text/javascript">
-							var permaLink = "http://www.notessensei.com/blog/2015/11/automated-tests-in-bluemix-build-and-deploy.html";
 						</script>
 					</p>
 

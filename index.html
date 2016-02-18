@@ -120,6 +120,134 @@
 			<div class="span9">
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2016/02/vertx-and-domino.html">Vert.x and Domino</a></small>
+					</h1>
+					<hr />
+					<div>A while ago 
+<a href="/blog/d6plinks/SHWL-9M4EVT">I shared</a> how to use 
+<a href="http://vertx.io/">vert.x</a> with a Notes client, which ultimately let me put 
+<a href="/blog/d6plinks/SHWL-9PF3PZ">an Angular face</a> on my inbox and inspired the 
+<a href="https://www.openntf.org/main.nsf/project.xsp?r=project/CrossWorlds">CrossWorlds</a> project. 
+<br /> I revisited vert.x which is now 3.2.1 and no longer beta. On a Domino Linux server (I don't have Windows) and on a Mac Notes client the JVM is 64 Bit, which makes the configuration easier (no -w32 switch, no download of an additional JVM). The obligatory 
+<code>HelloWorld</code> verticle ran quite nicely with my manually. However it wouldn't run, when the Domino ran using a startup script. 
+<br /> The simple reason: to be able to access the Domino instance the vert.x verticle needs to run with the same user as the Domino server. 
+<code>su</code> into the user doesn't do the trick - and of course you can't login into my server with the id that runs Domino. The solution was to turn 
+<a href="https://www.linkedin.com/in/danielnashed">to the expert</a> and his outstanding 
+<a href="https://www.nashcom.de/nshweb/pages/startscript.htm">Linux boot script</a>. Using the 
+<code>/etc/sysconfig/rc_domino_config_*</code> file you can simply define the behavior of your Domino startup and shutdown experience. Mine looks like this (I use &quot;domino&quot; as my standard user, not &quot;notes&quot;): 
+<h3>rc_domino_config_domino</h3> 
+<pre class="brush: bash">
+LOTUS=/opt/ibm/domino
+DOMINO_DATA_PATH=/home/domino/notesdata
+DOMINO_SHUTDOWN_TIMEOUT=600
+DOMINO_CONFIGURED=&quot;yes&quot;
+BROADCAST_SHUTDOWN_MESSAGE=&quot;yes&quot;
+DOMINO_REMOVE_TEMPFILES=&quot;yes&quot;
+DOMINO_POST_STARTUP_SCRIPT=/home/domino/scripts/launch_vertx
+DOMINO_PRE_SHUTDOWN_SCRIPT=/home/domino/scripts/stop_vertx
+</pre> 
+<br /> I have installed vert.x using 
+<a href="https://www.npmjs.com/">npm</a> using the full stack. With node.js installed, all you need is 
+<code>sudo npm install vertx3-full</code>. Of course there are more conservative ways to install, vert.x, this may be an exercise left to the reader. I didn't use any of the environment variables exposed by the standard boot script to keep it independent. The script itself is just a few lines: 
+<h3>launch_vertx</h3> 
+<pre class="brush: bash">
+#!/bin/sh
+# Starts the vert.x tasks that talks to Domino
+DOMINO_HOME=/opt/ibm/domino/notes/latest/linux
+export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+export VERTX_HOME=/usr/lib/node_modules/vertx3-full/vertx
+export DYLD_LIBRARY_PATH=$DOMINO_HOME
+export LD_LIBRARY_PATH=$DOMINO_HOME
+export CLASSPATH=.:$DOMINO_HOME/jvm/lib/ext/Notes.jar:$CLASSPATH
+export NOTES_ENV=SERVER
+vertx start com.ibm.issc.verseu.VerseLauncher -cp /home/domino/scripts/verseu.jar --vertx-id domino
+</pre> 
+<br /> The shutdown script is short and sweet. Since I used an vertx-id, I can use that to shut down the verticle without knowing or caring for its startclass name: 
+<h3>stop_vertx</h3> 
+<pre class="brush: bash">
+#!/bin/sh
+# Stops the vert.x tasks that talks to Domino
+export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+export VERTX_HOME=/usr/lib/node_modules/vertx3-full/vertx
+vertx stop domino
+</pre> 
+<br /> Next step: write some actual code beyond &quot;Hello World&quot;. 
+<br /> As usual YMMV</div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2016-02-18 06:07
+<span class="divider">|</span>
+<a href="/blog/2016/02/vertx-and-domino.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a> 
+
+						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2016/02/vertx-and-domino.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Vert.x and Domino"></div>
+						<script type="text/javascript">
+							var permaLink = "http://www.notessensei.com/blog/2016/02/vertx-and-domino.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1>
+						<small><a href="/blog/2016/02/developer-or-coder-part-1.html">Developer or Coder? -Part 1</a></small>
+					</h1>
+					<hr />
+					<div>Based on 
+<a href="/blog/d6plinks/SHWL-A48J7S/">recent article</a> I was asked: &quot; 
+<i>So how would you train a developer, to be a real developer, not just a coder?</i>&quot;. Interesting question. Regardless of language or platform (maybe short of COBOL, where you visit retirement homes a lot), each training path has large commonalities. 
+<br /> Below I outline a training path for a web developer. I'm quite opinionated about tools and frameworks to use, but wide open about tools to know. The list doesn't represent a recommended sequence, that would be a subject of an entire different discussion:</div>
+					<hr />
+ <a href="/blog/2016/02/developer-or-coder-part-1.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2016-02-13 12:42
+<span class="divider">|</span>
+<a href="/blog/2016/02/developer-or-coder-part-1.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/Software.html">Software</a> 
+
+						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2016/02/developer-or-coder-part-1.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Developer or Coder? -Part 1"></div>
+						<script type="text/javascript">
+							var permaLink = "http://www.notessensei.com/blog/2016/02/developer-or-coder-part-1.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1>
+						<small><a href="/blog/2016/02/disecting-a-mail-ui.html">Disecting a mail UI</a></small>
+					</h1>
+					<hr />
+					<div>At Connect 2016 
+<a href="https://www.linkedin.com/in/jeschick">Jeff</a> announced that there will be an IBM Verse Client for Domino on premises. Domino customers are used to an high amount of flexibility, so the tempation will arise to customize the Verse experience. 
+<br /> However this ability is nothing that has been announced in any IBM roadmap. So any considerations are purely theoretical. What is the interface of Verse made of. WIthout reverse engineering, just by looking at it, one could come to the following conclusion: 
+<br /> 
+<img src="/blog/images/2016/VerseUILarge.png" border="0" alt="A possible structure of the VerseUI" /> 
+<br /> This looks quite managable and lean. Now if all these components are Widgets (if build in Dojo) or Directives (if build in AngularJS) or Components (an upcoming 
+<a href="https://www.w3.org/TR/NOTE-HTMLComponents">HTML standard</a>) it wouldn't be too hard to envision customization abilities. 
+<br /> Using the excellent 
+<a href="https://addons.mozilla.org/en-US/firefox/addon/tilt/">Tilt Extension</a> for Firefox one can visualize how the different web clients are structured.</div>
+					<hr />
+ <a href="/blog/2016/02/disecting-a-mail-ui.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2016-02-13 01:24
+<span class="divider">|</span>
+<a href="/blog/2016/02/disecting-a-mail-ui.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a> 
+
+						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2016/02/disecting-a-mail-ui.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Disecting a mail UI"></div>
+						<script type="text/javascript">
+							var permaLink = "http://www.notessensei.com/blog/2016/02/disecting-a-mail-ui.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2016/01/the-quick-and-dirty-domino-cloudant-export.html">The quick and dirty Domino Cloudant export</a></small>
 					</h1>
 					<hr />
@@ -512,158 +640,6 @@ categories:  <a href="/blog/categories/Software.html">Software</a>
 						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/11/multitenancy-a-blast-from-the-past.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Multitenancy - a blast from the past?"></div>
 						<script type="text/javascript">
 							var permaLink = "http://www.notessensei.com/blog/2015/11/multitenancy-a-blast-from-the-past.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2015/11/the-lowdown-on-notes-application-web-and-mobile-enablement.html">The lowdown on Notes application web and mobile enablement</a></small>
-					</h1>
-					<hr />
-					<div>There are millions (if not billions) of lines of code written for the Notes client in small, large, simple, complex, epidermal and business critical applications. With the rise of browsers, tablets and mobile devices there is a need to web and mobile enable these applications, not at least since IBM won't let the C code of the Notes client run on iOS (which it could). 
-<br /> Whether we like it or not, that body of code can be considered 
-<a href="http://martinfowler.com/bliki/TechnicalDebt.html">technical debt</a>. 
-<br />&nbsp; The strategy I see is mostly the same: classify applications by size, business criticality and perceived complexity. Then retire as much as possible and start a pilot for one (either insignificant or overly complex - mostly both) application using XPages. From there it goes nowhere. 
-<br /> Guess what. There's a better way. 
-<br /> Keep the part where you decide if an application can be retired. If you need to retain read access you could check out 
-<a href="http://ldcvia.com/">LDC Via</a>, who remove the need to maintain a Domino infrastructure for those applications. 
-<br /> Then go and 
-<a href="/blog/d6plinks/SHWL-9GP4XG">collect evidence</a> (I know 
-<a rel="nofollow" href="http://www.amazon.com/gp/product/B005DI8XS0/ref=as_li_tl?ie=UTF8&amp;camp=1789&amp;creative=390957&amp;creativeASIN=B005DI8XS0&amp;linkCode=as2&amp;tag=wisselnetblog-20&amp;linkId=M64D7EF4ECQ3B3S2">evidence based management</a> 
-<img src="http://ir-na.amazon-adsystem.com/e/ir?t=wisselnetblog-20&amp;l=as2&amp;o=1&amp;a=B005DI8XS0" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" /> isn't in fashion right now). There are elements in Notes that translate easily into web or mobile, parts that are hard and some stuff browsers can't do. 
-<br /> Collect how much you use of those, it makes decisions easier. 
-<h3>Design element and difficulty</h3> 
-<ul> 
- <li><b>View navigation</b>:<br /> generally easy, its just data and Domino makes an excellent server for JSON data (I would render my own style, not the <code>?ReadViewEntries&amp;Outputformat=JSON</code>, but that's another story) </li> 
- <li><b>Categorised views</b>:<br /> medium. The twisties we got so used to in Notes are not a native construct on the web (show me one that was web native). But with a little effort you can devise interaction patterns, go peek here. </li> 
- <li><b>View actions</b>:<br /> HARD. They can be anything. Worst when code for front-end and back-end classes get mixed </li> 
- <li><b>Forms (read mode)</b>:<br /> Easy to medium. You could simply open a form using a browser and see something - or craft some XPage to show </li> 
- <li><b>Forms (edit mode)</b>:<br /> medium to hard (see below): You need to get your validation right and all the nice Hide-when conditions </li> 
- <li><b>RichText</b>:<br /> HARD to impossible. <code>RichText != HTML</code> (and that's not even <code>!==</code>). For rendering you want to have <a href="http://www.geniisoft.com/showcase.nsf/AppsFidelity">Ben's enhancements</a> as a start. RichText can contain attachments, wild formatting, OLE objects, Sections, Hidden stuff, tabbed or timed tables etc. All that doesn't really translate to HTML. To really know how RichText was used in your application and organisation you need to scan the actual data and analyse how RichText was used in each application </li> 
- <li><b>Code in forms</b>:<br /> HARD. There is no LotusScript running in your browser, so you need to rewrite that logic. So better to know how many functions and lines of code you are looking at. Do your <a href="/blog/d6plinks/SHWL-9GP4XG">CoCoMo analysis</a>. Code in fields (on enter/exit) needs to be re-though (nice word for retired) </li> 
- <li><b>Attachments</b>:<br /> TEDIOUS. HTML doesn't know attachments, so you have to bridge between user expectations: can put an attachment anywhere in the text and the storage reality of HTML: simulate this by placing an image and a link. You might consider adding webDAV for a round trip editing experience </li> 
- <li><b>Reader &amp; Author fields</b>:<br /> Easy. Works </li> 
- <li><b>Encryption and Signature</b>:<br /> (popular in approval applications) wait for Domino 9.0.2 - it supposedly will work there </li> 
- <li><b>Business Logic in hide-when formula</b>:<br /> hard to find in Domino designer, DXL to the rescue </li> 
-</ul> This list is probably not complete, but you get the gist 
-<h3>The approach</h3> I would advocate (after the retirement of old applications): 
-<ul> 
- <li>Look at the whole application portfolio, not just one pilot. The best analogy: remember how long it took to drive your first 100m in a car (and I'm not talking about the 18 years wait to come of age). You had to take driving lessons (at least in civilized countries you have to), learn for the test, get a car (bargin with a parent?). So it took you around 20-40h, lets say: 20h. So you conclude to get to the supermarket, 3 km away it will take you 600h - so driving is out, you rather walk. Same applied to the &quot;pilot&quot;. The first application is the hardest, so your experience wih it will screw the estimations.<br /> Furhermore looking at all applications gives you new synery potential and efficiency of scale</li> 
- <li>Create one module that handles view navigation for all applications (that probably would be a OSGi plug-in)<br /> When initially opening a document, it would point to a notes:// URL (you could have a little icon indicating that). Within a few weeks you have a working application giving some access to your Notes data (I would use JSON, AngularJS and Ionic for that app)</li> 
- <li>Next generate the forms using <a href="http://angular-formly.com/">angular-formly</a> or some <a href="https://mustache.github.io/">{{mustache}}</a> templates, so you have read-only access (DXL and XSLT skills come in handy)</li> 
- <li>Add a &quot;request&quot; functionality that lists the functions (Action buttons) an application once had, let users propose &quot;I want this&quot;, so you get some priorities sorted out</li> 
- <li>Transit to <a href="/blog/d6plinks/SHWL-A3QHEL">contemporary development</a> with a Domino backend</li> 
- <li>Do not fall into the trap: must look and work like a Notes client (we had that with the Java applets in R5 - last century). If someone is happy with the look of the Notes client - give them the <a href="http://www-10.lotus.com/ldd/dominowiki.nsf/xpDocViewer.xsp?lookupName=Notes+9.0.1+Browser+Plug-in#action=openDocument&amp;content=catcontent&amp;ct=prodDoc" title="the artist formerly known as Browser plug-in">IBM Client access plugin</a> (PC only)</li> 
-</ul> 
-<h3>Why no magic button?</h3> You could ask: why doesn't IBM provide this as an automatic module? After all they wrote LotusScript, the formula language and the Notes client. The short answer: IBM tried, we even had a prototype of LotusScript running on the JVM. The Notes client is such an incredible forgiving environment, any quality and mix of code &quot;simply runs&quot;™. I've seen code happily running (yes I'm talking about you 8000-lines-function) that was a melange of unspeakables. 
-<br /> Browsers on the other hand are fragile and unforgiving (not talking about 
-<a href="https://en.wikipedia.org/wiki/Quirks_mode">quirks mode</a> here). Any attempt to automate that never reached the stage of &quot;point-and-shoot&quot; - so it will not become an offering. 
-<h3>Why not just default and rewrite?</h3> Good idea. Until you look closer. Domino's 
-<a href="/blog/d6plinks/SHWL-9EQEPZ">declarative security</a> (ACL, Reader and Author fields anyone) is hard to replicate. The schema free Domino NoSQL store does neither map to Sharepoint nor an RDBMS (CouchDB could work), so you suddenly deal with data migration - a nightmare that can eat 80% of your total project cost. Lastly, the incremental approach outlined here allows to continue to use the applications (and eventually enhance them along the way), so disruption is minimised. Also the working Notes client provides a fallback for missing or malfunctioning features, this substantially lowers application risks. 
-<h3>Business partners to the rescue</h3> You are not alone on this journey. 
-<a href="http://www-304.ibm.com/partnerworld/wps/bplocator/landing">IBM business partners</a> and 
-<a href="http://www-01.ibm.com/software/lotus/services/">IBM Software Services for Collaboration</a> are here to help. If you like the approach &quot;I see Notes as one huge pool&quot;, you might want to talk to 
-<a href="http://redpilldevelopment.com/">Redpill</a>, they perfected this approach. 
-<br /> 
-<br /> As usual YMMV.</div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2015-11-03 11:00
-<span class="divider">|</span>
-<a href="/blog/2015/11/the-lowdown-on-notes-application-web-and-mobile-enablement.html#comments">Comments (5)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a> 
-
-						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/11/the-lowdown-on-notes-application-web-and-mobile-enablement.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="The lowdown on Notes application web and mobile enablement"></div>
-						<script type="text/javascript">
-							var permaLink = "http://www.notessensei.com/blog/2015/11/the-lowdown-on-notes-application-web-and-mobile-enablement.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2015/10/domino-grunt-json-and-yeoman.html">Domino, Extlib, GRUNT, JSON and Yeoman</a></small>
-					</h1>
-					<hr />
-					<div><h3>TL:TR</h3> With a few tweaks and clever setup, you can have web developers deliver front-ends for Domino without ever touching it. 
-<br /> Contemporary web development workflows separate front-end and back-end through a JSON API and HTTP (that's 21st century 3270 for you). The approach in these workflows is to treat the webserver as source of static files (HTML, CSS, JS) and JSON payload data being shuffled back and forth. This article describes how my development setup makes all this work with Domino and Domino designer. 
-<br /> 
-<h3>The full monty</h3> The front-end tools I use are: 
-<ul> 
- <li><a href="https://nodejs.org/">Node.js</a>: a JavaScript runtime based on Google's V8 engine. It provides all runtime for all the other tools. If you don't have a node.js installation on your developer workstation, where were you hiding the last 2 years?</li> 
- <li><a href="http://bower.io/">Bower</a>: a dependency manager for browser files like CSS, JS with their various frameworks. You add a depencency (e.g. Bootstrap) to the <code>bower.json</code> file and Bower will find the right version for you </li> 
- <li><a href="http://gruntjs.com/">Grunt</a>: a task runner application, used for assembly of web sites/applications (or any other stuff). Configured using a <code>Gruntfile.js</code>: it can do all sorts of steps like: copy files, combine and minify, check code quality, run tests etc.</li> 
- <li><a href="http://yeoman.io/">Yeoman</a>: A application scaffolding tool. It puts all the tools and needed configurations together. It uses generators to blueprint different applications from classic web, to reveal application to mobile hybrid apps. The site lists hundreds of generators and you are invited to modifiy them or roll your own</li> 
- <li><a href="https://git-scm.com/">GIT</a>: the version control system</li> 
-</ul> The list doesn't include 
-<a href="http://www.geany.org/">one</a> or 
-<a href="http://www.sublimetext.com/">the other</a> editor, 
-<a href="http://www.eclipse.org/">one</a> or 
-<a href="https://www.jetbrains.com/webstorm/">the other</a> IDE or 
-<a href="https://www.sourcetreeapp.com/">version control client</a>, since theses choices don't influence the workflow steps or setup. Pick what you like. 
-<br /> My general directory layout starts with a project folder that has entries for code, documentation, nsf and a misc. folder. I only put the 
-<code>code</code> folder into the GIT version control. 
-<br /> 
-<img src="/blog/images/2015/FrontEndBackEndDevelopment.jpg" border="0" alt="Seperation of concerns for frontend and backend development" /> 
-<br /> The front-end developer doesn't need any of the Domino components available to create user interface and interaction models. The back-end developer will use exclusively the REST controls from the Domino XPages Extension library (which is part of a default current Domino server install). The two directory structures are linked in a GIT project, but that isn't mandatory. One step that made my live much easier: take the 
-<code>dist</code> directory and link it to 
-<code>WebContent</code>. This saves me the step to copy things around. The fine-tuning of the setup is where the fun starts.</div>
-					<hr />
- <a href="/blog/2015/10/domino-grunt-json-and-yeoman.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2015-10-30 09:08
-<span class="divider">|</span>
-<a href="/blog/2015/10/domino-grunt-json-and-yeoman.html#comments">Comments (3)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/XPages.html">XPages</a> 
-
-						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/10/domino-grunt-json-and-yeoman.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Domino, Extlib, GRUNT, JSON and Yeoman"></div>
-						<script type="text/javascript">
-							var permaLink = "http://www.notessensei.com/blog/2015/10/domino-grunt-json-and-yeoman.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2015/08/theres-a-plug-in-for-that-getting-started-with-cf-plug-ins.html">There&apos;s a plug-in for that! Getting started with Cloud Foundry plug-ins</a></small>
-					</h1>
-					<hr />
-					<div>Since 
-<a href="https://bluemix.net">IBM Bluemix</a> is build on top of 
-<a href="https://www.cloudfoundry.org/">Cloud Foundry</a>, all the knowhow and tooling available for the later can be used in Bluemix too. 
-<br /> One of the tools I'm fond of is the Cloud Foundry command line 
-<code>cf</code>. The tool is a thin veneer over the 
-<a href="http://cloudfoundryjp.github.io/docs/reference/cc-api.html">Cloud Foundry REST API</a> and is written in 
-<a href="https://golang.org/">GO</a>. &quot;Thin veneer&quot; is a slight understatement, since the 
-<code>cf</code> command line is powerful, convenient and - icing on the cake - extensible. 
-<br /> A list of current plug-ins can be found in the 
-<a href="http://plugins.cloudfoundry.org/ui/">CF Plug-in directory</a>. Now the installation instructions haven't kept up with the 
-<code>cf</code> releases, so here are the steps you need: 
-<ol> 
- <li>Head to the CF Command Line <a href="https://github.com/cloudfoundry/cli/releases">release page</a> and make sure you have the latest release installed.<br /> At time of this writing that would be <b>6.12.2</b></li> 
- <li>Add the community repository to your installation using this command:<br /> <code>cf add-plugin-repo CF-Community http://plugins.cloudfoundry.org/</code><br /> This command is only available in cf versions &gt; 6.10. A lot of blog entries or even the github documentation suggest downloads or even golang installs. With the availability of the repository these steps are no longer necessary (but you are free to use them)</li> 
- <li>Now listing all available plug-ins is as simple as <code>cf repo-plugins</code></li> 
- <li>To install a specific plug-in you issue the command:<br /> <code>cf install-plugin '[name of plugin as listed]' -r CF-Community</code><br /> If the name doesn't contain white space, the quotes can be omitted</li> 
- <li>After installation <code>cf help</code> provides the short instructions on how to use the modules</li> 
-</ol> The interesting question now is, what are the plug-ins worthwhile looking at.</div>
-					<hr />
- <a href="/blog/2015/08/theres-a-plug-in-for-that-getting-started-with-cf-plug-ins.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2015-08-25 12:03
-<span class="divider">|</span>
-<a href="/blog/2015/08/theres-a-plug-in-for-that-getting-started-with-cf-plug-ins.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
-
-						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2015/08/theres-a-plug-in-for-that-getting-started-with-cf-plug-ins.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="There&apos;s a plug-in for that! Getting started with Cloud Foundry plug-ins"></div>
-						<script type="text/javascript">
-							var permaLink = "http://www.notessensei.com/blog/2015/08/theres-a-plug-in-for-that-getting-started-with-cf-plug-ins.html";
 						</script>
 					</p>
 </p>
