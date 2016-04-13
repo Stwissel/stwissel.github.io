@@ -252,11 +252,93 @@
  <a data-weight="24" href="/blog/categories/Travel.html">travel</a>
  <a data-weight="28" href="/blog/categories/Twins.html">twins</a>
  <a data-weight="6" href="/blog/categories/UMsys.html">umsys</a>
- <a data-weight="6" href="/blog/categories/vert.x.html">vert.x</a>
+ <a data-weight="7" href="/blog/categories/vert.x.html">vert.x</a>
  <a data-weight="2" href="/blog/categories/Workflow.html">workflow</a>
  <a data-weight="4" href="/blog/categories/Writing Chinese.html">writing chinese</a>
  <a data-weight="120" href="/blog/categories/XPages.html">xpages</a>
 			</div>
+			<article class="well well-raised span8">
+				<h1>
+					<small><a href="/blog/2016/04/annotations-to-supercharge-your-vertx-development.html">Annotations to supercharge your vert.x development</a></small>
+				</h1>
+				<hr />
+				<div>ProjectCastle is well under way. Part of it, the part talking to Domino, is written in Java8 and 
+<a href="http://vertx.io">vert.x</a>. With some prior experience in node.js development vert.x will look familiar: base on event loop and callbacks, you develop in a very similar way. The big differences: vert.x runs on the JVM8, it is by nature of the JVM multi-threaded, features an event bus and is polyglot - you can develop in a mix of languages: Java, JavaScript, Jython, Groovy etc. 
+<br /> This post reflects some of the approaches I found useful developing with vert.x in Java. There are 3 components which are core to vert.x development: 
+<ul> 
+ <li><h4>Verticle</h4> A unit of compute running with an event loop. Usually you start one Verticle (optional with multiple instances) as your application, but you might want/need to start additional ones for longer running tasks. A special version is the worker verticle, that runs from a thread pool to allow execution of blocking operations</li> 
+ <li><h4>EventBus</h4> The different components of your application message each other via the EventBus. Data send over the EventBus can be a String, a JsonObject or a buffer. You also can send any arbitrary Java class as message once you have defined a codec for it </li> 
+ <li><h4>Route</h4> Like in node.js a vert.x web application can register routes and their handlers to react on web input under various conditions. Routes can be defined using URLs, HTTP Verbs, Content-Types ( for POST/PUT/PATCH operations)</li> 
+</ul> Ideally when defining a route and a handler, a verticle or a potential message for the EventBus, all necessary code stays contained in the respective source code file. The challenge here is to register the components when the application starts. Your main Verticle doesn't know what components are in your application and manually maintain a loader code is a pain to keep in sync (besides leading to merge conflicts when working in a team). 
+<br /> Java annotations to the rescue! If you are new to annotations, go and check out 
+<a href="">this tutorial</a> to get up to speed. For my project I defined three of them, with one being able to be applied multiple times. 
+<h3>CastleRequest</h3> A class annotated with CastleRequest registers its handler with the EventBus, so the class can be sent over the EventBus and get encoded/decode appropriately. A special value for the annotation is &quot;self&quot; which indicates, that the class itself implements the 
+<a href="http://vertx.io/docs/apidocs/io/vertx/core/eventbus/MessageCodec.html">MessageCodec</a> interface 
+<br /> 
+<pre 'brush:="" java'="">
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE})
+public @interface CastleRequest {
+  // We use value to ease the syntax
+  // to @CastleRequest(NameOfCodec)
+  // Special value: self = class implements the MessageCodec interface
+  String value();
+}
+</pre> 
+<h3>CastleRoute</h3> This annotation can be assigned multiple times, so 2 annotation interfaces are needed 
+<br /> 
+<pre 'brush:="" java'="">
+@Documented
+@Repeatable(CastleRoutes.class)
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE})
+public @interface CastleRoute {
+  String route();
+  String description();
+  String mimetype() default &quot;any&quot;;
+  String method() default &quot;any&quot;;
+}
+</pre> 
+<br /> and the repeatability annotation (new with Java8): 
+<br /> 
+<pre 'brush:="" java'="">
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE})
+public @interface CastleRoutes {
+  CastleRoute[] value();
+}
+</pre> 
+<h3>CastleVerticle</h3> Classes marked with this annotation are loaded as verticles. They can implement listeners to the whole spectrum of vert.x listening capabilities 
+<br /> 
+<pre 'brush:="" java'="">
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE})
+public @interface CastleVerticle {
+  String type() default &quot;worker&quot;;
+  int instances() default 0;
+  boolean multithreaded() default false;
+}
+</pre></div>
+				<hr />
+				 <a href="/blog/2016/04/annotations-to-supercharge-your-vertx-development.html">Read more</a> 
+				<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2016-04-02 08:01
+<span class="divider">|</span>
+<a href="/blog/2016/04/annotations-to-supercharge-your-vertx-development.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/vert.x.html">vert.x</a> 
+
+						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2016/04/annotations-to-supercharge-your-vertx-development.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Annotations to supercharge your vert.x development"></div>
+						<script type="text/javascript">
+							var permaLink = "http://www.notessensei.com/blog/2016/04/annotations-to-supercharge-your-vertx-development.html";
+						</script>
+					</p>
+
+			</article>
 			<article class="well well-raised span8">
 				<h1>
 					<small><a href="/blog/2016/02/now-we-are-token-authorization-using-json-web-token-in-domino.html">Now we are token - Authorization using JSON Web Token in Domino</a></small>
@@ -292,7 +374,7 @@
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 2016-02-25 01:37
 <span class="divider">|</span>
-<a href="/blog/2016/02/now-we-are-token-authorization-using-json-web-token-in-domino.html#comments">Comments (0)</a>
+<a href="/blog/2016/02/now-we-are-token-authorization-using-json-web-token-in-domino.html#comments">Comments (1)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>  <a href="/blog/categories/vert.x.html">vert.x</a> 
 
@@ -335,7 +417,7 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>  <a href="/
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 2016-02-23 10:31
 <span class="divider">|</span>
-<a href="/blog/2016/02/the-cloud-awakening.html#comments">Comments (0)</a>
+<a href="/blog/2016/02/the-cloud-awakening.html#comments">Comments (1)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/Software.html">Software</a> 
 
@@ -476,32 +558,6 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>  <a href="/
 						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2016/02/vertx-and-domino.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Vert.x and Domino"></div>
 						<script type="text/javascript">
 							var permaLink = "http://www.notessensei.com/blog/2016/02/vertx-and-domino.html";
-						</script>
-					</p>
-
-			</article>
-			<article class="well well-raised span8">
-				<h1>
-					<small><a href="/blog/2016/02/developer-or-coder-part-1.html">Developer or Coder? -Part 1</a></small>
-				</h1>
-				<hr />
-				<div>Based on 
-<a href="/blog/d6plinks/SHWL-A48J7S/">recent article</a> I was asked: &quot; 
-<i>So how would you train a developer, to be a real developer, not just a coder?</i>&quot;. Interesting question. Regardless of language or platform (maybe short of COBOL, where you visit retirement homes a lot), each training path has large commonalities. 
-<br /> Below I outline a training path for a web developer. I'm quite opinionated about tools and frameworks to use, but wide open about tools to know. The list doesn't represent a recommended sequence, that would be a subject of an entire different discussion:</div>
-				<hr />
-				 <a href="/blog/2016/02/developer-or-coder-part-1.html">Read more</a> 
-				<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2016-02-13 12:42
-<span class="divider">|</span>
-<a href="/blog/2016/02/developer-or-coder-part-1.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/Software.html">Software</a> 
-
-						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2016/02/developer-or-coder-part-1.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Developer or Coder? -Part 1"></div>
-						<script type="text/javascript">
-							var permaLink = "http://www.notessensei.com/blog/2016/02/developer-or-coder-part-1.html";
 						</script>
 					</p>
 
