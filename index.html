@@ -120,6 +120,105 @@
 			<div class="span9">
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2016/09/domino-meets-rxjava.html">Domino meets RXJava</a></small>
+					</h1>
+					<hr />
+					<div>Verse on premises (VoP) is nearing its second beta release and fellow Notes experts are wondering if they need to install 
+<a href="http://lucene.apache.org/solr/">Apache Solr</a> as part of the VoP deployment. There was a lengthy, high quality discussion and quite some effort evaluating alternatives. In conclusion it was decided to deliver the subset of Solr capabilities needed for VoP as series of OSGi plugins to the Domino server. The project was formed out of the experience with ProjectCastle, which continues as Project OrangeBox to deliver these plugins. In VoP you might encounter one or the other reference to PoB, so now you know where it comes from. 
+<br /> One of the design challenges to solve was to emulate the facet results of the Solr search engine. I build some prototypes and finally settled on the use of 
+<a href="https://github.com/ReactiveX/RxJava">RxJava</a>. 
+<br /> RxJava is a member of the 
+<a href="http://reactivex.io/">ReactiveX</a> programming family, which is designed around the Observer pattern, iterators and functional programming. Check out the 
+<a href="http://reactivex.io/">main site</a> to get into the groove. 
+<br /> The task at hand is to convert something Domino (a ViewNavigator, a DocumentCollection or a Document) into something that emits subscribable events. I started with turning a document into an NotesItem emitter. Purpose of this was the creation of lighweight Java objects that contain the items I'm interested in. Since Domino's Java has 
+<a href="http://www-01.ibm.com/support/docview.wss?uid=swg21097861">special needs</a> and I couldn't use the 
+<a href="https://github.com/OpenNTF/org.openntf.domino">ODA</a>, special precaution was needed. 
+<br /> There are 
+<a href="https://github.com/ReactiveX/RxJava/wiki/Creating-Observables">plenty of methods</a> to create an Observable and on first look 
+<a href="http://reactivex.io/documentation/operators/create.html">Create</a> looks most promising, but it left the question of recycling open. Luckily there is the 
+<a href="http://reactivex.io/documentation/operators/using.html">Using</a> method that creates a companion object that lives along the Observable and gets explicitly called when the Observable is done. To create the NotesItem emitting Observable I settled on the 
+<a href="http://reactivex.io/documentation/operators/from.html">From</a> method with an 
+<a href="https://docs.oracle.com/javase/7/docs/api/java/lang/Iterable.html">Iterable</a> as source. The moving parts I had to create were 
+<code>class DocumentSource implements Iterable&lt;Item&gt;</code> and 
+<code>class ItemIterator implements Iterator&lt;Item&gt;</code> 
+<br /> Why Reactive? In a nutshell: a source emits data and any number of subscribers can subscribe to. Between the emission and subscription any number of filters, modifiers and aggregators can manipulate the data emitted. Since each of them lives in its own little class, testing and composition become very easy. Let's look at an example: 
+<br /> 
+<code>docSource.getItemStream(session).filter(nameFilter).map(toPobItem).map(nameMapper).subscribe(new ItemAdder());</code> 
+<br /> You almost can read this aloud: &quot; 
+<i>The source emits a stream of items, they get filtered by Name, then converted into another Java object (PobItem) and renamed before added to the subscriber.</i>&quot;. In a different case you might want to collect all entities (users, groups, roles) that have access to a document, you migh create a &quot;readerAuthorFilter&quot;. The individual classes are very easy to test. E.g. the Name filter looks like this: 
+<br /> 
+<pre class="brush: java">
+// requiredFields is is a Collection&lt;String&gt; of NotesItem names to include or exclude
+ItemNameFilter nameFilter = new ItemNameFilter(requiredFields, ItemNameFilter.FilterMode.INCLUDE);
+
+public class ItemNameFilter implements Func1&lt;Item, Boolean&gt; {
+
+    public enum FilterMode {
+        INCLUDE, EXCLUDE;
+    }
+
+    private final Logger      logger      = Logger.getLogger(this.getClass().getName());
+    private final Set&lt;String&gt; itemNameSet = new HashSet&lt;String&gt;();
+    private final FilterMode  filterMode;
+
+    /**
+     * Flexible include or exclude
+     * 
+     * @param itemNames
+     *            Collection of Names to include or exclude
+     * @param filterMode
+     *            INCLUDE or EXCLUDE
+     */
+    public ItemNameFilter(Collection&lt;String&gt; itemNames, FilterMode filterMode) {
+        this.filterMode = filterMode;
+        this.updateItemNames(itemNames);
+    }
+
+    public ItemNameFilter(Collection&lt;String&gt; itemNames) {
+        this.filterMode = FilterMode.INCLUDE;
+        this.updateItemNames(itemNames);
+    }
+
+    private void updateItemNames(Collection&lt;String&gt; itemNames) {
+        this.itemNameSet.addAll(itemNames);
+    }
+
+    @Override
+    public Boolean call(Item incomingItem) {
+        // Include unless proven otherwise
+        boolean result = true;
+        try {
+            String itemName = incomingItem.getName();
+            boolean inList = this.itemNameSet.contains(itemName.toLowerCase());
+            result = (inList &amp;&amp; this.filterMode.equals(FilterMode.INCLUDE));
+        } catch (NotesException e) {
+            this.logger.log(Level.SEVERE, e);
+            result = false;
+        }
+        return result;
+    }
+}
+</pre> 
+<br /></div>
+					<hr />
+ <a href="/blog/2016/09/domino-meets-rxjava.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2016-09-13 01:33
+<span class="divider">|</span>
+<a href="/blog/2016/09/domino-meets-rxjava.html#comments">Comments (1)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a> 
+
+						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2016/09/domino-meets-rxjava.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Domino meets RXJava"></div>
+						<script type="text/javascript">
+							var permaLink = "http://www.notessensei.com/blog/2016/09/domino-meets-rxjava.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2016/05/metawork-nobody-is-capable-but-all-participate-grudgingly.html">Metawork, nobody is capable but all participate grudgingly</a></small>
 					</h1>
 					<hr />
@@ -155,7 +254,7 @@
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 2016-05-13 07:41
 <span class="divider">|</span>
-<a href="/blog/2016/05/metawork-nobody-is-capable-but-all-participate-grudgingly.html#comments">Comments (0)</a>
+<a href="/blog/2016/05/metawork-nobody-is-capable-but-all-participate-grudgingly.html#comments">Comments (1)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/After hours.html">After hours</a> 
 
@@ -601,7 +700,7 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>  <a href="/
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 2016-02-13 12:42
 <span class="divider">|</span>
-<a href="/blog/2016/02/developer-or-coder-part-1.html#comments">Comments (0)</a>
+<a href="/blog/2016/02/developer-or-coder-part-1.html#comments">Comments (2)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/Software.html">Software</a> 
 
@@ -639,86 +738,6 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>
 						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2016/02/disecting-a-mail-ui.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Disecting a mail UI"></div>
 						<script type="text/javascript">
 							var permaLink = "http://www.notessensei.com/blog/2016/02/disecting-a-mail-ui.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2016/01/the-quick-and-dirty-domino-cloudant-export.html">The quick and dirty Domino Cloudant export</a></small>
-					</h1>
-					<hr />
-					<div>Moving data out of Domino never has been hard with all the APIs available. The challenge always has been: move them where? Ignoring for a second 
-<a href="/blog/d6plinks/SHWL-9EQEPZ">all security considerations</a>, the challenge is to find a target structure that matches the Domino model. Neither 
-<a href="https://en.wikipedia.org/wiki/SharePoint">flat table storage</a> nor 
-<a href="https://en.wikipedia.org/wiki/Relational_database_management_system">RDBMS</a> fit that very well. 
-<br /> A close contender is 
-<a href="https://www.mongodb.org/">MongoDB</a> which is used in one compelling 
-<a href="http://ldcvia.com/">Notes retirement offering</a>. However the closest match in concept and structure is 
-<a href="http://couchdb.apache.org/">Apache CouchDB</a>, not surprisingly due to its 
-<a href="http://damienkatz.net/2005/01/formula-engine-rewrite.html">heritage and origin</a>. 
-<br /> It is maintained by a team led by the highly skilled 
-<a href="http://writing.jan.io/">Jan&nbsp;Lehnardt</a> and of course there are 
-<a href="http://stackoverflow.com/questions/167716/what-is-the-difference-between-couchdb-and-lotus-notes">differences to Notes</a>. 
-<br /> But the fit is good enough. Using the lightweight 
-<a href="http://ektorp.org/">Java library</a> 
-<a href="http://www.ikea.com/sg/en/catalog/categories/series/07488/">Ektorp</a> exporting a set of documents from Notes to CouchDB is a breeze. The core class is a simple mapping of a Notes document to a JSON structure: 
-<br /> 
-<pre class="brush: java">
-package com.notessensei.export;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Vector;
-
-import lotus.domino.Document;
-import lotus.domino.Item;
-import lotus.domino.NotesException;
-
-public class NotesJsonDoc {
-	public static String ID_FIELD = &quot;_id&quot;;
-	public static String REV_FIELD = &quot;_rev&quot;;
-	
-	private Map&lt;String, String&gt; content = new HashMap&lt;String, String&gt;();
-	
-	@SuppressWarnings(&quot;rawtypes&quot;)
-	public NotesJsonDoc(Document source) throws NotesException {
-		Vector allItems = source.getItems();
-		for (Object itemObject : allItems) {
-			Item item = (Item) itemObject;
-			this.content.put(item.getName(), item.getText());
-		}
-		this.content.put(ID_FIELD, source.getUniversalID());
-	}
-	
-	public Map&lt;String, String&gt; getContent() {
-		return this.content;
-	}
-	
-	public NotesJsonDoc setRevision(String revision) {
-		this.content.put(REV_FIELD, revision);
-		return this;
-	}
-	
-	public String getId() {
-		return this.content.get(ID_FIELD);
-	}
-}
-</pre> 
-<br /></div>
-					<hr />
- <a href="/blog/2016/01/the-quick-and-dirty-domino-cloudant-export.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2016-01-21 01:45
-<span class="divider">|</span>
-<a href="/blog/2016/01/the-quick-and-dirty-domino-cloudant-export.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
-
-						<div class="shariff" data-lang="en" data-url="http://www.notessensei.com/blog/2016/01/the-quick-and-dirty-domino-cloudant-export.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="The quick and dirty Domino Cloudant export"></div>
-						<script type="text/javascript">
-							var permaLink = "http://www.notessensei.com/blog/2016/01/the-quick-and-dirty-domino-cloudant-export.html";
 						</script>
 					</p>
 </p>
@@ -891,10 +910,10 @@ categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a>
 						</tr>
 						<tr>
 							<td align="center"><a href="http://www-01.ibm.com/support/docview.wss?uid=swg21611954">8.5</a></td>
-							<td><script language="JavaScript" type="text/javascript">
-								document.write(getDayDifference("Sep 30, 2016"));
-							</script>
-							</td>
+							<td><!-- script language="JavaScript" type="text/javascript">
+								document.write(getDayDifference("Sep 30, 2018"));
+							</script -->
+							n.n. </td>
 						</tr>
 					</table>
 					Upgrade to <a
