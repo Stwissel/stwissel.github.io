@@ -195,506 +195,359 @@ ga('send', 'pageview');
 </style> 
 <pre>
  
- 
  <div class="lotusscript">
 
   
-  
   <font class="ls-statement">Sub</font> InjectCodeIntoForm
-  
   
   <font class="ls-operator">(</font>formName 
   
-  
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">String</font>
-  
   
   <font class="ls-operator">,</font> xPath 
   
-  
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">String</font>
-  
   
   <font class="ls-operator">,</font> codeSnippet 
   
-  
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">String</font>
-  
   
   <font class="ls-operator">)</font>
 	
 	
   
-  
   <font class="ls-comment">'Errorhandling omitted for clarity</font>
 	
   
-  
   <font class="ls-statement">Dim</font> s 
-  
   
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">New</font> 
-  
   
   <font class="ls-class">NotesSession</font>
 	
   
-  
   <font class="ls-statement">Dim</font> db 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesDatabase</font>
 	
   
-  
   <font class="ls-statement">Dim</font> f 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesForm</font>
 	
   
-  
   <font class="ls-statement">Dim</font> out 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesStream</font>
 	
 	
   
-  
   <font class="ls-statement">Dim</font> ex 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesDXLExporter</font>
 	
   
-  
   <font class="ls-statement">Dim</font> importer 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesDXLImporter</font>	
 	
   
-  
   <font class="ls-statement">Dim</font> col 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesNoteCollection</font>
 	
 	
   
-  
   <font class="ls-comment">'The strings holding the DXL</font>
 	
   
-  
   <font class="ls-statement">Dim</font> rawDXL 
-  
   
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">String</font>
 	
-  
   
   <font class="ls-statement">Dim</font> resultDXL 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-keyword">String</font>
 	
 	
   
-  
   <font class="ls-statement">Set</font> db 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CurrentDatabase
 	
 	
   
-  
   <font class="ls-comment">'Create a Note collection and add the form</font>
 	
   
-  
   <font class="ls-statement">Set</font> col 
-  
   
   <font class="ls-operator">=</font> db
   
-  
   <font class="ls-operator">.</font>CreateNoteCollection
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-constant">False</font>
-  
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-statement">Set</font> f 
-  
   
   <font class="ls-operator">=</font> db
   
-  
   <font class="ls-operator">.</font>GetForm
   
-  
   <font class="ls-operator">(</font>formName
-  
   
   <font class="ls-operator">)</font>	
 	col
   
-  
   <font class="ls-operator">.</font>BuildCollection
 	
   
-  
   <font class="ls-function">Call</font> col
-  
   
   <font class="ls-operator">.</font>Add
   
-  
   <font class="ls-operator">(</font>f
-  
   
   <font class="ls-operator">)</font>
 	
 	
-  
   
   <font class="ls-comment">'Create the exporter and run the stuff out</font>
 	
   
-  
   <font class="ls-statement">Set</font> ex 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CreateDXLExporter
 	
   
-  
   <font class="ls-statement">Set</font> out 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CreateStream
 	ex
   
-  
   <font class="ls-operator">.</font>RichTextOption 
   
-  
   <font class="ls-operator">=</font> RICHTEXTOPTION_RAW 
-  
   
   <font class="ls-comment">'This is to get rawitems for untranslatable stuff</font>
 	ex
   
-  
   <font class="ls-operator">.</font>ValidationStyle 
   
-  
   <font class="ls-operator">=</font> VALIDATIONSTYLE_NONE 
-  
   
   <font class="ls-comment">'To make sure we don't generate a schema reference</font>
 	
   
-  
   <font class="ls-function">Call</font> ex
-  
   
   <font class="ls-operator">.</font>setinput
   
-  
   <font class="ls-operator">(</font>col
-  
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-function">Call</font> ex
-  
   
   <font class="ls-operator">.</font>setOutput
   
-  
   <font class="ls-operator">(</font>out
-  
   
   <font class="ls-operator">)</font>
 	ex
-  
   
   <font class="ls-operator">.</font>process
 	
 	
   
-  
   <font class="ls-comment">'Reset the stream and manipulate the DXL</font>
 	out
   
-  
   <font class="ls-operator">.</font>Position 
-  
   
   <font class="ls-operator">=</font> 0
 	rawDXL 
   
-  
   <font class="ls-operator">=</font> out
-  
   
   <font class="ls-operator">.</font>ReadText
 	resultDXL
   
-  
   <font class="ls-operator">=</font> injectCode
-  
   
   <font class="ls-operator">(</font>rawDXL
   
-  
   <font class="ls-operator">,</font> xPath
   
-  
   <font class="ls-operator">,</font> codeSnippet
-  
   
   <font class="ls-operator">)</font>
 	
 	
-  
   
   <font class="ls-comment">'Write it back</font>
 	out
   
-  
   <font class="ls-operator">.</font>Truncate
 	
   
-  
   <font class="ls-function">Call</font> out
-  
   
   <font class="ls-operator">.</font>WriteText
   
-  
   <font class="ls-operator">(</font>resultDXL
-  
   
   <font class="ls-operator">)</font>
 	out
   
-  
   <font class="ls-operator">.</font>Position 
-  
   
   <font class="ls-operator">=</font> 0
 	
   
-  
   <font class="ls-statement">Set</font> importer 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CreateDXLImporter
 	
 	
   
-  
   <font class="ls-comment">'Having the right importer options is important</font>
 	importer
   
-  
   <font class="ls-operator">.</font>CompileLotusScript 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-constant">True</font>
 	importer
   
-  
   <font class="ls-operator">.</font>ReplaceDBProperties 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-constant">False</font>
 	importer
   
-  
   <font class="ls-operator">.</font>ReplicaRequiredForReplaceOrUpdate 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-constant">True</font>
 	importer
   
-  
   <font class="ls-operator">.</font>ACLImportOption 
-  
   
   <font class="ls-operator">=</font> DXLIMPORTOPTION_IGNORE
 	importer
   
-  
   <font class="ls-operator">.</font>DesignImportOption 
   
-  
   <font class="ls-operator">=</font> DXLIMPORTOPTION_REPLACE_ELSE_IGNORE 
-  
   
   <font class="ls-comment">'We only want to update the current form</font>
 	importer
   
-  
   <font class="ls-operator">.</font>DocumentImportOption 
   
-  
   <font class="ls-operator">=</font> DXLIMPORTOPTION_IGNORE 
-  
   
   <font class="ls-comment">'This is for design only</font>
 	importer
   
-  
   <font class="ls-operator">.</font>ExitOnFirstFatalError 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-constant">False</font>
 	
 	
   
-  
   <font class="ls-comment">'Standard import execution</font>
 	
   
-  
   <font class="ls-function">Call</font> importer
-  
   
   <font class="ls-operator">.</font>setInput
   
-  
   <font class="ls-operator">(</font>out
-  
   
   <font class="ls-operator">)</font>
 	
-  
   
   <font class="ls-function">Call</font> importer
   
-  
   <font class="ls-operator">.</font>setOutput
   
-  
   <font class="ls-operator">(</font>db
-  
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-statement">On</font> 
-  
   
   <font class="ls-function">Error</font> 
   
-  
   <font class="ls-statement">Resume</font> 
-  
   
   <font class="ls-statement">Next</font>	
 	
   
-  
   <font class="ls-function">Call</font> importer
-  
   
   <font class="ls-operator">.</font>Import
 	
 	
   
-  
   <font class="ls-function">Msgbox</font> importer
   
-  
   <font class="ls-operator">.</font>
-  
   
   <font class="ls-function">log</font>
 
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Sub</font>
 
- 
  
  </div></pre> 
 <div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;"> 
@@ -785,7 +638,9 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 						I am the "IBM Cloud Development Advocate for Collaboration". I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
-					<script src="//stackoverflow.com/users/flair/131021.js?theme=default" type="text/javascript"></script>
+					<a href="http://stackoverflow.com/users/131021/stwissel">
+					<img src="http://stackoverflow.com/users/flair/131021.png?theme=clean" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmers" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmers">
+				</a>
 				</div>
 				<div class="span2">
 					<h4>Contact</h4>
@@ -808,7 +663,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 				<div class="span8">
 					<h4>Disclaimer</h4>
 					<p>This site is in no way affiliated, endorsed, sanctioned,
-						supported, nor enlightened by Lotus Software nor IBM Corporation.
+						supported, nor enlightened by my current or previous employers.
 						I may be an employee, but the opinions, theories, facts, etc.
 						presented here are my own and are in now way given in any official
 						capacity. In short, these are my words and this is my site, not
@@ -816,12 +671,12 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 					<p>
 						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
-							href="http://creativecommons.org/licenses/by-nc-sa/3.0/"><img
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"
-							src="http://i.creativecommons.org/l/by-nc-sa/3.0/88x31.png" /></a>
+							src="//i.creativecommons.org/l/by-nc-sa/3.0/88x31.png" /></a>
 						Unless otherwise labeled by its originating author, the content
 						found on this site is made available under the terms of an <a
-							href="http://creativecommons.org/licenses/by-nc-sa/3.0/"
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
 							target="_blank"
 							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
 							Creative Commons License</a>, with the exception that no rights are
@@ -829,7 +684,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 						graphic design, trademarks or trade names of any type. Code
 						samples and code downloads on this site are, unless otherwise
 						labeled, made available under an <a
-							href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache
+							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
 							2.0</a> license. Other license models are available on written
 						request and written confirmation.
 					</p>
