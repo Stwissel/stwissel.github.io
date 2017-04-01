@@ -164,716 +164,506 @@ ga('send', 'pageview');
 </style> 
 <pre>
  
- 
  <div class="lotusscript">
 
   
-  
   <font class="ls-keyword">Option</font> 
-  
   
   <font class="ls-keyword">Public</font>
 
   
-  
   <font class="ls-keyword">Option</font> 
-  
   
   <font class="ls-keyword">Declare</font>
 
 
   
-  
   <font class="ls-statement">Sub</font> 
-  
   
   <font class="ls-keyword">Initialize</font>
 	
   
-  
   <font class="ls-statement">Dim</font> db 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesDatabase</font>
 	
   
-  
   <font class="ls-statement">Dim</font> notecol 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesNoteCollection</font>
 	
   
-  
   <font class="ls-statement">Dim</font> exporter 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesDXLExporter</font>
 	
   
-  
   <font class="ls-statement">Dim</font> importer 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesDXLImporter</font>
 	
   
-  
   <font class="ls-statement">Dim</font> transformer 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesXSLTransformer</font>
 	
   
-  
   <font class="ls-statement">Dim</font> result 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-keyword">String</font>
 	
   
-  
   <font class="ls-statement">Dim</font> stream 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesStream</font>
 	
 	
   
-  
   <font class="ls-statement">Dim</font> s 
-  
   
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">New</font> 
-  
   
   <font class="ls-class">NotesSession</font>
 	
 	
   
-  
   <font class="ls-comment">'Setup envionment</font>
 	
   
-  
   <font class="ls-statement">Set</font> db 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CurrentDatabase
 	
 	
   
-  
   <font class="ls-comment">'Create the collection</font>
 	
   
-  
   <font class="ls-statement">Set</font> notecol 
-  
   
   <font class="ls-operator">=</font> db
   
-  
   <font class="ls-operator">.</font>CreateNoteCollection
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-constant">False</font>
-  
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-function">Call</font> notecol
-  
   
   <font class="ls-operator">.</font>SelectAllAdminNotes
   
-  
   <font class="ls-operator">(</font>
-  
   
   <font class="ls-constant">True</font>
   
-  
   <font class="ls-operator">)</font> 
-  
   
   <font class="ls-comment">'ACL, Replication Formulas</font>
 	
   
-  
   <font class="ls-function">Call</font> notecol
-  
   
   <font class="ls-operator">.</font>BuildCollection
 	
   
-  
   <font class="ls-function">Print</font> 
-  
   
   <font class="ls-quote">&quot;Build the collection ...&quot;</font>
 	
 	
   
-  
   <font class="ls-comment">'Get the transformation stylesheet</font>
 	
   
-  
   <font class="ls-statement">Set</font> stream 
-  
   
   <font class="ls-operator">=</font> getRichTextSource
   
-  
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">&quot;DocumentCustomReplicationFormulas&quot;</font>
-  
   
   <font class="ls-operator">)</font>
 	
 	
   
-  
   <font class="ls-comment">'Create the import/export/transformer</font>
 	
   
-  
   <font class="ls-statement">Set</font> exporter 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CreateDXLExporter
 	
   
-  
   <font class="ls-statement">Set</font> transformer 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CreateXSLTransformer
 	
   
-  
   <font class="ls-statement">Set</font> importer 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CreateDXLImporter
 	
 	
   
-  
   <font class="ls-comment">'Now we need to wire the exporter to the transformer to the importer</font>
 	
   
-  
   <font class="ls-function">Call</font> exporter
-  
   
   <font class="ls-operator">.</font>SetInput
   
-  
   <font class="ls-operator">(</font>notecol
-  
   
   <font class="ls-operator">)</font>
 	
-  
   
   <font class="ls-function">Call</font> exporter
   
-  
   <font class="ls-operator">.</font>SetOutput
-  
   
   <font class="ls-operator">(</font>transformer
   
-  
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-function">Call</font> transformer
-  
   
   <font class="ls-operator">.</font>SetStylesheet
   
-  
   <font class="ls-operator">(</font>stream
-  
   
   <font class="ls-operator">)</font>
 	
-  
   
   <font class="ls-function">Call</font> transformer
   
-  
   <font class="ls-operator">.</font>setOutput
-  
   
   <font class="ls-operator">(</font>importer
   
-  
   <font class="ls-operator">)</font>
 	
-  
   
   <font class="ls-function">Call</font> importer
   
-  
   <font class="ls-operator">.</font>setOutput
   
-  
   <font class="ls-operator">(</font>db
-  
   
   <font class="ls-operator">)</font>
 	
 	
-  
   
   <font class="ls-comment">'Set the parameters for processing</font>
 	exporter
   
-  
   <font class="ls-operator">.</font>ExitOnFirstFatalError 
-  
   
   <font class="ls-operator">=</font> 
   
-  
   <font class="ls-constant">False</font>
 	importer
-  
   
   <font class="ls-operator">.</font>ReplaceDBProperties 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-constant">False</font>
 	importer
-  
   
   <font class="ls-operator">.</font>ReplicaRequiredForReplaceOrUpdate 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-constant">False</font>
 	importer
   
-  
   <font class="ls-operator">.</font>ACLImportOption 
-  
   
   <font class="ls-operator">=</font> DXLIMPORTOPTION_IGNORE
 	importer
-  
   
   <font class="ls-operator">.</font>DesignImportOption 
   
-  
   <font class="ls-operator">=</font> DXLIMPORTOPTION_IGNORE
 	importer
   
-  
   <font class="ls-operator">.</font>DocumentImportOption 
-  
   
   <font class="ls-operator">=</font> DXLIMPORTOPTION_CREATE
 	
 	
   
-  
   <font class="ls-function">Print</font> 
-  
   
   <font class="ls-quote">&quot;Processing&quot;</font>
 	
   
-  
   <font class="ls-statement">On</font> 
-  
   
   <font class="ls-function">Error</font> 
   
-  
   <font class="ls-statement">Resume</font> 
-  
   
   <font class="ls-statement">Next</font>
 	
 	
   
-  
   <font class="ls-function">Call</font> exporter
-  
   
   <font class="ls-operator">.</font>Process
 	
   
-  
   <font class="ls-function">Print</font> 
-  
   
   <font class="ls-quote">&quot;Backup completed&quot;</font>
 	result 
   
-  
   <font class="ls-operator">=</font> exporter
   
-  
   <font class="ls-operator">.</font>
-  
   
   <font class="ls-function">log</font>
 	
   
-  
   <font class="ls-function">Call</font> stream
   
-  
   <font class="ls-operator">.</font>
-  
   
   <font class="ls-function">Close</font>
 	
 	
   
-  
   <font class="ls-function">Beep</font>	
 	
   
-  
   <font class="ls-function">Msgbox</font> result
-  
   
   <font class="ls-operator">,</font> 0
   
-  
   <font class="ls-operator">,</font> 
-  
   
   <font class="ls-function">Cstr</font>
   
-  
   <font class="ls-operator">(</font>importer
-  
   
   <font class="ls-operator">.</font>importednotecount
   
-  
   <font class="ls-operator">)</font> 
   
-  
   <font class="ls-operator">&amp;</font> 
-  
   
   <font class="ls-quote">&quot; Documents created&quot;</font>
 	
 
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Sub</font>
 
 
   
-  
   <font class="ls-statement">Function</font> getRichTextSource
-  
   
   <font class="ls-operator">(</font>SourceName 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-keyword">String</font>
   
-  
   <font class="ls-operator">)</font> 
-  
   
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-class">NotesStream</font>
 	
-  
   
   <font class="ls-comment">'Retrieves a RichTextitem from the XSLTDefinitions view</font>
 	
   
-  
   <font class="ls-statement">Dim</font> db 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesDatabase</font>
 	
   
-  
   <font class="ls-statement">Dim</font> doc 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesDocument</font>
 	
   
-  
   <font class="ls-statement">Dim</font> v 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesView</font>
 	
   
-  
   <font class="ls-statement">Dim</font> tmpStream 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesStream</font>
 	
   
-  
   <font class="ls-statement">Dim</font> rt 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesRichTextItem</font>
 	
 	
   
-  
   <font class="ls-statement">Dim</font> s 
-  
   
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">New</font> 
-  
   
   <font class="ls-class">NotesSession</font>
 	
   
-  
   <font class="ls-statement">Set</font> db 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CurrentDatabase
 	
   
-  
   <font class="ls-statement">Set</font> v 
-  
   
   <font class="ls-operator">=</font> db
   
-  
   <font class="ls-operator">.</font>GetView
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">&quot;XSLTDefinitions&quot;</font>
-  
   
   <font class="ls-operator">)</font>
 	
-  
   
   <font class="ls-statement">Set</font> doc 
   
-  
   <font class="ls-operator">=</font> v
-  
   
   <font class="ls-operator">.</font>GetDocumentByKey
   
-  
   <font class="ls-operator">(</font>SourceName
-  
   
   <font class="ls-operator">,</font>
   
-  
   <font class="ls-constant">True</font>
-  
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-statement">If</font> doc 
-  
   
   <font class="ls-operator">Is</font> 
   
-  
   <font class="ls-constant">Nothing</font> 
-  
   
   <font class="ls-statement">Then</font>
 		
   
-  
   <font class="ls-function">Msgbox</font> 
-  
   
   <font class="ls-quote">&quot;XSLT Definition &quot;</font> 
   
-  
   <font class="ls-operator">&amp;</font> SourceName 
   
-  
   <font class="ls-operator">&amp;</font> 
-  
   
   <font class="ls-quote">&quot;not found&quot;</font>
 		
   
-  
   <font class="ls-statement">Exit</font> 
-  
   
   <font class="ls-statement">Function</font>
 	
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">If</font>
 	
 	
   
-  
   <font class="ls-statement">Set</font> rt 
-  
   
   <font class="ls-operator">=</font> doc
   
-  
   <font class="ls-operator">.</font>GetFirstItem
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">&quot;Body&quot;</font>
-  
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-statement">Set</font> tmpStream 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CreateStream
 	tmpStream
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>rt
   
-  
   <font class="ls-operator">.</font>GetUnformattedText
-  
   
   <font class="ls-operator">)</font>
 	tmpStream
   
-  
   <font class="ls-operator">.</font>Position 
-  
   
   <font class="ls-operator">=</font> 0
 	
   
-  
   <font class="ls-statement">Set</font> getRichTextSource 
-  
   
   <font class="ls-operator">=</font> tmpStream
 
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Function</font>
 
- 
  
  </div></pre> 
 <div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;"> 

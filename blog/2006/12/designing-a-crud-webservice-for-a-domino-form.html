@@ -177,481 +177,339 @@ ga('send', 'pageview');
 </style> 
 <pre>
  
- 
  <div class="lotusscript">
 
   
-  
   <font class="ls-statement">Sub</font> 
-  
   
   <font class="ls-keyword">Initialize</font>
 	
 	
   
-  
   <font class="ls-statement">Dim</font> db 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesDatabase</font>
 	
   
-  
   <font class="ls-statement">Dim</font> rt 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesRichTextItem</font>
 	
   
-  
   <font class="ls-statement">Dim</font> exporter 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesDXLExporter</font>
 	
   
-  
   <font class="ls-statement">Dim</font> transformer 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesXSLTransformer</font>
 	
   
-  
   <font class="ls-statement">Dim</font> result 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-keyword">String</font>
 	
   
-  
   <font class="ls-statement">Dim</font> stream 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesStream</font>
 	
   
-  
   <font class="ls-statement">Dim</font> filename 
-  
   
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">String</font>
 	
-  
   
   <font class="ls-statement">Dim</font> formname 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-keyword">String</font>
 	
   
-  
   <font class="ls-statement">Dim</font> f 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesForm</font>
 	
   
-  
   <font class="ls-statement">Dim</font> ncol 
   
-  
   <font class="ls-keyword">As</font>  
-  
   
   <font class="ls-class">NotesNoteCollection</font>
 	
 	
   
-  
   <font class="ls-comment">'Setup envionment</font>
 	
   
-  
   <font class="ls-statement">On</font> 
-  
   
   <font class="ls-function">Error</font> 
   
-  
   <font class="ls-statement">Resume</font> 
-  
   
   <font class="ls-statement">Next</font>
 	
   
-  
   <font class="ls-statement">Dim</font> s 
-  
   
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">New</font> 
-  
   
   <font class="ls-class">NotesSession</font>
 	
   
-  
   <font class="ls-statement">Set</font> db 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CurrentDatabase
 	
 	
   
-  
   <font class="ls-comment">'Get the source and destination</font>
 	formname 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-function">Inputbox</font>
   
-  
   <font class="ls-operator">(</font>
-  
   
   <font class="ls-quote">&quot;Please select the form name to export&quot;</font>
   
-  
   <font class="ls-operator">,</font>
-  
   
   <font class="ls-quote">&quot;DXL export&quot;</font>
   
-  
   <font class="ls-operator">,</font>
   
-  
   <font class="ls-quote">&quot;Memo&quot;</font>
-  
   
   <font class="ls-operator">)</font>
 	filename 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-function">Inputbox</font>
   
-  
   <font class="ls-operator">(</font>
-  
   
   <font class="ls-quote">&quot;Please select your destination file&quot;</font>
   
-  
   <font class="ls-operator">,</font>
-  
   
   <font class="ls-quote">&quot;DXL export&quot;</font>
   
-  
   <font class="ls-operator">,</font>
-  
   
   <font class="ls-quote">&quot;C:\temp\&quot;</font>
   
-  
   <font class="ls-operator">+</font>formname
-  
   
   <font class="ls-operator">+</font>
   
-  
   <font class="ls-quote">&quot;wsdl&quot;</font>
-  
   
   <font class="ls-operator">)</font>
 	
 	
-  
   
   <font class="ls-comment">'Retrieve the form -- will crash if the form name isn't valid</font>
 	
   
-  
   <font class="ls-statement">Set</font> f 
   
-  
   <font class="ls-operator">=</font> db
-  
   
   <font class="ls-operator">.</font>GetForm
   
-  
   <font class="ls-operator">(</font>formname
-  
   
   <font class="ls-operator">)</font>
 	
 	
-  
   
   <font class="ls-statement">Set</font> ncol 
   
-  
   <font class="ls-operator">=</font> db
-  
   
   <font class="ls-operator">.</font>CreateNoteCollection
   
-  
   <font class="ls-operator">(</font>
-  
   
   <font class="ls-constant">False</font>
   
-  
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-function">Call</font> ncol
-  
   
   <font class="ls-operator">.</font>Add
   
-  
   <font class="ls-operator">(</font>f
-  
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-function">Call</font> ncol
-  
   
   <font class="ls-operator">.</font>BuildCollection
 	
 	
   
-  
   <font class="ls-comment">REM create the file</font>
 	
   
-  
   <font class="ls-statement">Set</font> stream 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CreateStream
 	
   
-  
   <font class="ls-function">Call</font> stream
-  
   
   <font class="ls-operator">.</font>
   
-  
   <font class="ls-function">Open</font>
   
-  
   <font class="ls-operator">(</font>filename
-  
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-function">Call</font> stream
-  
   
   <font class="ls-operator">.</font>Truncate
 	
 	 
   
-  
   <font class="ls-comment">REM Export current database design as DXL into a new Notes document </font>
 	
   
-  
   <font class="ls-statement">Set</font> exporter 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CreateDXLExporter
 	
   
-  
   <font class="ls-statement">Set</font> transformer 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CreateXSLTransformer
 	
   
-  
   <font class="ls-function">Call</font> exporter
-  
   
   <font class="ls-operator">.</font>SetInput
   
-  
   <font class="ls-operator">(</font>ncol
-  
   
   <font class="ls-operator">)</font>
 	
-  
   
   <font class="ls-function">Call</font> exporter
   
-  
   <font class="ls-operator">.</font>SetOutput
-  
   
   <font class="ls-operator">(</font>transformer
   
-  
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-function">Call</font> transformer
-  
   
   <font class="ls-operator">.</font>setOutput
   
-  
   <font class="ls-operator">(</font>stream
-  
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-function">Call</font> transformer
-  
   
   <font class="ls-operator">.</font>SetStylesheet
   
-  
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">&quot;C:\temp\Form2wsdl.xslt&quot;</font>
-  
   
   <font class="ls-operator">)</font>
 	exporter
   
-  
   <font class="ls-operator">.</font>ExitOnFirstFatalError 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-constant">False</font>
 	
   
-  
   <font class="ls-function">Print</font> 
-  
   
   <font class="ls-quote">&quot;Conversion runs&quot;</font>
 	
   
-  
   <font class="ls-function">Call</font> exporter
-  
   
   <font class="ls-operator">.</font>Process
 	
   
-  
   <font class="ls-function">Print</font> 
-  
   
   <font class="ls-quote">&quot;Conversion completed&quot;</font>
 	result 
   
-  
   <font class="ls-operator">=</font> exporter
   
-  
   <font class="ls-operator">.</font>
-  
   
   <font class="ls-function">log</font>
 	
   
-  
   <font class="ls-function">Call</font> stream
   
-  
   <font class="ls-operator">.</font>
-  
   
   <font class="ls-function">Close</font>
 	
 	
   
-  
   <font class="ls-function">Beep</font>
 	
   
-  
   <font class="ls-function">Msgbox</font>
   
-  
   <font class="ls-operator">(</font>result
-  
   
   <font class="ls-operator">)</font>	
 
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Sub</font>
 
- 
  
  </div></pre> 
 <div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;"> 
