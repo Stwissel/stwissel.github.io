@@ -6,7 +6,35 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2017 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Sat, 01 Apr 2017 22:54:48 +0800</pubdate>
+	<pubdate>Wed, 12 Apr 2017 23:57:40 +0800</pubdate>
+<item
+	><title>From Blogsphere to a Static Site (Part 0) - Requirements</title>
+	<description>Readers of this blog might have noticed, that blog layout and blog URLs have changed (a while ago). This blog now serves static HTML pages using a 
+&lt;a href="https://www.nginx.com/"&gt;nginx&lt;/a&gt; web server (get used to nginx, it's coming in Connections Pink too). I will document the steps and code I used to get there. Step 0 is: define the requirements and evaluate the resulting constraints: 
+&lt;ul&gt; 
+ &lt;li&gt;Export of all Blogsphere content to HTML, including the conversion of entries written in RichText&lt;/li&gt; 
+ &lt;li&gt;No export of configuration or layout required&lt;/li&gt; 
+ &lt;li&gt;New site structure that shows articles in year and month folders&lt;/li&gt; 
+ &lt;li&gt;Modular templating system with includes for repeated pieces (e.g. header, footer, sidebar)&lt;/li&gt; 
+ &lt;li&gt;Summary pages for year, month and categories&lt;/li&gt; 
+ &lt;li&gt;Summary page for article series&lt;/li&gt; 
+ &lt;li&gt;Existing comments to become part of the html page&lt;/li&gt; 
+ &lt;li&gt;Repeatability: export must be able to repeat, but not overwrite a page that hasn't actually changed&lt;/li&gt; 
+ &lt;li&gt;Storage of exported pages in a file structure as JSON files&lt;/li&gt; 
+ &lt;li&gt;Rendering of static site from Notes or from JSON directory&lt;/li&gt; 
+ &lt;li&gt;Redirection file, so old links get a proper redirection to the new URL&lt;/li&gt; 
+ &lt;li&gt;Have a comment database for new comments&lt;/li&gt; 
+ &lt;li&gt;No pagination for any of the summary pages (I might change my mind on that one)&lt;/li&gt; 
+ &lt;li&gt;Cleanup messy HTML automatically, fix syntax and URLs to posts and images&lt;/li&gt; 
+ &lt;li&gt;Optimized HTML, CSS and JS for speedy delivery&lt;/li&gt; 
+&lt;/ul&gt; I had a look at 
+&lt;a href="https://jekyllrb.com/"&gt;Jekyll&lt;/a&gt;, which is the templating engine GitHub is using. I would have allowed me to just commit a new file and Github would render for me. Unfortunately Jekyll fell short of the article series and category overview pages.</description>
+	<link>2017/04/from-blogsphere-to-a-static-site-part-0-requirements.html</link>
+	<author>Stephan H Wissel</author>
+	<guid>612BA839A81B273C4825810000526DC0</guid>
+	<pubDate>2017-04-12 11:00</pubDate>
+
+</item>
 <item
 	><title>Project Deep Purple - IBM Notes Native for iOS</title>
 	<description>&lt;p&gt;We all heard the announcements around &lt;a href="https://itcblogs.currentanalysis.com/2017/02/23/at-ibm-the-future-of-collaboration-isnt-rosy-its-pink/"&gt;Project Pink&lt;/a&gt; headed by &lt;a href="https://www.linkedin.com/in/jasonroygary/"&gt;Jason R. Gary&lt;/a&gt;, the future of IBM Connections. Attending the conference we could admire him all &lt;a href="https://twitter.com/jasonroygary/status/836337112555323392"&gt;clad out in pink&lt;/a&gt;.&lt;/p&gt; 
@@ -332,91 +360,6 @@ function scLoginPart4(err, httpResponse, body) {
 	<author>Stephan H Wissel</author>
 	<guid>C11DBB777E01D4AB4825809600019630</guid>
 	<pubDate>2016-12-30 08:17</pubDate>
-
-</item>
-<item
-	><title>Domino meets RXJava</title>
-	<description>Verse on premises (VoP) is nearing its second beta release and fellow Notes experts are wondering if they need to install 
-&lt;a href="http://lucene.apache.org/solr/"&gt;Apache Solr&lt;/a&gt; as part of the VoP deployment. There was a lengthy, high quality discussion and quite some effort evaluating alternatives. In conclusion it was decided to deliver the subset of Solr capabilities needed for VoP as series of OSGi plugins to the Domino server. The project was formed out of the experience with ProjectCastle, which continues as Project OrangeBox to deliver these plugins. In VoP you might encounter one or the other reference to PoB, so now you know where it comes from. 
-&lt;br /&gt; One of the design challenges to solve was to emulate the facet results of the Solr search engine. I build some prototypes and finally settled on the use of 
-&lt;a href="https://github.com/ReactiveX/RxJava"&gt;RxJava&lt;/a&gt;. 
-&lt;br /&gt; RxJava is a member of the 
-&lt;a href="http://reactivex.io/"&gt;ReactiveX&lt;/a&gt; programming family, which is designed around the Observer pattern, iterators and functional programming. Check out the 
-&lt;a href="http://reactivex.io/"&gt;main site&lt;/a&gt; to get into the groove. 
-&lt;br /&gt; The task at hand is to convert something Domino (a ViewNavigator, a DocumentCollection or a Document) into something that emits subscribable events. I started with turning a document into an NotesItem emitter. Purpose of this was the creation of lighweight Java objects that contain the items I'm interested in. Since Domino's Java has 
-&lt;a href="http://www-01.ibm.com/support/docview.wss?uid=swg21097861"&gt;special needs&lt;/a&gt; and I couldn't use the 
-&lt;a href="https://github.com/OpenNTF/org.openntf.domino"&gt;ODA&lt;/a&gt;, special precaution was needed. 
-&lt;br /&gt; There are 
-&lt;a href="https://github.com/ReactiveX/RxJava/wiki/Creating-Observables"&gt;plenty of methods&lt;/a&gt; to create an Observable and on first look 
-&lt;a href="http://reactivex.io/documentation/operators/create.html"&gt;Create&lt;/a&gt; looks most promising, but it left the question of recycling open. Luckily there is the 
-&lt;a href="http://reactivex.io/documentation/operators/using.html"&gt;Using&lt;/a&gt; method that creates a companion object that lives along the Observable and gets explicitly called when the Observable is done. To create the NotesItem emitting Observable I settled on the 
-&lt;a href="http://reactivex.io/documentation/operators/from.html"&gt;From&lt;/a&gt; method with an 
-&lt;a href="https://docs.oracle.com/javase/7/docs/api/java/lang/Iterable.html"&gt;Iterable&lt;/a&gt; as source. The moving parts I had to create were 
-&lt;code&gt;class DocumentSource implements Iterable&amp;lt;Item&amp;gt;&lt;/code&gt; and 
-&lt;code&gt;class ItemIterator implements Iterator&amp;lt;Item&amp;gt;&lt;/code&gt; 
-&lt;br /&gt; Why Reactive? In a nutshell: a source emits data and any number of subscribers can subscribe to. Between the emission and subscription any number of filters, modifiers and aggregators can manipulate the data emitted. Since each of them lives in its own little class, testing and composition become very easy. Let's look at an example: 
-&lt;br /&gt; 
-&lt;code&gt;docSource.getItemStream(session).filter(nameFilter).map(toPobItem).map(nameMapper).subscribe(new ItemAdder());&lt;/code&gt; 
-&lt;br /&gt; You almost can read this aloud: &amp;quot; 
-&lt;i&gt;The source emits a stream of items, they get filtered by Name, then converted into another Java object (PobItem) and renamed before added to the subscriber.&lt;/i&gt;&amp;quot;. In a different case you might want to collect all entities (users, groups, roles) that have access to a document, you migh create a &amp;quot;readerAuthorFilter&amp;quot;. The individual classes are very easy to test. E.g. the Name filter looks like this: 
-&lt;br /&gt; 
-&lt;pre class="brush: java"&gt;
-// requiredFields is is a Collection&amp;lt;String&amp;gt; of NotesItem names to include or exclude
-ItemNameFilter nameFilter = new ItemNameFilter(requiredFields, ItemNameFilter.FilterMode.INCLUDE);
-
-public class ItemNameFilter implements Func1&amp;lt;Item, Boolean&amp;gt; {
-
-    public enum FilterMode {
-        INCLUDE, EXCLUDE;
-    }
-
-    private final Logger      logger      = Logger.getLogger(this.getClass().getName());
-    private final Set&amp;lt;String&amp;gt; itemNameSet = new HashSet&amp;lt;String&amp;gt;();
-    private final FilterMode  filterMode;
-
-    /**
-     * Flexible include or exclude
-     * 
-     * @param itemNames
-     *            Collection of Names to include or exclude
-     * @param filterMode
-     *            INCLUDE or EXCLUDE
-     */
-    public ItemNameFilter(Collection&amp;lt;String&amp;gt; itemNames, FilterMode filterMode) {
-        this.filterMode = filterMode;
-        this.updateItemNames(itemNames);
-    }
-
-    public ItemNameFilter(Collection&amp;lt;String&amp;gt; itemNames) {
-        this.filterMode = FilterMode.INCLUDE;
-        this.updateItemNames(itemNames);
-    }
-
-    private void updateItemNames(Collection&amp;lt;String&amp;gt; itemNames) {
-        this.itemNameSet.addAll(itemNames);
-    }
-
-    @Override
-    public Boolean call(Item incomingItem) {
-        // Include unless proven otherwise
-        boolean result = true;
-        try {
-            String itemName = incomingItem.getName();
-            boolean inList = this.itemNameSet.contains(itemName.toLowerCase());
-            result = (inList &amp;amp;&amp;amp; this.filterMode.equals(FilterMode.INCLUDE));
-        } catch (NotesException e) {
-            this.logger.log(Level.SEVERE, e);
-            result = false;
-        }
-        return result;
-    }
-}
-&lt;/pre&gt; 
-&lt;br /&gt;</description>
-	<link>2016/09/domino-meets-rxjava.html</link>
-	<author>Stephan H Wissel</author>
-	<guid>770F2C2B080A75A84825802D001E8D87</guid>
-	<pubDate>2016-09-13 01:33</pubDate>
 
 </item>
 
