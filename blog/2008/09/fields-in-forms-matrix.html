@@ -152,888 +152,631 @@ ga('send', 'pageview');
 					<div>When cleaning up existing applications it is good to have an overview what fields are used across forms. Unfortunately the synopsis isn't very helpful there. However with a few lines of LotusScript one can create a matrix that serves as an overview. It is a comparison by name only and doesn't tell you anything about computation mode or data-type. But it is a start. YMMV 
 <br /><pre>
  
- 
  <div class="lotusscript">
 
-  
   
   <font class="ls-comment">'CreateFieldMatrixReport: </font>
 
 
   
-  
   <font class="ls-keyword">Option</font> 
-  
   
   <font class="ls-keyword">Public</font>
 
   
-  
   <font class="ls-keyword">Option</font> 
-  
   
   <font class="ls-keyword">Declare</font>
 
 
   
-  
   <font class="ls-statement">Dim</font> fieldList 
-  
   
   <font class="ls-keyword">List</font> 
   
-  
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">Integer</font> 
-  
   
   <font class="ls-comment">'The row for a specific field name</font>
 
   
-  
   <font class="ls-statement">Dim</font> fieldCount 
-  
   
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">Integer</font> 
-  
   
   <font class="ls-comment">'How many unique fieldnames do we have 0 based</font>
 
 
   
-  
   <font class="ls-statement">Sub</font> 
-  
   
   <font class="ls-keyword">Initialize</font>
 	
   
-  
   <font class="ls-statement">Dim</font> db 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesDatabase</font>
 	
   
-  
   <font class="ls-statement">Dim</font> s 
-  
   
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">New</font> 
-  
   
   <font class="ls-class">NotesSession</font>
 	
   
-  
   <font class="ls-statement">Dim</font> out 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesStream</font>
 	
   
-  
   <font class="ls-statement">Dim</font> curForm 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesForm</font>
 	
   
-  
   <font class="ls-statement">Dim</font> filename 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-keyword">String</font>
 	
 	
   
-  
   <font class="ls-statement">Dim</font> formList 
-  
   
   <font class="ls-keyword">List</font> 
   
-  
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">Variant</font>	
-  
   
   <font class="ls-comment">'A list with arrays of fiields </font>
 	
   
-  
   <font class="ls-statement">Dim</font> formCount 
-  
   
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">Integer</font> 
-  
   
   <font class="ls-comment">'How many forms do we have 0 based</font>
 	
   
-  
   <font class="ls-statement">Dim</font> fieldArray
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-operator">)</font> 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-keyword">Boolean</font>
 	
 	
   
-  
   <font class="ls-statement">On</font> 
   
-  
   <font class="ls-function">Error</font> 
-  
   
   <font class="ls-keyword">Goto</font> Err_Initialize
 	
 	fileName 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-function">Inputbox</font>
   
-  
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">&quot;Where to store the result&quot;</font>
-  
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-statement">If</font> fileName 
-  
   
   <font class="ls-operator">=</font> 
   
-  
   <font class="ls-quote">&quot;&quot;</font> 
-  
   
   <font class="ls-statement">Then</font>
 		
   
-  
   <font class="ls-statement">Exit</font> 
-  
   
   <font class="ls-statement">Sub</font>
 	
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">If</font>
 	
 	
   
-  
   <font class="ls-statement">Set</font> out 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CreateStream
 	
   
-  
   <font class="ls-function">Call</font> out
-  
   
   <font class="ls-operator">.</font>
   
-  
   <font class="ls-function">Open</font>
   
-  
   <font class="ls-operator">(</font>fileName
-  
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-function">Call</font> out
-  
   
   <font class="ls-operator">.</font>Truncate
 	
 	formCount 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-operator">-</font>1
 	fieldCount 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-operator">-</font>1
 	
 	
   
-  
   <font class="ls-statement">Set</font> db 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CurrentDatabase
 	
 	
   
-  
   <font class="ls-comment">'Extract all the fields and forms</font>
 	
   
-  
   <font class="ls-statement">Forall</font> f In db
-  
   
   <font class="ls-operator">.</font>Forms
 		formCount 
   
-  
   <font class="ls-operator">=</font> formCount 
-  
   
   <font class="ls-operator">+</font> 1
 		
   
-  
   <font class="ls-statement">Set</font> curForm 
-  
   
   <font class="ls-operator">=</font> f
 		formList
   
-  
   <font class="ls-operator">(</font>curForm
-  
   
   <font class="ls-operator">.</font>
   
-  
   <font class="ls-function">Name</font>
-  
   
   <font class="ls-operator">)</font> 
   
-  
   <font class="ls-operator">=</font> curForm
-  
   
   <font class="ls-operator">.</font>Fields
 		
   
-  
   <font class="ls-function">Call</font> extractFields
-  
   
   <font class="ls-operator">(</font>curForm
   
-  
   <font class="ls-operator">.</font>Fields
-  
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Forall</font>
 	
 	
   
-  
   <font class="ls-comment">'Now size the array</font>
 	
   
-  
   <font class="ls-statement">Redim</font> fieldArray
-  
   
   <font class="ls-operator">(</font>fieldCount
   
-  
   <font class="ls-operator">,</font>formCount
-  
   
   <font class="ls-operator">)</font>
 	
 	
-  
   
   <font class="ls-comment">'Header</font>
 	out
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;html&gt;&lt;head&gt;&lt;title&gt;Field Matrix&lt;/title&gt;&lt;/head&gt;&lt;style&gt;.yes {background-color : red; color : white }|</font>
-  
   
   <font class="ls-operator">)</font>
 	out
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">| .no { color : white} table {width : 100%} td {text-align : center}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;table&gt;|</font>
-  
   
   <font class="ls-operator">)</font>
 	
 	
   
-  
   <font class="ls-comment">'Now fill the array</font>
 	
   
-  
   <font class="ls-statement">Dim</font> i 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-keyword">Integer</font>
 	
   
-  
   <font class="ls-statement">Dim</font> j 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-keyword">Integer</font>	
 	
 	
   
-  
   <font class="ls-comment">'Now fill the array and the first table</font>
 	out
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;tr&gt;&lt;th&gt;Field/Form&lt;/th&gt;|</font>
-  
   
   <font class="ls-operator">)</font>
 	i 
   
-  
   <font class="ls-operator">=</font> 
   
-  
   <font class="ls-operator">-</font>1 
-  
   
   <font class="ls-comment">'Reset i as Rowcounter</font>
 	
   
-  
   <font class="ls-statement">Forall</font> curFields In formList
 		i 
   
-  
   <font class="ls-operator">=</font> i 
-  
   
   <font class="ls-operator">+</font> 1
 		
   
-  
   <font class="ls-statement">For</font> j 
-  
   
   <font class="ls-operator">=</font> 0 
   
-  
   <font class="ls-statement">To</font> 
-  
   
   <font class="ls-function">Ubound</font>
   
-  
   <font class="ls-operator">(</font>curFields
-  
   
   <font class="ls-operator">)</font>
 			fieldArray
   
-  
   <font class="ls-operator">(</font>fieldList
-  
   
   <font class="ls-operator">(</font>curFields
   
-  
   <font class="ls-operator">(</font>j
   
-  
   <font class="ls-operator">)</font>
   
-  
   <font class="ls-operator">)</font>
-  
   
   <font class="ls-operator">,</font>i
   
-  
   <font class="ls-operator">)</font> 
-  
   
   <font class="ls-operator">=</font> 
   
-  
   <font class="ls-constant">True</font>
 		
-  
   
   <font class="ls-statement">Next</font>
 		
 		
   
-  
   <font class="ls-function">Call</font> out
-  
   
   <font class="ls-operator">.</font>WriteText
   
-  
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;th&gt;|</font>
-  
   
   <font class="ls-operator">)</font>	
 		out
   
-  
   <font class="ls-operator">.</font>WriteText 
-  
   
   <font class="ls-function">Listtag</font>
   
-  
   <font class="ls-operator">(</font>curFields
-  
   
   <font class="ls-operator">)</font>
 		
   
-  
   <font class="ls-function">Call</font> out
-  
   
   <font class="ls-operator">.</font>WriteText
   
-  
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;/th&gt;|</font>
-  
   
   <font class="ls-operator">)</font>
 		
 	
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Forall</font>
 	
   
-  
   <font class="ls-function">Call</font> out
-  
   
   <font class="ls-operator">.</font>WriteText
   
-  
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;/tr&gt;|</font>
-  
   
   <font class="ls-operator">)</font>
 	
 	
-  
   
   <font class="ls-comment">'Now the matrix in its full beauty</font>
 	
 	
   
-  
   <font class="ls-statement">Forall</font> curFields2 In FieldList
 		out
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;tr&gt;&lt;td&gt;|</font>
   
-  
   <font class="ls-operator">+</font>
-  
   
   <font class="ls-function">Listtag</font>
   
-  
   <font class="ls-operator">(</font>curFields2
   
-  
   <font class="ls-operator">)</font>
-  
   
   <font class="ls-operator">+</font>
   
-  
   <font class="ls-quote">|&lt;/td&gt;|</font>
-  
   
   <font class="ls-operator">)</font>
 		
-  
   
   <font class="ls-comment">'curFields2 has the row, we loop through the columns</font>
 		
 		
   
-  
   <font class="ls-statement">For</font> j 
   
-  
   <font class="ls-operator">=</font> 0 
-  
   
   <font class="ls-statement">To</font> formCount
 			
   
-  
   <font class="ls-statement">If</font> fieldArray
-  
   
   <font class="ls-operator">(</font>curFields2
   
-  
   <font class="ls-operator">,</font>j
-  
   
   <font class="ls-operator">)</font> 
   
-  
   <font class="ls-statement">Then</font> 
-  
   
   <font class="ls-comment">'it is boolean after all</font>
 				out
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;td class=&quot;yes&quot;&gt;+&lt;/td&gt;|</font>
-  
   
   <font class="ls-operator">)</font>
 			
-  
   
   <font class="ls-statement">Else</font>
 				out
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;td class=&quot;no&quot;&gt;-&lt;/td&gt;|</font>
-  
   
   <font class="ls-operator">)</font>
 			
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">If</font>
 		
   
-  
   <font class="ls-statement">Next</font>		
 		out
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;/tr&gt;|</font>
-  
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Forall</font>
 	
 	
   
-  
   <font class="ls-comment">'Footer</font>
 	out
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;|</font>
-  
   
   <font class="ls-operator">)</font>
 	
 Exit_Initialize
   
-  
   <font class="ls-operator">:</font>
 	
   
-  
   <font class="ls-statement">On</font> 
-  
   
   <font class="ls-function">Error</font> 
   
-  
   <font class="ls-statement">Resume</font> 
-  
   
   <font class="ls-statement">Next</font>
 	
   
-  
   <font class="ls-function">Call</font> out
   
-  
   <font class="ls-operator">.</font>
-  
   
   <font class="ls-function">Close</font>
 	
   
-  
   <font class="ls-statement">Exit</font> 
-  
   
   <font class="ls-statement">Sub</font>	
 	
 Err_Initialize
   
-  
   <font class="ls-operator">:</font>
 	
   
-  
   <font class="ls-function">Msgbox</font> 
-  
   
   <font class="ls-function">Error$</font>
 	
-  
   
   <font class="ls-statement">Resume</font> Exit_Initialize
 	
 
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Sub</font>
 
 
 
   
-  
   <font class="ls-statement">Sub</font> extractFields
-  
   
   <font class="ls-operator">(</font>allFields 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-keyword">Variant</font>
   
-  
   <font class="ls-operator">)</font>
 	
-  
   
   <font class="ls-comment">'fieldList, fieldcount are globla</font>
 	
 	
   
-  
   <font class="ls-statement">Forall</font> curFieldName In allFields
 		
   
-  
   <font class="ls-statement">If</font> 
-  
   
   <font class="ls-operator">Not</font> 
   
-  
   <font class="ls-function">Iselement</font>
-  
   
   <font class="ls-operator">(</font>fieldList
   
-  
   <font class="ls-operator">(</font>curFieldName
-  
   
   <font class="ls-operator">)</font>
   
-  
   <font class="ls-operator">)</font> 
-  
   
   <font class="ls-statement">Then</font>
 			
   
-  
   <font class="ls-comment">'We only add fields we don't have in the list</font>
 			fieldcount 
   
-  
   <font class="ls-operator">=</font> fieldCount 
-  
   
   <font class="ls-operator">+</font> 1
 			fieldList
   
-  
   <font class="ls-operator">(</font>curFieldName
   
-  
   <font class="ls-operator">)</font> 
-  
   
   <font class="ls-operator">=</font> fieldCount
 		
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">If</font>
 	
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Forall</font>
 
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Sub</font>
 
 
- 
  
  </div></pre> 
 <div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;"> 
@@ -1137,7 +880,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Solution Architect" for Salesforce. I'm based in Singapore.
+						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
