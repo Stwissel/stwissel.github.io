@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>NotesSensei's Blog - From Blogsphere to a Static Site (Part 1) - Objects</title>
+<title>NotesSensei's Blog - From Blogsphere to a Static Site (Part 2) - Cleaning up the HTML</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -14,7 +14,7 @@ ga('send', 'pageview');
 		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
 	<![endif]-->
 <meta name="ROBOTS" content="FOLLOW, NOIMAGEINDEX" />
-<meta name="DC.Title" content="NotesSensei's Weblog - From Blogsphere to a Static Site (Part 1) - Objects" />
+<meta name="DC.Title" content="NotesSensei's Weblog - From Blogsphere to a Static Site (Part 2) - Cleaning up the HTML" />
 <meta name="Author" content="Stephan H. Wissel" />
 <meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
 <meta name="description"
@@ -30,7 +30,7 @@ ga('send', 'pageview');
 <meta property="fb:admins" content="567103136" />
 <meta property="fb:app_id" content="219323514774289">
 <meta property="og:title"
-	content="wissel.net - From Blogsphere to a Static Site (Part 1) - Objects" />
+	content="wissel.net - From Blogsphere to a Static Site (Part 2) - Cleaning up the HTML" />
 <meta property="og:type" content="blog" />
 <meta property="og:url" content="https://wissel.net/blog" />
 <meta property="og:image"
@@ -138,98 +138,127 @@ ga('send', 'pageview');
 				<p>This article is part of a mini series. Read them all (latest on top):</p>
 				<h3>Blog Migration</h3>
 				<ol reversed class="nav nav-list">
-					<li ><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html">From Blogsphere to a Static Site (Part 2) - Cleaning up the HTML</a></li>
-					<li  class="active"><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html">From Blogsphere to a Static Site (Part 1) - Objects</a></li>
+					<li  class="active"><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html">From Blogsphere to a Static Site (Part 2) - Cleaning up the HTML</a></li>
+					<li ><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html">From Blogsphere to a Static Site (Part 1) - Objects</a></li>
 					<li ><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-0-requirements.html">From Blogsphere to a Static Site (Part 0) - Requirements</a></li>
 				</ol>
 			</div>	
 
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-0-requirements.html"><i class="icon-hand-left"></i>From Blogsphere to a Static Site (Part 0) - Requirements</a>
+					<li><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html"><i class="icon-hand-left"></i>From Blogsphere to a Static Site (Part 1) - Objects</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html">From Blogsphere to a Static Site (Part 2) - Cleaning up the HTML<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 				<article class="well well-raised">
 					<h1>
-						<small>From Blogsphere to a Static Site (Part 1) - Objects</small>
+						<small>From Blogsphere to a Static Site (Part 2) - Cleaning up the HTML</small>
 					</h1>
 					<hr />
-					<div>The migration tooling revolves around data, so getting the data classes right is important. The data classes need to be designed to allow it to be populated either from the Blogsphere NSF or from a collection of JSON files (so the blog generation can continue when the NSF is gone). For the blog we need 3 objects: 
-<ul> 
- <li><b>BlogEntry</b>: The main data containing a blog entry including its meta data</li> 
- <li><b>BlogComment</b>: An entry with a comment for a Blog in a 1:n relation</li> 
- <li><b>FileEntry</b>: information about downloadable files (needed for export)</li> 
-</ul> 
-<p>There will be auxiliary data classes like Config, RenderInstructions, Blogindex. Their content is derived from the data stored in the main object or, in case of Config, from disk.</p> 
-<img src="/blog/images/2017/BlogDataClasses.png" border="0" alt="Data classes in the Blog" /><p>The classes all feature static methods to load from a stream and save them as JSON to a stream. I found this pattern quite efficient.</p> 
-<h3>Saving as JSON</h3> 
-<h3> <pre class="brush: java">
-   /**
-     * Save the object to a JSON file for reuse
-     */
-    public void saveDatatoJson(OutputStream out) {
-        GsonBuilder gb = new GsonBuilder();
-        gb.setPrettyPrinting();
-        gb.disableHtmlEscaping();
-        Gson gson = gb.create();
-        PrintWriter writer = new PrintWriter(out);
-        gson.toJson(this, writer);
-        writer.flush();
-        writer.close();
-    }
-    
-    @Override
-    public String toString() {
-    	ByteArrayOutputStream out = new ByteArrayOutputStream();
-    	this.saveDatatoJson(out);
-    	return out.toString();
-    }
-</pre> </h3> 
-<h3>Loading from JSON</h3> 
-<br /> 
+					<div><p>Blogsphere allows to create RichText and plain HTML entries. To export them I need to grab the HTML, either the manual entered or the RichText generated on, clean it up (especially for my manual entered HTML) and then replace image sources and internal links using the new URL syntax. To make this happen I created 2 functions that saved images and attachments and created a lookup list, so the HTML cleanup has a mapping table to work with</p> 
 <pre class="brush: java">
-    public static BlogEntry loadDataFromJson(InputStream in) {
-        BlogEntry result = null;
-        Gson gson = new GsonBuilder().create();
-        result = (BlogEntry) gson.fromJson(new InputStreamReader(in), BlogEntry.class);
+private void saveImage(Document doc) {
+        String sourceDirectory = this.config.sourceDirectory + this.config.imageDirectory;
+        try {
+            String subject = doc.getItemValueString(&quot;ImageName&quot;);
+            Date created = doc.getCreated().toJavaDate();
+            @SuppressWarnings(&quot;rawtypes&quot;)
+            Vector attNames = this.s.evaluate(&quot;@AttachmentNames&quot;, doc);
+            String description = doc.getItemValueString(&quot;ImageName&quot;);
+            String oldURL = this.config.oldImageLocation + doc.getItemValueString(&quot;ImageUNID&quot;) + &quot;/$File/&quot;;
+            SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy&quot;);
+            String year = sdf.format(created);
+            FileEntry fe = this.imgEntries.add(subject, oldURL, description, created);
 
-        // The comments might not be sorted on disk, so we sort them out here
-        Set&lt;BlogComments&gt; bc = new TreeSet&lt;BlogComments&gt;();
-        bc.addAll(result.getComments());
-        result.setComments(bc);
+            for (Object attObj : attNames) {
+                try {
+                    String attName = attObj.toString();
+                    String newURL = this.config.webBlogLocation + this.config.imageDirectory + year + &quot;/&quot; + attName;
+                    fe.add(attName, newURL, description, created);
+                    String outDir = sourceDirectory + year + &quot;/&quot;;
+                    this.ensureDirectory(outDir);
+                    EmbeddedObject att = doc.getAttachment(attName);
+                    att.extractFile(outDir + attName);
+                    Utils.shred(att);
+                } catch (NotesException e) {
+                    e.printStackTrace();
+                } catch (Exception e2) {
+                    e2.printStackTrace();
+                }
+            }
 
-        return result;
+        } catch (NotesException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void saveImageFromURL(String href, String targetName) {
+
+        String fetchFromWhere = &quot;https://&quot; + this.config.bloghost + href;
+        try {
+            byte[] curImg = Request.Get(fetchFromWhere).execute().returnContent().asBytes();
+            this.saveIfChanged(curImg, targetName);
+        } catch (ClientProtocolException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 </pre> 
-<br /> The interesting part is the call to the 
-<code>fromJson()</code> method that reads and converts the JSON to the object defined by the class in the parameter. Gson will ignore unknown fields, so the mechanism is quite robust. Still you want to wrap that into an appropriate error handler. Next stop: collections needed for rendering</div>
+<p>With images saved the HTML cleanup can proceed. As mentioned before I'm using <a href="https://jsoup.org/">JSoup</a> to process crappy HTML. It allows for easy extraction of elements and attributes, so processing of links an images is just a few lines</p><pre class="brush: java">
+    private String cleanupHTMLlinksAndImages(String source, String location) {
+
+        org.jsoup.nodes.Document hDoc = Jsoup.parse(source);
+        this.cleanupTagUrlAttribute(hDoc, &quot;img&quot;, &quot;src&quot;, location);
+        this.cleanupTagUrlAttribute(hDoc, &quot;a&quot;, &quot;href&quot;, location);
+        return hDoc.body().html();
+
+    }
+
+    private void cleanupTagUrlAttribute(org.jsoup.nodes.Document hDoc, String elementName, String attName, String location) {
+
+        String query = elementName + &quot;[&quot; + attName + &quot;]&quot;;
+        Elements elements = hDoc.select(query);
+
+        for (Element element : elements) {
+            String attValue = element.attr(attName).trim();
+            if (this.mapperOldNewURLs.containsKey(attValue.toLowerCase())) {
+                String replace = this.mapperOldNewURLs.get(attValue.toLowerCase());
+                System.out.print(&quot;Replacing:&quot;);
+                System.out.print(attValue);
+                System.out.print(&quot; with &quot;);
+                System.out.println(replace);
+                element.attr(attName, replace);
+            }
+        }
+    }
+</pre> 
+<p>The returned HTML not only has the attribute values cleaned up, but also produces valid clean HTML.<br />Next stop: rendering output. Stay tuned</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2017-04-15 04:06
+Stephan H Wissel</a> on 2017-04-17 09:29
 <span class="divider">|</span>
-<a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html#comments">Comments (0)</a>
+<a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html#comments">Comments (0)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/Blog.html">Blog</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="From Blogsphere to a Static Site (Part 1) - Objects"></div>
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="From Blogsphere to a Static Site (Part 2) - Cleaning up the HTML"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html";
+							var permaLink = "https://www.notessensei.com/blog/2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html";
 						</script>
 					</p>
 
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_14A4D971F7B2205F48258103002C7F40" type="button">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_922F997388C85F0548258105004A17A1" type="button">
 		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
 	            </button>
 	            </div>
-				<div id="commentform_14A4D971F7B2205F48258103002C7F40"  class="collapse"></div>
+				<div id="commentform_922F997388C85F0548258105004A17A1"  class="collapse"></div>
 				<div class="well well-raised">
 					<h4>Comments</h4>
 					<ol id="commentList">
@@ -239,12 +268,9 @@ categories:  <a href="/blog/categories/Blog.html">Blog</a>
 					</ol>
 				</div>
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-0-requirements.html"><i class="icon-hand-left"></i>From Blogsphere to a Static Site (Part 0) - Requirements</a>
+					<li><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html"><i class="icon-hand-left"></i>From Blogsphere to a Static Site (Part 1) - Objects</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html">From Blogsphere to a Static Site (Part 2) - Cleaning up the HTML<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 			</div>
@@ -322,7 +348,7 @@ categories:  <a href="/blog/categories/Blog.html">Blog</a>
 	</footer>
 
 	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html";
+		var permaLink = "https://wissel.net/blog/2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html";
 	</script>
 		<script type="text/javascript" src="/blog/js/jquery.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
@@ -353,7 +379,7 @@ categories:  <a href="/blog/categories/Blog.html">Blog</a>
 	<script type="text/javascript" src="//www.google.com/recaptcha/api/js/recaptcha_ajax.js"></script>
 	<script type="text/javascript">
 		$(document).ready(function() {
-			renderComment("6LcUOewSAAAAACAI4zVcGFVkGWmp0sUH5gabwy1q", "14A4D971F7B2205F48258103002C7F40");
+			renderComment("6LcUOewSAAAAACAI4zVcGFVkGWmp0sUH5gabwy1q", "922F997388C85F0548258105004A17A1");
 		});
 	</script>
 

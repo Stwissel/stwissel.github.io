@@ -6,7 +6,68 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2017 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Mon, 17 Apr 2017 07:51:46 +0800</pubdate>
+	<pubdate>Mon, 17 Apr 2017 22:24:24 +0800</pubdate>
+<item
+	><title>From Blogsphere to a Static Site (Part 2) - Cleaning up the HTML</title>
+	<description>&lt;p&gt;Blogsphere allows to create RichText and plain HTML entries. To export them I need to grab the HTML, either the manual entered or the RichText generated on, clean it up (especially for my manual entered HTML) and then replace image sources and internal links using the new URL syntax. To make this happen I created 2 functions that saved images and attachments and created a lookup list, so the HTML cleanup has a mapping table to work with&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;
+private void saveImage(Document doc) {
+        String sourceDirectory = this.config.sourceDirectory + this.config.imageDirectory;
+        try {
+            String subject = doc.getItemValueString(&amp;quot;ImageName&amp;quot;);
+            Date created = doc.getCreated().toJavaDate();
+            @SuppressWarnings(&amp;quot;rawtypes&amp;quot;)
+            Vector attNames = this.s.evaluate(&amp;quot;@AttachmentNames&amp;quot;, doc);
+            String description = doc.getItemValueString(&amp;quot;ImageName&amp;quot;);
+            String oldURL = this.config.oldImageLocation + doc.getItemValueString(&amp;quot;ImageUNID&amp;quot;) + &amp;quot;/$File/&amp;quot;;
+            SimpleDateFormat sdf = new SimpleDateFormat(&amp;quot;yyyy&amp;quot;);
+            String year = sdf.format(created);
+            FileEntry fe = this.imgEntries.add(subject, oldURL, description, created);
+
+            for (Object attObj : attNames) {
+                try {
+                    String attName = attObj.toString();
+                    String newURL = this.config.webBlogLocation + this.config.imageDirectory + year + &amp;quot;/&amp;quot; + attName;
+                    fe.add(attName, newURL, description, created);
+                    String outDir = sourceDirectory + year + &amp;quot;/&amp;quot;;
+                    this.ensureDirectory(outDir);
+                    EmbeddedObject att = doc.getAttachment(attName);
+                    att.extractFile(outDir + attName);
+                    Utils.shred(att);
+                } catch (NotesException e) {
+                    e.printStackTrace();
+                } catch (Exception e2) {
+                    e2.printStackTrace();
+                }
+            }
+
+        } catch (NotesException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void saveImageFromURL(String href, String targetName) {
+
+        String fetchFromWhere = &amp;quot;https://&amp;quot; + this.config.bloghost + href;
+        try {
+            byte[] curImg = Request.Get(fetchFromWhere).execute().returnContent().asBytes();
+            this.saveIfChanged(curImg, targetName);
+        } catch (ClientProtocolException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+&lt;/pre&gt; 
+&lt;p&gt;With images saved the HTML cleanup can proceed. As mentioned before I'm using &lt;a href="https://jsoup.org/"&gt;JSoup&lt;/a&gt; to process crappy HTML. It allows for easy extraction of elements and attributes, so processing of links an images is just a few lines&lt;/p&gt;</description>
+	<link>2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html</link>
+	<author>Stephan H Wissel</author>
+	<guid>922F997388C85F0548258105004A17A1</guid>
+	<pubDate>2017-04-17 09:29</pubDate>
+
+</item>
 <item
 	><title>From Blogsphere to a Static Site (Part 1) - Objects</title>
 	<description>The migration tooling revolves around data, so getting the data classes right is important. The data classes need to be designed to allow it to be populated either from the Blogsphere NSF or from a collection of JSON files (so the blog generation can continue when the NSF is gone). For the blog we need 3 objects: 
@@ -321,42 +382,6 @@ function scLoginPart4(err, httpResponse, body) {
 	<author>Stephan H Wissel</author>
 	<guid>9B9FB2E6D097996C482580A5002D4E39</guid>
 	<pubDate>2017-01-11 04:14</pubDate>
-
-</item>
-<item
-	><title>Lessons from Project OrangeBox</title>
-	<description>&lt;p&gt;Project OrangeBox, the &lt;a href="http://lucene.apache.org/solr/"&gt;Solr&lt;/a&gt; free search component, was launched after the experiments with Java8, &lt;a href="http://vertx.io/"&gt;Vert.x&lt;/a&gt; and &lt;a href="https://github.com/ReactiveX/RxJava"&gt;RxJava&lt;/a&gt; in &lt;a href="#" title="The project that shall not be named" style="color: black; font-weight: normal"&gt;TPTSNBN&lt;/a&gt; concluded. With &lt;a href="https://twitter.com/edbrill/status/799733973870059520"&gt;a certain promise&lt;/a&gt; we were working on a tight dead line and burned way more midnight oil than I would have wished for.&lt;/p&gt; 
-&lt;p&gt;Anyway, I had the opportunity to work with great engineers and we shipped as promised. There are quite some lesson to be learned, here we go (in no specific order):&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;&lt;b&gt;Co-locate&lt;/b&gt;&lt;br /&gt; The Verse team is spread over the globe: USA, Ireland, Belarus, China, Singapore and The Philippines. While this allows for 24x7 development, it also poses a substantial communications overhead. We made the largest jumps in both features and quality during and after co-location periods. So any sizable project needs to start and be interluded with co-location time. Team velocity will greatly benefit&lt;/li&gt; 
- &lt;li&gt;&lt;b&gt;No holy cows&lt;/b&gt;&lt;br /&gt; For VoP we slaughtered the &amp;quot;Verse is Solr&amp;quot; cow. That saved the Domino installed base a lot of investments in time and resources. Each project has its &amp;quot;holy cows&amp;quot;: Interfaces, tool sets, &amp;quot;invaluable, immutable code&amp;quot;, development pattern, processes. You have to be ready to challenge them by keeping a razor sharp focus on customer success. Watch out for Prima donnas (see next item)&lt;/li&gt; 
- &lt;li&gt;&lt;b&gt;No &lt;a href="https://www.google.com.sg/search?q=define+primadonna"&gt;Prima Donnas&lt;/a&gt;&lt;/b&gt;&lt;br /&gt; As software engineers we are very prone to perceive our view of the world as the (only) correct one. After all we create some of it. In a team setting that's deadly. Self reflection and &lt;a href="http://www.planetofsuccess.com/blog/2011/developing-empathy-walk-a-mile-in-someone%E2%80%99s-shoes/"&gt;empathy&lt;/a&gt; are as critical to the success as technical skills and perseverance.&lt;br /&gt; &lt;a href="http://amzn.to/2ixejLi"&gt;Robert Sutton&lt;/a&gt;, one of my favourite Harvard authors, expresses that &lt;a href="http://amzn.to/2j2ljD1"&gt;a little bolder&lt;/a&gt;.&lt;br /&gt; In short: A team can only be bigger than the sum of its members, when the individuals see themselves as members and are not hovering above it&lt;/li&gt; 
- &lt;li&gt;&lt;b&gt;Unit test are overrated&lt;/b&gt;&lt;br /&gt; I hear howling, read on. Like &amp;quot;A journey of &lt;a href="http://www.bbc.co.uk/worldservice/learningenglish/movingwords/shortlist/laotzu.shtml"&gt;a thousand miles&lt;/a&gt; begins with a single step&amp;quot; you can say: &amp;quot;Great software starts with a Unit Test&amp;quot;. Begins, not: &amp;quot;Great software consists of Unit Tests&amp;quot;. A great journey that only has steps ends tragically in death by starvation, thirst or evil events.&lt;br /&gt; Same applies to your test regime: You start with Unit tests, write code, pass it on to the next level of tests (module, integration, UI) etc. So unit tests are a &amp;quot;&lt;a href="https://en.wikipedia.org/wiki/Sine_qua_non"&gt;conditio sine qua non&lt;/a&gt;&amp;quot; in your test regime, but in no way sufficient&lt;/li&gt; 
- &lt;li&gt;&lt;b&gt;Test pyramid and good test data&lt;/b&gt;&lt;br /&gt; Starting with unit tests (we used &lt;a href="http://junit.org/"&gt;JUnit&lt;/a&gt; and &lt;a href="http://easymock.org/"&gt;EasyMock&lt;/a&gt;), you move up to module tests. There, still written in JUnit, you check the correctness of higher combinations. Then you have API test for your REST API. Here we used &lt;a href="https://www.getpostman.com/"&gt;Postman&lt;/a&gt; and its node.js integration &lt;a href="https://www.getpostman.com/docs/newman_intro"&gt;Newman&lt;/a&gt;.&lt;br /&gt; Finally you need to test end-to-end including the UI. For that &lt;a href="http://www.seleniumhq.org/"&gt;Selenium&lt;/a&gt; rules supreme. Why not e.g. &lt;a href="http://phantomjs.org/"&gt;PhantomJS&lt;/a&gt;? Selenium drives real browsers, so you can (automate) test against all rendering engines, which, as a fact of the matter, behave unsurprisingly different.&lt;br /&gt; One super critical insight: You need a &lt;b&gt;good set&lt;/b&gt; of diverse test data, both expected and unexpected inputs in conjunction with the expected outputs. A good set of &lt;b&gt;fringe data&lt;/b&gt; makes sure you catch challenges and border conditions early.&lt;br /&gt; Last not least: Have performance tests from the very beginning. We used both &lt;a href="http://www-03.ibm.com/software/products/en/performance"&gt;Rational Performance Tester&lt;/a&gt; (RPT) and &lt;a href="http://jmeter.apache.org/"&gt;Apache JMeter&lt;/a&gt;. RPT gives you a head start in creating tests, while JMeter's XML file based test cases were easier to share and manipulate. When you are short of test infrastructure (quite often the client running tests is the limiting factor) you can offload JMeter tests to &lt;a href="https://www.blazemeter.com/"&gt;Blazemeter&lt;/a&gt; or &lt;a href="https://flood.io/"&gt;Flood.io&lt;/a&gt;&lt;/li&gt; 
- &lt;li&gt;&lt;b&gt;Measure, measure, measure&lt;/b&gt;&lt;br /&gt; You need to know where your code is spending its time in. We employed a number of tools to get good metrics. You want to look at averages, min, max and standard deviations of your calls. David even wrote a specific plugin to see the native calls (note open, design note open) or Java code would produce (This will result in future Java API improvements). The two main tools (besides watching the network tab in the browser) were &lt;a href="https://newrelic.com/"&gt;New Relic&lt;/a&gt; with deep instrumentation into our Domino server's JVM and &lt;a href="http://jamonapi.sourceforge.net/"&gt;JAMon&lt;/a&gt; collecting live statistics (which you can query on the Domino console using &lt;code&gt;show stats vop&lt;/code&gt;. Making measurements a default practise during code development makes your life much easier later on&lt;/li&gt; 
- &lt;li&gt;&lt;b&gt;No Work without ticket&lt;/b&gt;&lt;br /&gt; That might be the hardest part to implement. Any code item needs to be related to a ticket. For the search component we used Github Enterprise, pimped up with &lt;a href="https://www.zenhub.com/"&gt;Zenhub&lt;/a&gt;.&lt;br /&gt; A &lt;b&gt;very&lt;/b&gt; typical flow is: someone (analyst, scrum master, offering manager, project architect, etc.) &amp;quot;owns&amp;quot; the ticket system and tickets flow down. Sounds awfully like &lt;a href="http://www.waterfall2006.com/"&gt;waterfall&lt;/a&gt; (and it is). Breaking free from this and turn to &amp;quot;the tickets are created by the developers and are the actual standup&amp;quot; greatly improves team velocity. This doesn't preclude creation of tickets by others, to fill a backlog or create and extend user stories. Look for the middle ground.&lt;br /&gt; We managed to get Github tickets to &lt;a href="http://marketplace.eclipse.org/content/github-mylyn-connector"&gt;work with Eclipse&lt;/a&gt; which made it easy to create tickets on the fly. Once you are there you can visualize progress using &lt;a href="http://www.wissel.net/blog/d6plinks/SHWL-8CLNBW"&gt;Burn charts&lt;/a&gt; &lt;/li&gt; 
- &lt;li&gt;&lt;b&gt;Agile&lt;/b&gt;&lt;br /&gt; &amp;quot;Standup meeting every morning 9:30, no exception&amp;quot; - isn't agile. That's process strangling velocity. Spend some time to rediscover &lt;a href="http://alistair.cockburn.us/Rediscovering+the+Heart+of+Agile"&gt;the heart of Agile&lt;/a&gt; and implement that.&lt;br /&gt; Typical traps to avoid: 
-  &lt;ul&gt; 
-   &lt;li&gt;use ticket (closings) as (sole) metric. It only discourages the us of the ticket system as ongoing documentation&lt;/li&gt; 
-   &lt;li&gt;insist on process over collaboration. A &amp;quot;standup meeting&amp;quot; could be just a Slack channel for most of the time. No need to spend time every day in a call or meeting, especially when the team is large&lt;/li&gt; 
-   &lt;li&gt;Code is final - it's not. Refactoring is part of the package - including refactoring the various tests&lt;/li&gt; 
-   &lt;li&gt;Isolate teams. If there isn't a lively exchange of progress, you end up with silo code. Requires mutual team respect&lt;/li&gt; 
-   &lt;li&gt;Track &amp;quot;percent complete&amp;quot;. This lives on the fallacy of 100% being a fixed value. Track units of work left to do (and expect that to eventually rise during the project)&lt;/li&gt; 
-   &lt;li&gt;One way flow. If the people actually writing code can't participate in shaping user stories or create tickets, you have waterfall in disguise&lt;/li&gt; 
-   &lt;li&gt;Narrow user definitions and stories: I always cringe at the Scrum template for user stories: &amp;quot;As a ... I want ... because/in order to ...&amp;quot;. There are two fallacies: first it presumes a linear, single actor flow, secondly it only describes what happens if it works. While it's a good start, adopting more complete use cases (the big brother of user stories) helps to keep the stories consistent. Go learn about &lt;a href="http://amzn.to/2iCBDtM"&gt;Writing Effective Use Cases&lt;/a&gt;. The agile twist: A use case doesn't have to be complete to get started. Adjust and complete it as it evolves. Another little trap: The &amp;quot;users&amp;quot; in the user stories need to include: infrastructure managers, db admins, code maintainer, software testers etc. Basically anybody touching the app, not just final (business) users&lt;/li&gt; 
-   &lt;li&gt;No code reviews: looking at each other's code increases coherence in code style and accellerates bug squashing. Don't fall for the trap: productivity drops by 50% if 2 people stare at one screen - just the opposite happens&lt;/li&gt; 
-  &lt;/ul&gt; &lt;/li&gt; 
- &lt;li&gt;&lt;b&gt;Big screens&lt;/b&gt;&lt;br /&gt; While co-located we 
-  &lt;strike&gt;
-    squatted in 
-  &lt;/strike&gt; booked conference rooms with whiteboard, postit walls and projectors. Some of the most efficient working hours were two or three pairs of eyes walking through code, both in source and debug mode. During quiet time (developers need ample of that. The &lt;a href="http://amzn.to/2iCLMXc"&gt;Bose solution&lt;/a&gt; isn't enough), 27&amp;quot; or more inches of screen real estate boost productivity. At my home office I run a dual screen setup with more than one machine running (However, I have to admit: some of the code was written perched into a cattle class seat travelling between Singapore and the US)&lt;/li&gt; 
- &lt;li&gt;&lt;b&gt;Automate&lt;/b&gt;&lt;br /&gt; We used both &lt;a href="https://jenkins.io/" title="Jenkins is the tool of choice for the core Verse team"&gt;Jenkins&lt;/a&gt; and &lt;a href="https://travis-ci.org/" title="ISSC uses Travis, mostly because it also can build on macOS"&gt;Travis&lt;/a&gt; as our automation platform. The project used &lt;a href="http://maven.apache.org/"&gt;Maven&lt;/a&gt; to keep the project together. While Maven &lt;a href="https://en.wikipedia.org/wiki/The_Moon_Is_a_Harsh_Mistress"&gt;is a harsh mistress&lt;/a&gt; spending time to provide all automation targets proved invaluable.&lt;br /&gt; You have to configure your test regime carefully. Unit test should not only run on the CI environment, but on a developers workstation - for the code (s)he touches. A full integration test for VoP on the other hand, runs for a couple of hours. That's the task better left to the CI environment. Our Maven tasks included generating the (internal) website and the JavaDoc.&lt;br /&gt; Lesson learned: setting up a full CI environment is quite a task. Getting the repeatable datasets in place (especially when you have time sensitive tests like &amp;quot;provide emails from the last hour&amp;quot;) can be tricky. Lesson 2: you will need more compute than expected, plan for parallel testing &lt;/li&gt; 
- &lt;li&gt;&lt;b&gt;Ownership&lt;/b&gt;&lt;br /&gt; David owned performance, Michael the build process, Raj the Query Parser, Christopher the test automation and myself the query strategy and core classes. It didn't mean: being the (l)only coder, but feeling responsible and taking the lead in the specific module. With the sense of ownership at the code level, we experienced a number of refactoring exercises, to the benefit of the result, that would never have happened if we followed &lt;a href="https://www.youtube.com/watch?v=qYodWEKCuGg"&gt;Code Monkey&lt;/a&gt; style an analyst's or architect's blueprint. &lt;/li&gt; 
-&lt;/ul&gt; As usual YMMV</description>
-	<link>2017/01/lessons-from-project-orangebox.html</link>
-	<author>Stephan H Wissel</author>
-	<guid>ECA77946958C5E624825809D0009F1B0</guid>
-	<pubDate>2017-01-03 09:48</pubDate>
 
 </item>
 
