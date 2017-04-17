@@ -86,6 +86,7 @@ function renderComment(recaptchaid, parentId) {
 	$.ajax({
 		url: destinationURL + "?parentid=" + parentId,
 		type: 'GET',
+		async: true,
 		success: function(data){ 
 			if (data.length > 0) {
 				$("li.dynamicComments").remove();
