@@ -50,6 +50,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -91,9 +92,7 @@ ga('send', 'pageview');
 	</div>
 <div class="navbar-spacer"></div>
 
-
 	<div class="container">
-
     		<!-- Masthead
 		================================================== -->
 		<br />
@@ -123,13 +122,81 @@ ga('send', 'pageview');
   </div>
 <![endif]-->
 
-
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html">From Blogsphere to a Static Site (Part 2) - Cleaning up the HTML</a></small>
-					</h1>
+					<h1><small><a href="/blog/2017/05/from-blogsphere-to-a-static-site-part-3-generating-pages.html">From Blogsphere to a Static Site (Part 3) - Generating pages</a></small></h1>
+					<hr />
+					<div><p>The rendering engine I choose is <a href="mustache.github.com/mustache.5.html">mustache</a> which describes itself as &quot;<i>logic-less templating engine</i>&quot;. My main criteria was the availability on multiple platforms including <a href="https://github.com/spullara/mustache.java">Java</a> and <a href="https://github.com/janl/mustache.js">JavaScript</a> (I might port the rendering part to NodeJS at some time in the future).<br /> The only logic mustache supports is conditional rendering based on the presence or absence of an element. When an element is present and is an array (or a collection in Java) the body of the template gets repeated for each element in the array. A scalar value hence is treated as an array with one value only.</p> 
+<p>Mustache is simple to use. All you need is a data bean (in Java, a JSON structure for JavaScript) and a text file containing placeholders with the property names. E.g. <code>&lt;h1&gt;{{title}}&lt;/h1&gt;</code> will render a headline with the title property of you data object. In Java that would be either a public variable or a call to <code>getTitle</code> according to the bean specification. The blog rendering code therefore is quite simple:</p> 
+<pre class="brush: java">
+private void renderOneEntry(BlogEntry be, Mustache mustache) throws IOException {
+
+        String location = this.config.destinationDirectory + be.getNewURL();
+        String outDirs = location.substring(0, location.lastIndexOf(&quot;/&quot;));
+        File dirs = new File(outDirs);
+        if (!dirs.exists()) {
+            dirs.mkdirs();
+        }
+        // Set the current context
+        for (LinkItem cat : be.getCategory()) {
+            String c = cat.name;
+            this.allCategories.get(c.toLowerCase()).active = true;
+        }
+        this.allDateCategories.get(be.getDateYear()).active = true;
+
+        if (be.getSeries() != null) {
+            String series = be.getSeries();
+            if (this.allSeries.containsKey(series)) {
+                this.allSeries.get(series).get(be.getNewURL()).active = true;
+            }
+        }
+
+        // Prepare to write out
+        ByteArrayOutputStream out = new ByteArrayOutputStream(102400);
+        Writer pw = new PrintWriter(out);
+
+        // This is where the magic happens
+        mustache.execute(pw, be);
+        pw.flush();
+        pw.close();
+        this.saveIfChanged(out.toByteArray(), location);
+
+        // Cleanup
+        for (LinkItem cat : be.getCategory()) {
+            String c = cat.name;
+            this.allCategories.get(c.toLowerCase()).active = false;
+        }
+        this.allDateCategories.get(be.getDateYear()).active = false;
+
+        if (be.getSeries() != null) {
+            String series = be.getSeries();
+            if (this.allSeries.containsKey(series)) {
+                this.allSeries.get(series).get(be.getNewURL()).active = false;
+            }
+        }
+    }
+</pre> 
+<p>The actual rendering is just the line <code>mustache.execute(pw, be);</code> The code around it prepares and resets the collections that might render on a page like categories, series or month and year. Also of interest is <code>this.saveIfChanged(out.toByteArray(), location);</code> which only saves results back to disk if it actually has changed. Don't be mistaken: any change in layout will lead to a newly rendered page, so this is quite important to save as needed and not more (you don't want to have tons of identical files that only differ in their time stamp)</p></div>
+					<hr />
+ <a href="/blog/2017/05/from-blogsphere-to-a-static-site-part-3-generating-pages.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2017-05-01 11:23
+<span class="divider">|</span>
+<a href="/blog/2017/05/from-blogsphere-to-a-static-site-part-3-generating-pages.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/Blog.html">Blog</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2017/05/from-blogsphere-to-a-static-site-part-3-generating-pages.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="From Blogsphere to a Static Site (Part 3) - Generating pages"></div>
+						<script type="text/javascript">
+							var permaLink = "https://www.notessensei.com/blog/2017/05/from-blogsphere-to-a-static-site-part-3-generating-pages.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1><small><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html">From Blogsphere to a Static Site (Part 2) - Cleaning up the HTML</a></small></h1>
 					<hr />
 					<div><p>Blogsphere allows to create RichText and plain HTML entries. To export them I need to grab the HTML, either the manual entered or the RichText generated on, clean it up (especially for my manual entered HTML) and then replace image sources and internal links using the new URL syntax. To make this happen I created 2 functions that saved images and attachments and created a lookup list, so the HTML cleanup has a mapping table to work with</p> 
 <pre class="brush: java">
@@ -202,9 +269,7 @@ categories:  <a href="/blog/categories/Blog.html">Blog</a>
 </p>
 				</article>
 				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html">From Blogsphere to a Static Site (Part 1) - Objects</a></small>
-					</h1>
+					<h1><small><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html">From Blogsphere to a Static Site (Part 1) - Objects</a></small></h1>
 					<hr />
 					<div>The migration tooling revolves around data, so getting the data classes right is important. The data classes need to be designed to allow it to be populated either from the Blogsphere NSF or from a collection of JSON files (so the blog generation can continue when the NSF is gone). For the blog we need 3 objects: 
 <ul> 
@@ -232,9 +297,7 @@ categories:  <a href="/blog/categories/Blog.html">Blog</a>
 </p>
 				</article>
 				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-0-requirements.html">From Blogsphere to a Static Site (Part 0) - Requirements</a></small>
-					</h1>
+					<h1><small><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-0-requirements.html">From Blogsphere to a Static Site (Part 0) - Requirements</a></small></h1>
 					<hr />
 					<div>Readers of this blog might have noticed, that blog layout and blog URLs have changed (a while ago). This blog now serves static HTML pages using a 
 <a href="https://www.nginx.com/">nginx</a> web server (get used to nginx, it's coming in Connections Pink too). I will document the steps and code I used to get there. Step 0 is: define the requirements and evaluate the resulting constraints: 
@@ -274,9 +337,7 @@ categories:  <a href="/blog/categories/Blog.html">Blog</a>
 </p>
 				</article>
 				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2017/04/project-deep-purple-ibm-notes-native-for-ios.html">Project Deep Purple - IBM Notes Native for iOS</a></small>
-					</h1>
+					<h1><small><a href="/blog/2017/04/project-deep-purple-ibm-notes-native-for-ios.html">Project Deep Purple - IBM Notes Native for iOS</a></small></h1>
 					<hr />
 					<div><p>We all heard the announcements around <a href="https://itcblogs.currentanalysis.com/2017/02/23/at-ibm-the-future-of-collaboration-isnt-rosy-its-pink/">Project Pink</a> headed by <a href="https://www.linkedin.com/in/jasonroygary/">Jason R. Gary</a>, the future of IBM Connections. Attending the conference we could admire him all <a href="https://twitter.com/jasonroygary/status/836337112555323392">clad out in pink</a>.</p> 
 <p>However there is something more going on (and I'm not talking about his &quot;don style&quot; haircut). Besides the pink suit, Jason has been spotted in a deep purple jacket on several occasions, like his <a href="https://www.youtube.com/watch?v=2gKIsWqbJIk#action=share">FossASIA talk</a>. Digging deeper it seems IBM collaboration projects are now colour coded. Purple is chosen quite deliberately: <a href="http://www.bourncreative.com/meaning-of-the-color-purple/">The color purple</a>&nbsp;is a rare occurring color in nature and as a result is often seen as having sacred meaning.&nbsp;Purple&nbsp;combines the calm stability of blue and the fierce energy of red. The color purple is often associated with royalty, nobility, luxury, power, and ambition. Purple also represents meanings of wealth, extravagance, creativity, wisdom, dignity, grandeur, devotion, peace, pride, mystery, independence, and magic.</p> 
@@ -303,9 +364,7 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>
 </p>
 				</article>
 				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2017/04/goodbye-ibm-hello-salesforce.html">Goodbye IBM, hello Salesforce!</a></small>
-					</h1>
+					<h1><small><a href="/blog/2017/04/goodbye-ibm-hello-salesforce.html">Goodbye IBM, hello Salesforce!</a></small></h1>
 					<hr />
 					<div><p>The <a href="http://www.mom.gov.sg/">Ministry of Manpower</a> in Singapore is running a campaign &quot;<a href="https://www.facebook.com/sgministryofmanpower/posts/1205144312868167">A new career at 55</a>&quot;. Intrigued by it, I decided to give it a shot.</p> 
 <p>I will be joining <a href="https://www.salesforce.com/">Salesforce</a> in Singapore as Cloud Solution Architect this Monday.</p> 
@@ -336,9 +395,7 @@ categories:  <a href="/blog/categories/IBM.html">IBM</a>  <a href="/blog/categor
 </p>
 				</article>
 				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2017/04/formula-on-json.html">@Formula on JSON</a></small>
-					</h1>
+					<h1><small><a href="/blog/2017/04/formula-on-json.html">@Formula on JSON</a></small></h1>
 					<hr />
 					<div><p>When you look at &quot;<i>modern</i>&quot; programming styles, you will find novel concepts like <a href="http://isomorphic.net/">isomorphic</a> (runs on client or server), <a href="http://www.restapitutorial.com/lessons/idempotency.html">Idempotency</a> (same call, same result), <a href="https://www.sitepoint.com/immutability-javascript/">Immutable</a> (functions never mess with the parameters or global state) or <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Array/map">map operations</a> (working on a set of data without looping).</p> 
 <p>I put &quot;<i>modern</i>&quot; deliberately in quotes, since these ideas have been around since <a href="https://en.wikipedia.org/wiki/Lisp_(programming_language)">Lisp</a> (or for the younger of you: since you sorted all blocks by colour and size in kindergarden). In the Lotus world we got our share of this with the venerable <a href="https://www.ibm.com/support/knowledgecenter/en/SSVRGU_9.0.1/basic/H_7_FORMULAS_FUNCTION_REFERENCE.html">@Formula</a> language (the functions, not the commands), IBM Notes inherited from <a href="https://en.wikipedia.org/wiki/Lotus_1-2-3">Lotus 1-2-3</a>. While it has served us well, so far it has been confined to the realm of the <a href="https://fileinfo.com/extension/nsf">NSF</a>.</p> 
@@ -361,9 +418,7 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>
 </p>
 				</article>
 				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2017/02/agile-outsourcing.html">Agile Outsourcing</a></small>
-					</h1>
+					<h1><small><a href="/blog/2017/02/agile-outsourcing.html">Agile Outsourcing</a></small></h1>
 					<hr />
 					<div><h2>The problem</h2> 
 <a href="http://www.investopedia.com/terms/o/outsourcing.asp">Outsourcing</a> is a &quot;special&quot; animal. Typically the idea is to save cost by letting a service provider execute work. The saving cost happens because the service provider is supposed to be able to perform this actions at scale. Increasingly outsourcing deals are motivated by a skill squeeze. So instead of maintaining in-house expertise, rely on the vendors to keep the light on. 
@@ -436,9 +491,7 @@ categories:  <a href="/blog/categories/Software.html">Software</a>
 </p>
 				</article>
 				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2017/01/saml-and-the-command-line.html">SAML and the Command Line</a></small>
-					</h1>
+					<h1><small><a href="/blog/2017/01/saml-and-the-command-line.html">SAML and the Command Line</a></small></h1>
 					<hr />
 					<div>One of the best kept secrets of Connections Cloud S1 is the 
 <a href="https://www-10.lotus.com/ldd/dominowiki.nsf/dx/IBM_Notes_Traveler_Administration_API">Traveler API</a>. The API allows interactions that are missing from the Admin UI, like deleting a specific device or implementing an approval workflow. 
@@ -563,9 +616,7 @@ categories:  <a href="/blog/categories/NodeJS.html">NodeJS</a>  <a href="/blog/c
 </p>
 				</article>
 				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2017/01/git-deploy-your-static-sites-part-1.html">GIT deploy your static sites - Part 1</a></small>
-					</h1>
+					<h1><small><a href="/blog/2017/01/git-deploy-your-static-sites-part-1.html">GIT deploy your static sites - Part 1</a></small></h1>
 					<hr />
 					<div>When you, in principal, like the idea to 
 <a href="/blog/d6plinks/SHWL-AHHBPB">serve SPA from the http server</a>, you will encounter the pressing question: 
@@ -607,44 +658,11 @@ categories:  <a href="/blog/categories/nginx.html">nginx</a>  <a href="/blog/cat
 					</p>
 </p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2017/01/serving-single-page-applications-with-domino.html">Serving Single Page Applications with Domino</a></small>
-					</h1>
-					<hr />
-					<div><a href="https://en.wikipedia.org/wiki/Single-page_application">Single Page Applications</a> (SPA) are all the rage. They get developed with AngularJS, ReactJS or {insert-your-framework-of-choice}. Those share a few communialities: 
-<ul> 
- <li>the application is served by a static web server</li> 
- <li>data is provided via an API, typically reading/writing JSON via REST or graph</li> 
- <li>authentication is often long lasting (remember me...) based on <a href="https://jwt.io/">JWT</a></li> 
- <li>authentication is highly flexible: login with {facebook|google|linkedin|twitter} or a corporate account. Increasingly 2 factor authentication is used (especially <a href="http://eur-lex.europa.eu/eli/reg/2016/679/oj">in Europe</a>)</li> 
-</ul> How does Domino fit into the picture with its integrated http stack, authentication and database? The answer isn't very straight forward. Bundling components creates ease of administration, but carries the risk that new technologies are implemented late (or not at all). For anything internet facing that's quite some risk. So here is what I would do: 
-<br /> 
-<img src="/blog/images/2017/DominoAPIServer.jpg" border="0" alt="Red/Green Zone layout for Domino" /> 
-<br /></div>
-					<hr />
- <a href="/blog/2017/01/serving-single-page-applications-with-domino.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2017-01-11 04:14
-<span class="divider">|</span>
-<a href="/blog/2017/01/serving-single-page-applications-with-domino.html#comments">Comments (3)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>  <a href="/blog/categories/XPages.html">XPages</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2017/01/serving-single-page-applications-with-domino.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Serving Single Page Applications with Domino"></div>
-						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2017/01/serving-single-page-applications-with-domino.html";
-						</script>
-					</p>
-</p>
-				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/all" title="That's a loooong list!">Older entries<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 			</div>
-
 			<div class="span3">
 				<aside id="sidebar_reference" class="well">
 					<h5>Reference</h5>
@@ -926,7 +944,6 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>  <a href="/
 			</div>
 		</div>
 	</div>
-	<!-- Footer	================================================== -->
 		<footer>
 		<div class="container">
 			<div class="row">
@@ -989,9 +1006,7 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>  <a href="/
 	</footer>
 
 		<script type="text/javascript" src="/blog/js/jquery.min.js"></script>
-	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
-	<script type="text/javascript" src="/blog/js/jquery.fittext.js"></script>
 	<script type="text/javascript" src="/blog/js/main.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushJava.js"></script>

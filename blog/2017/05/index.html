@@ -50,6 +50,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -143,6 +144,79 @@ ga('send', 'pageview');
 				<div class="well well-raised">
 					<h1>By Date: May 2017</h1>
 				</div>
+				<article class="well well-raised">
+					<h1>
+						<small><a href="/blog/2017/05/from-blogsphere-to-a-static-site-part-3-generating-pages.html">From Blogsphere to a Static Site (Part 3) - Generating pages</a></small>
+					</h1>
+					<hr />
+					<div><p>The rendering engine I choose is <a href="mustache.github.com/mustache.5.html">mustache</a> which describes itself as &quot;<i>logic-less templating engine</i>&quot;. My main criteria was the availability on multiple platforms including <a href="https://github.com/spullara/mustache.java">Java</a> and <a href="https://github.com/janl/mustache.js">JavaScript</a> (I might port the rendering part to NodeJS at some time in the future).<br /> The only logic mustache supports is conditional rendering based on the presence or absence of an element. When an element is present and is an array (or a collection in Java) the body of the template gets repeated for each element in the array. A scalar value hence is treated as an array with one value only.</p> 
+<p>Mustache is simple to use. All you need is a data bean (in Java, a JSON structure for JavaScript) and a text file containing placeholders with the property names. E.g. <code>&lt;h1&gt;{{title}}&lt;/h1&gt;</code> will render a headline with the title property of you data object. In Java that would be either a public variable or a call to <code>getTitle</code> according to the bean specification. The blog rendering code therefore is quite simple:</p> 
+<pre class="brush: java">
+private void renderOneEntry(BlogEntry be, Mustache mustache) throws IOException {
+
+        String location = this.config.destinationDirectory + be.getNewURL();
+        String outDirs = location.substring(0, location.lastIndexOf(&quot;/&quot;));
+        File dirs = new File(outDirs);
+        if (!dirs.exists()) {
+            dirs.mkdirs();
+        }
+        // Set the current context
+        for (LinkItem cat : be.getCategory()) {
+            String c = cat.name;
+            this.allCategories.get(c.toLowerCase()).active = true;
+        }
+        this.allDateCategories.get(be.getDateYear()).active = true;
+
+        if (be.getSeries() != null) {
+            String series = be.getSeries();
+            if (this.allSeries.containsKey(series)) {
+                this.allSeries.get(series).get(be.getNewURL()).active = true;
+            }
+        }
+
+        // Prepare to write out
+        ByteArrayOutputStream out = new ByteArrayOutputStream(102400);
+        Writer pw = new PrintWriter(out);
+
+        // This is where the magic happens
+        mustache.execute(pw, be);
+        pw.flush();
+        pw.close();
+        this.saveIfChanged(out.toByteArray(), location);
+
+        // Cleanup
+        for (LinkItem cat : be.getCategory()) {
+            String c = cat.name;
+            this.allCategories.get(c.toLowerCase()).active = false;
+        }
+        this.allDateCategories.get(be.getDateYear()).active = false;
+
+        if (be.getSeries() != null) {
+            String series = be.getSeries();
+            if (this.allSeries.containsKey(series)) {
+                this.allSeries.get(series).get(be.getNewURL()).active = false;
+            }
+        }
+    }
+</pre> 
+<p>The actual rendering is just the line <code>mustache.execute(pw, be);</code> The code around it prepares and resets the collections that might render on a page like categories, series or month and year. Also of interest is <code>this.saveIfChanged(out.toByteArray(), location);</code> which only saves results back to disk if it actually has changed. Don't be mistaken: any change in layout will lead to a newly rendered page, so this is quite important to save as needed and not more (you don't want to have tons of identical files that only differ in their time stamp)</p></div>
+					<hr />
+ <a href="/blog/2017/05/from-blogsphere-to-a-static-site-part-3-generating-pages.html">Read more</a>
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2017-05-01 11:23
+<span class="divider">|</span>
+<a href="/blog/2017/05/from-blogsphere-to-a-static-site-part-3-generating-pages.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/Blog.html">Blog</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2017/05/from-blogsphere-to-a-static-site-part-3-generating-pages.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="From Blogsphere to a Static Site (Part 3) - Generating pages"></div>
+						<script type="text/javascript">
+							var permaLink = "https://www.notessensei.com/blog/2017/05/from-blogsphere-to-a-static-site-part-3-generating-pages.html";
+						</script>
+					</p>
+
+				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/2017/04/index.html"><i class="icon-hand-left"></i>By Date: April 2017</a>
 						<span class="divider">|</span></li>
@@ -345,9 +419,7 @@ ga('send', 'pageview');
 	</footer>
 
 		<script type="text/javascript" src="/blog/js/jquery.min.js"></script>
-	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
-	<script type="text/javascript" src="/blog/js/jquery.fittext.js"></script>
 	<script type="text/javascript" src="/blog/js/main.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushJava.js"></script>
@@ -356,14 +428,18 @@ ga('send', 'pageview');
     <script type="text/javascript" src="/blog/js2/shBrushBash.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
-    <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>   
+    <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
-	
 		_uacct = "UA-72033-1";
 		urchinTracker();
 	</script>
 	<script type="text/javascript" src="//feeds.feedburner.com/~s/Wisselnet?i=https://wissel.net/blog" charset="utf-8"></script>
+    <script type="text/javascript">
+    $(document).ready(function() {
+            SyntaxHighlighter.all();
+    });
+    </script>
 
 </body>
 </html>
