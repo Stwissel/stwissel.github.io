@@ -169,630 +169,441 @@ ga('send', 'pageview');
 </style> 
 <pre>
  
- 
  <div class="lotusscript">
 
   
-  
   <font class="ls-kw">Option Public Option Declare</font>
 
-  
   
   <font class="ls-co">'/** ' * ' * FieldAccess is a universal class to manage large amount of values put into text fields ' * (text, names, readers, authors etc. ' * it manages these large amount by splitting reader names into multiple fields to overcome ' * the 32k size limit. New fields are created as needed. ' * Good for 62500 entries ' * ' * v0.1 2009-03-20 : notessensei@sg.ibm.com ' **/</font>
 
 
   
-  
   <font class="ls-co">'// Important: This class doesn't contain production quality error handling, you need to add '// that for production use. Use OpenLog for best results!</font>
 
   
-  
   <font class="ls-kw">Public</font> 
-  
   
   <font class="ls-statement">Class</font> FieldAccess
 	
   
-  
   <font class="ls-kw">Private</font> AccessFieldName 
-  
   
   <font class="ls-kw">As</font> 
   
-  
   <font class="ls-kw">String</font> 
-  
   
   <font class="ls-co">'The base name for the Reader field</font>
 	
   
-  
   <font class="ls-kw">Private</font> maxFieldEntries 
-  
   
   <font class="ls-kw">As</font> 
   
-  
   <font class="ls-kw">Integer</font> 
-  
   
   <font class="ls-co">'The maximum number of entries per reader field</font>
 	
   
-  
   <font class="ls-kw">Private</font> maxNumOfFields 
-  
   
   <font class="ls-kw">As</font> 
   
-  
   <font class="ls-kw">Integer</font> 
-  
   
   <font class="ls-co">'Limit the number of fields, to avoid mising data in views </font>
 	
   
-  
   <font class="ls-kw">Private</font> maxTotal 
-  
   
   <font class="ls-kw">As</font> 
   
-  
   <font class="ls-kw">Integer</font> 
-  
   
   <font class="ls-co">'The maximum number of names in total</font>
 	
   
-  
   <font class="ls-kw">Private</font> curTotal 
-  
   
   <font class="ls-kw">As</font> 
   
-  
   <font class="ls-kw">Integer</font> 
-  
   
   <font class="ls-co">'The current number of entries</font>
 	
   
-  
   <font class="ls-kw">Private</font> curFieldMembers 
-  
   
   <font class="ls-kw">List</font> 
   
-  
   <font class="ls-kw">As</font> 
   
-  
   <font class="ls-kw">String</font> 
-  
   
   <font class="ls-co">'The list of current Reader entries</font>
 	
   
-  
   <font class="ls-kw">Private</font> fieldCount 
-  
   
   <font class="ls-kw">As</font> 
   
-  
   <font class="ls-kw">Integer</font> 
-  
   
   <font class="ls-co">'The current number of fields</font>
 	
   
-  
   <font class="ls-kw">Private</font> initialized 
-  
   
   <font class="ls-kw">As</font> 
   
-  
   <font class="ls-kw">Boolean</font> 
-  
   
   <font class="ls-co">'Has the list of names been initialized</font>
 	
   
-  
   <font class="ls-kw">Private</font> doc 
-  
   
   <font class="ls-kw">As</font> 
   
-  
   <font class="ls-class">NotesDocument</font> 
-  
   
   <font class="ls-co">'The current document</font>
 	
   
-  
   <font class="ls-kw">Private</font> fieldType 
-  
   
   <font class="ls-kw">As</font> 
   
-  
   <font class="ls-kw">Integer</font> 
-  
   
   <font class="ls-co">'Text, names, reader, author</font>
 	
 	
   
-  
   <font class="ls-statement">Sub</font> 
-  
   
   <font class="ls-kw">new</font>
   
-  
   <font class="ls-op">(</font>curDoc 
-  
   
   <font class="ls-kw">As</font> 
   
-  
   <font class="ls-class">NotesDocument</font>
-  
   
   <font class="ls-op">)</font>
 		
   
-  
   <font class="ls-statement">Set</font> 
-  
   
   <font class="ls-kw">Me</font>
   
-  
   <font class="ls-op">.</font>doc 
-  
   
   <font class="ls-op">=</font> curDoc
 		
   
-  
   <font class="ls-kw">Me</font>
-  
   
   <font class="ls-op">.</font>AccessFieldName 
   
-  
   <font class="ls-op">=</font> 
-  
   
   <font class="ls-quote">&quot;Field&quot;</font>
 		
   
-  
   <font class="ls-kw">Me</font>
   
-  
   <font class="ls-op">.</font>maxFieldEntries 
-  
   
   <font class="ls-op">=</font> 500
 		
   
-  
   <font class="ls-kw">Me</font>
-  
   
   <font class="ls-op">.</font>maxNumOfFields 
   
-  
   <font class="ls-op">=</font> 10 
-  
   
   <font class="ls-co">'Adjust as needed</font>
 		
   
-  
   <font class="ls-kw">Me</font>
-  
   
   <font class="ls-op">.</font>initialized 
   
-  
   <font class="ls-op">=</font> 
-  
   
   <font class="ls-constant">False</font>
 		
   
-  
   <font class="ls-kw">Me</font>
-  
   
   <font class="ls-op">.</font>fieldType 
   
-  
   <font class="ls-op">=</font> 0 
-  
   
   <font class="ls-co">'No special type</font>
 	
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Sub</font>
 	
 	
-  
   
   <font class="ls-co">'Need to set the field Name</font>
 	
   
-  
   <font class="ls-kw">Public</font> 
-  
   
   <font class="ls-statement">Property</font> 
   
-  
   <font class="ls-statement">Set</font> fieldName 
   
-  
   <font class="ls-kw">As</font> 
-  
   
   <font class="ls-kw">String</font>
 		
   
-  
   <font class="ls-statement">If</font> 
-  
   
   <font class="ls-kw">Me</font>
   
-  
   <font class="ls-op">.</font>AccessFieldName 
-  
   
   <font class="ls-op">&lt;</font>
   
-  
   <font class="ls-op">&gt;</font> fieldName 
-  
   
   <font class="ls-statement">Then</font>
 			
   
-  
   <font class="ls-kw">Me</font>
   
-  
   <font class="ls-op">.</font>AccessFieldName 
-  
   
   <font class="ls-op">=</font> fieldName
 			
   
-  
   <font class="ls-kw">Me</font>
-  
   
   <font class="ls-op">.</font>initialized 
   
-  
   <font class="ls-op">=</font> 
-  
   
   <font class="ls-constant">False</font>
 		
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">If</font>
 	
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Property</font>
 	
 	
   
-  
   <font class="ls-kw">Public</font> 
-  
   
   <font class="ls-statement">Property</font> 
   
-  
   <font class="ls-statement">Get</font> FieldName 
   
-  
   <font class="ls-kw">As</font> 
-  
   
   <font class="ls-kw">String</font>
 		fieldName 
   
-  
   <font class="ls-op">=</font> 
   
-  
   <font class="ls-kw">Me</font>
-  
   
   <font class="ls-op">.</font>AccessFieldName
 	
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Property</font>
 	
 	
-  
   
   <font class="ls-co">'How many entries are in the names field right now</font>
 	
   
-  
   <font class="ls-kw">Public</font> 
-  
   
   <font class="ls-statement">Property</font> 
   
-  
   <font class="ls-statement">Get</font> count 
   
-  
   <font class="ls-kw">As</font> 
-  
   
   <font class="ls-kw">Integer</font>
 		
   
-  
   <font class="ls-statement">If</font> 
-  
   
   <font class="ls-op">Not</font> 
   
-  
   <font class="ls-kw">Me</font>
   
-  
   <font class="ls-op">.</font>initialized 
-  
   
   <font class="ls-statement">Then</font>
 			
   
-  
   <font class="ls-kw">Me</font>
-  
   
   <font class="ls-op">.</font>initializeFields
 		
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">If</font>
 		count 
   
-  
   <font class="ls-op">=</font> 
   
-  
   <font class="ls-kw">Me</font>
-  
   
   <font class="ls-op">.</font>curTotal
 	
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Property</font>
 		
   
-  
   <font class="ls-co">'Add a entry to the value list</font>
 	
   
-  
   <font class="ls-kw">Public</font> 
-  
   
   <font class="ls-statement">Sub</font> addEntry
   
-  
   <font class="ls-op">(</font>entryToAdd 
-  
   
   <font class="ls-kw">As</font> 
   
-  
   <font class="ls-kw">String</font>
-  
   
   <font class="ls-op">)</font>
 		
   
-  
   <font class="ls-statement">If</font> 
-  
   
   <font class="ls-op">Not</font> 
   
-  
   <font class="ls-kw">Me</font>
   
-  
   <font class="ls-op">.</font>initialized 
-  
   
   <font class="ls-statement">Then</font>
 			
   
-  
   <font class="ls-kw">Me</font>
-  
   
   <font class="ls-op">.</font>initializeFields
 		
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">If</font>
 		
 		
   
-  
   <font class="ls-statement">If</font> 
-  
   
   <font class="ls-op">Not</font> 
   
-  
   <font class="ls-function">Iselement</font>
-  
   
   <font class="ls-op">(</font>
   
-  
   <font class="ls-kw">Me</font>
-  
   
   <font class="ls-op">.</font>curFieldMembers
   
-  
   <font class="ls-op">(</font>entryToAdd
-  
   
   <font class="ls-op">)</font>
   
-  
   <font class="ls-op">)</font> 
-  
   
   <font class="ls-statement">Then</font>
 			
   
-  
   <font class="ls-statement">If</font> 
   
-  
   <font class="ls-kw">Me</font>
-  
   
   <font class="ls-op">.</font>curTotal 
   
-  
   <font class="ls-op">=</font> 
   
-  
   <font class="ls-kw">Me</font>
-  
   
   <font class="ls-op">.</font>maxFieldEntries 
   
-  
   <font class="ls-op">*</font> 
-  
   
   <font class="ls-kw">Me</font>
   
-  
   <font class="ls-op">.</font>maxNumOfFields 
-  
   
   <font class="ls-statement">Then</font>
 				
   
-  
   <font class="ls-function">Error</font> 8000 
-  
   
   <font class="ls-co">'We throw an error</font>
 			
   
-  
   <font class="ls-statement">Else</font>
 				
   
-  
   <font class="ls-kw">Me</font>
-  
   
   <font class="ls-op">.</font>curFieldMembers
   
-  
   <font class="ls-op">(</font>entryToAdd
   
-  
   <font class="ls-op">)</font> 
-  
   
   <font class="ls-op">=</font> entryToAdd
 				
   
-  
   <font class="ls-kw">Me</font>
   
-  
   <font class="ls-op">.</font>curTotal 
-  
   
   <font class="ls-op">=</font> 
   
-  
   <font class="ls-kw">Me</font>
   
-  
   <font class="ls-op">.</font>curTotal 
-  
   
   <font class="ls-op">+</font> 1
 			
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">If</font>
 		
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">If</font>	
 	
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Sub</font>
 	
   
-  
   <font class="ls-co">'Bulk adding of entries. Suitable to pull in entries from getItemValues</font>
- 
  
  </div></pre><font class="ls-kw">Public</font> 
 <font class="ls-statement">Sub</font> addEntries 
@@ -1386,7 +1197,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 						<li><a href="https://www.twitter.com/notessensei">Twitter</a></li>
 						<li><a href="https://plus.google.com/+StephanWissel/about" rel="author" style="text-decoration: none;">
 						    <img src="https://ssl.gstatic.com/images/icons/gplus-16.png" alt="" style="border: 0; width: 16px; height: 16px;" /> Google+</a></li>
-						<li><a href="skype//:notessensei?chat">Skype</a></li>
+						<li><a href="skype://notessensei?chat">Skype</a></li>
 						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
 						<li><a href="https://www.xing.com/profile/StephanH_Wissel">XING</a></li>
 						<li><a href="https://astore.amazon.com/wissenetblog-20">Amazon Store</a></li>
