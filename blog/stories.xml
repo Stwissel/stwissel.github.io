@@ -6,7 +6,136 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2017 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 03 May 2017 00:09:52 +0800</pubdate>
+	<pubdate>Thu, 04 May 2017 22:29:21 +0800</pubdate>
+<item
+	><title>From Blogsphere to a Static Site (Part 4) - Comment backend</title>
+	<description>&lt;p&gt;The blog needed a comment function. While there are social options around (Facebook, &lt;a href="https://disqus.com/"&gt;Disqus&lt;/a&gt; etc), I decided I want to roll my own. Partly because I want tighter control and partly, well, because I could. My comment backend would:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Provide a REST API to create comments in a JSON structure. The comment body will be &lt;a href="https://daringfireball.net/projects/markdown/syntax"&gt;Markdown&lt;/a&gt;. Reading would provide comments in ready to use HTML (I hear howling from the API crowd). No delete or update functionality&lt;/li&gt; 
+ &lt;li&gt;Cleanup content considered harmful (code injection) and optional sport Captcha&lt;/li&gt; 
+ &lt;li&gt;Store all content in a NoSQL database, in my case CouchDB (or Cloudant with its 20G free plan)&lt;/li&gt; 
+ &lt;li&gt;Cache all queries for comment in an online cache to limit calls to the database&lt;/li&gt; 
+ &lt;li&gt;Initially run on Domino, later on liberty or the raw JVM&lt;/li&gt; 
+ &lt;li&gt;Initially also update Domino using a web service - so during transition no comments would get lost&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;In its initial incarnation the Comment servlet is a OSGi plugin that listens to the &lt;code&gt;/comments&lt;/code&gt; URL implemented as Wink servlet. So the class of interest is the one defining the service. We have one method for post, one for get and a helper function&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;
+/**
+ * Wink implementation of Comment service
+ */
+@Workspace(workspaceTitle = &amp;quot;Blog Comments&amp;quot;, collectionTitle = &amp;quot;Create or display comments&amp;quot;)
+@Path(value = &amp;quot;/comments&amp;quot;)
+@Produces(MediaType.TEXT_HTML)
+@Consumes(MediaType.APPLICATION_JSON)
+public class CommentService extends CommentResponse {
+
+    private final Logger logger = Logger.getLogger(this.getClass().getName());
+
+    @POST
+    public Response createComment(@Context HttpServletRequest request) {
+        final Monitor mon = MonitorFactory.start(&amp;quot;CommentService#createComment&amp;quot;);
+        String result = &amp;quot;Sorry I can't process your comment at this time&amp;quot;;
+        ResponseBuilder builder = Response.ok();
+
+        try {
+            InputStream in = request.getInputStream();
+            BlogComment comment = BlogComment.load(in);
+            in.close();
+
+            if (comment != null) {
+                this.captureSubmissionDetails(request, comment);
+                result = CommentManager.INSTANCE.saveComment(comment, true);
+            } else {
+                builder.status(Status.NOT_ACCEPTABLE);
+            }
+            builder.entity(result).type(MediaType.TEXT_HTML_TYPE);
+
+        } catch (Exception e) {
+            String errorMessage = e.getMessage();
+            builder.entity((((errorMessage == null) || errorMessage.equals(&amp;quot;&amp;quot;)) ? &amp;quot;Undefined error&amp;quot; : errorMessage)).type(
+                    MediaType.TEXT_HTML_TYPE);
+            Utils.logError(this.logger, e);
+        }
+
+        mon.stop();
+        return builder.build();
+    }
+
+    @GET
+    public Response getComments(@QueryParam(&amp;quot;parentid&amp;quot;) final String parentid) {
+        Response response = null;
+        final Monitor mon = MonitorFactory.start(&amp;quot;CommentService#getComments&amp;quot;);
+        final ResponseBuilder builder = Response.ok();
+        final Collection&amp;lt;BlogComment&amp;gt; bc = CommentManager.INSTANCE.loadComments(parentid);
+
+        if ((bc == null) || bc.isEmpty()) {
+            builder.status(Status.NO_CONTENT);
+        } else {
+            response = this.renderOutput(bc, &amp;quot;comment.mustache&amp;quot;);
+        }
+        mon.stop();
+        return (response == null) ? builder.build() : response;
+    }
+
+    private void captureSubmissionDetails(HttpServletRequest request, BlogComment comment) {
+        final Monitor mon = MonitorFactory.start(&amp;quot;CommentService#captureSubmissionDetails&amp;quot;);
+        try {
+            @SuppressWarnings(&amp;quot;rawtypes&amp;quot;)
+            Enumeration hn = request.getHeaderNames();
+            if (hn != null) {
+                while (hn.hasMoreElements()) {
+                    String key = hn.nextElement().toString();
+                    comment.addParameter(key, request.getHeader(key));
+                }
+            }
+            @SuppressWarnings(&amp;quot;rawtypes&amp;quot;)
+            Enumeration pn = request.getParameterNames();
+            if (pn != null) {
+                while (pn.hasMoreElements()) {
+                    String key = pn.nextElement().toString();
+                    String[] values = request.getParameterValues(key);
+                    comment.addParameters(key, values);
+
+                    if (key.equals(&amp;quot;referer&amp;quot;)) {
+                        comment.setReferer(values[0]);
+                    } else if (key.equals(&amp;quot;user-agent&amp;quot;)) {
+                        comment.setUserAgent(values[0]);
+                    }
+
+                }
+            }
+            @SuppressWarnings(&amp;quot;rawtypes&amp;quot;)
+            Enumeration an = request.getAttributeNames();
+            if (an != null) {
+                while (an.hasMoreElements()) {
+                    try {
+                        String key = an.nextElement().toString();
+                        comment.addAttribute(key, String.valueOf(request.getAttribute(key)));
+                    } catch (Exception e) {
+                        // No action here
+                    }
+                }
+            }
+            comment.addParameter(&amp;quot;REMOTE_HOST&amp;quot;, request.getRemoteHost());
+            comment.addParameter(&amp;quot;REMOTE_ADDR&amp;quot;, request.getRemoteAddr());
+            comment.addParameter(&amp;quot;REMOTE_USER&amp;quot;, request.getRemoteUser());
+
+            // Needed for Captcha
+            comment.setRemoteAddress(request.getRemoteAddr());
+        } catch (Exception e) {
+            Utils.logError(this.logger, e);
+            // But no further action here!
+        }
+        mon.stop();
+    }
+}
+&lt;/pre&gt;</description>
+	<link>2017/05/from-blogsphere-to-a-static-site-part-4-comment-backend.html</link>
+	<author>Stephan H Wissel</author>
+	<guid>5CD6877EE6BFF61948258116003F5BF6</guid>
+	<pubDate>2017-05-04 07:32</pubDate>
+
+</item>
 <item
 	><title>The Decline and Fall of IBM</title>
 	<description>&lt;p&gt;I wrote this quite a while ago, never finished the article until now. Enjoy. &lt;br /&gt;&lt;br /&gt;&lt;/p&gt; 
@@ -305,119 +434,6 @@ private void saveImage(Document doc) {
 	<author>Stephan H Wissel</author>
 	<guid>28D047097AAD822D482580C1003C6EF8</guid>
 	<pubDate>2017-02-08 07:00</pubDate>
-
-</item>
-<item
-	><title>SAML and the Command Line</title>
-	<description>One of the best kept secrets of Connections Cloud S1 is the 
-&lt;a href="https://www-10.lotus.com/ldd/dominowiki.nsf/dx/IBM_Notes_Traveler_Administration_API"&gt;Traveler API&lt;/a&gt;. The API allows interactions that are missing from the Admin UI, like deleting a specific device or implementing an approval workflow. 
-&lt;br /&gt; Unfortunately the API only offers authentication via SAML, OAuth or BasicAuth are missing. So any application interacting with the API needs to do 
-&lt;a href="https://www.google.com.sg/search?q=SAML+Dance+Connections+Cloud"&gt;The SAML Dance&lt;/a&gt;. That's annoying when you have an UI to use, and a formidable challenge when you have a command line application, like a cron Job running unsupervised at interval. 
-&lt;br /&gt; One lovely step in the process: the IBM IdP returns a HTML page with a hidden form containing the SAML assertion result to be posted back to the application provider. Quite interesting, when your application provider is a command line app. Let's get to work. 
-&lt;br /&gt; The script is written in 
-&lt;a href="https://nodejs.org"&gt;node.js&lt;/a&gt; and uses 
-&lt;a href="https://www.npmjs.com/package/request"&gt;request&lt;/a&gt; and 
-&lt;a href="https://www.npmjs.com/package/fast-html-parser"&gt;fast-html-parser&lt;/a&gt; npm package. The first step is to load the login form (which comes with a first set of cookies) 
-&lt;br /&gt; 
-&lt;pre class="brush: js"&gt;
-var requestOptionsTemplate = {
-    headers: {
-        'Origin': 'https://api.notes.ap.collabserv.com/api/traveler/',
-        'User-Agent': 'ancy CommandLine Script',
-        'Connection': 'keep-alive',
-        'Cache-Control': 'max-age=0',
-        'Upgrade-Insecure-Requests': 1
-    },
-    'method': 'GET'
-};
-
-function scLoginPart1() {
-    console.log('Authenticating to SmartCloud ...');
-    var requestOptions = Object.assign({}, requestOptionsTemplate);
-    requestOptions.url = 'https://apps.na.collabserv.com/manage/account/dashboardHandler/input';
-    request(requestOptions, scLoginPart2);
-}
-&lt;/pre&gt; 
-&lt;br /&gt; The function calls the URL where the login form can be found. The result gets delivered to the function 
-&lt;code&gt;scLoginPart2&lt;/code&gt;. That function makes use of a global configuration variable 
-&lt;code&gt;config&lt;/code&gt; that was created through 
-&lt;code&gt;const config = require(&amp;quot;./config.json&amp;quot;)&lt;/code&gt; and contains all the credentials we need. Step2 submits the form and hands over to Step3. 
-&lt;br /&gt; 
-&lt;pre class="brush: js"&gt;
-function scLoginPart2(err, httpResponse, body) {
-    if (err) {
-        return console.error(err);
-    }
-    // Capture cookies
-    var outgoingCookies = captureCookies(httpResponse);
-    var requestOptions = Object.assign({}, requestOptionsTemplate);
-    requestOptions.headers.Cookie = outgoingCookies.join('; ');
-    requestOptions.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-    requestOptions.method = 'POST';
-    requestOptions.url = 'https://apps.ap.collabserv.com/pkmslogin.form';
-    requestOptions.form = {
-        'login-form-type': 'pwd',
-        'error-code': '',
-        'username': config.smartcloud.user,
-        'password': config.smartcloud.password,
-        'show_login': 'showLoginAgain'
-    }
-    request(requestOptions, scLoginPart3);
-}
-
-function captureCookies(response) {
-    var incomingCookies = response.headers['set-cookie'];
-    var outgoingCookies = [];
-    if (incomingCookies) {
-        incomingCookies.forEach(function(cookie) {
-            outgoingCookies.push(cookie.split(';')[0]);
-        });
-    }
-    // Array, allows for duplicate coolie names
-    return outgoingCookies;
-}
-&lt;/pre&gt; 
-&lt;br /&gt; Part 3 / 4 finally collect all the cookies we need, so to turn attention to getting the API token in step 5 
-&lt;br /&gt; 
-&lt;pre class="brush: js"&gt;
-function scLoginPart3(err, httpResponse, body) {
-    if (err) {
-        console.error('Login failed miserably');
-        return console.error(err);
-    }
-    // Login returns not 200 but 302
-    // see https://developer.ibm.com/social/2015/06/23/slight-changes-to-the-form-based-login/
-    if (httpResponse.statusCode !== 302) {
-        return console.error('Wrong status code received: ' + httpResponse.statusCode);
-    }
-
-    var outgoingCookies = captureCookies(httpResponse);
-    var redirect = httpResponse.headers.location;
-
-    // This is the 3rd request we need to make to get finally all cookies for app.na
-    var requestOptions = Object.assign({}, requestOptionsTemplate);
-    requestOptions.headers.Cookie = outgoingCookies.join('; ');
-    requestOptions.url = redirect;
-    request(requestOptions, scLoginPart4);
-}
-
-function scLoginPart4(err, httpResponse, body) {
-    if (err) {
-        console.error('Login redirect failed miserably');
-        return console.error(err);
-    }
-    var cookieHarvest = captureCookies(httpResponse);
-    // Now we have some cookies in app, we need the SAML dance for api.notes
-    scLoginPart5(cookieHarvest)
-}
-&lt;/pre&gt; 
-&lt;br /&gt; In Part 5 we first request the URL with actual data (devices in our case), but get another SAML dance step, since we have 
-&lt;code&gt;apps.na&lt;/code&gt; vs 
-&lt;code&gt;api.notes&lt;/code&gt; in the URL</description>
-	<link>2017/01/saml-and-the-command-line.html</link>
-	<author>Stephan H Wissel</author>
-	<guid>134DE77E2F5D7C55482580B8004B2B1E</guid>
-	<pubDate>2017-01-30 09:41</pubDate>
 
 </item>
 
