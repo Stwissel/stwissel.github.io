@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>From Blogsphere to a Static Site (Part 1) - Objects - NotesSensei's Blog</title>
+<title>From Blogsphere to a Static Site (Part 5) - Comment front-end - NotesSensei's Blog</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -14,7 +14,7 @@ ga('send', 'pageview');
 		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
 	<![endif]-->
 <meta name="ROBOTS" content="FOLLOW, NOIMAGEINDEX" />
-<meta name="DC.Title" content="NotesSensei's Weblog - From Blogsphere to a Static Site (Part 1) - Objects" />
+<meta name="DC.Title" content="NotesSensei's Weblog - From Blogsphere to a Static Site (Part 5) - Comment front-end" />
 <meta name="Author" content="Stephan H. Wissel" />
 <meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
 <meta name="description"
@@ -30,7 +30,7 @@ ga('send', 'pageview');
 <meta property="fb:admins" content="567103136" />
 <meta property="fb:app_id" content="219323514774289">
 <meta property="og:title"
-	content="wissel.net - From Blogsphere to a Static Site (Part 1) - Objects" />
+	content="wissel.net - From Blogsphere to a Static Site (Part 5) - Comment front-end" />
 <meta property="og:type" content="blog" />
 <meta property="og:url" content="https://wissel.net/blog" />
 <meta property="og:image"
@@ -123,7 +123,7 @@ ga('send', 'pageview');
     <ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2017/">2017</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2017/04/">April</a></li>
+  <li><a href="/blog/2017/07/">July</a></li>
   <li class="pull-right">
     <span class="divider">|</span><a href="/blog/categories/Blog.html">Blog</a>
   </li>
@@ -135,99 +135,255 @@ ga('send', 'pageview');
 				<p>This article is part of a mini series. Read them all (latest on top):</p>
 				<h3>Blog Migration</h3>
 				<ol reversed class="nav nav-list">
-					<li ><a href="/blog/2017/07/from-blogsphere-to-a-static-site-part-5-comment-front-end.html">From Blogsphere to a Static Site (Part 5) - Comment front-end</a></li>
+					<li  class="active"><a href="/blog/2017/07/from-blogsphere-to-a-static-site-part-5-comment-front-end.html">From Blogsphere to a Static Site (Part 5) - Comment front-end</a></li>
 					<li ><a href="/blog/2017/05/from-blogsphere-to-a-static-site-part-4-comment-backend.html">From Blogsphere to a Static Site (Part 4) - Comment backend</a></li>
 					<li ><a href="/blog/2017/05/from-blogsphere-to-a-static-site-part-3-generating-pages.html">From Blogsphere to a Static Site (Part 3) - Generating pages</a></li>
 					<li ><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html">From Blogsphere to a Static Site (Part 2) - Cleaning up the HTML</a></li>
-					<li  class="active"><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html">From Blogsphere to a Static Site (Part 1) - Objects</a></li>
+					<li ><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html">From Blogsphere to a Static Site (Part 1) - Objects</a></li>
 					<li ><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-0-requirements.html">From Blogsphere to a Static Site (Part 0) - Requirements</a></li>
 				</ol>
 			</div>	
 
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-0-requirements.html"><i class="icon-hand-left"></i>From Blogsphere to a Static Site (Part 0) - Requirements</a>
+					<li><a href="/blog/2017/07/ownership-flow-of-customer-community-created-cases.html"><i class="icon-hand-left"></i>Ownership flow of customer community created cases</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html">From Blogsphere to a Static Site (Part 2) - Cleaning up the HTML<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 				<article class="well well-raised">
-					<h1><small>From Blogsphere to a Static Site (Part 1) - Objects</small></h1>
+					<h1><small>From Blogsphere to a Static Site (Part 5) - Comment front-end</small></h1>
 					<hr />
-					<div>The migration tooling revolves around data, so getting the data classes right is important. The data classes need to be designed to allow it to be populated either from the Blogsphere NSF or from a collection of JSON files (so the blog generation can continue when the NSF is gone). For the blog we need 3 objects: 
+					<div><p>In <a href="/blog/2017/05/from-blogsphere-to-a-static-site-part-4-comment-backend.html">Part 4</a> I described the comment backend. This installment sheds a light on the comment front-end.</p> 
+<p>Comments can be tricky. One lesson I learned early: When your comment form is standard HTML form, it attracts spam like a light bulb attracts moths. So the requirement were:</p> 
 <ul> 
- <li><b>BlogEntry</b>: The main data containing a blog entry including its meta data</li> 
- <li><b>BlogComment</b>: An entry with a comment for a Blog in a 1:n relation</li> 
- <li><b>FileEntry</b>: information about downloadable files (needed for export)</li> 
+ <li>The original blog entry should not contain any HTML form. It should be loaded on a button click using JavaScript. Nota bene: this isn't hide/show, but actual manipulation of the DOM</li> 
+ <li>The dynamic form shall not contain a POST URL, but submission should be in JavaScript - keeps a lot of the scumbags out already</li> 
+ <li>Submission should be secured with a Captcha</li> 
+ <li>Some formatting should be allowed. I opted for a Markdown editor with preview capabilities</li> 
 </ul> 
-<p>There will be auxiliary data classes like Config, RenderInstructions, Blogindex. Their content is derived from the data stored in the main object or, in case of Config, from disk.</p> 
-<img src="/blog/images/2017/BlogDataClasses.png" border="0" alt="Data classes in the Blog" /><p>The classes all feature static methods to load from a stream and save them as JSON to a stream. I found this pattern quite efficient.</p> 
-<h3>Saving as JSON</h3> 
-<h3> <pre class="brush: java">
-   /**
-     * Save the object to a JSON file for reuse
-     */
-    public void saveDatatoJson(OutputStream out) {
-        GsonBuilder gb = new GsonBuilder();
-        gb.setPrettyPrinting();
-        gb.disableHtmlEscaping();
-        Gson gson = gb.create();
-        PrintWriter writer = new PrintWriter(out);
-        gson.toJson(this, writer);
-        writer.flush();
-        writer.close();
-    }
-    
-    @Override
-    public String toString() {
-    	ByteArrayOutputStream out = new ByteArrayOutputStream();
-    	this.saveDatatoJson(out);
-    	return out.toString();
-    }
-</pre> </h3> 
-<h3>Loading from JSON</h3> 
-<br /> 
-<pre class="brush: java">
-    public static BlogEntry loadDataFromJson(InputStream in) {
-        BlogEntry result = null;
-        Gson gson = new GsonBuilder().create();
-        result = (BlogEntry) gson.fromJson(new InputStreamReader(in), BlogEntry.class);
-
-        // The comments might not be sorted on disk, so we sort them out here
-        Set&lt;BlogComments&gt; bc = new TreeSet&lt;BlogComments&gt;();
-        bc.addAll(result.getComments());
-        result.setComments(bc);
-
-        return result;
-    }
+<p>The first component is the placeholder for the existing comments and the button showing the comment form:</p> 
+<pre class="brush: html">
+&lt;a name=&quot;comments&quot;&gt;&lt;/a&gt;
+{{^commentsclosed}}
+&lt;div class=&quot;well well-raised&quot; style=&quot;text-align : center&quot;&gt;
+  &lt;button class=&quot;btn btn-lg btn-info&quot; data-toggle=&quot;collapse&quot; data-target=&quot;#commentform_{{UNID}}&quot; type=&quot;button&quot;&gt;
+    Add your comment...&nbsp;&nbsp;&lt;span class=&quot;glyphicon glyphicon-comment&quot;&gt;&lt;/span&gt;
+  &lt;/button&gt;
+&lt;/div&gt;
+&lt;div id=&quot;commentform_{{UNID}}&quot; class=&quot;collapse&quot;&gt;&lt;/div&gt;
+{{/commentsclosed}}
+&lt;div class=&quot;well well-raised&quot;&gt;
+  &lt;h4&gt;Comments&lt;/h4&gt;
+  &lt;ol id=&quot;commentList&quot;&gt;
+    {{#comments}}
+    &lt;li&gt;
+      {{#gravatarURL}}&lt;img src=&quot;{{.}}&quot; class=&quot;gravatarimg&quot; /&gt; {{/gravatarURL}} posted by &lt;b&gt;{{author}}&lt;/b&gt; on &lt;i&gt;{{createdString}}&lt;/i&gt;:
+      &lt;br /&gt; {{&amp; comment}}
+      &lt;hr style=&quot;clear : both&quot; /&gt;
+    &lt;/li&gt; {{/comments}} {{^comments}}
+    &lt;li id=&quot;nocomments&quot;&gt;
+      &lt;h5&gt;No comments yet, be the first to comment&lt;/h5&gt;
+    &lt;/li&gt;
+    {{/comments}}
+  &lt;/ol&gt;
+&lt;/div&gt;
 </pre> 
-<br /> The interesting part is the call to the 
-<code>fromJson()</code> method that reads and converts the JSON to the object defined by the class in the parameter. Gson will ignore unknown fields, so the mechanism is quite robust. Still you want to wrap that into an appropriate error handler. Next stop: collections needed for rendering</div>
+<p>The second component is the comment form, implemented as mustache template - one of the reasons I picked Mustache: runs on the server and the client in tons of languages</p> 
+<pre class="brush: html">
+&lt;form title=&quot;Comment form for blog discussion&quot; onSubmit=&quot;return addComment(this,'{{recaptchaid}}','{{parentId}}')&quot; class=&quot;form-vertical well well-raised&quot;&gt;
+  &lt;fieldset&gt;
+    &lt;legend&gt;Add your comment&lt;/legend&gt;
+    &lt;p&gt;Please note: &lt;b&gt;Comments without a valid and working eMail address will be removed.&lt;/b&gt;
+      &lt;br /&gt; This is my site, so I decide what stays here and what goes.&lt;/p&gt;
+     &lt;div class=&quot;control-group&quot; id=&quot;commentcontrol&quot;&gt;
+      &lt;label class=&quot;control-label&quot; for=&quot;Commentor&quot;&gt;Name (required, published)&lt;/label&gt;
+      &lt;div class=&quot;controls&quot;&gt;
+        &lt;input class=&quot;input-xlarge focused&quot; id=&quot;Commentor&quot; size=&quot;30&quot; accesskey=&quot;n&quot; name=&quot;nameAuthor&quot; /&gt;
+      &lt;/div&gt;
+      &lt;label class=&quot;control-label&quot; for=&quot;Email&quot;&gt;eMail (required, not published)&lt;/label&gt;
+      &lt;div class=&quot;controls&quot;&gt;
+        &lt;input type=&quot;eMail&quot; class=&quot;input-xlarge focused&quot; id=&quot;Email&quot; size=&quot;30&quot; accesskey=&quot;n&quot; name=&quot;txtEmail&quot; placeholder=&quot;A working eMail please!&quot; /&gt;
+      &lt;/div&gt;
+      &lt;label class=&quot;control-label&quot; for=&quot;webSite&quot;&gt;URL (optional)&lt;/label&gt;
+      &lt;div class=&quot;controls&quot;&gt;
+        &lt;input type=&quot;url&quot; class=&quot;input-xlarge&quot; id=&quot;webSite&quot; size=&quot;30&quot; accesskey=&quot;n&quot; name=&quot;txtWebSite&quot; /&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;controls&quot;&gt;
+        &lt;div id=&quot;wmd-panel&quot; class=&quot;wmd-panel&quot;&gt;
+          &lt;table style=&quot;width : 100%&quot; border=&quot;0&quot;&gt;
+            &lt;tr&gt;
+              &lt;td style=&quot;width : 50%; vertical-align : top&quot;&gt;
+                &lt;label class=&quot;control-label&quot; for=&quot;wmd-input&quot;&gt;Your Comment (Use markdown like &lt;a href=&quot;//stackoverflow.com/editing-help&quot; target=&quot;_blank&quot;&gt;Stackoverflow&lt;/a&gt;)&lt;/label&gt;
+                &lt;div id=&quot;wmd-button-bar&quot;&gt;&lt;/div&gt;
+                &lt;textarea class=&quot;wmd-input&quot; id=&quot;wmd-input&quot; name=&quot;Body&quot;&gt;&lt;/textarea&gt;
+              &lt;/td&gt;
+              &lt;td style=&quot;width : 50%; vertical-align : top&quot;&gt;
+                &lt;label class=&quot;control-label&quot;&gt;Preview&lt;/label&gt;
+                &lt;div id=&quot;wmd-preview&quot; class=&quot;wmd-panel wmd-preview&quot;&gt;&lt;/div&gt;
+              &lt;/td&gt;
+            &lt;/tr&gt;
+          &lt;/table&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;controls&quot; id=&quot;captchadiv&quot;&gt;Captcha here&lt;/div&gt;
+      &lt;div class=&quot;form-actions&quot;&gt;
+        &lt;button id=&quot;commentsubmit&quot; type=&quot;submit&quot; class=&quot;btn btn-primary btn-large&quot;&gt;Post your comment&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;alert alert-block&quot; id=&quot;alertContainer&quot; style=&quot;display : none&quot;&gt;One moment please, submitting comment...&lt;/div&gt;
+  &lt;/fieldset&gt;
+&lt;/form&gt;
+</pre> 
+<p>The whole mechanism gets to work with just a few jQuery JavaScript functions (Vanilla JS would work too, but I had JQuery already for the social buttons, so I reused that) and the respective JS files:</p><ul> 
+ <li>mustache.js</li> 
+ <li>blogcomments.js</li> 
+ <li>Markdown.Converter.js</li> 
+ <li>Markdown.Sanitizer.js</li> 
+ <li>Markdown.Editor.j</li> 
+ <li>//www.google.com/recaptcha/api/js/recaptcha_ajax.js</li> 
+</ul> 
+<h3>blogcomments.js</h3> 
+<pre class="brush: javascript">
+var destinationURL = &quot;/blog/comments&quot;;
+
+function getCommentForm(recaptchaid, parentId) {
+  var params = {};
+  params.recaptchaid = recaptchaid;
+  params.parentId = parentId;
+  var result = {};
+  $.ajax({
+    url: '/blog/js2/comment.mustache',
+    dataType: 'text',
+    success: function(template) {
+      result = Mustache.render(template, params);
+    },
+    async: false
+  });
+  return result;
+}
+
+function addComment(form, recaptchaid, parentId) {
+  $('#commentsubmit').hide();
+  $('#commentcontrol').hide();
+  $('#captchadiv').hide();
+  $(&quot;#alertContainer&quot;).html(&quot;One moment please, submitting comment...&quot;)
+    .show();
+
+  $.postJSON({
+    url: destinationURL,
+    data: {
+      Commentor: this.Commentor.value,
+      eMail: this.Email.value,
+      webSite: this.webSite.value,
+      Body: this[&quot;wmd-input&quot;].value,
+      rChallenge: this.recaptcha_challenge_field.value,
+      rResponse: this.recaptcha_response_field.value,
+      parentId: parentId
+    },
+    success: function(result) {
+      $(&quot;#alertContainer&quot;).html(result).addClass(&quot;alert-error&quot;).delay(
+        2000).hide(200, function() {
+        resetComment(recaptchaid, parentId);
+      });
+    },
+    error: function(err) {
+      $(&quot;#alertContainer&quot;).html(err.responseText).addClass(&quot;alert-error&quot;)
+        .delay(1000).hide(200, function() {
+          resetComment(recaptchaid, parentId);
+        });
+    }
+  });
+  return false;
+}
+
+function resetComment(recaptchaid, parentId) {
+  var hasSuccess = $(&quot;div.commentsuccess&quot;);
+  if (hasSuccess.length == 0) {
+    // It didn't work!
+    $(&quot;#alertContainer&quot;).show();
+    $('#commentsubmit').show();
+    $('#commentcontrol').show();
+    $('#captchadiv').show();
+  } else {
+    renderComment(recaptchaid, parentId);
+  }
+}
+
+function renderComment(recaptchaid, parentId) {
+  var fid = &quot;#commentform_&quot; + parentId;
+  var form = getCommentForm(recaptchaid, parentId);
+  $(fid).empty().append(form);
+  if (Recaptcha) {
+    var theDiv = document.getElementById(&quot;captchadiv&quot;);
+    Recaptcha.create(recaptchaid, theDiv, {
+      tabindex: 1,
+      theme: &quot;clean&quot;
+        /*
+         * , callback : Recaptcha.focus_response_field
+         */
+    });
+  }
+
+  // Markdown
+  var converter1 = Markdown.getSanitizingConverter();
+  var editor1 = new Markdown.Editor(converter1);
+  editor1.run();
+
+  // Comments that are not yet static
+  $.ajax({
+    url: destinationURL + &quot;?parentid=&quot; + parentId,
+    type: 'GET',
+    async: true,
+    success: function(data) {
+      if (data &amp;&amp; data.length &gt; 0) {
+        $(&quot;li.dynamicComments&quot;).remove();
+        $(&quot;#nocomments&quot;).remove();
+        $(&quot;#commentList&quot;).append(data);
+      }
+    },
+    error: function(data) {
+      // Crude error handling
+      $(&quot;#alertContainer&quot;).html(data).show();
+    }
+  });
+}
+
+jQuery.extend({
+  postJSON: function(params) {
+    return jQuery.ajax(jQuery.extend(params, {
+      type: &quot;POST&quot;,
+      data: JSON.stringify(params.data),
+      dataType: &quot;json&quot;,
+      contentType: &quot;application/json&quot;,
+      processData: false
+    }));
+  }
+});
+</pre> 
+<p>As usual: YMMV</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2017-04-15 04:06
+Stephan H Wissel</a> on 2017-07-20 10:58
 <span class="divider">|</span>
-<a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html#comments">Comments (0)</a>
+<a href="/blog/2017/07/from-blogsphere-to-a-static-site-part-5-comment-front-end.html#comments">Comments (0)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/Blog.html">Blog</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="From Blogsphere to a Static Site (Part 1) - Objects"></div>
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2017/07/from-blogsphere-to-a-static-site-part-5-comment-front-end.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="From Blogsphere to a Static Site (Part 5) - Comment front-end"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html";
+							var permaLink = "https://www.notessensei.com/blog/2017/07/from-blogsphere-to-a-static-site-part-5-comment-front-end.html";
 						</script>
 					</p>
 
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_14A4D971F7B2205F48258103002C7F40" type="button">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_7380F00B6085195048258163005240F6" type="button">
 		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
 	            </button>
 	            </div>
-				<div id="commentform_14A4D971F7B2205F48258103002C7F40"  class="collapse"></div>
+				<div id="commentform_7380F00B6085195048258163005240F6"  class="collapse"></div>
 				<div class="well well-raised">
 					<h4>Comments</h4>
 					<ol id="commentList">
@@ -237,12 +393,9 @@ categories:  <a href="/blog/categories/Blog.html">Blog</a>
 					</ol>
 				</div>
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-0-requirements.html"><i class="icon-hand-left"></i>From Blogsphere to a Static Site (Part 0) - Requirements</a>
+					<li><a href="/blog/2017/07/ownership-flow-of-customer-community-created-cases.html"><i class="icon-hand-left"></i>Ownership flow of customer community created cases</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html">From Blogsphere to a Static Site (Part 2) - Cleaning up the HTML<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 			</div>
@@ -250,7 +403,7 @@ categories:  <a href="/blog/categories/Blog.html">Blog</a>
 		<ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2017/">2017</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2017/04/">April</a></li>
+  <li><a href="/blog/2017/07/">July</a></li>
   <li class="pull-right">
     <span class="divider">|</span><a href="/blog/categories/Blog.html">Blog</a>
   </li>
@@ -319,7 +472,7 @@ categories:  <a href="/blog/categories/Blog.html">Blog</a>
 	</footer>
 
 	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html";
+		var permaLink = "https://wissel.net/blog/2017/07/from-blogsphere-to-a-static-site-part-5-comment-front-end.html";
 	</script>
 		<script type="text/javascript" src="/blog/js/jquery.min.js"></script>
 	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
@@ -354,7 +507,7 @@ categories:  <a href="/blog/categories/Blog.html">Blog</a>
 	<script type="text/javascript">
 		$(document).ready(function() {
 		        SyntaxHighlighter.all();
-			renderComment("6LcUOewSAAAAACAI4zVcGFVkGWmp0sUH5gabwy1q", "14A4D971F7B2205F48258103002C7F40");
+			renderComment("6LcUOewSAAAAACAI4zVcGFVkGWmp0sUH5gabwy1q", "7380F00B6085195048258163005240F6");
 		});
 	</script>
 

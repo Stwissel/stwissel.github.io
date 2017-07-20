@@ -6,7 +6,97 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2017 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Sun, 16 Jul 2017 22:25:47 +0800</pubdate>
+	<pubdate>Thu, 20 Jul 2017 23:35:32 +0800</pubdate>
+<item
+	><title>From Blogsphere to a Static Site (Part 5) - Comment front-end</title>
+	<description>&lt;p&gt;In &lt;a href="/blog/2017/05/from-blogsphere-to-a-static-site-part-4-comment-backend.html"&gt;Part 4&lt;/a&gt; I described the comment backend. This installment sheds a light on the comment front-end.&lt;/p&gt; 
+&lt;p&gt;Comments can be tricky. One lesson I learned early: When your comment form is standard HTML form, it attracts spam like a light bulb attracts moths. So the requirement were:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;The original blog entry should not contain any HTML form. It should be loaded on a button click using JavaScript. Nota bene: this isn't hide/show, but actual manipulation of the DOM&lt;/li&gt; 
+ &lt;li&gt;The dynamic form shall not contain a POST URL, but submission should be in JavaScript - keeps a lot of the scumbags out already&lt;/li&gt; 
+ &lt;li&gt;Submission should be secured with a Captcha&lt;/li&gt; 
+ &lt;li&gt;Some formatting should be allowed. I opted for a Markdown editor with preview capabilities&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;The first component is the placeholder for the existing comments and the button showing the comment form:&lt;/p&gt; 
+&lt;pre class="brush: html"&gt;
+&amp;lt;a name=&amp;quot;comments&amp;quot;&amp;gt;&amp;lt;/a&amp;gt;
+{{^commentsclosed}}
+&amp;lt;div class=&amp;quot;well well-raised&amp;quot; style=&amp;quot;text-align : center&amp;quot;&amp;gt;
+  &amp;lt;button class=&amp;quot;btn btn-lg btn-info&amp;quot; data-toggle=&amp;quot;collapse&amp;quot; data-target=&amp;quot;#commentform_{{UNID}}&amp;quot; type=&amp;quot;button&amp;quot;&amp;gt;
+    Add your comment...&amp;nbsp;&amp;nbsp;&amp;lt;span class=&amp;quot;glyphicon glyphicon-comment&amp;quot;&amp;gt;&amp;lt;/span&amp;gt;
+  &amp;lt;/button&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;div id=&amp;quot;commentform_{{UNID}}&amp;quot; class=&amp;quot;collapse&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
+{{/commentsclosed}}
+&amp;lt;div class=&amp;quot;well well-raised&amp;quot;&amp;gt;
+  &amp;lt;h4&amp;gt;Comments&amp;lt;/h4&amp;gt;
+  &amp;lt;ol id=&amp;quot;commentList&amp;quot;&amp;gt;
+    {{#comments}}
+    &amp;lt;li&amp;gt;
+      {{#gravatarURL}}&amp;lt;img src=&amp;quot;{{.}}&amp;quot; class=&amp;quot;gravatarimg&amp;quot; /&amp;gt; {{/gravatarURL}} posted by &amp;lt;b&amp;gt;{{author}}&amp;lt;/b&amp;gt; on &amp;lt;i&amp;gt;{{createdString}}&amp;lt;/i&amp;gt;:
+      &amp;lt;br /&amp;gt; {{&amp;amp; comment}}
+      &amp;lt;hr style=&amp;quot;clear : both&amp;quot; /&amp;gt;
+    &amp;lt;/li&amp;gt; {{/comments}} {{^comments}}
+    &amp;lt;li id=&amp;quot;nocomments&amp;quot;&amp;gt;
+      &amp;lt;h5&amp;gt;No comments yet, be the first to comment&amp;lt;/h5&amp;gt;
+    &amp;lt;/li&amp;gt;
+    {{/comments}}
+  &amp;lt;/ol&amp;gt;
+&amp;lt;/div&amp;gt;
+&lt;/pre&gt; 
+&lt;p&gt;The second component is the comment form, implemented as mustache template - one of the reasons I picked Mustache: runs on the server and the client in tons of languages&lt;/p&gt; 
+&lt;pre class="brush: html"&gt;
+&amp;lt;form title=&amp;quot;Comment form for blog discussion&amp;quot; onSubmit=&amp;quot;return addComment(this,'{{recaptchaid}}','{{parentId}}')&amp;quot; class=&amp;quot;form-vertical well well-raised&amp;quot;&amp;gt;
+  &amp;lt;fieldset&amp;gt;
+    &amp;lt;legend&amp;gt;Add your comment&amp;lt;/legend&amp;gt;
+    &amp;lt;p&amp;gt;Please note: &amp;lt;b&amp;gt;Comments without a valid and working eMail address will be removed.&amp;lt;/b&amp;gt;
+      &amp;lt;br /&amp;gt; This is my site, so I decide what stays here and what goes.&amp;lt;/p&amp;gt;
+     &amp;lt;div class=&amp;quot;control-group&amp;quot; id=&amp;quot;commentcontrol&amp;quot;&amp;gt;
+      &amp;lt;label class=&amp;quot;control-label&amp;quot; for=&amp;quot;Commentor&amp;quot;&amp;gt;Name (required, published)&amp;lt;/label&amp;gt;
+      &amp;lt;div class=&amp;quot;controls&amp;quot;&amp;gt;
+        &amp;lt;input class=&amp;quot;input-xlarge focused&amp;quot; id=&amp;quot;Commentor&amp;quot; size=&amp;quot;30&amp;quot; accesskey=&amp;quot;n&amp;quot; name=&amp;quot;nameAuthor&amp;quot; /&amp;gt;
+      &amp;lt;/div&amp;gt;
+      &amp;lt;label class=&amp;quot;control-label&amp;quot; for=&amp;quot;Email&amp;quot;&amp;gt;eMail (required, not published)&amp;lt;/label&amp;gt;
+      &amp;lt;div class=&amp;quot;controls&amp;quot;&amp;gt;
+        &amp;lt;input type=&amp;quot;eMail&amp;quot; class=&amp;quot;input-xlarge focused&amp;quot; id=&amp;quot;Email&amp;quot; size=&amp;quot;30&amp;quot; accesskey=&amp;quot;n&amp;quot; name=&amp;quot;txtEmail&amp;quot; placeholder=&amp;quot;A working eMail please!&amp;quot; /&amp;gt;
+      &amp;lt;/div&amp;gt;
+      &amp;lt;label class=&amp;quot;control-label&amp;quot; for=&amp;quot;webSite&amp;quot;&amp;gt;URL (optional)&amp;lt;/label&amp;gt;
+      &amp;lt;div class=&amp;quot;controls&amp;quot;&amp;gt;
+        &amp;lt;input type=&amp;quot;url&amp;quot; class=&amp;quot;input-xlarge&amp;quot; id=&amp;quot;webSite&amp;quot; size=&amp;quot;30&amp;quot; accesskey=&amp;quot;n&amp;quot; name=&amp;quot;txtWebSite&amp;quot; /&amp;gt;
+      &amp;lt;/div&amp;gt;
+      &amp;lt;div class=&amp;quot;controls&amp;quot;&amp;gt;
+        &amp;lt;div id=&amp;quot;wmd-panel&amp;quot; class=&amp;quot;wmd-panel&amp;quot;&amp;gt;
+          &amp;lt;table style=&amp;quot;width : 100%&amp;quot; border=&amp;quot;0&amp;quot;&amp;gt;
+            &amp;lt;tr&amp;gt;
+              &amp;lt;td style=&amp;quot;width : 50%; vertical-align : top&amp;quot;&amp;gt;
+                &amp;lt;label class=&amp;quot;control-label&amp;quot; for=&amp;quot;wmd-input&amp;quot;&amp;gt;Your Comment (Use markdown like &amp;lt;a href=&amp;quot;//stackoverflow.com/editing-help&amp;quot; target=&amp;quot;_blank&amp;quot;&amp;gt;Stackoverflow&amp;lt;/a&amp;gt;)&amp;lt;/label&amp;gt;
+                &amp;lt;div id=&amp;quot;wmd-button-bar&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
+                &amp;lt;textarea class=&amp;quot;wmd-input&amp;quot; id=&amp;quot;wmd-input&amp;quot; name=&amp;quot;Body&amp;quot;&amp;gt;&amp;lt;/textarea&amp;gt;
+              &amp;lt;/td&amp;gt;
+              &amp;lt;td style=&amp;quot;width : 50%; vertical-align : top&amp;quot;&amp;gt;
+                &amp;lt;label class=&amp;quot;control-label&amp;quot;&amp;gt;Preview&amp;lt;/label&amp;gt;
+                &amp;lt;div id=&amp;quot;wmd-preview&amp;quot; class=&amp;quot;wmd-panel wmd-preview&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
+              &amp;lt;/td&amp;gt;
+            &amp;lt;/tr&amp;gt;
+          &amp;lt;/table&amp;gt;
+        &amp;lt;/div&amp;gt;
+      &amp;lt;/div&amp;gt;
+      &amp;lt;div class=&amp;quot;controls&amp;quot; id=&amp;quot;captchadiv&amp;quot;&amp;gt;Captcha here&amp;lt;/div&amp;gt;
+      &amp;lt;div class=&amp;quot;form-actions&amp;quot;&amp;gt;
+        &amp;lt;button id=&amp;quot;commentsubmit&amp;quot; type=&amp;quot;submit&amp;quot; class=&amp;quot;btn btn-primary btn-large&amp;quot;&amp;gt;Post your comment&amp;lt;/button&amp;gt;
+      &amp;lt;/div&amp;gt;
+    &amp;lt;/div&amp;gt;
+    &amp;lt;div class=&amp;quot;alert alert-block&amp;quot; id=&amp;quot;alertContainer&amp;quot; style=&amp;quot;display : none&amp;quot;&amp;gt;One moment please, submitting comment...&amp;lt;/div&amp;gt;
+  &amp;lt;/fieldset&amp;gt;
+&amp;lt;/form&amp;gt;
+&lt;/pre&gt; 
+&lt;p&gt;The whole mechanism gets to work with just a few jQuery JavaScript functions (Vanilla JS would work too, but I had JQuery already for the social buttons, so I reused that) and the respective JS files:&lt;/p&gt;</description>
+	<link>2017/07/from-blogsphere-to-a-static-site-part-5-comment-front-end.html</link>
+	<author>Stephan H Wissel</author>
+	<guid>7380F00B6085195048258163005240F6</guid>
+	<pubDate>2017-07-20 10:58</pubDate>
+
+</item>
 <item
 	><title>Ownership flow of customer community created cases</title>
 	<description>&lt;p&gt;In a previous entry I &lt;a href="/blog/d6plinks/SHWL-APBH4Q"&gt;mapped out&lt;/a&gt; sharing abilities the Salesforce platform is capable of.&lt;/p&gt; 
@@ -358,22 +448,6 @@ private void saveImage(Document doc) {
 	<author>Stephan H Wissel</author>
 	<guid>922F997388C85F0548258105004A17A1</guid>
 	<pubDate>2017-04-17 09:29</pubDate>
-
-</item>
-<item
-	><title>From Blogsphere to a Static Site (Part 1) - Objects</title>
-	<description>The migration tooling revolves around data, so getting the data classes right is important. The data classes need to be designed to allow it to be populated either from the Blogsphere NSF or from a collection of JSON files (so the blog generation can continue when the NSF is gone). For the blog we need 3 objects: 
-&lt;ul&gt; 
- &lt;li&gt;&lt;b&gt;BlogEntry&lt;/b&gt;: The main data containing a blog entry including its meta data&lt;/li&gt; 
- &lt;li&gt;&lt;b&gt;BlogComment&lt;/b&gt;: An entry with a comment for a Blog in a 1:n relation&lt;/li&gt; 
- &lt;li&gt;&lt;b&gt;FileEntry&lt;/b&gt;: information about downloadable files (needed for export)&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;There will be auxiliary data classes like Config, RenderInstructions, Blogindex. Their content is derived from the data stored in the main object or, in case of Config, from disk.&lt;/p&gt; 
-&lt;img src="/blog/images/2017/BlogDataClasses.png" border="0" alt="Data classes in the Blog" /&gt;</description>
-	<link>2017/04/from-blogsphere-to-a-static-site-part-1-objects.html</link>
-	<author>Stephan H Wissel</author>
-	<guid>14A4D971F7B2205F48258103002C7F40</guid>
-	<pubDate>2017-04-15 04:06</pubDate>
 
 </item>
 
