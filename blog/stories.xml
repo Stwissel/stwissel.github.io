@@ -6,7 +6,45 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2017 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 26 Jul 2017 01:27:03 +0800</pubdate>
+	<pubdate>Mon, 02 Oct 2017 23:16:28 +0800</pubdate>
+<item
+	><title>Excel in Continuous Integration</title>
+	<description>&lt;p&gt;Business Users like Excel. Besides its original use case of calculating, lists are a favourite use case. They also serve as poor man's requirement and bug tracker, so they siep into software development too.&lt;/p&gt; 
+&lt;p&gt;While Excel sheets are great for interaction, they are a beast for anything automation. The irony of it: Modern Excel files (the xslx flavour) are nothing less than &lt;a href="https://en.wikipedia.org/wiki/Office_Open_XML"&gt;zip files with XML content&lt;/a&gt;. However that format is, let's say, [insert expletives here].&lt;/p&gt; 
+&lt;p&gt;From an XML representation I would expect something like &lt;code&gt;&amp;lt;cell row=&amp;quot;23&amp;quot; col=&amp;quot;44&amp;quot;&amp;gt;Some value&amp;lt;/cell&amp;gt;&lt;/code&gt;. However that's not what Excel does. Rename an xlsx to zip and see for yourself. Also (which makes sense for Excel itself) empty cells are not represented in XML.&lt;/p&gt; 
+&lt;p&gt;Cutting a long story short, an Excel file or its XML representation poses some challenges:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;XML format is not very suitable for automation, like generating reports using XSLT&lt;/li&gt; 
+ &lt;li&gt;Excel automation only runs on Windows (and when you run headless, you trade the head for a headache). That makes it a no-go for most automation server environments&lt;/li&gt; 
+ &lt;li&gt;Empty cells are absent from the XML (a variation of &amp;quot;not suitable&amp;quot;)&lt;/li&gt; 
+ &lt;li&gt;Cross reports with other files (e.g. logs in XML format) is hard&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;To overcome these limitations I wrote &lt;a href="https://github.com/Stwissel/Excel2XML"&gt;Excel2XML&lt;/a&gt;. It is a little Java command line utility that converts Excel into a more digestible XML format. I used Microsoft's contribution to the &lt;a href="https://poi.apache.org/"&gt;Apache POI&lt;/a&gt; project to read the file. It has the following functions:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Extract workbooks in one or separate files per worksheet&lt;/li&gt; 
+ &lt;li&gt;Ignore all formatting&lt;/li&gt; 
+ &lt;li&gt;Computed cells return their last result values, unless it is a formula error, then the formula is returned&lt;/li&gt; 
+ &lt;li&gt;The first line of each sheet is treated as column headers, which are extracted as columns/column elements&lt;/li&gt; 
+ &lt;li&gt;Each cell has a &lt;code&gt;column&lt;/code&gt;, a &lt;code&gt;row&lt;/code&gt; and a &lt;code&gt;title&lt;/code&gt; attribute. The title reflects the value from the first row. This allows in XSLT to query the title instead of relying on the column number. Reordering, adding or removing columns won't kill your XSLT stylesheet that way&lt;/li&gt; 
+ &lt;li&gt;Optional empty cells can be generated with an attribute of &lt;code&gt;empty=&amp;quot;true&amp;quot;&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;Runs on Java8 completely from command line&lt;/li&gt; 
+ &lt;li&gt;Calling it without parameters outputs the exact syntax of options&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;The full syntax: &lt;code&gt;java -jar excel2xml.jar -i somefile.xslt [-o somefile.xml [ ]-e] [-s] [-w3,4]&lt;/code&gt;&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;-i the input file in xslx format&lt;/li&gt; 
+ &lt;li&gt;-o the output file. If missing same name as input, but extension xml&lt;/li&gt; 
+ &lt;li&gt;-e generate empty cells. If missing: cells without data are skipped&lt;/li&gt; 
+ &lt;li&gt;-s generate a single file for the whole workbook. If missing: creates one file per sheet&lt;/li&gt; 
+ &lt;li&gt;-w comma separated list of sheets to export. Starts at 0. If missing: exports all sheets&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;Head over to the git repository and grab &lt;a href="https://github.com/Stwissel/Excel2XML/releases"&gt;a release&lt;/a&gt;. Let me know what use you found. As usual YMMV&lt;/p&gt;</description>
+	<link>2017/10/excel-in-ci.html</link>
+	<author>Stephan H Wissel</author>
+	<guid>8439A1CD09FAA0D2482581AD004F86B5</guid>
+	<pubDate>2017-10-02 10:28</pubDate>
+
+</item>
 <item
 	><title>Static APEX code analysis with PMD</title>
 	<description>&lt;p&gt;Coding standard are only as good as they are followed. One venerable tool to check source code is &lt;a href="https://pmd.github.io/"&gt;PMD&lt;/a&gt;. When you, like I did, wonder what acronym PMD represents, you will &lt;a href="https://pmd.github.io/pmd-5.8.1/overview/meaning.html"&gt;be disappointed&lt;/a&gt;. PMD supports the usual suspects like C, C++, C#, Fortran, Java, JavaScript, Go, Groovy, XML... as well as &lt;a href="https://pmd.github.io/pmd-5.8.1/pmd-apex/index.html"&gt;Apex&lt;/a&gt; and &lt;a href="https://pmd.github.io/pmd-5.8.1/pmd-visualforce/index.html"&gt;Visualforce&lt;/a&gt;.&lt;/p&gt; 
@@ -346,65 +384,6 @@ public class CommentService extends CommentResponse {
 	<author>Stephan H Wissel</author>
 	<guid>FAD76A0F746D9A3748257D04003A257E</guid>
 	<pubDate>2017-05-01 12:35</pubDate>
-
-</item>
-<item
-	><title>From Blogsphere to a Static Site (Part 3) - Generating pages</title>
-	<description>&lt;p&gt;The rendering engine I choose is &lt;a href="mustache.github.com/mustache.5.html"&gt;mustache&lt;/a&gt; which describes itself as &amp;quot;&lt;i&gt;logic-less templating engine&lt;/i&gt;&amp;quot;. My main criteria was the availability on multiple platforms including &lt;a href="https://github.com/spullara/mustache.java"&gt;Java&lt;/a&gt; and &lt;a href="https://github.com/janl/mustache.js"&gt;JavaScript&lt;/a&gt; (I might port the rendering part to NodeJS at some time in the future).&lt;br /&gt; The only logic mustache supports is conditional rendering based on the presence or absence of an element. When an element is present and is an array (or a collection in Java) the body of the template gets repeated for each element in the array. A scalar value hence is treated as an array with one value only.&lt;/p&gt; 
-&lt;p&gt;Mustache is simple to use. All you need is a data bean (in Java, a JSON structure for JavaScript) and a text file containing placeholders with the property names. E.g. &lt;code&gt;&amp;lt;h1&amp;gt;{{title}}&amp;lt;/h1&amp;gt;&lt;/code&gt; will render a headline with the title property of you data object. In Java that would be either a public variable or a call to &lt;code&gt;getTitle&lt;/code&gt; according to the bean specification. The blog rendering code therefore is quite simple:&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;
-private void renderOneEntry(BlogEntry be, Mustache mustache) throws IOException {
-
-        String location = this.config.destinationDirectory + be.getNewURL();
-        String outDirs = location.substring(0, location.lastIndexOf(&amp;quot;/&amp;quot;));
-        File dirs = new File(outDirs);
-        if (!dirs.exists()) {
-            dirs.mkdirs();
-        }
-        // Set the current context
-        for (LinkItem cat : be.getCategory()) {
-            String c = cat.name;
-            this.allCategories.get(c.toLowerCase()).active = true;
-        }
-        this.allDateCategories.get(be.getDateYear()).active = true;
-
-        if (be.getSeries() != null) {
-            String series = be.getSeries();
-            if (this.allSeries.containsKey(series)) {
-                this.allSeries.get(series).get(be.getNewURL()).active = true;
-            }
-        }
-
-        // Prepare to write out
-        ByteArrayOutputStream out = new ByteArrayOutputStream(102400);
-        Writer pw = new PrintWriter(out);
-
-        // This is where the magic happens
-        mustache.execute(pw, be);
-        pw.flush();
-        pw.close();
-        this.saveIfChanged(out.toByteArray(), location);
-
-        // Cleanup
-        for (LinkItem cat : be.getCategory()) {
-            String c = cat.name;
-            this.allCategories.get(c.toLowerCase()).active = false;
-        }
-        this.allDateCategories.get(be.getDateYear()).active = false;
-
-        if (be.getSeries() != null) {
-            String series = be.getSeries();
-            if (this.allSeries.containsKey(series)) {
-                this.allSeries.get(series).get(be.getNewURL()).active = false;
-            }
-        }
-    }
-&lt;/pre&gt; 
-&lt;p&gt;The actual rendering is just the line &lt;code&gt;mustache.execute(pw, be);&lt;/code&gt; The code around it prepares and resets the collections that might render on a page like categories, series or month and year. Also of interest is &lt;code&gt;this.saveIfChanged(out.toByteArray(), location);&lt;/code&gt; which only saves results back to disk if it actually has changed. Don't be mistaken: any change in layout will lead to a newly rendered page, so this is quite important to save as needed and not more (you don't want to have tons of identical files that only differ in their time stamp)&lt;/p&gt;</description>
-	<link>2017/05/from-blogsphere-to-a-static-site-part-3-generating-pages.html</link>
-	<author>Stephan H Wissel</author>
-	<guid>02FE470F4B650113482581130012A956</guid>
-	<pubDate>2017-05-01 11:23</pubDate>
 
 </item>
 
