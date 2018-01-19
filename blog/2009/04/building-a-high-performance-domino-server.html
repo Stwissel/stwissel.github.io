@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -150,17 +150,17 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Building a high performance Domino Server</small></h1>
 					<hr />
-					<div>Domino can take huge user populations. To do this successfully all elements of a Domino server have to be considered carefully. Following the old insight &quot; 
-<i>It is always the cable</i>&quot; you need to pay attention to the hardware layout. While you perfectly well can install a Domino server on a low-end laptop or a VM Image, it wouldn't give you the peak performance you are looking for. You rather want something looking like this: 
-<br /> 
-<img src="/blog/images/2009/HighPerformanceDomino853.jpg" border="0" alt="Server layout for a high performance Domino server" /> 
-<br /> Let us look at the details: 
+					<div>Domino can take huge user populations. To do this successfully all elements of a Domino server have to be considered carefully. Following the old insight " 
+<i>It is always the cable</i>" you need to pay attention to the hardware layout. While you perfectly well can install a Domino server on a low-end laptop or a VM Image, it wouldn't give you the peak performance you are looking for. You rather want something looking like this: 
+<br> 
+<img src="/blog/images/2009/HighPerformanceDomino853.jpg" border="0" alt="Server layout for a high performance Domino server"> 
+<br> Let us look at the details: 
 <ul> 
  <li>Disk layout 
   <ul> 
    <li><b>Operating system and Applications</b>: This is your first RAID 1 Array. Since data hardly change and are really not that much a small but fast spinning drive will do. RAID1 protects you against failure of one drive and speeds read operations. Some suggest to have separate drives for application and OS, but that might be overkill. You could consider having separate partitions (easy on Linux/Unix).</li> 
    <li><b>View Rebuild Directory</b>: There is a nice notes.ini variable <a href="http://www.ibm.com/developerworks/lotus/documentation/notes-ini/utoz.html">View_Rebuild_Dir</a>. You can point to a separate drive to store the temporary files created during index updates. The default is the system temp directory. This directory is a good candidate for a RAM disk or a solid state disk when your system is updating a lot of views all the time.</li> 
-   <li><b>Domino Data</b>: Typically you have a RAID5/RAID10 storage here to accommodate the large amount of data (users demand Google size mailboxes and your applications don't shrink magically). More and more we do see <a href="http://www-01.ibm.com/support/docview.wss?uid=swg27002613">SAN</a> systems for Domino storage, which is OK. Just keep in mind: Don't store Domino cluster databases from different clusters in the same SAN since it defeats the idea of a share-nothing cluster. While we support the use of NAS, the network latency and bandwidth is a limiting factor. Archival servers run fine with NAS, but not your high performance primary production server.<br /> <b>Update</b>: Fixed the graphic to show RAID10 since is shows much better performance than RAID5</li> 
+   <li><b>Domino Data</b>: Typically you have a RAID5/RAID10 storage here to accommodate the large amount of data (users demand Google size mailboxes and your applications don't shrink magically). More and more we do see <a href="http://www-01.ibm.com/support/docview.wss?uid=swg27002613">SAN</a> systems for Domino storage, which is OK. Just keep in mind: Don't store Domino cluster databases from different clusters in the same SAN since it defeats the idea of a share-nothing cluster. While we support the use of NAS, the network latency and bandwidth is a limiting factor. Archival servers run fine with NAS, but not your high performance primary production server.<br> <b>Update</b>: Fixed the graphic to show RAID10 since is shows much better performance than RAID5</li> 
    <li><b>Transaction Logging</b>: You have tried it. Switched it on, expected great things and it didn't perform. The flaw: for good transaction logging performance you need your own disk. Not just another partition, but your very own spindle (RAID1) ideally with its own controller. It would be interesting to see how solid state disks work here.</li> 
    <li><b>Full Text Index</b>: Since Domino 8.5.3 you can move the FTIndex to a different drive. This improves data throughput and reduces fragmentation on your data drive. Add <code>FTBasePath=d:\full_text</code> to the notes.ini and run <code>updall -f</code>. Your 100 user server won't notice. Large environments will benefit</li> 
   </ul> </li> 
@@ -172,13 +172,13 @@ ga('send', 'pageview');
   </ul> </li> 
 </ul> Of course all of this isn't new (except the shiny picture), you can read much more details on IBM's 
 <a href="http://www-01.ibm.com/support/docview.wss?rs=203&amp;uid=swg27008849">Domino Performance Best Practices</a> pages. This is just about the hardware layout. You need to consider the operating system too. But that's a story for another time. As usual YMMV. 
-<br /> 
+<br> 
 <b>Update</b>: There is now addtional material available how to tune an 
 <a href="http://www.redbooks.ibm.com/redpieces/abstracts/sg245287.html">IBM System x server</a> to peak performance. 
 <b>Update 2</b>: 
 <a href="http://twitter.com/Pipalia">Samir</a> points to a nice comparison between 
 <a href="http://weblogs.sqlteam.com/billg/archive/2007/06/18/RAID-10-vs.-RAID-5-Performance.aspx">RAID5 and RAID10</a>. It's not Domino related but insightful. One key point there: watch your controller. 
-<br /> 
+<br> 
 <b>Update 3</b>: Added the separate drive for the full-text index</div>
 					<hr />
 					<p>
@@ -207,8 +207,8 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/64aba47aff935b985271615a7cb59d1a.jpg?s=88" class="gravatarimg" />
-							posted by <b>Darren Duke</b> on <i>Tuesday 21 April 2009 AD - 22:32 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/64aba47aff935b985271615a7cb59d1a.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Darren Duke</b> on <i>Tuesday 21 April 2009 AD - 22:32 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Shame most standalone servers only allow a max of 8 drives ;) 
@@ -218,8 +218,8 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.jpg?s=88" class="gravatarimg" />
-							posted by <b>Selcuk A</b> on <i>Tuesday 21 April 2009 AD - 22:44 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Selcuk A</b> on <i>Tuesday 21 April 2009 AD - 22:44 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   FYI: It is possible to build a cross over cable for gigabit ports: { 
@@ -228,8 +228,8 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8ce5878f72015d625dd13c44d942db36.jpg?s=88" class="gravatarimg" />
-							posted by <b>Jim Casale</b> on <i>Tuesday 21 April 2009 AD - 22:59 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8ce5878f72015d625dd13c44d942db36.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Jim Casale</b> on <i>Tuesday 21 April 2009 AD - 22:59 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   @Darren High performance SAN is only possible if the SAN people give you what you ask for. This is the second position I have found that they give you want they want to give you, not what you ask for. 
@@ -238,8 +238,8 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 21 April 2009 AD - 23:03 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 21 April 2009 AD - 23:03 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   @Selcuk: Thx for the link, learned something 
@@ -251,8 +251,8 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/f8a85b2f8c976aeb6e842c1f64324c36.jpg?s=88" class="gravatarimg" />
-							posted by <b>Ulrich Krause</b> on <i>Tuesday 21 April 2009 AD - 23:10 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/f8a85b2f8c976aeb6e842c1f64324c36.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Ulrich Krause</b> on <i>Tuesday 21 April 2009 AD - 23:10 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Don't forget your DAOS repository!!
@@ -260,8 +260,8 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/37cd81ab46cd132069229b900f627c65.jpg?s=88" class="gravatarimg" />
-							posted by <b>Ray</b> on <i>Wednesday 22 April 2009 AD - 00:05 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/37cd81ab46cd132069229b900f627c65.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Ray</b> on <i>Wednesday 22 April 2009 AD - 00:05 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Hi Stephan, good post. I would add two things and that is multiple Domino Partitions especially now with Windows 64 bit support and DIR links to move some lesser used DB's to cheaper and slower storage like a single big SATA drive. Did you know you can use DIR links for the mail boxes as well? All you do is create a text file called mail1/2/3/4/etc.box and inside the file point it to the actual location. 
@@ -270,8 +270,8 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/41523c6db74e0f187eae731a6871a320.jpg?s=88" class="gravatarimg" />
-							posted by <b>Richard Schwartz</b> on <i>Wednesday 22 April 2009 AD - 03:07 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/41523c6db74e0f187eae731a6871a320.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Richard Schwartz</b> on <i>Wednesday 22 April 2009 AD - 03:07 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   My recommendations have been the same for years now. Direct-attached external cabinet rather than SAN, and the fastest spin rate available for the drives. Multiple controllers if possible, too. And these days I'm recommending either RAID-10 for the data array, or RAID-6 -- with RAID-10 for the best performance or RAID-6 for the best combination of performance and reliability. 
@@ -281,8 +281,8 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/ad9ce991d531f490ecfb203a1c5b6a4d.jpg?s=88" class="gravatarimg" />
-							posted by <b>Paul Mooney</b> on <i>Wednesday 22 April 2009 AD - 03:42 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/ad9ce991d531f490ecfb203a1c5b6a4d.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Paul Mooney</b> on <i>Wednesday 22 April 2009 AD - 03:42 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   I find myself very cynical to SAN's these days. Hard to justify, especially for Domino considering the active active clustering model. 
@@ -292,8 +292,8 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/9db90b9f281254e66cc842ba9f4561b8.jpg?s=88" class="gravatarimg" />
-							posted by <b>Fred Janssen</b> on <i>Wednesday 22 April 2009 AD - 14:45 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/9db90b9f281254e66cc842ba9f4561b8.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Fred Janssen</b> on <i>Wednesday 22 April 2009 AD - 14:45 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   This is exactly what I recommend my customers. Since 8.5 I also add a separate DAOS RAID5/SAN. 
@@ -305,8 +305,8 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.jpg?s=88" class="gravatarimg" />
-							posted by <b>Edwin Kanis</b> on <i>Thursday 23 April 2009 AD - 21:58 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Edwin Kanis</b> on <i>Thursday 23 April 2009 AD - 21:58 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Anyone experienced performance with Solid State Drives allready?
@@ -314,8 +314,8 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/323fa4ff7568e42ae372c4c609fb9874.jpg?s=88" class="gravatarimg" />
-							posted by <b>David Brown</b> on <i>Tuesday 11 May 2010 AD - 00:51 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/323fa4ff7568e42ae372c4c609fb9874.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>David Brown</b> on <i>Tuesday 11 May 2010 AD - 00:51 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Stephan, thanks for taking the time to create this example. I am intrigued by your suggestion to use ram disk for view rebuilds. I found some (relatively old) but still exciting info here about the potential benefits of doing so: { 
@@ -332,8 +332,8 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/a1818cf4caf8f3f1ed989a73aa62986b.jpg?s=88" class="gravatarimg" />
-							posted by <b>Andrew Luder</b> on <i>Saturday 15 October 2011 AD - 06:12 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/a1818cf4caf8f3f1ed989a73aa62986b.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Andrew Luder</b> on <i>Saturday 15 October 2011 AD - 06:12 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Hi Stephan, 
@@ -348,8 +348,8 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/92de00ed9b92229d182df3c573af0113.jpg?s=88" class="gravatarimg" />
-							posted by <b>Lars Berntrop-Bos</b> on <i>Wednesday 19 October 2011 AD - 03:29 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/92de00ed9b92229d182df3c573af0113.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Lars Berntrop-Bos</b> on <i>Wednesday 19 October 2011 AD - 03:29 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   System i people keep saying this is not needed for system i. I would like to hear the opinion of the esteemed experts gathered here!
@@ -357,8 +357,8 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 01 November 2011 AD - 15:13 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 01 November 2011 AD - 15:13 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   @Andrew: It is in the official announcement: { 
@@ -371,8 +371,8 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/80d3b4ac7080c72ca9e9c75af74edbc5.jpg?s=88" class="gravatarimg" />
-							posted by <b>Al</b> on <i>Monday 09 February 2015 AD - 10:57 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/80d3b4ac7080c72ca9e9c75af74edbc5.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Al</b> on <i>Monday 09 February 2015 AD - 10:57 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Hi Stephen, 
@@ -388,8 +388,8 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Monday 09 February 2015 AD - 18:06 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Monday 09 February 2015 AD - 18:06 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Al: Separating out the view indexes is only available in the upcoming R9.0.2 release. For now you can separate FTIndex and transaction log. 
@@ -432,7 +432,7 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -463,7 +463,7 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

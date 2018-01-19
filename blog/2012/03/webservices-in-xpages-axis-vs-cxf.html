@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -147,102 +147,102 @@ ga('send', 'pageview');
 					<div>I wrote about using 
 <a href="http://axis.apache.org/axis/">Apache AXIS</a> to connect to a web service 
 <a href="/blog/d6plinks/SHWL-8CUKQV">before</a>. It worked like a charm when you import the AXIS library into the NSF. In the past few days I tried to move this code into an extension library and I had initially very little success. Here is what I tried and what finally worked: 
-<br /> 
+<br> 
 <ol> 
  <li>The AXIS libraries are provided as a plug-in in the Domino server, so my first take was to declare a dependency in my plug-in to that plug-in. To successfully create a Extension Library I had to declare dependencies to <code>com.ibm.commons</code> and <code>com.ibm.xsp.core</code> to be able to extend <code>com.ibm.commons.Extension</code>. Unfortunately the plug-ins expose Java commons logging, so the classloader complaint and didn't load the AXIS classes</li> 
  <li>Second attempt was to split the code into two plug-ins: one that depended on the AXIS plug-in and another one that depended on the former and <code>com.ibm.commons</code> and <code>com.ibm.xsp.core</code>. This didn't yield any better result</li> 
  <li>3rd test was to import the AXIS jars into a plug-in and only depend on <code>com.ibm.commons</code> and <code>com.ibm.xsp.core</code> but not the AXIS plug-in. Didn't work either</li> 
- <li>Finally I tried to switch from AXIS to the newer and more flexible <a href="http://cxf.apache.org/">Apache CXF</a>. CXF is able to provide transport over many protocols, not only SOAP and REST but JMS and others too. Initially I felt it was too complex for my little requirement, especially since the list of jar dependencies is quite long.<br /> Turns out CXF is the optimal solution. I used CXF 2.5.2 and the provided <a href="http://cxf.apache.org/docs/wsdl-to-java.html">wsdl2java</a> utility. The command line I used is <code>[path-to-cxf-install]/bin/wsdl2java -frontend jaxws21 -client your.wsdl</code>. The <code>-client</code> parameter is optional, but generates a nice sample client that shows the call parameters for all web service methods.<br /> I found I either need to include the WSDL file in the jar or point to the URL where the WSDL file is available online to get CXF to run. Now for the best part: <b>All</b> dependencies including CXF are available in Domino (I tested on 8.5.3), so other than the Java code generated I didn't had to import, depend etc. on anything (it actually might work even in a Java agent). So CXF is the way to go.</li> 
+ <li>Finally I tried to switch from AXIS to the newer and more flexible <a href="http://cxf.apache.org/">Apache CXF</a>. CXF is able to provide transport over many protocols, not only SOAP and REST but JMS and others too. Initially I felt it was too complex for my little requirement, especially since the list of jar dependencies is quite long.<br> Turns out CXF is the optimal solution. I used CXF 2.5.2 and the provided <a href="http://cxf.apache.org/docs/wsdl-to-java.html">wsdl2java</a> utility. The command line I used is <code>[path-to-cxf-install]/bin/wsdl2java -frontend jaxws21 -client your.wsdl</code>. The <code>-client</code> parameter is optional, but generates a nice sample client that shows the call parameters for all web service methods.<br> I found I either need to include the WSDL file in the jar or point to the URL where the WSDL file is available online to get CXF to run. Now for the best part: <b>All</b> dependencies including CXF are available in Domino (I tested on 8.5.3), so other than the Java code generated I didn't had to import, depend etc. on anything (it actually might work even in a Java agent). So CXF is the way to go.</li> 
 </ol> 
 <b>Update</b>: As 
 <a href="">Bernd</a> pointed out in the comments, it is important to update the permissions ( [Notes program directroy]/jvm/lib/security/java.policy ): 
-<br /> 
-<code><b>grant { <br /> permission java.lang.RuntimePermission &quot;setContextClassLoader&quot;; <br /> permission java.lang.reflect.ReflectPermission &quot;suppressAccessChecks&quot;; <br />};</b></code> 
-<br />For testing I used a 
+<br> 
+<code><b>grant { <br> permission java.lang.RuntimePermission "setContextClassLoader"; <br> permission java.lang.reflect.ReflectPermission "suppressAccessChecks"; <br>};</b></code> 
+<br>For testing I used a 
 <a href="http://services.aonaware.com/DictService/DictService.asmx?WSDL">dictionary service</a> that returns the definitions found for a given word. My class (the part I had to write myself) is rather short: 
 <div class="java"> 
  <span class="kw1">package</span> 
  <span class="co2">demo</span> 
  <span class="sy0">;</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">java.io.ByteArrayOutputStream</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">java.io.IOException</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">java.io.OutputStream</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">java.io.OutputStreamWriter</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">java.net.URL</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">java.util.List</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">javax.xml.namespace.QName</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">com.aonaware.services.webservices.Definition</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">com.aonaware.services.webservices.DictService</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">com.aonaware.services.webservices.DictServiceSoap</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">com.aonaware.services.webservices.WordDefinition</span> 
  <span class="sy0">;</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">public</span> 
  <span class="kw1">class</span> Dict2Test 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">public</span> 
  <span class="kw1">final</span> 
  <span class="kw1">static</span> 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> WORD_TO_LOOK_FOR 
  <span class="sy0">=</span> 
- <span class="st0">&quot;Trust&quot;</span> 
+ <span class="st0">"Trust"</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">public</span> 
  <span class="kw1">final</span> 
  <span class="kw1">static</span> 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> WSDL_URL 
  <span class="sy0">=</span> 
- <span class="st0">&quot;http://services.aonaware.com/DictService/DictService.asmx?WSDL&quot;</span> 
+ <span class="st0">"http://services.aonaware.com/DictService/DictService.asmx?WSDL"</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">public</span> 
  <span class="kw1">static</span> 
  <span class="kw1">final</span> QName SERVICE_NAME 
  <span class="sy0">=</span> 
  <span class="kw1">new</span> QName 
  <span class="br0">(</span> 
- <span class="st0">&quot;http://services.aonaware.com/webservices/&quot;</span>, 
- <span class="st0">&quot;DictService&quot;</span> 
+ <span class="st0">"http://services.aonaware.com/webservices/"</span>, 
+ <span class="st0">"DictService"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">public</span> 
  <span class="kw1">static</span> 
  <span class="kw4">void</span> main 
@@ -254,13 +254,13 @@ ga('send', 'pageview');
  <span class="kw1">throws</span> 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aioexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">IOException</span></a> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; Dict2Test dt 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; Dict2Test dt 
  <span class="sy0">=</span> 
  <span class="kw1">new</span> Dict2Test 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Abytearrayoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">ByteArrayOutputStream</span></a> out 
  <span class="sy0">=</span> 
  <span class="kw1">new</span> 
@@ -268,12 +268,12 @@ ga('send', 'pageview');
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; dt. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; dt. 
  <span class="me1">getWordInfo</span> 
  <span class="br0">(</span>out, WORD_TO_LOOK_FOR 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Asystem+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">System</span></a>. 
  <span class="me1">out</span>. 
  <span class="me1">println</span> 
@@ -283,10 +283,10 @@ ga('send', 'pageview');
  <span class="br0">)</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">public</span> 
  <span class="kw4">void</span> getWordInfo 
  <span class="br0">(</span> 
@@ -294,24 +294,24 @@ ga('send', 'pageview');
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> theWord 
  <span class="br0">)</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aoutputstreamwriter+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">OutputStreamWriter</span></a> w 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; DictService ds 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; DictService ds 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; DictServiceSoap dss 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; DictServiceSoap dss 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; w 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; w 
  <span class="sy0">=</span> 
  <span class="kw1">new</span> 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aoutputstreamwriter+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">OutputStreamWriter</span></a> 
  <span class="br0">(</span>out 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">try</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ds 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ds 
  <span class="sy0">=</span> 
  <span class="kw1">new</span> DictService 
  <span class="br0">(</span> 
@@ -321,19 +321,19 @@ ga('send', 'pageview');
  <span class="br0">)</span>,SERVICE_NAME 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dss 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dss 
  <span class="sy0">=</span> ds. 
  <span class="me1">getDictServiceSoap</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; WordDefinition wd 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; WordDefinition wd 
  <span class="sy0">=</span> dss. 
  <span class="me1">define</span> 
  <span class="br0">(</span>theWord 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; List 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; List 
  <span class="sy0">&lt;</span>Definition 
  <span class="sy0">&gt;</span> allDef 
  <span class="sy0">=</span> wd. 
@@ -344,7 +344,7 @@ ga('send', 'pageview');
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">if</span> 
  <span class="br0">(</span>allDef. 
  <span class="me1">isEmpty</span> 
@@ -352,57 +352,57 @@ ga('send', 'pageview');
  <span class="br0">)</span> 
  <span class="br0">)</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
  <span class="me1">append</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;&lt;h1&gt;No definition found for &quot;</span> 
+ <span class="st0">"&lt;h1&gt;No definition found for "</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
  <span class="me1">append</span> 
  <span class="br0">(</span>theWord 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
  <span class="me1">append</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;&lt;/h1&gt;<span class="es0">\n</span>&quot;</span> 
+ <span class="st0">"&lt;/h1&gt;<span class="es0">\n</span>"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span> 
  <span class="kw1">else</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
  <span class="me1">append</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;&lt;h1&gt;You were looking for: &quot;</span> 
+ <span class="st0">"&lt;h1&gt;You were looking for: "</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
  <span class="me1">append</span> 
  <span class="br0">(</span>theWord 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
  <span class="me1">append</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;&lt;/h1&gt;<span class="es0">\n</span>&lt;ul&gt;&quot;</span> 
+ <span class="st0">"&lt;/h1&gt;<span class="es0">\n</span>&lt;ul&gt;"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">for</span> 
  <span class="br0">(</span>Definition oneD 
  <span class="sy0">:</span> allDef 
  <span class="br0">)</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
  <span class="me1">append</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;<span class="es0">\n</span>&lt;li&gt;&quot;</span> 
+ <span class="st0">"<span class="es0">\n</span>&lt;li&gt;"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
  <span class="me1">append</span> 
  <span class="br0">(</span>oneD. 
  <span class="me1">getWordDefinition</span> 
@@ -410,104 +410,104 @@ ga('send', 'pageview');
  <span class="br0">)</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
  <span class="me1">append</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;&lt;/li&gt;&quot;</span> 
+ <span class="st0">"&lt;/li&gt;"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
  <span class="me1">append</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;<span class="es0">\n</span>&lt;/ul&gt;&quot;</span> 
+ <span class="st0">"<span class="es0">\n</span>&lt;/ul&gt;"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span> 
  <span class="kw1">catch</span> 
  <span class="br0">(</span> 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Exception</span></a> e 
  <span class="br0">)</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">try</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
  <span class="me1">append</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;&lt;h1&gt;&quot;</span> 
+ <span class="st0">"&lt;h1&gt;"</span> 
  <span class="sy0">+</span> e. 
  <span class="me1">getMessage</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">+</span> 
- <span class="st0">&quot;&lt;/h1&gt;&quot;</span> 
+ <span class="st0">"&lt;/h1&gt;"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span> 
  <span class="kw1">catch</span> 
  <span class="br0">(</span> 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aioexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">IOException</span></a> e1 
  <span class="br0">)</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e1. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e1. 
  <span class="me1">printStackTrace</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span> 
  <span class="kw1">finally</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">try</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. 
  <span class="me1">close</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span> 
  <span class="kw1">catch</span> 
  <span class="br0">(</span> 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aioexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">IOException</span></a> ex 
  <span class="br0">)</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ex. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ex. 
  <span class="me1">printStackTrace</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> 
+ <br> 
  <span class="br0">}</span> 
 </div> To test the class I defined it as a managed bean in 
 <code>faces-config.xml</code>: 
 <div class="xml"> 
  <span class="sc3"><span class="re1">&lt;managed-bean<span class="re2">&gt;</span></span></span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="sc3"><span class="re1">&lt;managed-bean-name<span class="re2">&gt;</span></span></span>dictionary 
  <span class="sc3"><span class="re1">&lt;/managed-bean-name<span class="re2">&gt;</span></span></span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="sc3"><span class="re1">&lt;managed-bean-class<span class="re2">&gt;</span></span></span>demo.Dict2Test 
  <span class="sc3"><span class="re1">&lt;/managed-bean-class<span class="re2">&gt;</span></span></span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="sc3"><span class="re1">&lt;managed-bean-scope<span class="re2">&gt;</span></span></span>request 
  <span class="sc3"><span class="re1">&lt;/managed-bean-scope<span class="re2">&gt;</span></span></span> 
- <br /> 
+ <br> 
  <span class="sc3"><span class="re1">&lt;/managed-bean<span class="re2">&gt;</span></span></span> 
 </div> and created an 
 <a href="blog/d6plinks/shwl-7mgfbn">XAgent</a> with the following codein the BeforeRenderResponse event: 
@@ -516,120 +516,120 @@ ga('send', 'pageview');
  <span class="sy0">=</span> 
  <span class="kw2">true</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw2">var</span> x 
  <span class="sy0">=</span> context. 
  <span class="me1">getUrlParameter</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;word&quot;</span> 
+ <span class="st0">"word"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">if</span> 
  <span class="br0">(</span>x 
  <span class="sy0">==</span> 
  <span class="kw2">null</span> 
  <span class="sy0">||</span> x 
  <span class="sy0">==</span> 
- <span class="st0">&quot;&quot;</span> 
+ <span class="st0">""</span> 
  <span class="br0">)</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; x 
+ <br> &nbsp; &nbsp; x 
  <span class="sy0">=</span> 
- <span class="st0">&quot;Parameter [word] missing, use ..XAgentDemo4?word=somevalue&quot;</span> 
+ <span class="st0">"Parameter [word] missing, use ..XAgentDemo4?word=somevalue"</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; proceedWithBeanCall 
+ <br> &nbsp; &nbsp; proceedWithBeanCall 
  <span class="sy0">=</span> 
  <span class="kw2">false</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="br0">}</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="co1">// The external context and the response object</span> 
- <br /> 
+ <br> 
  <span class="kw2">var</span> exCon 
  <span class="sy0">=</span> facesContext. 
  <span class="me1">getExternalContext</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw2">var</span> response 
  <span class="sy0">=</span> exCon. 
  <span class="me1">getResponse</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="co1">// Deliver uncached result</span> 
- <br /> response. 
+ <br> response. 
  <span class="me1">setContentType</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;text/html&quot;</span> 
+ <span class="st0">"text/html"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> response. 
+ <br> response. 
  <span class="me1">setHeader</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;Cache-Control&quot;</span> 
+ <span class="st0">"Cache-Control"</span> 
  <span class="sy0">,</span> 
- <span class="st0">&quot;no-cache&quot;</span> 
+ <span class="st0">"no-cache"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="co1">// The Output Stream for Binary Output</span> 
- <br /> 
+ <br> 
  <span class="kw2">var</span> out 
  <span class="sy0">=</span> response. 
  <span class="me1">getOutputStream</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">if</span> 
  <span class="br0">(</span>proceedWithBeanCall 
  <span class="br0">)</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">try</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dictionary. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dictionary. 
  <span class="me1">getWordInfo</span> 
  <span class="br0">(</span>out 
  <span class="sy0">,</span> x 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span> 
  <span class="kw1">catch</span> 
  <span class="br0">(</span>innerErr 
  <span class="br0">)</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; x 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; x 
  <span class="sy0">=</span> innerErr. 
  <span class="me1">message</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; proceedWithBeanCall 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; proceedWithBeanCall 
  <span class="sy0">=</span> 
  <span class="kw2">false</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span>&nbsp; 
- <br /> 
+ <br> 
  <span class="br0">}</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">if</span> 
  <span class="br0">(</span> 
  <span class="sy0">!</span>proceedWithBeanCall 
  <span class="br0">)</span> 
  <span class="br0">{</span>&nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw2">var</span> w 
  <span class="sy0">=</span> 
  <span class="kw2">new</span> java. 
@@ -638,52 +638,52 @@ ga('send', 'pageview');
  <span class="br0">(</span>out 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; w. 
  <span class="kw1">write</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;&lt;h1&gt;Didn't work the way we wanted!&lt;/h1&gt;<span class="es0">\n</span>&quot;</span> 
+ <span class="st0">"&lt;h1&gt;Didn't work the way we wanted!&lt;/h1&gt;<span class="es0">\n</span>"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; w. 
  <span class="kw1">write</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;&lt;h2&gt;&quot;</span> 
+ <span class="st0">"&lt;h2&gt;"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; w. 
  <span class="kw1">write</span> 
  <span class="br0">(</span>x 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; w. 
  <span class="kw1">write</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;&lt;/h2&gt;<span class="es0">\n</span>&quot;</span> 
+ <span class="st0">"&lt;/h2&gt;<span class="es0">\n</span>"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; w. 
  <span class="kw3">close</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="br0">}</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="co1">// Done</span> 
- <br /> facesContext. 
+ <br> facesContext. 
  <span class="me1">responseComplete</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> out. 
+ <br> out. 
  <span class="kw3">close</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
 </div> Note the signature of the working method. By using the output stream as a parameter the function can be easily tested outside of XPages (see the main() function in the class) as well as integrated into XPages (the approach is called 
 <a href="http://en.wikipedia.org/wiki/Dependency_injection">dependency injection</a>). 
-<br /> As usual: YMMV</div>
+<br> As usual: YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -711,8 +711,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/91adc08b89d67b2f3bc05eb09f745bd5.jpg?s=88" class="gravatarimg" />
-							posted by <b>Ferhat Bulut</b> on <i>Tuesday 12 June 2012 AD - 21:59 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/91adc08b89d67b2f3bc05eb09f745bd5.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Ferhat Bulut</b> on <i>Tuesday 12 June 2012 AD - 21:59 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Hi Stephen, 
@@ -728,8 +728,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/29e73c6b6ab555b8c664db745d54919b.jpg?s=88" class="gravatarimg" />
-							posted by <b>Bernd Hort</b> on <i>Tuesday 17 July 2012 AD - 16:10 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/29e73c6b6ab555b8c664db745d54919b.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Bernd Hort</b> on <i>Tuesday 17 July 2012 AD - 16:10 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Hi Stephan, 
@@ -748,8 +748,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/29e73c6b6ab555b8c664db745d54919b.jpg?s=88" class="gravatarimg" />
-							posted by <b>Bernd Hort</b> on <i>Tuesday 31 July 2012 AD - 18:30 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/29e73c6b6ab555b8c664db745d54919b.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Bernd Hort</b> on <i>Tuesday 31 July 2012 AD - 18:30 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Hi Stephan, 
@@ -768,8 +768,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/73168d99bc3021b3168f6e4ac47bfdba.jpg?s=88" class="gravatarimg" />
-							posted by <b>Steve Lapthorn</b> on <i>Tuesday 18 September 2012 AD - 00:25 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/73168d99bc3021b3168f6e4ac47bfdba.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Steve Lapthorn</b> on <i>Tuesday 18 September 2012 AD - 00:25 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Great post, it was really helpful to get my web service consumer up and running against a MS based webservice (which the built-in &quot;import WSDL&quot; function of Notes 8.5.3 failed to import) 
@@ -780,8 +780,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/a80cc420287c49a4e7fae83fceeb65e4.jpg?s=88" class="gravatarimg" />
-							posted by <b>Rickard Tauson</b> on <i>Monday 10 December 2012 AD - 20:25 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/a80cc420287c49a4e7fae83fceeb65e4.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Rickard Tauson</b> on <i>Monday 10 December 2012 AD - 20:25 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Thanks for a great post, trying to implement some logging into the request using either a cxf.xml implementation or a programmatic approach. In both cases the use of wsdl4j is needed from CXF, the domino server uses wsdl4j 1.5.1 (I think) due to dependecy on a old axis version. Have you found any solution on logging request / response on a domino server using xPage and cxf ?
@@ -789,8 +789,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/41125a6794dc53584c5a26ca302de225.jpg?s=88" class="gravatarimg" />
-							posted by <b>Martin Vereecken</b> on <i>Tuesday 22 January 2013 AD - 22:45 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/41125a6794dc53584c5a26ca302de225.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Martin Vereecken</b> on <i>Tuesday 22 January 2013 AD - 22:45 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Hi Stephan, 
@@ -806,8 +806,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/41125a6794dc53584c5a26ca302de225.jpg?s=88" class="gravatarimg" />
-							posted by <b>Martin Vereecken</b> on <i>Tuesday 22 January 2013 AD - 22:49 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/41125a6794dc53584c5a26ca302de225.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Martin Vereecken</b> on <i>Tuesday 22 January 2013 AD - 22:49 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Btw good to see the &quot;Show 'n Tell&quot; image is still used nowadays; I posted it at that time 
@@ -816,8 +816,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Wednesday 23 January 2013 AD - 01:00 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Wednesday 23 January 2013 AD - 01:00 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   @Martin: did you amend the java.policy as per Bernd's comment?
@@ -825,8 +825,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/41125a6794dc53584c5a26ca302de225.jpg?s=88" class="gravatarimg" />
-							posted by <b>Martin Vereecken</b> on <i>Wednesday 23 January 2013 AD - 18:19 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/41125a6794dc53584c5a26ca302de225.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Martin Vereecken</b> on <i>Wednesday 23 January 2013 AD - 18:19 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Stephan, I did add the &quot;grants&quot; to the java.policy file. But, what really seemed the problem: I did my tests locally (in my Notes 9 client). When I ran the agent scheduled on the server, it worked!! Or the java classes are different on client versus server, or the classes are different in version 9... 
@@ -838,8 +838,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/41125a6794dc53584c5a26ca302de225.jpg?s=88" class="gravatarimg" />
-							posted by <b>Martin Vereecken</b> on <i>Wednesday 23 January 2013 AD - 23:51 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/41125a6794dc53584c5a26ca302de225.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Martin Vereecken</b> on <i>Wednesday 23 January 2013 AD - 23:51 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Some extra information can be found here: { 
@@ -851,8 +851,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/ccc0d01afa4b6c0dd8ecd6f77eb7d593.jpg?s=88" class="gravatarimg" />
-							posted by <b>don van zijtveld</b> on <i>Thursday 24 January 2013 AD - 18:51 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/ccc0d01afa4b6c0dd8ecd6f77eb7d593.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>don van zijtveld</b> on <i>Thursday 24 January 2013 AD - 18:51 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Dear Stephan, 
@@ -868,8 +868,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/4ea488fc41545b3e336665c14c72634c.jpg?s=88" class="gravatarimg" />
-							posted by <b>Cristian D&#39;Aloisio</b> on <i>Saturday 26 January 2013 AD - 03:43 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/4ea488fc41545b3e336665c14c72634c.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Cristian D&#39;Aloisio</b> on <i>Saturday 26 January 2013 AD - 03:43 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Very interesting post and comments, thanks for sharing. 
@@ -881,8 +881,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.jpg?s=88" class="gravatarimg" />
-							posted by <b>Lee McMullen</b> on <i>Thursday 31 January 2013 AD - 18:44 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Lee McMullen</b> on <i>Thursday 31 January 2013 AD - 18:44 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Thanks again for the post Stephan, very useful as I mentioned on Twitter. 
@@ -895,8 +895,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/a05736273209bd1eadde9a32cff39b69.jpg?s=88" class="gravatarimg" />
-							posted by <b>Lauri Laanti</b> on <i>Wednesday 14 May 2014 AD - 15:32 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/a05736273209bd1eadde9a32cff39b69.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Lauri Laanti</b> on <i>Wednesday 14 May 2014 AD - 15:32 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Thanks for an informative post! Just one addition: I noticed that with the wsdl2java tool you can create the whole JAR automatically with wsdl file included with -clientJar option.
@@ -932,7 +932,7 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -963,7 +963,7 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

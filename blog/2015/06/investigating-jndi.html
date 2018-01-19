@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -151,19 +151,19 @@ ga('send', 'pageview');
 <a href="http://www.bluemix.net/">Bluemix</a> a best practise is to use 
 <a href="https://en.wikipedia.org/wiki/Java_Naming_and_Directory_Interface">JNDI</a> to access resources and services you use. In Cloud Foundry all services are listed in the 
 <a href="http://docs.run.pivotal.io/devguide/deploy-apps/environment-variable.html#VCAP-SERVICES"><code>VCAP_SERVICES</code></a> environment variable and could be parsed as JSON string. However this would make the application platform dependent, which is something you want to avoid. 
-<br /> Typically a JNDI service requires to edit the server.xml to point to the right service. However editing the server.xml in Bluemix is something you do want to avoid as much as possible. Luckily the 
+<br> Typically a JNDI service requires to edit the server.xml to point to the right service. However editing the server.xml in Bluemix is something you do want to avoid as much as possible. Luckily the 
 <a href="https://github.com/cloudfoundry/ibm-websphere-liberty-buildpack">Websphere Java Liberty Buildpack</a>, which is the one Bluemix uses for Java by default, does handle that for you 
 <i>automagic</i> and all Bluemix services turn into discoverable JNDI objects. So far in theory. I found myself in the tricky situation to check what services are actually there. So I wrote some code that turns the available JNDI objects into a JSON string. 
-<br /> 
+<br> 
 <pre class="brush:java">
     @GET
-    @Path(&quot;/jndi&quot;)
+    @Path("/jndi")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getJndi() {
         StringBuilder b = new StringBuilder();
-        b.append(&quot;{ \&quot;java:comp\&quot; : [&quot;);
-        this.renderJndi(&quot;java:comp&quot;, b);
-        b.append(&quot;]}&quot;);
+        b.append("{ \"java:comp\" : [");
+        this.renderJndi("java:comp", b);
+        b.append("]}");
 
         return Response.status(Status.OK).entity(b.toString()).build();
     }
@@ -176,38 +176,38 @@ ga('send', 'pageview');
             NamingEnumerationlt;NameClassPairgt; list = ic.list(prefix);
             while (list.hasMore()) {
                 if (!isFirst) {
-                    b.append(&quot;, \n&quot;);
+                    b.append(", \n");
                 }
 
                 NameClassPair ncp = list.next();
                 String theName = ncp.getName();
                 String className = ncp.getClassName();
 
-                b.append(&quot;{\&quot;name\&quot; : \&quot;&quot;);
+                b.append("{\"name\" : \"");
                 b.append(theName);
-                b.append(&quot;\&quot;,&quot;);
-                b.append(&quot;\&quot;javaClass\&quot; : \&quot;&quot;);
+                b.append("\",");
+                b.append("\"javaClass\" : \"");
 
                 b.append(className);
-                b.append(&quot;\&quot;&quot;);
-                if (&quot;javax.naming.Context&quot;.equals(className)) {
-                    b.append(&quot;, \&quot;children\&quot; : [&quot;);
-                    this.renderJndi(prefix + (prefix.endsWith(&quot;:&quot;) ? &quot;&quot; : &quot;/&quot;) + theName, b);
-                    b.append(&quot;]&quot;);
+                b.append("\"");
+                if ("javax.naming.Context".equals(className)) {
+                    b.append(", \"children\" : [");
+                    this.renderJndi(prefix + (prefix.endsWith(":") ? "" : "/") + theName, b);
+                    b.append("]");
                 }
-                b.append(&quot;}&quot;);
+                b.append("}");
                 isFirst = false;
             }
         } catch (Exception e) {
             e.printStackTrace();
-            b.append(&quot;\&quot;&quot;);
+            b.append("\"");
             b.append(e.getMessage());
-            b.append(&quot;\&quot;&quot;);
+            b.append("\"");
         }
 
     }
 </pre> 
-<br /> Enjoy - As usual you YMMV</div>
+<br> Enjoy - As usual you YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -269,7 +269,7 @@ categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a>  <a href="/blog
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -300,7 +300,7 @@ categories:  <a href="/blog/categories/Bluemix.html">Bluemix</a>  <a href="/blog
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

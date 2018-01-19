@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -160,101 +160,101 @@ ga('send', 'pageview');
  <li>Extra care is needed if you have views with duplicate names in your database </li> 
 </ul> I designed a solution that uses a control database with one form, one view and a bit of LotusScript. First create a form with the following fields: Server, Database, ViewName, SelectionFormula (all text, data input), lastRun (computedWhenComposed with formula 
 <code>lastRun</code> and finally CurrentSelectionFormula, Text, Computed. Use this formula: 
-<br /> 
-<code>ReplaceStringToday := &quot;@Date(&quot;+@Text(@Year(@Today))+&quot;;&quot;+@Text(@Month(@Today))+&quot;;&quot;+@Text(@Day(@Today))+&quot;)&quot;;<br /> ReplaceStringYesterday := &quot;@Date(&quot;+@Text(@Year(@Yesterday))+&quot;;&quot;+@Text(@Month(@Yesterday))+&quot;;&quot;+@Text(@Day(@Yesterday))+&quot;)&quot;;<br /> ReplaceStringTomorrow := &quot;@Date(&quot;+@Text(@Year(@Tomorrow))+&quot;;&quot;+@Text(@Month(@Tomorrow))+&quot;;&quot;+@Text(@Day(@Tomorrow))+&quot;)&quot;;<br /> @ReplaceSubstring(SelectionFormula; &quot;@Today&quot;:&quot;@Now&quot;:&quot;@Yesterday&quot;:&quot;@Tomorrow&quot;; ReplaceStringToday:ReplaceStringToday:ReplaceStringYesterday:ReplaceStringTomorrow)</code> 
-<br /> Everytime that document gets refreshed the field will reflect how the selection formula currently should look like. Then create a view with Server, Database, ViewName -&gt; all 3 columns sorted (ViewName sorting is optional). I called mine 
+<br> 
+<code>ReplaceStringToday := "@Date("+@Text(@Year(@Today))+";"+@Text(@Month(@Today))+";"+@Text(@Day(@Today))+")";<br> ReplaceStringYesterday := "@Date("+@Text(@Year(@Yesterday))+";"+@Text(@Month(@Yesterday))+";"+@Text(@Day(@Yesterday))+")";<br> ReplaceStringTomorrow := "@Date("+@Text(@Year(@Tomorrow))+";"+@Text(@Month(@Tomorrow))+";"+@Text(@Day(@Tomorrow))+")";<br> @ReplaceSubstring(SelectionFormula; "@Today":"@Now":"@Yesterday":"@Tomorrow"; ReplaceStringToday:ReplaceStringToday:ReplaceStringYesterday:ReplaceStringTomorrow)</code> 
+<br> Everytime that document gets refreshed the field will reflect how the selection formula currently should look like. Then create a view with Server, Database, ViewName -&gt; all 3 columns sorted (ViewName sorting is optional). I called mine 
 <code>ViewsToAdjust</code>. Next step is to populate the documents with views that actually have time related selection formulas. I use this agent for it: 
 <div class="lotusscript"> 
  <span class="kw1">Option</span> 
  <span class="kw1">Public</span> 
- <br /> 
+ <br> 
  <span class="kw1">Option</span> 
  <span class="kw1">Declare</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">Sub</span> Initialize 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> s 
  <span class="kw1">As</span> 
  <span class="kw1">New</span> 
  <span class="kw2">NotesSession</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> server 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> dbDir 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDbDirectory</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> reportDB 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDatabase</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> db 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDatabase</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Set</span> reportDB = s. 
  <span class="me1">Currentdatabase</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; server = reportDB. 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; server = reportDB. 
  <span class="me1">Server</span> 
- <br /> &nbsp; &nbsp; server = 
+ <br> &nbsp; &nbsp; server = 
  <span class="kw1">InputBox$</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;Select Server to scan&quot;</span>, 
- <span class="st0">&quot;Server selection&quot;</span>, server 
+ <span class="st0">"Select Server to scan"</span>, 
+ <span class="st0">"Server selection"</span>, server 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">If</span> 
  <span class="kw1">Trim</span> 
  <span class="br0">(</span>server 
  <span class="br0">)</span> = 
- <span class="st0">&quot;&quot;</span> 
+ <span class="st0">""</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Exit</span> 
  <span class="kw1">sub</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Set</span> dbDir = s. 
  <span class="me1">Getdbdirectory</span> 
  <span class="br0">(</span>Server 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Set</span> db = dbDir. 
  <span class="me1">Getfirstdatabase</span> 
  <span class="br0">(</span>TEMPLATE_CANDIDATE 
  <span class="br0">)</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Do</span> 
  <span class="kw1">Until</span> db 
  <span class="kw1">Is</span> 
  <span class="kw1">Nothing</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> ProcessDB 
  <span class="br0">(</span>reportDB, db 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> db = dbDir. 
  <span class="me1">Getnextdatabase</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Loop</span> 
- <br /> 
+ <br> 
  <span class="kw1">End</span> 
  <span class="kw1">Sub</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">Sub</span> ProcessDB 
  <span class="br0">(</span>reportDB 
  <span class="kw1">As</span> 
@@ -262,65 +262,65 @@ ga('send', 'pageview');
  <span class="kw1">As</span> 
  <span class="kw2">NotesDatabase</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">On</span> 
  <span class="kw1">Error</span> 
  <span class="kw1">GoTo</span> err_ProcessDB 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">If</span> 
  <span class="kw1">Not</span> db. 
  <span class="me1">Isopen</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> db. 
  <span class="kw1">Open</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;&quot;</span>, 
- <span class="st0">&quot;&quot;</span> 
+ <span class="st0">""</span>, 
+ <span class="st0">""</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">If</span> 
  <span class="kw1">Not</span> db. 
  <span class="me1">Isopen</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Print</span> 
- <span class="st0">&quot;Can't open &quot;</span> &amp; db. 
+ <span class="st0">"Can't open "</span> &amp; db. 
  <span class="me1">Title</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Exit</span> 
  <span class="kw1">sub</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Print</span> 
- <span class="st0">&quot;Processing &quot;</span> &amp; db. 
+ <span class="st0">"Processing "</span> &amp; db. 
  <span class="me1">Title</span>&nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Call</span> CreateViewAdjusterForms 
  <span class="br0">(</span>reportDB, db 
  <span class="br0">)</span> 
- <br /> exit_ProcessDB: 
- <br /> &nbsp; &nbsp; 
+ <br> exit_ProcessDB: 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Exit</span> 
  <span class="kw1">sub</span>&nbsp; &nbsp; 
- <br /> err_ProcessDB: 
- <br /> &nbsp; &nbsp; 
+ <br> err_ProcessDB: 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Print</span> 
  <span class="kw1">Error$</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Resume</span> exit_ProcessDB &nbsp; 
- <br /> 
+ <br> 
  <span class="kw1">End</span> 
  <span class="kw1">Sub</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">Sub</span> CreateViewAdjusterForms 
  <span class="br0">(</span>reportDB 
  <span class="kw1">As</span> 
@@ -328,75 +328,75 @@ ga('send', 'pageview');
  <span class="kw1">As</span> 
  <span class="kw2">NotesDatabase</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> doc 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDocument</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> v 
  <span class="kw1">As</span> 
  <span class="kw2">NotesView</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> selectionFormula 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">ForAll</span> curView 
  <span class="kw1">In</span> db. 
  <span class="me1">Views</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> v = curView 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; SelectionFormula = v. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; SelectionFormula = v. 
  <span class="me1">SelectionFormula</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">If</span> isCriticalProblem 
  <span class="br0">(</span>Formula 
  <span class="br0">)</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> doc = reportDB. 
  <span class="me1">Createdocument</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
  <span class="me1">form</span> = 
- <span class="st0">&quot;ViewAdjuster&quot;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
+ <span class="st0">"ViewAdjuster"</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
  <span class="me1">server</span> = db. 
  <span class="me1">Server</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
  <span class="me1">database</span> = db. 
  <span class="me1">Filepath</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
  <span class="me1">viewname</span> = v. 
  <span class="kw1">Name</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
  <span class="me1">SelectionFormula</span> = selectionFormula 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> doc. 
  <span class="me1">Computewithform</span> 
  <span class="br0">(</span> 
  <span class="kw1">true</span>, 
  <span class="kw1">false</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> doc. 
  <span class="me1">Save</span> 
  <span class="br0">(</span> 
  <span class="kw1">true</span>, 
  <span class="kw1">True</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span>&nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">ForAll</span> 
- <br /> 
+ <br> 
  <span class="kw1">End</span> 
  <span class="kw1">Sub</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">Function</span> isCriticalProblem 
  <span class="br0">(</span>Formula 
  <span class="kw1">As</span> 
@@ -404,42 +404,42 @@ ga('send', 'pageview');
  <span class="br0">)</span> 
  <span class="kw1">As</span> 
  <span class="kw1">Boolean</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> work 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; work = 
+ <br> &nbsp; &nbsp; work = 
  <span class="kw1">LCase$</span> 
  <span class="br0">(</span>Formula 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; isCriticalProblem = 
+ <br> &nbsp; &nbsp; isCriticalProblem = 
  <span class="kw1">InStr</span> 
  <span class="br0">(</span>work, 
- <span class="st0">&quot;now&quot;</span> 
+ <span class="st0">"now"</span> 
  <span class="br0">)</span> &lt;&gt; 
  <span class="nu0">0</span> 
  <span class="kw1">Or</span> _ 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">InStr</span> 
  <span class="br0">(</span>work, 
- <span class="st0">&quot;today&quot;</span> 
+ <span class="st0">"today"</span> 
  <span class="br0">)</span> &lt;&gt; 
  <span class="nu0">0</span> 
  <span class="kw1">Or</span> _ 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">InStr</span> 
  <span class="br0">(</span>work, 
- <span class="st0">&quot;tomorrow&quot;</span> 
+ <span class="st0">"tomorrow"</span> 
  <span class="br0">)</span> &lt;&gt; 
  <span class="nu0">0</span> 
  <span class="kw1">Or</span> _ 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">InStr</span> 
  <span class="br0">(</span>work, 
- <span class="st0">&quot;yesterday&quot;</span> 
+ <span class="st0">"yesterday"</span> 
  <span class="br0">)</span> &lt;&gt; 
  <span class="nu0">0</span> 
- <br /> 
+ <br> 
  <span class="kw1">End</span> 
  <span class="kw1">Function</span> 
 </div> Once you have the formulas you want to review them if the are really critical and that the revised formula actually will work. Then design a scheduled agent that checks those views. I run it hourly and on all servers (you could use the lastRun date to only check databases that haven't been processed today.</div>
@@ -608,7 +608,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -639,7 +639,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

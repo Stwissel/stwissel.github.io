@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -144,18 +144,18 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Reader Fields - extreme Edition (update)</small></h1>
 					<hr />
-					<div><a href="/blog/d6plinks/SHWL-7PNDF7">Reader</a> fields are &quot;haunting&quot; me. Recently I was asked to provide a solution for a requirement to add a very large number of entries to a reader field. A number that firmly exceeds the storage capability of a reader field (still 32k after all these years). My first instinct was to look for alternatives like using a few group names. However the alleged business case is the exclusion of a few people from a large group (somehow: the whole department can read a document except the person who has birthday since it is a party-planning application). This was one of the cases where I was wishing for a new field-type: NoReaderField (and for that sake NoAuthorField). 
-<br /> Well there is always the next version. Until then I created a small class, that allows you to add, remove and query names in a &quot;virtual&quot; reader field. Instead of reading and writing into a Notes item the developers call a method in a class (addEntry(newName as String) or addEntries(newNames as Variant) (an Array)) to interact with the reader field. The &quot;saveField&quot; method then distributes the values onto one or more reader fields. I don't made it too scientific and counted bytes, but rather count number of names. Splitting the reader names across multipe fields requires adjustments to your views. Something like Reader1:Reader2:Reader3:....:Readerx. We haven't tested the impact of that on performance. Once I have data on that I'll provide an update. 
-<br /> 
-<br /> 
+					<div><a href="/blog/d6plinks/SHWL-7PNDF7">Reader</a> fields are "haunting" me. Recently I was asked to provide a solution for a requirement to add a very large number of entries to a reader field. A number that firmly exceeds the storage capability of a reader field (still 32k after all these years). My first instinct was to look for alternatives like using a few group names. However the alleged business case is the exclusion of a few people from a large group (somehow: the whole department can read a document except the person who has birthday since it is a party-planning application). This was one of the cases where I was wishing for a new field-type: NoReaderField (and for that sake NoAuthorField). 
+<br> Well there is always the next version. Until then I created a small class, that allows you to add, remove and query names in a "virtual" reader field. Instead of reading and writing into a Notes item the developers call a method in a class (addEntry(newName as String) or addEntries(newNames as Variant) (an Array)) to interact with the reader field. The "saveField" method then distributes the values onto one or more reader fields. I don't made it too scientific and counted bytes, but rather count number of names. Splitting the reader names across multipe fields requires adjustments to your views. Something like Reader1:Reader2:Reader3:....:Readerx. We haven't tested the impact of that on performance. Once I have data on that I'll provide an update. 
+<br> 
+<br> 
 <b>Update</b>: Turns out the class was a 
 <a href="http://www-01.ibm.com/support/docview.wss?uid=swg21222807">bad idea</a>. There is a hard stop for the total size of all combined Reader fields in a document. So the alternative is to use an approach similar to the 
 <a href="/blog/d6plinks/SHWL-7R5DMZ">NoReader field</a>. I consulted with 
 <a href="http://www-10.lotus.com/ldd/bpmpblog.nsf">the master</a> and 
 <a href="/blog/d6plinks/SHWL-7R72U5">discuss alternatives</a>. 
-<br /> 
-<br /> Have a look at the code yourself: 
-<br /> 
+<br> 
+<br> Have a look at the code yourself: 
+<br> 
 <style>.lotusscript { font-family: sans-serif; font-size: 9pt; color: black; }
 .ls-co { color: green; }
 .ls-quote { color: gray; }
@@ -169,441 +169,630 @@ ga('send', 'pageview');
 </style> 
 <pre>
  
+ 
  <div class="lotusscript">
 
   
+  
   <font class="ls-kw">Option Public Option Declare</font>
 
+  
   
   <font class="ls-co">'/** ' * ' * FieldAccess is a universal class to manage large amount of values put into text fields ' * (text, names, readers, authors etc. ' * it manages these large amount by splitting reader names into multiple fields to overcome ' * the 32k size limit. New fields are created as needed. ' * Good for 62500 entries ' * ' * v0.1 2009-03-20 : notessensei@sg.ibm.com ' **/</font>
 
 
   
+  
   <font class="ls-co">'// Important: This class doesn't contain production quality error handling, you need to add '// that for production use. Use OpenLog for best results!</font>
 
   
+  
   <font class="ls-kw">Public</font> 
+  
   
   <font class="ls-statement">Class</font> FieldAccess
 	
   
+  
   <font class="ls-kw">Private</font> AccessFieldName 
+  
   
   <font class="ls-kw">As</font> 
   
+  
   <font class="ls-kw">String</font> 
+  
   
   <font class="ls-co">'The base name for the Reader field</font>
 	
   
+  
   <font class="ls-kw">Private</font> maxFieldEntries 
+  
   
   <font class="ls-kw">As</font> 
   
+  
   <font class="ls-kw">Integer</font> 
+  
   
   <font class="ls-co">'The maximum number of entries per reader field</font>
 	
   
+  
   <font class="ls-kw">Private</font> maxNumOfFields 
+  
   
   <font class="ls-kw">As</font> 
   
+  
   <font class="ls-kw">Integer</font> 
+  
   
   <font class="ls-co">'Limit the number of fields, to avoid mising data in views </font>
 	
   
+  
   <font class="ls-kw">Private</font> maxTotal 
+  
   
   <font class="ls-kw">As</font> 
   
+  
   <font class="ls-kw">Integer</font> 
+  
   
   <font class="ls-co">'The maximum number of names in total</font>
 	
   
+  
   <font class="ls-kw">Private</font> curTotal 
+  
   
   <font class="ls-kw">As</font> 
   
+  
   <font class="ls-kw">Integer</font> 
+  
   
   <font class="ls-co">'The current number of entries</font>
 	
   
+  
   <font class="ls-kw">Private</font> curFieldMembers 
+  
   
   <font class="ls-kw">List</font> 
   
+  
   <font class="ls-kw">As</font> 
   
+  
   <font class="ls-kw">String</font> 
+  
   
   <font class="ls-co">'The list of current Reader entries</font>
 	
   
+  
   <font class="ls-kw">Private</font> fieldCount 
+  
   
   <font class="ls-kw">As</font> 
   
+  
   <font class="ls-kw">Integer</font> 
+  
   
   <font class="ls-co">'The current number of fields</font>
 	
   
+  
   <font class="ls-kw">Private</font> initialized 
+  
   
   <font class="ls-kw">As</font> 
   
+  
   <font class="ls-kw">Boolean</font> 
+  
   
   <font class="ls-co">'Has the list of names been initialized</font>
 	
   
+  
   <font class="ls-kw">Private</font> doc 
+  
   
   <font class="ls-kw">As</font> 
   
+  
   <font class="ls-class">NotesDocument</font> 
+  
   
   <font class="ls-co">'The current document</font>
 	
   
+  
   <font class="ls-kw">Private</font> fieldType 
+  
   
   <font class="ls-kw">As</font> 
   
+  
   <font class="ls-kw">Integer</font> 
+  
   
   <font class="ls-co">'Text, names, reader, author</font>
 	
 	
   
+  
   <font class="ls-statement">Sub</font> 
+  
   
   <font class="ls-kw">new</font>
   
+  
   <font class="ls-op">(</font>curDoc 
+  
   
   <font class="ls-kw">As</font> 
   
+  
   <font class="ls-class">NotesDocument</font>
+  
   
   <font class="ls-op">)</font>
 		
   
+  
   <font class="ls-statement">Set</font> 
+  
   
   <font class="ls-kw">Me</font>
   
+  
   <font class="ls-op">.</font>doc 
+  
   
   <font class="ls-op">=</font> curDoc
 		
   
+  
   <font class="ls-kw">Me</font>
+  
   
   <font class="ls-op">.</font>AccessFieldName 
   
+  
   <font class="ls-op">=</font> 
   
-  <font class="ls-quote">&quot;Field&quot;</font>
+  
+  <font class="ls-quote">"Field"</font>
 		
+  
   
   <font class="ls-kw">Me</font>
   
+  
   <font class="ls-op">.</font>maxFieldEntries 
+  
   
   <font class="ls-op">=</font> 500
 		
   
+  
   <font class="ls-kw">Me</font>
+  
   
   <font class="ls-op">.</font>maxNumOfFields 
   
+  
   <font class="ls-op">=</font> 10 
+  
   
   <font class="ls-co">'Adjust as needed</font>
 		
   
+  
   <font class="ls-kw">Me</font>
+  
   
   <font class="ls-op">.</font>initialized 
   
+  
   <font class="ls-op">=</font> 
+  
   
   <font class="ls-constant">False</font>
 		
   
+  
   <font class="ls-kw">Me</font>
+  
   
   <font class="ls-op">.</font>fieldType 
   
+  
   <font class="ls-op">=</font> 0 
+  
   
   <font class="ls-co">'No special type</font>
 	
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">Sub</font>
 	
 	
+  
   
   <font class="ls-co">'Need to set the field Name</font>
 	
   
+  
   <font class="ls-kw">Public</font> 
+  
   
   <font class="ls-statement">Property</font> 
   
+  
   <font class="ls-statement">Set</font> fieldName 
   
+  
   <font class="ls-kw">As</font> 
+  
   
   <font class="ls-kw">String</font>
 		
   
+  
   <font class="ls-statement">If</font> 
+  
   
   <font class="ls-kw">Me</font>
   
+  
   <font class="ls-op">.</font>AccessFieldName 
+  
   
   <font class="ls-op">&lt;</font>
   
+  
   <font class="ls-op">&gt;</font> fieldName 
+  
   
   <font class="ls-statement">Then</font>
 			
   
+  
   <font class="ls-kw">Me</font>
   
+  
   <font class="ls-op">.</font>AccessFieldName 
+  
   
   <font class="ls-op">=</font> fieldName
 			
   
+  
   <font class="ls-kw">Me</font>
+  
   
   <font class="ls-op">.</font>initialized 
   
+  
   <font class="ls-op">=</font> 
+  
   
   <font class="ls-constant">False</font>
 		
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">If</font>
 	
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">Property</font>
 	
 	
   
+  
   <font class="ls-kw">Public</font> 
+  
   
   <font class="ls-statement">Property</font> 
   
+  
   <font class="ls-statement">Get</font> FieldName 
   
+  
   <font class="ls-kw">As</font> 
+  
   
   <font class="ls-kw">String</font>
 		fieldName 
   
+  
   <font class="ls-op">=</font> 
   
+  
   <font class="ls-kw">Me</font>
+  
   
   <font class="ls-op">.</font>AccessFieldName
 	
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">Property</font>
 	
 	
+  
   
   <font class="ls-co">'How many entries are in the names field right now</font>
 	
   
+  
   <font class="ls-kw">Public</font> 
+  
   
   <font class="ls-statement">Property</font> 
   
+  
   <font class="ls-statement">Get</font> count 
   
+  
   <font class="ls-kw">As</font> 
+  
   
   <font class="ls-kw">Integer</font>
 		
   
+  
   <font class="ls-statement">If</font> 
+  
   
   <font class="ls-op">Not</font> 
   
+  
   <font class="ls-kw">Me</font>
   
+  
   <font class="ls-op">.</font>initialized 
+  
   
   <font class="ls-statement">Then</font>
 			
   
+  
   <font class="ls-kw">Me</font>
+  
   
   <font class="ls-op">.</font>initializeFields
 		
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">If</font>
 		count 
   
+  
   <font class="ls-op">=</font> 
   
+  
   <font class="ls-kw">Me</font>
+  
   
   <font class="ls-op">.</font>curTotal
 	
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">Property</font>
 		
   
+  
   <font class="ls-co">'Add a entry to the value list</font>
 	
   
+  
   <font class="ls-kw">Public</font> 
+  
   
   <font class="ls-statement">Sub</font> addEntry
   
+  
   <font class="ls-op">(</font>entryToAdd 
+  
   
   <font class="ls-kw">As</font> 
   
+  
   <font class="ls-kw">String</font>
+  
   
   <font class="ls-op">)</font>
 		
   
+  
   <font class="ls-statement">If</font> 
+  
   
   <font class="ls-op">Not</font> 
   
+  
   <font class="ls-kw">Me</font>
   
+  
   <font class="ls-op">.</font>initialized 
+  
   
   <font class="ls-statement">Then</font>
 			
   
+  
   <font class="ls-kw">Me</font>
+  
   
   <font class="ls-op">.</font>initializeFields
 		
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">If</font>
 		
 		
   
+  
   <font class="ls-statement">If</font> 
+  
   
   <font class="ls-op">Not</font> 
   
+  
   <font class="ls-function">Iselement</font>
+  
   
   <font class="ls-op">(</font>
   
+  
   <font class="ls-kw">Me</font>
+  
   
   <font class="ls-op">.</font>curFieldMembers
   
+  
   <font class="ls-op">(</font>entryToAdd
+  
   
   <font class="ls-op">)</font>
   
+  
   <font class="ls-op">)</font> 
+  
   
   <font class="ls-statement">Then</font>
 			
   
+  
   <font class="ls-statement">If</font> 
   
+  
   <font class="ls-kw">Me</font>
+  
   
   <font class="ls-op">.</font>curTotal 
   
+  
   <font class="ls-op">=</font> 
   
+  
   <font class="ls-kw">Me</font>
+  
   
   <font class="ls-op">.</font>maxFieldEntries 
   
+  
   <font class="ls-op">*</font> 
+  
   
   <font class="ls-kw">Me</font>
   
+  
   <font class="ls-op">.</font>maxNumOfFields 
+  
   
   <font class="ls-statement">Then</font>
 				
   
+  
   <font class="ls-function">Error</font> 8000 
+  
   
   <font class="ls-co">'We throw an error</font>
 			
   
+  
   <font class="ls-statement">Else</font>
 				
   
+  
   <font class="ls-kw">Me</font>
+  
   
   <font class="ls-op">.</font>curFieldMembers
   
+  
   <font class="ls-op">(</font>entryToAdd
   
+  
   <font class="ls-op">)</font> 
+  
   
   <font class="ls-op">=</font> entryToAdd
 				
   
+  
   <font class="ls-kw">Me</font>
   
+  
   <font class="ls-op">.</font>curTotal 
+  
   
   <font class="ls-op">=</font> 
   
+  
   <font class="ls-kw">Me</font>
   
+  
   <font class="ls-op">.</font>curTotal 
+  
   
   <font class="ls-op">+</font> 1
 			
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">If</font>
 		
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">If</font>	
 	
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">Sub</font>
 	
   
+  
   <font class="ls-co">'Bulk adding of entries. Suitable to pull in entries from getItemValues</font>
+ 
  
  </div></pre><font class="ls-kw">Public</font> 
 <font class="ls-statement">Sub</font> addEntries 
@@ -888,7 +1077,7 @@ ga('send', 'pageview');
 <font class="ls-kw">Me</font> 
 <font class="ls-op">.</font>AccessFieldName 
 <font class="ls-op">+</font> 
-<font class="ls-quote">&quot;_&quot;</font> 
+<font class="ls-quote">"_"</font> 
 <font class="ls-op">+</font> 
 <font class="ls-function">Trim</font> 
 <font class="ls-op">(</font> 
@@ -946,7 +1135,7 @@ ga('send', 'pageview');
 <font class="ls-kw">Me</font> 
 <font class="ls-op">.</font>AccessFieldName 
 <font class="ls-op">+</font> 
-<font class="ls-quote">&quot;_&quot;</font> 
+<font class="ls-quote">"_"</font> 
 <font class="ls-op">+</font> 
 <font class="ls-function">Trim</font> 
 <font class="ls-op">(</font> 
@@ -1002,7 +1191,7 @@ ga('send', 'pageview');
 <font class="ls-kw">Me</font> 
 <font class="ls-op">.</font>AccessFieldName 
 <font class="ls-op">+</font> 
-<font class="ls-quote">&quot;_&quot;</font> 
+<font class="ls-quote">"_"</font> 
 <font class="ls-op">+</font> 
 <font class="ls-function">Trim</font> 
 <font class="ls-op">(</font> 
@@ -1091,7 +1280,7 @@ ga('send', 'pageview');
 <font class="ls-kw">Me</font> 
 <font class="ls-op">.</font>AccessFieldName 
 <font class="ls-op">=</font> 
-<font class="ls-quote">&quot;DocReaders&quot;</font> 
+<font class="ls-quote">"DocReaders"</font> 
 <font class="ls-kw">Me</font> 
 <font class="ls-op">.</font>fieldType 
 <font class="ls-op">=</font> 
@@ -1105,7 +1294,7 @@ ga('send', 'pageview');
  <center>
    This LotusScript was converted to HTML using the 
   <b><i>ls2html</i></b> routine, 
-  <br />provided by Julian Robichaux at 
+  <br>provided by Julian Robichaux at 
   <a href="http://www.nsftools.com" target="_blank">nsftools.com</a>. 
  </center> 
 </div></div>
@@ -1136,8 +1325,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/154f8f34526354153123b74ecc5d1600.jpg?s=88" class="gravatarimg" />
-							posted by <b>Srinivas Kotaru</b> on <i>Wednesday 15 April 2009 AD - 19:39 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/154f8f34526354153123b74ecc5d1600.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Srinivas Kotaru</b> on <i>Wednesday 15 April 2009 AD - 19:39 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Wow. Great piece of code. Thanks a lot.
@@ -1145,8 +1334,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8a2a807da5b24e308efead7a39603b87.jpg?s=88" class="gravatarimg" />
-							posted by <b>Kevin Pettitt</b> on <i>Wednesday 15 April 2009 AD - 21:26 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8a2a807da5b24e308efead7a39603b87.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Kevin Pettitt</b> on <i>Wednesday 15 April 2009 AD - 21:26 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Nice one Stephan. 
@@ -1184,7 +1373,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -1215,7 +1404,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

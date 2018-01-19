@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -152,10 +152,10 @@ ga('send', 'pageview');
 <strike>
   where do babies come from 
 </strike> how to get your application deployed onto the http server? This applies to nodeJS applications too, but that is part of another story for another time. 
-<br /> On 
+<br> On 
 <a href="https://console.ng.bluemix.net/">Bluemix</a> that's easy: just use a 
 <a href="https://hub.jazz.net/docs/deploy/#example">Pipeline</a>. 
-<br /> For mere mortal environments there are several options: 
+<br> For mere mortal environments there are several options: 
 <ul> 
  <li>Just FTP them - insecure unless you use sftp/scp. Big pain here: deleting obsolete files</li> 
  <li>Setup rsync. When done with a ssh certificate can be reasonably automated. Same pain applies: deleting obsolete files</li> 
@@ -166,11 +166,11 @@ ga('send', 'pageview');
  <li>Typically a repository would sit in <code>.git</code> inside the site directory. While you could protect that with access control, I decided I don't want to have it in separate directories</li> 
  <li>When pushing to the <code>master</code> branch, the site should get updated, not on any other branch. You can extend my approach to push other branches to other sites - so you get a test/demo/staging capability</li> 
  <li>Setting up a new site should be fast and reliable (including https - but that's part 2)</li> 
-</ul> The &quot;secret&quot; ingredients here are 
+</ul> The "secret" ingredients here are 
 <a href="https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks#Server-Side-Hooks">git-hooks</a>, in specific the 
 <code>post-receive</code>. Hooks, in a nutshell are shell scripts that are triggered by events that happen to a git environment. I got inspired by 
 <a href="http://nicolasgallagher.com/simple-git-deployment-strategy-for-static-sites/">this entry</a> but wanted to automate the setup.So I devised the following shell script: 
-<br /> 
+<br> 
 <pre class="brush: bash">
 #!/bin/bash
 # Script to establish a git driven static site 
@@ -180,35 +180,35 @@ SITENAME=$1
 
 # Check if we have a parameter. We expect the base URL only
 if [ -z ${SITENAME+x} ]; then
-  echo &quot;You need to provide a site name: addnginxsite.sh acme.com&quot;;
+  echo "You need to provide a site name: addnginxsite.sh acme.com";
   exit
 else
- echo &quot;Site to be created '$SITENAME' with alias 'www.$SITENAME'&quot;;
+ echo "Site to be created '$SITENAME' with alias 'www.$SITENAME'";
 fi
 
 # Create the web root directory and .wellknown for letsencrypt
 mkdir -p $WEBROOT/$SITENAME/.wellknown
-echo &quot;<h1>Site root for $SITENAME</h1>&quot; &gt; $WEBROOT/$SITENAME/index.html
+echo "<h1>Site root for $SITENAME</h1>" &gt; $WEBROOT/$SITENAME/index.html
 
 # Create the repository and add the index file
 git init --bare $GITROOT/$SITENAME
 
 git -C $WEBROOT/$SITENAME --git-dir=$GITROOT/$SITENAME --work-tree=$WEBROOT/$SITENAME add --all
-git -C $WEBROOT/$SITENAME --git-dir=$GITROOT/$SITENAME --work-tree=$WEBROOT/$SITENAME commit -m &quot;automatic creation of ${SITENAME}&quot;
+git -C $WEBROOT/$SITENAME --git-dir=$GITROOT/$SITENAME --work-tree=$WEBROOT/$SITENAME commit -m "automatic creation of ${SITENAME}"
 
 # Create the commit hook
 HOOKNAME=$GITROOT/$SITENAME/hooks/post-receive
-echo &quot;#!/bin/bash&quot; &gt; $HOOKNAME
-echo &quot;if [ \`git rev-parse --abbrev-ref HEAD\` == 'master' ]; then&quot; &gt;&gt; $HOOKNAME
-echo &quot;    git --work-tree=$WEBROOT/$SITENAME clean -fd&quot; &gt;&gt; $HOOKNAME
-echo &quot;    git --work-tree=$WEBROOT/$SITENAME checkout --force&quot; &gt;&gt; $HOOKNAME
-echo &quot;fi&quot; &gt;&gt; $HOOKNAME
+echo "#!/bin/bash" &gt; $HOOKNAME
+echo "if [ \`git rev-parse --abbrev-ref HEAD\` == 'master' ]; then" &gt;&gt; $HOOKNAME
+echo "    git --work-tree=$WEBROOT/$SITENAME clean -fd" &gt;&gt; $HOOKNAME
+echo "    git --work-tree=$WEBROOT/$SITENAME checkout --force" &gt;&gt; $HOOKNAME
+echo "fi" &gt;&gt; $HOOKNAME
 chmod +x $HOOKNAME
 echo Done creation of $SITENAME
 </pre> 
-<br /> You need to adjust the path variables to your environment. Next stop: 
+<br> You need to adjust the path variables to your environment. Next stop: 
 <!-- a href="2017/01/git-deploy-your-static-sites-part-1.html"  -->Create the nginx site with SSL. 
-<br /> As usual: YMMV</div>
+<br> As usual: YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -270,7 +270,7 @@ categories:  <a href="/blog/categories/nginx.html">nginx</a>  <a href="/blog/cat
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -301,7 +301,7 @@ categories:  <a href="/blog/categories/nginx.html">nginx</a>  <a href="/blog/cat
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

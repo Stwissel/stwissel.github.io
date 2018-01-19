@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -173,136 +173,136 @@ ga('send', 'pageview');
  <li>The MIME parts retrieved come infested with &lt;br /&gt; tags, since iNotes renders them in a display window (I would have used &lt;pre&gt;, but that's a different story. So they need cleanup</li> 
 </ul> To begin I'll use the result of 
 <code>l_JSVars</code> to learn about the document. Since, again, it is JavaScript, not JSON, I'll take the Rhino approach to extract a Java object. 
-<br /> The parts I'm interested in is in the variable named 
+<br> The parts I'm interested in is in the variable named 
 <code>DXX</code> which contains 
 <code>item</code> that is a representation of NotesItems. True to the nature of an item, the JSON is quite elaborate, which you can see on the example of the form item: 
-<br /> 
+<br> 
 <pre class="brush : js">
-{ &quot;@name&quot;: &quot;Form&quot;,
-  &quot;textlist&quot;: {
-    &quot;text&quot;: [
-        {&quot;0&quot;: &quot;Memo&quot;}
+{ "@name": "Form",
+  "textlist": {
+    "text": [
+        {"0": "Memo"}
        ]
    }
 }
 </pre> 
-<br /> For our purposes this will be flattened into a Map that has the item name as key. The Java code is quite similar to the retrieval of the Outline, the magic is in the JavaScript: 
-<br /> 
+<br> For our purposes this will be flattened into a Map that has the item name as key. The Java code is quite similar to the retrieval of the Outline, the magic is in the JavaScript: 
+<br> 
 <pre class="brush : java">
 public MessageObject(String code, String rawMsg) {
     long start = System.currentTimeMillis();
-    ScriptEngine engine = new ScriptEngineManager().getEngineByExtension(&quot;js&quot;);
+    ScriptEngine engine = new ScriptEngineManager().getEngineByExtension("js");
     engine.eval(code);
     Invocable jsFunc = (Invocable) engine;
-    MessageObject msg = (MessageObject) jsFunc.invokeFunction(&quot;getMessageObject&quot;, rawMsg);
+    MessageObject msg = (MessageObject) jsFunc.invokeFunction("getMessageObject", rawMsg);
     long end = System.currentTimeMillis();
     System.out.println(msg.getUNID());
-    System.out.print(&quot;Time in ms:&quot;);
+    System.out.print("Time in ms:");
     System.out.println(end-start);
     return msg;
 }
 </pre> 
-<br /> A little detail to stumble over is the item structure. It can be 
+<br> A little detail to stumble over is the item structure. It can be 
 <code>textlist/text</code> or only 
 <code>text</code> (feels like MIME Headers) and 
 <code>datetimelist/datetimepair/datetime</code> or 
 <code>datetimelist/datetime</code>.I haven't seen any item other than the name 
-<code>&quot;0&quot;</code>, so JSON arrays and multi-values got a little in each other's way. 
+<code>"0"</code>, so JSON arrays and multi-values got a little in each other's way. 
 <code>text</code> as an array could have multiple values eliminating the need for an enclosing 
 <code>textlist</code>, but probably I'm overlooking something, smarter people that me, who designed this, did envision. 
-<br /> 
+<br> 
 <pre class="brush : js">
 function getMessageObject(raw) {
 	importPackage(com.notessensei.demo);
 	var msg;
-	eval(&quot;msg = &quot; + raw);
+	eval("msg = " + raw);
 	var result = new MessageObject(msg.sUnid);
 	var count = 0;
 	var first = true;
-	var curName = &quot;&quot;;
-	var curValue = &quot;&quot;;
+	var curName = "";
+	var curValue = "";
 	for ( var id in msg.DXX) {
 		var notesItem = msg.DXX[id];
-		curName = notesItem[&quot;@name&quot;]
+		curName = notesItem["@name"]
 		// Process depending on data type
 		if (notesItem.text) {
-			curValue = notesItem.text[&quot;0&quot;];
+			curValue = notesItem.text["0"];
 		} else if (notesItem.number) {
-			curValue = notesItem.number[&quot;0&quot;];
+			curValue = notesItem.number["0"];
 		} else if (notesItem.datetime) {
-			curValue = notesItem.datetime[&quot;0&quot;];
+			curValue = notesItem.datetime["0"];
 		} else if (notesItem.textlist) {
 			first = true;
-			curValue = &quot;&quot;;
+			curValue = "";
 			for ( var t in notesItem.textlist.text) {
 				if (!first) {
-					curValue += &quot;;&quot;;
+					curValue += ";";
 				}
-				curValue += notesItem.textlist.text[t][&quot;0&quot;];
+				curValue += notesItem.textlist.text[t]["0"];
 				first = false;
 			}
 		} else if (notesItem.numberlist) {
 			first = true;
-			curValue = &quot;&quot;;
+			curValue = "";
 			for ( var t in notesItem.numberlist.number) {
 				if (!first) {
-					curValue += &quot;;&quot;;
+					curValue += ";";
 				}
-				curValue += notesItem.numberlist.number[t][&quot;0&quot;];
+				curValue += notesItem.numberlist.number[t]["0"];
 				first = false;
 			}
 		} else if (notesItem.datetimelist.datetimepair) {
-			curValue = notesItem.datetimelist.datetimepair[0].datetime[0][&quot;0&quot;];
-			curValue += &quot; - &quot;;
-			curValue += notesItem.datetimelist.datetimepair[0].datetime[1][&quot;0&quot;];
+			curValue = notesItem.datetimelist.datetimepair[0].datetime[0]["0"];
+			curValue += " - ";
+			curValue += notesItem.datetimelist.datetimepair[0].datetime[1]["0"];
 		} else if (notesItem.datetimelist.datetime) {
 			first = true;
-			curValue = &quot;&quot;;
+			curValue = "";
 			for ( var t in notesItem.datetimelist.datetime) {
 				if (!first) {
-					curValue += &quot;;&quot;;
+					curValue += ";";
 				}
-				curValue += notesItem.datetimelist.datetime[t][&quot;0&quot;];
+				curValue += notesItem.datetimelist.datetime[t]["0"];
 				first = false;
 			}
 
 		} else {
 			// Data type we didn't expect!
-			print(&quot;Unexpected item encountered: &quot;);
-			print(notesItem[&quot;@name&quot;]);
-			print(&quot;: &quot;);
+			print("Unexpected item encountered: ");
+			print(notesItem["@name"]);
+			print(": ");
 			for (x in notesItem) {
 				print(x);
-				print(&quot;: &quot;);
+				print(": ");
 				println(notesItem[x]);
 			}
-			print(&quot;\n&quot;);
-			curName = &quot;&quot;;
-			curValue = &quot;&quot;;
+			print("\n");
+			curName = "";
+			curValue = "";
 		}
 
-		if (curName != &quot;&quot;) {
+		if (curName != "") {
 			result.addItem(curName, curValue);
 		}
 
 		count++;
 	}
-	print(&quot;\n Fields found: &quot;);
+	print("\n Fields found: ");
 	print(count);
-	print(&quot;\n&quot;);
+	print("\n");
 
 	return result;
 }
 </pre> 
-<br /> When you use a Map instead of a specialized object, you need to change 
+<br> When you use a Map instead of a specialized object, you need to change 
 <code>var result = new MessageObject(msg.sUnid);</code> to 
 <code>var result = new java.util.HashMap;</code> and 
 <code>result.addItem(curName, curValue);</code> to 
-<code>result.put(curName, curValue);</code>. To avoid empty fields (caveat: there's a difference between &quot;empty field&quot; and &quot;field not there&quot;), change 
-<code>if (curName != &quot;&quot;) {</code> to 
-<code>if (curName != &quot;&quot; &amp;&amp; curValue != &quot;&quot;) {</code> 
-<br /> An interesting question to contemplate: while all values in the JSON come across as String, the structure clearly specifies the data type. Should therefore the object you create contain these data types instead of String? 
-<br /> As usual YMMV</div>
+<code>result.put(curName, curValue);</code>. To avoid empty fields (caveat: there's a difference between "empty field" and "field not there"), change 
+<code>if (curName != "") {</code> to 
+<code>if (curName != "" &amp;&amp; curValue != "") {</code> 
+<br> An interesting question to contemplate: while all values in the JSON come across as String, the structure clearly specifies the data type. Should therefore the object you create contain these data types instead of String? 
+<br> As usual YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -361,7 +361,7 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -392,7 +392,7 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

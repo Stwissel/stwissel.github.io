@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -144,33 +144,33 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Sharing HideWhen Formulas</small></h1>
 					<hr />
-					<div>Yes - a Notes classic development post, since XPages knows a &quot;rendered&quot; property (labeled as &quot;visible&quot;) but no &quot;hideWhen&quot;. I was asked &quot; 
-<i>How can I share HideWhen formulas</i>?&quot;. The short answer is: &quot; 
-<i>You can't</i>&quot;. The long answer: &quot; 
-<i>Once you separate the label from the logic it becomes possible</i>&quot;. Let me elaborate: 
-<br /> Instead of adding business logic to your hidewhen formula in the formula window itself you just enter keywords that describe the condition, something like 
+					<div>Yes - a Notes classic development post, since XPages knows a "rendered" property (labeled as "visible") but no "hideWhen". I was asked " 
+<i>How can I share HideWhen formulas</i>?". The short answer is: " 
+<i>You can't</i>". The long answer: " 
+<i>Once you separate the label from the logic it becomes possible</i>". Let me elaborate: 
+<br> Instead of adding business logic to your hidewhen formula in the formula window itself you just enter keywords that describe the condition, something like 
 <code>isManager</code> or 
-<code>isConfidential</code> (Important: that are FIELD names, so no quotes). I like using &quot;is&quot; as prefix since the keyword describes a state of the document and based on that state information is supposed to be shown or hidden. De facto you create your 
+<code>isConfidential</code> (Important: that are FIELD names, so no quotes). I like using "is" as prefix since the keyword describes a state of the document and based on that state information is supposed to be shown or hidden. De facto you create your 
 <b>domain specific language</b> here. Now you create one computed for display (CfD) numeric field with exactly that name, so you have fields named 
 <code>isManager</code> or 
 <code>isConfidential</code>. That fields need to have results that are either 
 <code>@True</code> or 
 <code>@False</code>. To get to that result you can use anything at your disposal including profile documents or &lt;gasp&gt;@DBLookup or @DBColumn&lt;/gasp&gt;. You could allow simple AND or OR statements like 
 <code>isDraft | !isManager</code>Having done that you can start thinking about reuse. 
-<br /> Pack all the fields into a subform and put it at the 
+<br> Pack all the fields into a subform and put it at the 
 <strike>
   beginning 
-</strike>end of your form. In computation sequence fields are calculated first before HideWhen is executed, so putting them last ensures that you have the right values in them and don't need 2 recomputations. Quite often you will not use all hide conditions in all forms, so you might perform lookups that are discarded without being used. To avoid that you can use the following strategy. Add a CfD field, type text - multivalue, before the subform. Name it &quot; 
-<i>HideWhenUsedHere</i>&quot;. In its formula (which would differ from form to form) you list the HideWhen types you want to use e.g 
-<code>&quot;isManager&quot;:&quot;isDraft&quot;</code> (Note: you have quotes here!). On a subform you would have a CfD field HideWhen_[Name of the subform]. When you add a subform you would adjust the 
+</strike>end of your form. In computation sequence fields are calculated first before HideWhen is executed, so putting them last ensures that you have the right values in them and don't need 2 recomputations. Quite often you will not use all hide conditions in all forms, so you might perform lookups that are discarded without being used. To avoid that you can use the following strategy. Add a CfD field, type text - multivalue, before the subform. Name it " 
+<i>HideWhenUsedHere</i>". In its formula (which would differ from form to form) you list the HideWhen types you want to use e.g 
+<code>"isManager":"isDraft"</code> (Note: you have quotes here!). On a subform you would have a CfD field HideWhen_[Name of the subform]. When you add a subform you would adjust the 
 <i>HideWhenUsedHere</i> formula to look like 
-<code>@Trim(@Unique(&quot;isManager&quot;:&quot;isDraft&quot;:HideWhen_[Name of the subform]))</code>. Then add to the first line of each CfD field of your hidewhen-subform: 
-<code>@if(@IsNotMember(@ThisName;HideWhenUsedHere);@Return(@False);&quot;&quot;);</code> This way your eventual longer running lookup won't execute. The @isMember executes 
-<b>very</b> fast. Of course you could construct it the other way around and have a field &quot; 
-<i>DoNotUseTheseHideWhenHere</i>&quot;, then the first line would look like this: 
-<code>@if(@IsMember(@ThisName;DoNotUseTheseHideWhenHere);@Return(@False);&quot;&quot;);</code> 
-<br /> It is not as elegant or powerful as a SSJS library in XPages, but once you wrap your head around it provides an easy resuable way for your &quot;business visibility rules&quot; 
-<br /> As usual: YMMV</div>
+<code>@Trim(@Unique("isManager":"isDraft":HideWhen_[Name of the subform]))</code>. Then add to the first line of each CfD field of your hidewhen-subform: 
+<code>@if(@IsNotMember(@ThisName;HideWhenUsedHere);@Return(@False);"");</code> This way your eventual longer running lookup won't execute. The @isMember executes 
+<b>very</b> fast. Of course you could construct it the other way around and have a field " 
+<i>DoNotUseTheseHideWhenHere</i>", then the first line would look like this: 
+<code>@if(@IsMember(@ThisName;DoNotUseTheseHideWhenHere);@Return(@False);"");</code> 
+<br> It is not as elegant or powerful as a SSJS library in XPages, but once you wrap your head around it provides an easy resuable way for your "business visibility rules" 
+<br> As usual: YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -198,8 +198,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/40481a7a46b43d2060ea9473ec0f07a3.jpg?s=88" class="gravatarimg" />
-							posted by <b>Palmi</b> on <i>Monday 07 March 2011 AD - 23:47 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/40481a7a46b43d2060ea9473ec0f07a3.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Palmi</b> on <i>Monday 07 March 2011 AD - 23:47 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Cool tip - thanks 
@@ -236,7 +236,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -267,7 +267,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

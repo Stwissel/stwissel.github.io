@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -144,7 +144,7 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Getting hold of your replication formulas (SnTT Sunday edition)</small></h1>
 					<hr />
-					<div><p>Since R6 we are able to manipulate replication formulas using Lotus Script. You simply retrieve the entry and update or delete it. There is only one problem: If you don't know what custom replication pairs are in your database you can't do anything about it. Since &quot;wild&quot; custom replication formulas are a nightmare to track down I created the following script and XSLT stylesheet to extract this information using DXL. My script simply creates documents that document the settings. It will be easy to extend the script to include deletion of the entries. Or you could modifiy it to track replication formulas in multiple databases.</p> 
+					<div><p>Since R6 we are able to manipulate replication formulas using Lotus Script. You simply retrieve the entry and update or delete it. There is only one problem: If you don't know what custom replication pairs are in your database you can't do anything about it. Since "wild" custom replication formulas are a nightmare to track down I created the following script and XSLT stylesheet to extract this information using DXL. My script simply creates documents that document the settings. It will be easy to extend the script to include deletion of the entries. Or you could modifiy it to track replication formulas in multiple databases.</p> 
 <p>As usual: your mileage might vary!</p> 
 <style type="text/css">.lotusscript { font-family: verdana, arial, sans-serif; font-size: xx-small; color: black; border-left : 10px solid #9999FF; padding-left : 5px; background-color : #DDDDDD;}
 .ls-comment { color: green; }
@@ -159,537 +159,747 @@ ga('send', 'pageview');
 </style> 
 <pre>
  
+ 
  <div class="lotusscript">
 
   
+  
   <font class="ls-keyword">Option</font> 
+  
   
   <font class="ls-keyword">Public</font>
 
   
+  
   <font class="ls-keyword">Option</font> 
+  
   
   <font class="ls-keyword">Declare</font>
 
 
   
+  
   <font class="ls-statement">Sub</font> 
+  
   
   <font class="ls-keyword">Initialize</font>
 	
   
+  
   <font class="ls-statement">Dim</font> db 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesDatabase</font>
 	
   
+  
   <font class="ls-statement">Dim</font> notecol 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesNoteCollection</font>
 	
   
+  
   <font class="ls-statement">Dim</font> exporter 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesDXLExporter</font>
 	
   
+  
   <font class="ls-statement">Dim</font> importer 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesDXLImporter</font>
 	
   
+  
   <font class="ls-statement">Dim</font> transformer 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesXSLTransformer</font>
 	
   
+  
   <font class="ls-statement">Dim</font> result 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-keyword">String</font>
 	
   
+  
   <font class="ls-statement">Dim</font> stream 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesStream</font>
 	
 	
   
+  
   <font class="ls-statement">Dim</font> s 
+  
   
   <font class="ls-keyword">As</font> 
   
+  
   <font class="ls-keyword">New</font> 
+  
   
   <font class="ls-class">NotesSession</font>
 	
 	
   
+  
   <font class="ls-comment">'Setup envionment</font>
 	
   
+  
   <font class="ls-statement">Set</font> db 
   
+  
   <font class="ls-operator">=</font> s
+  
   
   <font class="ls-operator">.</font>CurrentDatabase
 	
 	
   
+  
   <font class="ls-comment">'Create the collection</font>
 	
   
+  
   <font class="ls-statement">Set</font> notecol 
+  
   
   <font class="ls-operator">=</font> db
   
+  
   <font class="ls-operator">.</font>CreateNoteCollection
+  
   
   <font class="ls-operator">(</font>
   
+  
   <font class="ls-constant">False</font>
+  
   
   <font class="ls-operator">)</font>
 	
   
+  
   <font class="ls-function">Call</font> notecol
+  
   
   <font class="ls-operator">.</font>SelectAllAdminNotes
   
+  
   <font class="ls-operator">(</font>
+  
   
   <font class="ls-constant">True</font>
   
+  
   <font class="ls-operator">)</font> 
+  
   
   <font class="ls-comment">'ACL, Replication Formulas</font>
 	
   
+  
   <font class="ls-function">Call</font> notecol
+  
   
   <font class="ls-operator">.</font>BuildCollection
 	
   
+  
   <font class="ls-function">Print</font> 
   
-  <font class="ls-quote">&quot;Build the collection ...&quot;</font>
+  
+  <font class="ls-quote">"Build the collection ..."</font>
 	
 	
+  
   
   <font class="ls-comment">'Get the transformation stylesheet</font>
 	
   
+  
   <font class="ls-statement">Set</font> stream 
+  
   
   <font class="ls-operator">=</font> getRichTextSource
   
+  
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;DocumentCustomReplicationFormulas&quot;</font>
+  
+  <font class="ls-quote">"DocumentCustomReplicationFormulas"</font>
+  
   
   <font class="ls-operator">)</font>
 	
 	
   
+  
   <font class="ls-comment">'Create the import/export/transformer</font>
 	
   
+  
   <font class="ls-statement">Set</font> exporter 
   
+  
   <font class="ls-operator">=</font> s
+  
   
   <font class="ls-operator">.</font>CreateDXLExporter
 	
   
+  
   <font class="ls-statement">Set</font> transformer 
   
+  
   <font class="ls-operator">=</font> s
+  
   
   <font class="ls-operator">.</font>CreateXSLTransformer
 	
   
+  
   <font class="ls-statement">Set</font> importer 
   
+  
   <font class="ls-operator">=</font> s
+  
   
   <font class="ls-operator">.</font>CreateDXLImporter
 	
 	
   
+  
   <font class="ls-comment">'Now we need to wire the exporter to the transformer to the importer</font>
 	
   
+  
   <font class="ls-function">Call</font> exporter
+  
   
   <font class="ls-operator">.</font>SetInput
   
+  
   <font class="ls-operator">(</font>notecol
+  
   
   <font class="ls-operator">)</font>
 	
+  
   
   <font class="ls-function">Call</font> exporter
   
+  
   <font class="ls-operator">.</font>SetOutput
+  
   
   <font class="ls-operator">(</font>transformer
   
+  
   <font class="ls-operator">)</font>
 	
   
+  
   <font class="ls-function">Call</font> transformer
+  
   
   <font class="ls-operator">.</font>SetStylesheet
   
+  
   <font class="ls-operator">(</font>stream
+  
   
   <font class="ls-operator">)</font>
 	
+  
   
   <font class="ls-function">Call</font> transformer
   
+  
   <font class="ls-operator">.</font>setOutput
+  
   
   <font class="ls-operator">(</font>importer
   
+  
   <font class="ls-operator">)</font>
 	
+  
   
   <font class="ls-function">Call</font> importer
   
+  
   <font class="ls-operator">.</font>setOutput
   
+  
   <font class="ls-operator">(</font>db
+  
   
   <font class="ls-operator">)</font>
 	
 	
+  
   
   <font class="ls-comment">'Set the parameters for processing</font>
 	exporter
   
+  
   <font class="ls-operator">.</font>ExitOnFirstFatalError 
+  
   
   <font class="ls-operator">=</font> 
   
+  
   <font class="ls-constant">False</font>
 	importer
+  
   
   <font class="ls-operator">.</font>ReplaceDBProperties 
   
+  
   <font class="ls-operator">=</font> 
+  
   
   <font class="ls-constant">False</font>
 	importer
+  
   
   <font class="ls-operator">.</font>ReplicaRequiredForReplaceOrUpdate 
   
+  
   <font class="ls-operator">=</font> 
+  
   
   <font class="ls-constant">False</font>
 	importer
   
+  
   <font class="ls-operator">.</font>ACLImportOption 
+  
   
   <font class="ls-operator">=</font> DXLIMPORTOPTION_IGNORE
 	importer
+  
   
   <font class="ls-operator">.</font>DesignImportOption 
   
+  
   <font class="ls-operator">=</font> DXLIMPORTOPTION_IGNORE
 	importer
   
+  
   <font class="ls-operator">.</font>DocumentImportOption 
+  
   
   <font class="ls-operator">=</font> DXLIMPORTOPTION_CREATE
 	
 	
   
+  
   <font class="ls-function">Print</font> 
   
-  <font class="ls-quote">&quot;Processing&quot;</font>
+  
+  <font class="ls-quote">"Processing"</font>
 	
+  
   
   <font class="ls-statement">On</font> 
   
+  
   <font class="ls-function">Error</font> 
   
+  
   <font class="ls-statement">Resume</font> 
+  
   
   <font class="ls-statement">Next</font>
 	
 	
   
+  
   <font class="ls-function">Call</font> exporter
+  
   
   <font class="ls-operator">.</font>Process
 	
   
+  
   <font class="ls-function">Print</font> 
   
-  <font class="ls-quote">&quot;Backup completed&quot;</font>
+  
+  <font class="ls-quote">"Backup completed"</font>
 	result 
+  
   
   <font class="ls-operator">=</font> exporter
   
+  
   <font class="ls-operator">.</font>
+  
   
   <font class="ls-function">log</font>
 	
   
+  
   <font class="ls-function">Call</font> stream
   
+  
   <font class="ls-operator">.</font>
+  
   
   <font class="ls-function">Close</font>
 	
 	
   
+  
   <font class="ls-function">Beep</font>	
 	
   
+  
   <font class="ls-function">Msgbox</font> result
+  
   
   <font class="ls-operator">,</font> 0
   
+  
   <font class="ls-operator">,</font> 
+  
   
   <font class="ls-function">Cstr</font>
   
+  
   <font class="ls-operator">(</font>importer
+  
   
   <font class="ls-operator">.</font>importednotecount
   
+  
   <font class="ls-operator">)</font> 
+  
   
   <font class="ls-operator">&amp;</font> 
   
-  <font class="ls-quote">&quot; Documents created&quot;</font>
+  
+  <font class="ls-quote">" Documents created"</font>
 	
 
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">Sub</font>
 
 
   
+  
   <font class="ls-statement">Function</font> getRichTextSource
+  
   
   <font class="ls-operator">(</font>SourceName 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-keyword">String</font>
   
+  
   <font class="ls-operator">)</font> 
+  
   
   <font class="ls-keyword">As</font> 
   
+  
   <font class="ls-class">NotesStream</font>
 	
+  
   
   <font class="ls-comment">'Retrieves a RichTextitem from the XSLTDefinitions view</font>
 	
   
+  
   <font class="ls-statement">Dim</font> db 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesDatabase</font>
 	
   
+  
   <font class="ls-statement">Dim</font> doc 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesDocument</font>
 	
   
+  
   <font class="ls-statement">Dim</font> v 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesView</font>
 	
   
+  
   <font class="ls-statement">Dim</font> tmpStream 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesStream</font>
 	
   
+  
   <font class="ls-statement">Dim</font> rt 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesRichTextItem</font>
 	
 	
   
+  
   <font class="ls-statement">Dim</font> s 
+  
   
   <font class="ls-keyword">As</font> 
   
+  
   <font class="ls-keyword">New</font> 
+  
   
   <font class="ls-class">NotesSession</font>
 	
   
+  
   <font class="ls-statement">Set</font> db 
   
+  
   <font class="ls-operator">=</font> s
+  
   
   <font class="ls-operator">.</font>CurrentDatabase
 	
   
+  
   <font class="ls-statement">Set</font> v 
+  
   
   <font class="ls-operator">=</font> db
   
+  
   <font class="ls-operator">.</font>GetView
+  
   
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;XSLTDefinitions&quot;</font>
+  
+  <font class="ls-quote">"XSLTDefinitions"</font>
+  
   
   <font class="ls-operator">)</font>
 	
+  
   
   <font class="ls-statement">Set</font> doc 
   
+  
   <font class="ls-operator">=</font> v
+  
   
   <font class="ls-operator">.</font>GetDocumentByKey
   
+  
   <font class="ls-operator">(</font>SourceName
+  
   
   <font class="ls-operator">,</font>
   
+  
   <font class="ls-constant">True</font>
+  
   
   <font class="ls-operator">)</font>
 	
   
+  
   <font class="ls-statement">If</font> doc 
+  
   
   <font class="ls-operator">Is</font> 
   
+  
   <font class="ls-constant">Nothing</font> 
+  
   
   <font class="ls-statement">Then</font>
 		
   
+  
   <font class="ls-function">Msgbox</font> 
   
-  <font class="ls-quote">&quot;XSLT Definition &quot;</font> 
+  
+  <font class="ls-quote">"XSLT Definition "</font> 
+  
   
   <font class="ls-operator">&amp;</font> SourceName 
   
+  
   <font class="ls-operator">&amp;</font> 
   
-  <font class="ls-quote">&quot;not found&quot;</font>
+  
+  <font class="ls-quote">"not found"</font>
 		
   
+  
   <font class="ls-statement">Exit</font> 
+  
   
   <font class="ls-statement">Function</font>
 	
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">If</font>
 	
 	
   
+  
   <font class="ls-statement">Set</font> rt 
+  
   
   <font class="ls-operator">=</font> doc
   
+  
   <font class="ls-operator">.</font>GetFirstItem
+  
   
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;Body&quot;</font>
+  
+  <font class="ls-quote">"Body"</font>
+  
   
   <font class="ls-operator">)</font>
 	
   
+  
   <font class="ls-statement">Set</font> tmpStream 
   
+  
   <font class="ls-operator">=</font> s
+  
   
   <font class="ls-operator">.</font>CreateStream
 	tmpStream
   
+  
   <font class="ls-operator">.</font>WriteText
+  
   
   <font class="ls-operator">(</font>rt
   
+  
   <font class="ls-operator">.</font>GetUnformattedText
+  
   
   <font class="ls-operator">)</font>
 	tmpStream
   
+  
   <font class="ls-operator">.</font>Position 
+  
   
   <font class="ls-operator">=</font> 0
 	
   
+  
   <font class="ls-statement">Set</font> getRichTextSource 
+  
   
   <font class="ls-operator">=</font> tmpStream
 
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">Function</font>
 
+ 
  
  </div></pre> 
 <div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;"> 
  <center>
    This LotusScript was converted to HTML using the 
   <b><i>ls2html</i></b> routine, 
-  <br />provided by Julian Robichaux at 
+  <br>provided by Julian Robichaux at 
   <a href="http://www.nsftools.com" target="_blank">nsftools.com</a>. 
  </center> 
 </div><p>Here is the stylesheet I used:</p> 
 <div class="element" id="xmlsource">
   &lt;xsl:stylesheet 
  <span class="attribute">version=</span> 
- <span class="attvalue">&quot;1.0&quot;</span> 
+ <span class="attvalue">"1.0"</span> 
  <span class="attribute">exclude-result-prefixes=</span> 
- <span class="attvalue">&quot;d&quot;</span>&gt; 
+ <span class="attvalue">"d"</span>&gt; 
  <div class="element">
    &lt;xsl:output 
   <span class="attribute">method=</span> 
-  <span class="attvalue">&quot;xml&quot;</span> 
+  <span class="attvalue">"xml"</span> 
   <span class="attribute">version=</span> 
-  <span class="attvalue">&quot;1.0&quot;</span> 
+  <span class="attvalue">"1.0"</span> 
   <span class="attribute">encoding=</span> 
-  <span class="attvalue">&quot;UTF-8&quot;</span> 
+  <span class="attvalue">"UTF-8"</span> 
   <span class="attribute">indent=</span> 
-  <span class="attvalue">&quot;yes&quot;</span> /&gt; 
+  <span class="attvalue">"yes"</span> /&gt; 
  </div> 
  <div class="element">
    &lt;xsl:template 
   <span class="attribute">match=</span> 
-  <span class="attvalue">&quot;/&quot;</span> &gt; 
+  <span class="attvalue">"/"</span> &gt; 
   <div class="element">
     &lt;xsl:apply-templates /&gt; 
   </div>&lt;/xsl:template&gt; 
@@ -697,112 +907,112 @@ ga('send', 'pageview');
  <div class="element">
    &lt;xsl:template 
   <span class="attribute">match=</span> 
-  <span class="attvalue">&quot;d:database&quot;</span> &gt; 
+  <span class="attvalue">"d:database"</span> &gt; 
   <div class="element">
     &lt;xsl:element 
    <span class="attribute">name=</span> 
-   <span class="attvalue">&quot;database&quot;</span> &gt; 
+   <span class="attvalue">"database"</span> &gt; 
    <div class="element">
      &lt;xsl:attribute 
     <span class="attribute">name=</span> 
-    <span class="attvalue">&quot;version&quot;</span> &gt; 
+    <span class="attvalue">"version"</span> &gt; 
     <div class="element">
       &lt;xsl:value-of 
      <span class="attribute">select=</span> 
-     <span class="attvalue">&quot;@version&quot;</span> /&gt; 
+     <span class="attvalue">"@version"</span> /&gt; 
     </div>&lt;/xsl:attribute&gt; 
    </div> 
    <div class="element">
      &lt;xsl:attribute 
     <span class="attribute">name=</span> 
-    <span class="attvalue">&quot;maintenanceversion&quot;</span> &gt; 
+    <span class="attvalue">"maintenanceversion"</span> &gt; 
     <div class="element">
       &lt;xsl:value-of 
      <span class="attribute">select=</span> 
-     <span class="attvalue">&quot;@maintenanceversion&quot;</span> /&gt; 
+     <span class="attvalue">"@maintenanceversion"</span> /&gt; 
     </div>&lt;/xsl:attribute&gt; 
    </div> 
    <div class="element">
      &lt;xsl:apply-templates 
     <span class="attribute">select=</span> 
-    <span class="attvalue">&quot;d:note[@class='replicationformula']&quot;</span> /&gt; 
+    <span class="attvalue">"d:note[@class='replicationformula']"</span> /&gt; 
    </div>&lt;/xsl:element&gt; 
   </div>&lt;/xsl:template&gt; 
  </div> 
  <div class="element">
    &lt;xsl:template 
   <span class="attribute">match=</span> 
-  <span class="attvalue">&quot;d:note[@class='replicationformula']&quot;</span> &gt; 
+  <span class="attvalue">"d:note[@class='replicationformula']"</span> &gt; 
   <div class="element">
     &lt;xsl:element 
    <span class="attribute">name=</span> 
-   <span class="attvalue">&quot;document&quot;</span> &gt; 
+   <span class="attvalue">"document"</span> &gt; 
    <div class="element">
      &lt;xsl:attribute 
     <span class="attribute">name=</span> 
-    <span class="attvalue">&quot;form&quot;</span> /&gt; 
+    <span class="attvalue">"form"</span> /&gt; 
    </div> 
    <div class="element">
      &lt;xsl:apply-templates 
     <span class="attribute">select=</span> 
-    <span class="attvalue">&quot;d:item[@name='$TITLE']&quot;</span> /&gt; 
+    <span class="attvalue">"d:item[@name='$TITLE']"</span> /&gt; 
    </div> 
    <div class="element">
      &lt;xsl:apply-templates 
     <span class="attribute">select=</span> 
-    <span class="attvalue">&quot;d:item[@name='$ReplSrcServers']&quot;</span> /&gt; 
+    <span class="attvalue">"d:item[@name='$ReplSrcServers']"</span> /&gt; 
    </div>&lt;/xsl:element&gt; 
   </div>&lt;/xsl:template&gt; 
  </div> 
  <div class="element">
    &lt;xsl:template 
   <span class="attribute">match=</span> 
-  <span class="attvalue">&quot;d:item[@name='$ReplSrcServers']&quot;</span> &gt; 
+  <span class="attvalue">"d:item[@name='$ReplSrcServers']"</span> &gt; 
   <div class="element">
     &lt;xsl:element 
    <span class="attribute">name=</span> 
-   <span class="attvalue">&quot;item&quot;</span> &gt; 
+   <span class="attvalue">"item"</span> &gt; 
    <div class="element">
      &lt;xsl:attribute 
     <span class="attribute">name=</span> 
-    <span class="attvalue">&quot;name&quot;</span> /&gt; 
+    <span class="attvalue">"name"</span> /&gt; 
    </div> 
    <div class="element">
      &lt;xsl:copy-of 
     <span class="attribute">select=</span> 
-    <span class="attvalue">&quot;d:textlist&quot;</span> /&gt; 
+    <span class="attvalue">"d:textlist"</span> /&gt; 
    </div>&lt;/xsl:element&gt; 
   </div>&lt;/xsl:template&gt; 
  </div> 
  <div class="element">
    &lt;xsl:template 
   <span class="attribute">match=</span> 
-  <span class="attvalue">&quot;d:item[@name='$TITLE']&quot;</span> &gt; 
+  <span class="attvalue">"d:item[@name='$TITLE']"</span> &gt; 
   <div class="element">
     &lt;xsl:element 
    <span class="attribute">name=</span> 
-   <span class="attvalue">&quot;item&quot;</span> &gt; 
+   <span class="attvalue">"item"</span> &gt; 
    <div class="element">
      &lt;xsl:attribute 
     <span class="attribute">name=</span> 
-    <span class="attvalue">&quot;name&quot;</span> /&gt; 
+    <span class="attvalue">"name"</span> /&gt; 
    </div> 
    <div class="element">
      &lt;xsl:copy-of 
     <span class="attribute">select=</span> 
-    <span class="attvalue">&quot;d:text&quot;</span> /&gt; 
+    <span class="attvalue">"d:text"</span> /&gt; 
    </div>&lt;/xsl:element&gt; 
   </div>&lt;/xsl:template&gt; 
  </div> 
  <div class="element">
    &lt;xsl:template 
   <span class="attribute">match=</span> 
-  <span class="attvalue">&quot;d:note[@default='true' and @class='replicationformula']&quot;</span> /&gt; 
+  <span class="attvalue">"d:note[@default='true' and @class='replicationformula']"</span> /&gt; 
  </div> 
  <div class="element">
    &lt;xsl:template 
   <span class="attribute">match=</span> 
-  <span class="attvalue">&quot;*&quot;</span> /&gt; 
+  <span class="attvalue">"*"</span> /&gt; 
  </div>&lt;/xsl:stylesheet&gt; 
 </div> P.S.: If anybody knows a good tool/stylesheet to transform XML source to HTML, let me know.</div>
 					<hr />
@@ -863,7 +1073,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -894,7 +1104,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

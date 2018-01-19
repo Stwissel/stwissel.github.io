@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -149,39 +149,39 @@ ga('send', 'pageview');
 					<hr />
 					<div><b>THE</b> bummer mistake in any web revamp is a total disregard for page addresses. The maximum to be found is a nice 
 <a href="http://queenofsubtle.com/404/">404</a> page with a notice that things have been revamped and the invitation to search. What a waste of human time and disregard for a site's users! 
-<br /> The links to the original page live outside the sites control and 
+<br> The links to the original page live outside the sites control and 
 <a href="http://www.useit.com/jakob/">Jacob</a> already stated in 1998 
 <a href="http://www.useit.com/alertbox/981129.html">Pages need to live forever</a>. So what could you do when 
 <a href="http://geldred.com/2012/12/04/and-so-here-we-are/">swapping blog platforms</a>? 
-<br /> If your new platform runs behind an 
+<br> If your new platform runs behind an 
 <a href="http://httpd.apache.org/">Apache HTTP</a> server (also known as 
 <a href="http://www-01.ibm.com/software/webservers/httpservers/">IHS</a>), there is 
 <a href="http://httpd.apache.org/docs/current/mod/mod_rewrite.html">mod_rewrite</a> that allows you to alter incoming addresses (the old links) into the new destinations based on a pattern match ( 
 <a href="http://www.amazon.com/gp/product/1849510865/ref=as_li_ss_tl?ie=UTF8&amp;camp=1789&amp;creative=390957&amp;creativeASIN=1849510865&amp;linkCode=as2&amp;tag=wisselnetblog-20">other http servers</a> 
-<img src="http://www.assoc-amazon.com/e/ir?t=wisselnetblog-20&amp;l=as2&amp;o=1&amp;a=1849510865" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" /> have similar functions, but that's a story for another time). 
-<br /> HTTP knows 2 redirection codes: 
+<img src="http://www.assoc-amazon.com/e/ir?t=wisselnetblog-20&amp;l=as2&amp;o=1&amp;a=1849510865" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;"> have similar functions, but that's a story for another time). 
+<br> HTTP knows 2 redirection codes: 
 <ul> 
  <li><a href="http://en.wikipedia.org/wiki/HTTP_302">302</a> for temporary redirections </li> 
  <li><a href="http://en.wikipedia.org/wiki/HTTP_301">301</a> for permanent ones. </li> 
 </ul> You want to use the later, so at least the search engines update their links. 
-<br /> Now your new URL pattern most likely uses a different structure than the old one, so a simple 
+<br> Now your new URL pattern most likely uses a different structure than the old one, so a simple 
 <a href="http://en.wikipedia.org/wiki/Regex">Regex</a> might not help for that transition. E.g. your existing format might be 
 <code>/myblog.nsf/d6plinks/ABCDEF</code> while the new pattern would be 
 <code>/blog/2001/10/is-this-on.html</code>. 
-<br /> For this case mod_rewrite provides the 
+<br> For this case mod_rewrite provides the 
 <a href="http://httpd.apache.org/docs/current/mod/mod_rewrite.html#RewriteMap">RewriteMap</a> where you can use your old value (ABCDEF in our case) to find the new URL. Unfortunately mod_rewrite is very close to dark magic. It can be simple from a key/value lookup up to invoking an external program to get the result. For the key/value lookup you need make your key case insensitive, so all the possible case variations work. This is what I figured out: 
-<br /> 
+<br> 
 <pre>RewriteEngine on
 RewriteMap lowercase int:tolower
 RewriteMap blog-map dbm:/var/www/blogmap.map
 RewriteRule ^/myblog.nsf/d6plinks/(.*) /blog/${blog-map:${lowercase:$1}} [NC,R=301,L]</pre> Let me pick that into pieces for you: 
 <ol> 
- <li><b>RewriteEngine on</b><br /> This switches the rewrite engine on. It requires that mod_rewrite is loaded (check your documentation for that)</li> 
- <li><b>RewriteMap lowercase int:tolower</b><br /> This enabled an internal conversion of the incoming string into its lower case format</li> 
- <li><b>RewriteMap blog-map dbm:/var/www/blogmap.map</b><br /> This defines the actual lookup. The simplest case would be a text file with the key and result in one line separated by a space. However that might not perform well enough for larger numbers of links, so I choose a indexed table format. It is very easy to create, since the tool is included in the Apache install. I generated my translation list as text file and then invoked <code>httxt2dbm -v -i /var/www/blogmap.txt -o /var/www/blogmap.map</code> and the indexed file is created/updated</li> 
- <li><b style="color : red">RewriteRule ^/myblog.nsf/d6plinks/(.*) /blog/${blog-map:${lowercase:$1}} [NC,R=301,L]</b><br /> This is the rewrite rule with a nested set of parameters that first converts the key to lower case and then looks up the new URL. If a key isn't found it redirects to <code>/blog/</code> which suits my needs, you might want to handle things different.<br /> In detail: 
+ <li><b>RewriteEngine on</b><br> This switches the rewrite engine on. It requires that mod_rewrite is loaded (check your documentation for that)</li> 
+ <li><b>RewriteMap lowercase int:tolower</b><br> This enabled an internal conversion of the incoming string into its lower case format</li> 
+ <li><b>RewriteMap blog-map dbm:/var/www/blogmap.map</b><br> This defines the actual lookup. The simplest case would be a text file with the key and result in one line separated by a space. However that might not perform well enough for larger numbers of links, so I choose a indexed table format. It is very easy to create, since the tool is included in the Apache install. I generated my translation list as text file and then invoked <code>httxt2dbm -v -i /var/www/blogmap.txt -o /var/www/blogmap.map</code> and the indexed file is created/updated</li> 
+ <li><b style="color : red">RewriteRule ^/myblog.nsf/d6plinks/(.*) /blog/${blog-map:${lowercase:$1}} [NC,R=301,L]</b><br> This is the rewrite rule with a nested set of parameters that first converts the key to lower case and then looks up the new URL. If a key isn't found it redirects to <code>/blog/</code> which suits my needs, you might want to handle things different.<br> In detail: 
   <ol> 
-   <li><b>^/myblog.nsf/d6plinks/(.*)</b> matches all links inside the d6plinks, the () &quot;captures&quot; ABCEDF (from our example), so it can be used in $1</li> 
+   <li><b>^/myblog.nsf/d6plinks/(.*)</b> matches all links inside the d6plinks, the () "captures" ABCEDF (from our example), so it can be used in $1</li> 
    <li><b>${lowercase:$1}</b> converts ABCDEF into abcdef</li> 
    <li><b>${blog-map: ... }</b> finally looks it up in the map file</li> 
    <li><b>[NC,R=301,L]</b> are the switched governing the execution of the rewrite rule: 
@@ -219,8 +219,8 @@ categories:  <a href="/blog/categories/Software.html">Software</a>  <a href="/bl
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/01d34f8fce19c8ce45a53a3aa55d4554.jpg?s=88" class="gravatarimg" />
-							posted by <b>David Schaffer</b> on <i>Wednesday 05 December 2012 AD - 23:19 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/01d34f8fce19c8ce45a53a3aa55d4554.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>David Schaffer</b> on <i>Wednesday 05 December 2012 AD - 23:19 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Thanks for the nice tutorial on the rewrite rules. However, if a site is heavily reorganized there's often not much you can do with pattern matching. Sometimes you need individual redirects for the most popular pages and a good site map for the rest.
@@ -228,8 +228,8 @@ categories:  <a href="/blog/categories/Software.html">Software</a>  <a href="/bl
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Thursday 06 December 2012 AD - 00:15 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Thursday 06 December 2012 AD - 00:15 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   David, 
@@ -242,8 +242,8 @@ categories:  <a href="/blog/categories/Software.html">Software</a>  <a href="/bl
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/60376f5bfcb7ca0ac6654d699908bcfe.jpg?s=88" class="gravatarimg" />
-							posted by <b>Martin Leyrer</b> on <i>Thursday 06 December 2012 AD - 00:16 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/60376f5bfcb7ca0ac6654d699908bcfe.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Martin Leyrer</b> on <i>Thursday 06 December 2012 AD - 00:16 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Tim Berners-Lee in 1998: Cool URIs don't change 
@@ -254,8 +254,8 @@ categories:  <a href="/blog/categories/Software.html">Software</a>  <a href="/bl
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/60376f5bfcb7ca0ac6654d699908bcfe.jpg?s=88" class="gravatarimg" />
-							posted by <b>Martin Leyrer</b> on <i>Thursday 06 December 2012 AD - 00:20 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/60376f5bfcb7ca0ac6654d699908bcfe.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Martin Leyrer</b> on <i>Thursday 06 December 2012 AD - 00:20 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   @David: mod_rewrite is voodoo. Damned cool voodoo, but still voodoo 
@@ -297,7 +297,7 @@ categories:  <a href="/blog/categories/Software.html">Software</a>  <a href="/bl
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -328,7 +328,7 @@ categories:  <a href="/blog/categories/Software.html">Software</a>  <a href="/bl
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

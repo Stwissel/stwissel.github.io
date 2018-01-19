@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -146,11 +146,11 @@ ga('send', 'pageview');
 					<hr />
 					<div>When customers start developing new Domino applications, the distributed nature of Domino can pose a stumbling block. Suddenly the unheard of 
 <i>replication conflict</i> crops up and wants to be dealt with. A customer recently asked: 
-<br /> &quot; 
-<i>I need to check with you about the Conflict Handling in Lotus Notes application. Default I will set the Conflict Handling to Create Conflicts, but I found my application have create more and more replication or save conflict documents. What can I do for all these replication or save conflict documents, and I found some information in conflict documents is not in original document? How can I prevent the system to generate conflict document?</i>&quot; 
-<br /> 
-<img src="http://www.wissel.net/blog/Images/SHWL-93KFL9/$File/replicationconflict.jpg" border="0" alt="Replication Conflict Handling" /> 
-<br /> Before going into details, lets have a closer look how Notes handles its data. There's quite some hierarchy involved: 
+<br> " 
+<i>I need to check with you about the Conflict Handling in Lotus Notes application. Default I will set the Conflict Handling to Create Conflicts, but I found my application have create more and more replication or save conflict documents. What can I do for all these replication or save conflict documents, and I found some information in conflict documents is not in original document? How can I prevent the system to generate conflict document?</i>" 
+<br> 
+<img src="http://www.wissel.net/blog/Images/SHWL-93KFL9/$File/replicationconflict.jpg" border="0" alt="Replication Conflict Handling"> 
+<br> Before going into details, lets have a closer look how Notes handles its data. There's quite some hierarchy involved: 
 <ol> 
  <li>to replicate two databases need to have the same replica id. The replica id is created when a database is created and only can be changed using the C API (or <a href="http://www.openntf.org/p/Surely Template">a wrapper</a> around it). When a NSF is copied on the file system, you actually create a replica (but you <a href="/blog/d6plinks/SHWL-8MZDTB">wouldn't do that</a>, would you?</li> 
  <li>Inside a database 2 documents need to have the same document unique id (<a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/index.jsp?topic=%2Fcom.ibm.designer.domino.main.doc%2FH_DOCUMENTUNIQUEID.html">UNID</a>), which is created from a time stamp at document creation time. The UNID is actually read/write in LotusScript and Java and a <a href="http://planetlotus.org/profiles/nathan-t-freeman">certain gentleman</a> can teach you about creative 
@@ -158,21 +158,21 @@ ga('send', 'pageview');
     ab 
   </strike>use of this capability. In addition in the document properties a sequence number is stored that gets incremented when a document is changed. Together with the last modification date this forms the <a href="http://en.wikipedia.org/wiki/IBM_Lotus_Notes#Data_replication">patented</a> Notes replication.</li> 
  <li>Inside the document the Notes items are stored. This are not just field values in a schema (like in an RDBMS) but little treasure troves of information. An item has a name, an array of values, a data type, an actual length and a <b>sequence number</b>. Notes can (and does) use this sequence number to see what items have been altered (note the difference: a form contains fields, a document contains items)</li> 
-</ol> So how do the form options behave for conflicts (which are stored as $ConflictAction item in the document)? First Notes determines a &quot;winner&quot; and a &quot;loser&quot; document. The winner is the 
+</ol> So how do the form options behave for conflicts (which are stored as $ConflictAction item in the document)? First Notes determines a "winner" and a "loser" document. The winner is the 
 <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.notes85.help.doc/rep_save_conflicts_t.html">most edited document</a>. If there same amount of edits, only then the document saved last wins (savour this: an older document still can be a winner). Once the winner is determined, the conflict resolution is executed: 
 <ul> 
- <li><b>Create conflicts</b> (no $ConflictAction item)<br /> The &quot;loser&quot; document is converted into a response document of the winner document and an item $Conflict is created. The conflicts are shown in in views unless excluded by view selection formula (<code>&amp; !@isAvailable($Conflict)</code>). Conflict resolution is manual (an agent you write is considered manual too) </li> 
- <li><b>Merge conflicts</b> ($ConflictAction = &quot;1&quot;)<br /> If a document has been edited concurrently but different field have been altered, then they are merged into the one document and no conflict is created. If the same fields are altered a conflict is still generated.<br /> Sounds good? In practise I often see this fail, when true distributed edits by users are the conflict cause, since applications habitually contain a field &quot;LastEditedBy&quot; with @UserName as formula - a lesson to be learned when designing distributed apps: update only what is really necessary</li> 
- <li><b>Merge/No Conflicts</b> ($ConflictAction = &quot;3&quot;)<br /> Same as above: if different fields have been altered, then they are merged. If the same fields were altered the loser document is silently discarded. One could argue: why not merge at least the different fields. But that would create rather a data mess</li> 
- <li><b>No Conflicts</b> ($ConflictAction = &quot;2&quot;)<br /> The radical solution: the winner takes it all, the loser disappears and nobody will ever know. I haven't seen a good use case for that, but the world is big</li> 
-</ul> So what to do about them? First you need to have clarity: They are called &quot;Replication and 
-<b>Save</b>&quot; conflicts. So they can also happen on the same server. Some pointers how to prevent them: 
+ <li><b>Create conflicts</b> (no $ConflictAction item)<br> The "loser" document is converted into a response document of the winner document and an item $Conflict is created. The conflicts are shown in in views unless excluded by view selection formula (<code>&amp; !@isAvailable($Conflict)</code>). Conflict resolution is manual (an agent you write is considered manual too) </li> 
+ <li><b>Merge conflicts</b> ($ConflictAction = "1")<br> If a document has been edited concurrently but different field have been altered, then they are merged into the one document and no conflict is created. If the same fields are altered a conflict is still generated.<br> Sounds good? In practise I often see this fail, when true distributed edits by users are the conflict cause, since applications habitually contain a field "LastEditedBy" with @UserName as formula - a lesson to be learned when designing distributed apps: update only what is really necessary</li> 
+ <li><b>Merge/No Conflicts</b> ($ConflictAction = "3")<br> Same as above: if different fields have been altered, then they are merged. If the same fields were altered the loser document is silently discarded. One could argue: why not merge at least the different fields. But that would create rather a data mess</li> 
+ <li><b>No Conflicts</b> ($ConflictAction = "2")<br> The radical solution: the winner takes it all, the loser disappears and nobody will ever know. I haven't seen a good use case for that, but the world is big</li> 
+</ul> So what to do about them? First you need to have clarity: They are called "Replication and 
+<b>Save</b>" conflicts. So they can also happen on the same server. Some pointers how to prevent them: 
 <ul> 
  <li>Using <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/index.jsp?topic=/com.ibm.notes.help.doc/DOC/H_LOCKING_YOUR_DOCUMENTS_OVER.html">document locking</a> prevents them when edits happen on the same server</li> 
  <li>Also make sure, that you scheduled agent don't run on <a href="http://www-10.lotus.com/ldd/dominowiki.nsf/dx/02172008091426PMWEB4N3.htm">two servers concurrently</a></li> 
  <li>A nice rookie mistake is to use <code>NotesDocument.save(...)</code> in a querySave (or postSave without closing the form) event - Domino will (or has) saved the document, get out of its way</li> 
- <li>Recheck your application flow: Can you limit the current allowed editor using <a href="/blog/d6plinks/SHWL-89PMVR">Author</a> fields/items? Quite often removing access in querySave combined with an agent altering access &quot;on documents changed&quot; makes a lot of sense</li> 
- <li>Check your forms: are there fields that are &quot;computed&quot; and changed by agents? You could/should set them to &quot;computed when composed&quot;</li> 
+ <li>Recheck your application flow: Can you limit the current allowed editor using <a href="/blog/d6plinks/SHWL-89PMVR">Author</a> fields/items? Quite often removing access in querySave combined with an agent altering access "on documents changed" makes a lot of sense</li> 
+ <li>Check your forms: are there fields that are "computed" and changed by agents? You could/should set them to "computed when composed"</li> 
  <li>Avoid <code>NotesDocument.computeWithForm(..)</code> in agents unless you are sure it isn't the source of your conflict</li> 
  <li>If your business logic mandates that you have multiple concurrent edits, consider to implement the <a href="/blog/d6plinks/shwl-78e34m">inversion of logging</a> pattern (with XPages you can make that real snappy)</li> 
  <li>last not least: replicate more often or consider to cluster your servers</li> 
@@ -204,8 +204,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/a336fd0a8b2f9a39ca09a49739fd677a.jpg?s=88" class="gravatarimg" />
-							posted by <b>Dragon Cotterill</b> on <i>Wednesday 02 January 2013 AD - 22:37 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/a336fd0a8b2f9a39ca09a49739fd677a.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Dragon Cotterill</b> on <i>Wednesday 02 January 2013 AD - 22:37 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   The Grammar Nazi in me is screaming; &quot;It's 'loser' not 'looser'&quot;. The Notes Dev in me is yelling; &quot;Yeah, I know that. So what?&quot;. The Blogger is me is shouting; &quot;Nice Article&quot;.
@@ -213,8 +213,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Wednesday 02 January 2013 AD - 23:15 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Wednesday 02 January 2013 AD - 23:15 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   @Dragon: for the grammar Nazi: wrong party, the spelling Nazi would have been needed 
@@ -224,8 +224,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/a336fd0a8b2f9a39ca09a49739fd677a.jpg?s=88" class="gravatarimg" />
-							posted by <b>Dragon Cotterill</b> on <i>Thursday 03 January 2013 AD - 00:39 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/a336fd0a8b2f9a39ca09a49739fd677a.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Dragon Cotterill</b> on <i>Thursday 03 January 2013 AD - 00:39 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Thanks Stephan. The Grammar Nazi is back in his box. The Spelling Nazi has headed off elsewhere muttering about &quot;your, you're, and yaw&quot;. The Notes Dev needs to take his finger off the lift call button and the Blogger is currently digging through the old blog articles trying to find the one which has a special form for handling conflicts by showing all the differences between the original and conflict and allows the user to select which fields to keep before eventually deleting the conflict.
@@ -233,8 +233,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/81b4aef957f4942c31d01a68f758e0cb.jpg?s=88" class="gravatarimg" />
-							posted by <b>Glen Urban</b> on <i>Thursday 03 January 2013 AD - 03:31 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/81b4aef957f4942c31d01a68f758e0cb.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Glen Urban</b> on <i>Thursday 03 January 2013 AD - 03:31 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   I've seen a lot of applications where edit history fields e.g.&quot;Jon Smith last updated on 1 Jan 2013&quot; have caused conflicts. If two users edit the same document on different replicas then there's going to be a conflict, even if they edited different fields and merge conflicts is turned on. 
@@ -244,8 +244,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/7dd15da2bc16dba12e07a6430940ab11.jpg?s=88" class="gravatarimg" />
-							posted by <b>Patrick Kwinten</b> on <i>Thursday 24 January 2013 AD - 15:36 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/7dd15da2bc16dba12e07a6430940ab11.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Patrick Kwinten</b> on <i>Thursday 24 January 2013 AD - 15:36 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   thanks for explaining. 
@@ -255,8 +255,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/c8d29ab2d53f00e0689810544d7cc214.jpg?s=88" class="gravatarimg" />
-							posted by <b>Norbert Goeth</b> on <i>Monday 24 June 2013 AD - 21:46 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/c8d29ab2d53f00e0689810544d7cc214.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Norbert Goeth</b> on <i>Monday 24 June 2013 AD - 21:46 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Profile documents have set automatically the radical solution with $ConflictAction=&quot;2&quot;. 
@@ -296,7 +296,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -327,7 +327,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

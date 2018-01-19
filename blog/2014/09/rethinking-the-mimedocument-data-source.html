@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -148,9 +148,9 @@ ga('send', 'pageview');
 <a href="https://www.linkedin.com/profile/view?id=16014400">Jesse</a> had the idea to store 
 <a href="https://frostillic.us/f.nsf/posts/an-extended-document-data-source-to-support-mimebeans">beans in Mime documents</a>, which became an 
 <a href="http://openntf.org/main.nsf/project.xsp?r=project/mimeDominoDocument%20Data%20Source/summary">OpenNTF project</a>. 
-<br /> I love that idea and was musing how to make it more &quot;domino like&quot;. In its binary format, a serialized bean can't be used for showing view data, nor can one be sure that it can be transported or deserialized other than through the same class version as the creator (this is why 
+<br> I love that idea and was musing how to make it more "domino like". In its binary format, a serialized bean can't be used for showing view data, nor can one be sure that it can be transported or deserialized other than through the same class version as the creator (this is why 
 <code>Serialized</code> wants to have a serialid). 
-<br /> With a little extra work, that becomes actually quite easy: Enter 
+<br> With a little extra work, that becomes actually quite easy: Enter 
 <a href="http://www.vogella.com/tutorials/JAXB/article.html">JAXB</a>. Serializing a bean to XML (I hear howling from the JSON camp) allows for a number of interesting options: 
 <ul> 
  <li>The MIME data generated in the document becomes human readable</li> 
@@ -159,7 +159,7 @@ ga('send', 'pageview');
  <li>Since XML is text, full text search will capture the content</li> 
  <li>Using a stylesheet a fully human readable version can be stored with the original MIME (good to eMail)</li> 
 </ul> I haven't sorted out the details, but lets look at some of the building blocks. Who ever has seen me demo XPages will recognize the fruit class. The difference here: I added the XML annotations for a successful serialization: 
-<br /> 
+<br> 
 <pre class="brush: java">
 package test;
 
@@ -169,16 +169,16 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name = &quot;Fruit&quot;, namespace = &quot;http://www.notessensei.com/fruits&quot;)
+@XmlRootElement(name = "Fruit", namespace = "http://www.notessensei.com/fruits")
 @XmlAccessorType(XmlAccessType.NONE)
 public class Fruit {
-    @XmlAttribute(name = &quot;name&quot;)
+    @XmlAttribute(name = "name")
     private String  name;
-    @XmlElement(name = &quot;color&quot;)
+    @XmlElement(name = "color")
     private String  color;
-    @XmlElement(name = &quot;taste&quot;)
+    @XmlElement(name = "taste")
     private String  taste;
-    @XmlAttribute(name = &quot;smell&quot;)
+    @XmlAttribute(name = "smell")
     private String  smell;
     
     public String getSmell() {
@@ -225,8 +225,8 @@ public class Fruit {
     }
 }
 </pre> 
-<br /> The function (probably in a manager class or instance) to turn that into a Document is quite short. The serialization of JAXB would allow to directly serialize it into a Stream or String, but we need the XML Document step to be able to apply the XPath. 
-<br /> 
+<br> The function (probably in a manager class or instance) to turn that into a Document is quite short. The serialization of JAXB would allow to directly serialize it into a Stream or String, but we need the XML Document step to be able to apply the XPath. 
+<br> 
 <pre class="brush: java">
 public org.w3c.dom.Document getDocument(Fruit fruit) throws ParserConfigurationException, JAXBException {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -239,20 +239,20 @@ public org.w3c.dom.Document getDocument(Fruit fruit) throws ParserConfigurationE
 		return doc;
 	}
 </pre> 
-<br /> The little catch here: There is a Document in the 
+<br> The little catch here: There is a Document in the 
 <code>lotus.domino</code> package as well as in the 
 <code>org.w3c.dom</code> package. You need to take care not to confuse the two. Saving it into a document including the style sheet (to make it pretty) is short too. The function provides the stylesheet as a w3c Document and the list of fields to extract as a key (the field) - value (the XPath) map. Something like this: 
-<br /><pre class="brush: java">
+<br><pre class="brush: java">
        public boolean saveFruitXmlToDocument(lotus.domino.Session session s, lotus.domino.Document d, org.w3c.dom.Document xDoc, org.w3c.dom.Document style) {
-		public static final MIME_FIELD_NAME = &quot;Body&quot;;
+		public static final MIME_FIELD_NAME = "Body";
 		boolean success = true;
         Map&lt;String,String&gt; defs = new HashMap&lt;String,String&gt;();
         //These are specific to the fruit class, should be read from a source
-        defs.add(&quot;Subject&quot;, &quot;/fruit:Fruit/@name&quot;);
-        defs.add(&quot;Taste&quot;, &quot;/fruit:Fruit/taste&quot;);
-        defs.add(&quot;Color&quot;, &quot;/fruit:Fruit/color&quot;);
-        defs.add(&quot;Attributes&quot;, &quot;/fruit:Fruit/@*&quot;);
-        defs.add(&quot;Summary&quot;, &quot;/fruit:Fruit&quot;);
+        defs.add("Subject", "/fruit:Fruit/@name");
+        defs.add("Taste", "/fruit:Fruit/taste");
+        defs.add("Color", "/fruit:Fruit/color");
+        defs.add("Attributes", "/fruit:Fruit/@*");
+        defs.add("Summary", "/fruit:Fruit");
         
         try {
 			boolean oldMime = session.isConvertMime();
@@ -265,28 +265,28 @@ public org.w3c.dom.Document getDocument(Fruit fruit) throws ParserConfigurationE
 			
 			// Create the top mime entry
 			MIMEEntity root = d.createMIMEEntity(MIME_FIELD_NAME);
-			MIMEHeader header = root.createHeader(&quot;Content-Type&quot;);
-            header.setHeaderVal(&quot;multipart/mixed&quot;);
+			MIMEHeader header = root.createHeader("Content-Type");
+            header.setHeaderVal("multipart/mixed");
 			
 			MIMEEntity body = root.createChildEntity();
-			MIMEHeader bheader = body.createHeader(&quot;Content-Type&quot;);
-			bheader.setHeaderVal(&quot;multipart/alternative&quot;);
+			MIMEHeader bheader = body.createHeader("Content-Type");
+			bheader.setHeaderVal("multipart/alternative");
 
 			MIMEEntity textMime = body.createChildEntity();
-			MIMEHeader textHeader = textMime.createHeader(&quot;Content-Type&quot;);
-			String cType = (this.style == null) ? &quot;text/plain&quot; : &quot;text/html&quot;;
+			MIMEHeader textHeader = textMime.createHeader("Content-Type");
+			String cType = (this.style == null) ? "text/plain" : "text/html";
 			textHeader.setHeaderVal(cType);
 			Stream stream2 = session.createStream();
 			stream2.write(this.dom2Byte(xDoc, style));
-			textMime.setContentFromBytes(stream2, cType + &quot;; charset=\&quot;UTF-8\&quot;&quot;,
+			textMime.setContentFromBytes(stream2, cType + "; charset=\"UTF-8\"",
 					MIMEEntity.ENC_NONE);
 
 	         MIMEEntity xmlMime = body.createChildEntity();
-	            MIMEHeader xmlHeader = xmlMime.createHeader(&quot;Content-Type&quot;);
-	            xmlHeader.setHeaderVal(&quot;application/xml&quot;);	            
+	            MIMEHeader xmlHeader = xmlMime.createHeader("Content-Type");
+	            xmlHeader.setHeaderVal("application/xml");	            
 	            Stream stream = session.createStream();
 	            stream.write(this.dom2Byte(xDoc,null));
-	            xmlMime.setContentFromBytes(stream, &quot;application/xml; charset=\&quot;UTF-8\&quot;&quot;, MIMEEntity.ENC_NONE);
+	            xmlMime.setContentFromBytes(stream, "application/xml; charset=\"UTF-8\"", MIMEEntity.ENC_NONE);
 
 			// Now extract the fields
 			for (Map.Entry&lt;String,String&gt; e : this.definitions) {
@@ -327,7 +327,7 @@ public org.w3c.dom.Document getDocument(Fruit fruit) throws ParserConfigurationE
                result.add(curNode.getNodeValue());
 			}
         } catch (XPathExpressionException e) {
-            System.err.println(&quot;XPATH failed for &quot; + xPathString);
+            System.err.println("XPATH failed for " + xPathString);
         }        
        return result;
    }
@@ -351,7 +351,7 @@ public org.w3c.dom.Document getDocument(Fruit fruit) throws ParserConfigurationE
             }
 
             // We don't want the XML declaration in front
-            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, &quot;yes&quot;);
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
          
             transformer.transform(source, xResult);
 
@@ -362,8 +362,8 @@ public org.w3c.dom.Document getDocument(Fruit fruit) throws ParserConfigurationE
         return out.toByteArray();
     }    
 </pre> 
-<br /> The final missing ingredient is the MagicNamespace: 
-<br /> 
+<br> The final missing ingredient is the MagicNamespace: 
+<br> 
 <pre class="brush: java">
 package test;
 
@@ -387,10 +387,10 @@ public class MagicNamespaceContext implements NamespaceContext {
         this.addNamespace(XMLConstants.XMLNS_ATTRIBUTE, XMLConstants.XMLNS_ATTRIBUTE_NS_URI);
 
         // We make d / dxl namespaces for Domino/DXL
-        this.addNamespace(&quot;&quot;, &quot;http://www.lotus.com/dxl&quot;);
-        this.addNamespace(&quot;d&quot;, &quot;http://www.lotus.com/dxl&quot;);
-        this.addNamespace(&quot;dxl&quot;, &quot;http://www.lotus.com/dxl&quot;);
-        this.addNamespace(&quot;fruit&quot;, &quot;http://www.notessensei.com/fruits&quot;);
+        this.addNamespace("", "http://www.lotus.com/dxl");
+        this.addNamespace("d", "http://www.lotus.com/dxl");
+        this.addNamespace("dxl", "http://www.lotus.com/dxl");
+        this.addNamespace("fruit", "http://www.notessensei.com/fruits");
     }
 
     /**
@@ -442,8 +442,8 @@ public class MagicNamespaceContext implements NamespaceContext {
     }
 }
 </pre> 
-<br /> and of course a test: 
-<br /> 
+<br> and of course a test: 
+<br> 
 <pre class="brush: java">
 package test;
 
@@ -461,14 +461,14 @@ public class InitialTest {
     public static void main(String[] args) throws NotesException {
         NotesThread.sinitThread();
         Session s = NotesFactory.createSession();
-        System.out.println(&quot;\n\n ************* Test starting ******************\n\n&quot;);
+        System.out.println("\n\n ************* Test starting ******************\n\n");
         InitialTest t = new InitialTest(s);
         t.createDoc();
-        System.out.println(&quot;\n\n ****************** Test done ********************\n\n&quot;);
+        System.out.println("\n\n ****************** Test done ********************\n\n");
         NotesThread.stermThread();
     }
     
-    private static final String dbName = &quot;XMLDocuments.nsf&quot;;
+    private static final String dbName = "XMLDocuments.nsf";
     private final Session s;
     
     public InitialTest(Session s) {
@@ -476,9 +476,9 @@ public class InitialTest {
     }
     
     public void createDoc() throws NotesException {
-        org.w3c.dom.Document style = DomHelper.INSTANCE.file2Dom(&quot;fruit.xsl&quot;);
+        org.w3c.dom.Document style = DomHelper.INSTANCE.file2Dom("fruit.xsl");
         Database db = s.getDatabase(null, dbName);
-        Fruit f = new Fruit(&quot;Apple&quot;,&quot;Green&quot;,&quot;Sweet&quot;,&quot;Really nice&quot;);
+        Fruit f = new Fruit("Apple","Green","Sweet","Really nice");
         Document d = db.createDocument();
         org.w3c.dom.Document xDoc = getDocument(f);
         saveFruitXmlToDocument(s, d, xDoc, style);
@@ -487,7 +487,7 @@ public class InitialTest {
     }
 }
 </pre> 
-<br /> Still work in progress, but you get the idea.</div>
+<br> Still work in progress, but you get the idea.</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -515,8 +515,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/4d2086493cd1864f13fb8fee35b090a9.jpg?s=88" class="gravatarimg" />
-							posted by <b>Sean Cull</b> on <i>Tuesday 01 September 2015 AD - 19:12 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/4d2086493cd1864f13fb8fee35b090a9.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Sean Cull</b> on <i>Tuesday 01 September 2015 AD - 19:12 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Hello Stephan, 
@@ -528,8 +528,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 01 September 2015 AD - 21:30 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 01 September 2015 AD - 21:30 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Almost. What went into production was &quot;Take 2&quot; of this approach. Details here: { 
@@ -566,7 +566,7 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -597,7 +597,7 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

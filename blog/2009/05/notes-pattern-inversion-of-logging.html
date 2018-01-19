@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -152,21 +152,21 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Notes pattern : Inversion of logging</small></h1>
 					<hr />
-					<div>A typical requirement in applications is to keep a log of changes. The simplest form is to keep fields with the author and date/time of the latest change (which has the distinct disadvantage not knowing what has been changed by whom). The next level would be to keep the list of all authors and change times (still leaving the question &quot; 
+					<div>A typical requirement in applications is to keep a log of changes. The simplest form is to keep fields with the author and date/time of the latest change (which has the distinct disadvantage not knowing what has been changed by whom). The next level would be to keep the list of all authors and change times (still leaving the question " 
 <i>what</i> unanswered) followed by very sophisticated tools like 
 <a href="http://www.openntf.org/Projects/pmt.nsf/ProjectLookup/Audit%20Manager">Audit Manager</a> or similar home grown solutions. 
-<br /> All these solutions have in common, that they &quot;merely&quot; record changes made (typically in a query or post save event) 
+<br> All these solutions have in common, that they "merely" record changes made (typically in a query or post save event) 
 <b>after</b> they happened (From a big picture perspective, a log on query-save is technically before, but after the trigger that will commit the change). While this works reasonable well for audit, adding another typical requirement calls for a different solution. More often than not the parts of a (workflow) document which can be altered by any given user change in the course of an [workflow] application. While Author fields protect a document at large, safeguarding individual fields becomes more tedious, especially when you can't group them in access controlled sections (e.g. in a web application). 
-<br /> In a related use case: documents could be updated by users, who have current information, but don't &quot;own&quot; the documents. Typically they send an email to the document owner (if that is visible) asking for the update of that information. Asking somebody to update data into some other system, that involves copy &amp; paste from an eMail *is* a sign of a broken process. The solution to that seemingly contrary requirements: &quot;update of certain fields&quot; only and &quot;update by anybody&quot; can be solved using a pattern that I christianed &quot; 
-<b>Inversion of Logging</b>&quot;: 
-<br /> Instead of logging what has changed an application using this pattern creates a change request, stating what 
+<br> In a related use case: documents could be updated by users, who have current information, but don't "own" the documents. Typically they send an email to the document owner (if that is visible) asking for the update of that information. Asking somebody to update data into some other system, that involves copy &amp; paste from an eMail *is* a sign of a broken process. The solution to that seemingly contrary requirements: "update of certain fields" only and "update by anybody" can be solved using a pattern that I christianed " 
+<b>Inversion of Logging</b>": 
+<br> Instead of logging what has changed an application using this pattern creates a change request, stating what 
 <b>will</b> be changed. This request is then processed by a central system and checked against system constraints. If an authorized user requests a change, the changes are applied without further user interaction. The change request is kept as record. If an unauthorized user requests a change a workflow is kicked of to determine if the request is suitable for approval to be then routed to the data owner (or data guardian) for approval. Once approved the changes are applied to the main document. 
-<br /> 
-<img src="/blog/images/2009/InversionOfLoggingFlowChart.gif" alt="Flow of Inversion of Logging" /> 
-<br /> To make this internal flow transparent and pleasant to the users a few considerations need to be made:<ul> 
+<br> 
+<img src="/blog/images/2009/InversionOfLoggingFlowChart.gif" alt="Flow of Inversion of Logging"> 
+<br> To make this internal flow transparent and pleasant to the users a few considerations need to be made:<ul> 
  <li>Default Access to Database is Author, but documents don't contain Author fields. So users can create new documents, but can't edit existing documents.</li> 
  <li>You need to handle QueryOpen (mode=edit) and QueryModeChange events (from read to edit) in Notes clients as well as ?EditDocument in web applications. Ideally to a user it <b>looks like</b> going into edit mode, so the inner workings of the solution stay transparent.</li> 
- <li>You need a mail-in database (Default access=Depositor) to collect the change requests. If the interval of the &quot;if new mail arrives&quot; agent is too long for you, you might consider an XPage and a @URLOpen agent as faster trigger option (more on that in another post)</li> 
+ <li>You need a mail-in database (Default access=Depositor) to collect the change requests. If the interval of the "if new mail arrives" agent is too long for you, you might consider an XPage and a @URLOpen agent as faster trigger option (more on that in another post)</li> 
  <li>You need to have a rule book for what fields can be updated in which application by whom based on what document status. This sounds awfully like business process engineering and as a matter of fact: it is.</li> 
  <li>You need to make a call how do you want to handle pending changes. For one you probably want to display a hint on the form. That costs you one @DBLookup (which should be bearable). You could also include the pending changes into the working copy of the document. The interesting question here: how to handle the flow if such a pending change is rejected. Or - if you base the working copy on the existing document, what if the changes requested match a pending change request (e.g. waiting for approval) and would get auto-approval. So you need to plan for a potential resequencing.</li> 
  <li>Don't resort to email as the default notification mechanism. Rather add a record to a notification application (using a web service for that seems like an excellent idea) where a user could define how (s)he wants to be notified and what eventual notification exceptions (e.g. delegation of authority) exist.</li> 
@@ -174,7 +174,7 @@ ga('send', 'pageview');
  <li>Plan your archive well. You can keep the current archive in a profile in the change request database and switch based on calendar, size or number of entries</li> 
  <li>The change request database should have a short deletion stub lifecycle (default is 30 days, cut it to 5) since you create and delete a lot of documents during the course of the application. You could consider to delete/recreate that database during a time-out period (or use 2 different database names based on the day of week, so you can recreate savely on alternate days.</li> 
  <li>Make sure that in a multi-server environment the apply-changes agent is running only on one server. Make sure to plan for agent fail-over in a cluster environment.</li> 
- <li>Provide an easy UI for data integrity checks. I don't think an automatic check would be needed in most of the cases. It might be smart to record the archive databases in the main document, so lookups will be faster. However you want to have an &quot;Auditor&quot; function that does a deep check. Eventually you would send a request to a mail-in database, so the UI isn't blocked while a lot of archives get queried.</li> 
+ <li>Provide an easy UI for data integrity checks. I don't think an automatic check would be needed in most of the cases. It might be smart to record the archive databases in the main document, so lookups will be faster. However you want to have an "Auditor" function that does a deep check. Eventually you would send a request to a mail-in database, so the UI isn't blocked while a lot of archives get queried.</li> 
 </ul> As usual YMMV.</div>
 					<hr />
 					<p>
@@ -203,8 +203,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/07b6641fb4796d85d6357b7bfd47ebbb.jpg?s=88" class="gravatarimg" />
-							posted by <b>Patrick Picard</b> on <i>Monday 04 May 2009 AD - 00:13 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/07b6641fb4796d85d6357b7bfd47ebbb.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Patrick Picard</b> on <i>Monday 04 May 2009 AD - 00:13 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Very interesting concept. As a non-notes programmer, i'd love to see this in action. Do you have a sample db implementing this pattern?
@@ -212,8 +212,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/3cd04ed374ebaa5190c930f955b8dcc7.jpg?s=88" class="gravatarimg" />
-							posted by <b>Ian Randall</b> on <i>Monday 04 May 2009 AD - 07:42 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/3cd04ed374ebaa5190c930f955b8dcc7.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Ian Randall</b> on <i>Monday 04 May 2009 AD - 07:42 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Thanks for posting this, it helps to share techniques and practical experience with workflows with the community. To add to your comments, we also provide the option of a Document Change Request (DCR)workflow in our application that includes a document management system, although there are some differences to the model that you have described: 
@@ -247,8 +247,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Monday 04 May 2009 AD - 14:44 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Monday 04 May 2009 AD - 14:44 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   @Patrick - code samples coming somewhen. The pattern itself isn''t limited to Notes or Domino. Actually SAP is using that for their configuration and data management too. 
@@ -258,8 +258,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/3cd04ed374ebaa5190c930f955b8dcc7.jpg?s=88" class="gravatarimg" />
-							posted by <b>Ian Randall</b> on <i>Monday 04 May 2009 AD - 15:42 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/3cd04ed374ebaa5190c930f955b8dcc7.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Ian Randall</b> on <i>Monday 04 May 2009 AD - 15:42 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Stephan, 
@@ -277,8 +277,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Monday 04 May 2009 AD - 21:24 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Monday 04 May 2009 AD - 21:24 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   @Ian: having a change log is the *classical* way of doing things. Nothing is wrong with that and tons of applications work well that way. And it seems that your requirement (e.g. Only one pending change at a time) is well covered by your approach. It is just not the *inversion of logging* pattern in use. I'm also not saying that the pattern is the only way or best way. The pattern however has a few distinct advantages: 
@@ -294,8 +294,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/63b2cd78827470ac6441d98097fca53e.jpg?s=88" class="gravatarimg" />
-							posted by <b>Marie Scott</b> on <i>Tuesday 05 May 2009 AD - 06:43 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/63b2cd78827470ac6441d98097fca53e.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Marie Scott</b> on <i>Tuesday 05 May 2009 AD - 06:43 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Thanks for posting this concept. A quick question - what do you use to create diagrams? They are always so clear and concise! Even an end user could understand this one! 
@@ -304,8 +304,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/3cd04ed374ebaa5190c930f955b8dcc7.jpg?s=88" class="gravatarimg" />
-							posted by <b>Ian Randall</b> on <i>Tuesday 05 May 2009 AD - 09:34 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/3cd04ed374ebaa5190c930f955b8dcc7.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Ian Randall</b> on <i>Tuesday 05 May 2009 AD - 09:34 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   I guess we are talking totally different revision control paradigms. 
@@ -319,8 +319,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/37a6259cc0c1dae299a7866489dff0bd.jpg?s=88" class="gravatarimg" />
-							posted by <b>Erik Brooks</b> on <i>Thursday 07 May 2009 AD - 10:10 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/37a6259cc0c1dae299a7866489dff0bd.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Erik Brooks</b> on <i>Thursday 07 May 2009 AD - 10:10 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   &quot;if new mail arrives&quot; agent is too long for you, you might consider an XPage and a @URLOpen agent as faster trigger option (more on that in another post)&quot; 
@@ -330,8 +330,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/0a8947a1d1ddb778ed7b7db1a3f85fa1.jpg?s=88" class="gravatarimg" />
-							posted by <b>James Fricker</b> on <i>Friday 15 February 2013 AD - 09:03 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/0a8947a1d1ddb778ed7b7db1a3f85fa1.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>James Fricker</b> on <i>Friday 15 February 2013 AD - 09:03 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   [QUOTE]You need a mail-in database (Default access=Depositor) to collect the change requests.[/QUOTE] 
@@ -345,8 +345,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Monday 25 February 2013 AD - 11:12 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Monday 25 February 2013 AD - 11:12 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   @James: time to upgrade your experience. Depositor access means: I can add a document, but I can't see or alter any documents in there. In a processing queue the whole point is to prevent anybody but the queue engine to change submitted entries. Also nobody should see what other entries (with potentially sensitive data, they don't have access to in the orginating database) have been submitted. You could start fiddling with Reader fields, but that adds an unneccesary complexity when Depositor is the perfect access level. 
@@ -358,8 +358,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/0a8947a1d1ddb778ed7b7db1a3f85fa1.jpg?s=88" class="gravatarimg" />
-							posted by <b>James Fricker</b> on <i>Tuesday 14 May 2013 AD - 09:00 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/0a8947a1d1ddb778ed7b7db1a3f85fa1.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>James Fricker</b> on <i>Tuesday 14 May 2013 AD - 09:00 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   @Stephan: If the mail-in receives the updates by email then the default access should be no-access. The mail.box needs depositor as the Notes client writes to it directly when sending mail. The only thing that writes to a mail-in db is the router, so the default access does not need to be any higher than no-access.
@@ -367,8 +367,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 14 May 2013 AD - 09:50 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 14 May 2013 AD - 09:50 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   @James: if it is a pure mail-in db services by the router only you are right. In a mixed model where change requests are directly written into the database by the local instance, the recommended Depositor is what you need - that's what I had in mind.
@@ -404,7 +404,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -435,7 +435,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

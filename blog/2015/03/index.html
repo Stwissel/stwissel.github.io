@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -153,10 +153,10 @@ ga('send', 'pageview');
 <a href="/blog/d6plinks/SHWL-9NJLY6">storing XML documents</a> as MIME entries in Notes - while preserving some of the fields for use in views and the Notes client. 
 <a href="https://twitter.com/gidgerby">Jesse</a> suggested I should have a look at 
 <a href="http://www.javacodegeeks.com/2014/11/java-annotations-tutorial.html">annotations</a>. Turns out, it is easier that it sound. To create an annotation that works at runtime, I need a one liner only: 
-<br /> 
+<br> 
 <code>@Retention(RetentionPolicy.RUNTIME) public @interface ItemPathMappings { String[] value(); }</code> 
-<br /> To further improve usefulness, I created a &quot;BaseConfiguration&quot; my classes will inherit from, that contains the common properties I want all my classes (and documents) to have. You might want to adjust it to your needs: 
-<br /> 
+<br> To further improve usefulness, I created a "BaseConfiguration" my classes will inherit from, that contains the common properties I want all my classes (and documents) to have. You might want to adjust it to your needs: 
+<br> 
 <pre class="brush : java">
 ackage com.notessensei.domino;
 import java.io.Serializable;
@@ -168,11 +168,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * Common methods implemented by all classes to be Dominoserialized
  */
-@XmlRootElement(name = &quot;BaseConfiguration&quot;)
+@XmlRootElement(name = "BaseConfiguration")
 @XmlAccessorType(XmlAccessType.NONE)
 public abstract class BaseConfiguration implements Serializable, Comparable&lt;BaseConfiguration&gt; {
     private static final long serialVersionUID = 1L;
-    @XmlAttribute(name = &quot;name&quot;)
+    @XmlAttribute(name = "name")
     protected String          name;
 
     public int compareTo(BaseConfiguration bc) {
@@ -194,7 +194,7 @@ public abstract class BaseConfiguration implements Serializable, Comparable&lt;B
     }
 }
 </pre> 
-<br /> The next building block is my Serializer support with a couple of static methods, that make dealing with XML and JSON easier. 
+<br> The next building block is my Serializer support with a couple of static methods, that make dealing with XML and JSON easier. 
 <pre class="brush : java">
 package com.notessensei.domino;
 import java.io.ByteArrayInputStream;
@@ -266,7 +266,7 @@ public class Serializer {
         return doc;
     }
 
-    @SuppressWarnings(&quot;rawtypes&quot;)
+    @SuppressWarnings("rawtypes")
     public static Object fromByte(byte[] source, Class targetClass) throws JAXBException {
         ByteArrayInputStream in = new ByteArrayInputStream(source);
         JAXBContext context = JAXBContext.newInstance(targetClass);
@@ -275,9 +275,9 @@ public class Serializer {
     }
 }
 </pre> 
-<br /> The key piece is for the XML serialization/deserialization to work is the abstract class 
+<br> The key piece is for the XML serialization/deserialization to work is the abstract class 
 <code>AbstractXmlDocument</code>. That class contains the load and save methods that interact with Domino's MIME capabilities as well as executing the XPath expressions to store the Notes fields. The implementations of this abstract class will have annotations that combine the Notes field name, the type and the XPath expression. An implementation would look like this: 
-<br /> 
+<br> 
 <pre class="brush : java">
 package com.notessensei.domino.xmldocument;
 import javax.xml.bind.JAXBException;
@@ -290,22 +290,22 @@ import com.notessensei.domino.Serializer;
 import com.notessensei.domino.xmldocument.AbstractXmlDocument.ItemPathMappings;
 
 // The ItemPathMappings are application specific!
-@ItemPathMappings({ &quot;Subject|Text|/Application/@name&quot;,
-					&quot;Description|Text|/Application/description&quot;,
-					&quot;Unid|Text|/Application/@unid&quot;,
-					&quot;Audience|Text|/Application/Audiences/Audience&quot;,
-					&quot;NumberOfViews|Number|count(/Application/Views/View)&quot;,
-					&quot;NumberOfForms|Number|count(/Application/Forms/Form)&quot;,
-					&quot;NumberOfColumns|Number|count(/Application/Views/View/columns/column)&quot;,
-					&quot;NumberOfFields|Number|count(/Application/Forms/Form/fields/field)&quot;,
-					&quot;NumberOfActions|Number|count(//action)&quot; })
+@ItemPathMappings({ "Subject|Text|/Application/@name",
+					"Description|Text|/Application/description",
+					"Unid|Text|/Application/@unid",
+					"Audience|Text|/Application/Audiences/Audience",
+					"NumberOfViews|Number|count(/Application/Views/View)",
+					"NumberOfForms|Number|count(/Application/Forms/Form)",
+					"NumberOfColumns|Number|count(/Application/Views/View/columns/column)",
+					"NumberOfFields|Number|count(/Application/Forms/Form/fields/field)",
+					"NumberOfActions|Number|count(//action)" })
 public class ApplicationXmlDocument extends AbstractXmlDocument {
 
     public ApplicationXmlDocument(String formName) {
         super(formName);
     }
 
-    @SuppressWarnings(&quot;unchecked&quot;)
+    @SuppressWarnings("unchecked")
     @Override
     public ApplicationConfiguration load(Session session, Document d) {
 
@@ -323,7 +323,7 @@ public class ApplicationXmlDocument extends AbstractXmlDocument {
         return result;
     }
 
-    @SuppressWarnings(&quot;unchecked&quot;)
+    @SuppressWarnings("unchecked")
     @Override
     public ApplicationConfiguration load(Session session, Database db, String unid) {
         Document doc;
@@ -343,7 +343,7 @@ public class ApplicationXmlDocument extends AbstractXmlDocument {
     }
 }
 </pre> 
-<br /></div>
+<br></div>
 					<hr />
  <a href="/blog/2015/03/xpages-xml-document-datasource-take-2.html">Read more</a>
 					<p>
@@ -374,9 +374,9 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 <h3>develop local, deploy (Bluemix) global</h3> The task at hand is to develop a Java 
 <a href="https://developer.ibm.com/wasdev/blog/2013/03/29/introducing_the_liberty_profile/">Liberty</a> based application, that uses CouchDB/Cloudant as its NoSQL data store. I want to be able to develop/test the application while being completely 
 <a href="http://offlinefirst.org/">offline</a> and deploy it to Bluemix. I don't want any code to have conditions offline/online, but rather use configuration of the runtimes for it. 
-<br /> Luckily I have access to 
+<br> Luckily I have access to 
 <a href="https://twitter.com/Sai_Vennam">really smart developers</a> (thx Sai), so I succeeded. 
-<br /> This is what I found out, I needed to do. The list serves as reference for myself and others living in a latency/bandwidth challenged environment. 
+<br> This is what I found out, I needed to do. The list serves as reference for myself and others living in a latency/bandwidth challenged environment. 
 <ol> 
  <li><b>Read</b>: There are a number of articles around, that contain bits and pieces of the information required. In no specific order: 
   <ul> 
@@ -403,8 +403,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
    <li>Replication between your local CouchDB instance and the Cloudant server database (if you want to keep the data in sync)</li> 
   </ul> </li> 
 </ol> The flow of the data access looks like this 
-<br /> 
-<img src="/blog/images/2015/BlueMixLocal.jpg" border="0" alt="Develop local, deploy global" /></div>
+<br> 
+<img src="/blog/images/2015/BlueMixLocal.jpg" border="0" alt="Develop local, deploy global"></div>
 					<hr />
  <a href="/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html">Read more</a>
 					<p>
@@ -570,7 +570,7 @@ categories:  <a href="/blog/categories/CouchDB.html">CouchDB</a>  <a href="/blog
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -601,7 +601,7 @@ categories:  <a href="/blog/categories/CouchDB.html">CouchDB</a>  <a href="/blog
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

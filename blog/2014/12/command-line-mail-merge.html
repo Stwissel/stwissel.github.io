@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -166,7 +166,7 @@ ga('send', 'pageview');
  <li>a file with a Text message including {{mustache}} tags</li> 
  <li>The senders eMail</li> 
 </ol>There isn't much error handling in that code, so be careful. 
-<br /> 
+<br> 
 <pre class="brush : java">
 package com.notessensei;
 
@@ -202,7 +202,7 @@ public class MergeManager implements Serializable {
         // We need 4 parameters: nsfToUse, addresses, html message, text message
         // eMail field in addresses MUST be eMail
         if (args.length &lt; 5) {
-            System.out.println(&quot;Usage: java MergeManager maifile.nsf, addresses.csv, htmlmessage.txt, textmessage.txt sender&quot;);
+            System.out.println("Usage: java MergeManager maifile.nsf, addresses.csv, htmlmessage.txt, textmessage.txt sender");
             System.exit(1);
         }
 
@@ -215,18 +215,18 @@ public class MergeManager implements Serializable {
         MergeManager mergeManager = new MergeManager();
 
         // Load the content into the objects
-        mergeManager.setRawAddresses(new Scanner(new File(adrfilename)).useDelimiter(&quot;\\Z&quot;).next());
-        mergeManager.setHtmlMessage(new Scanner(new File(htmlfilename)).useDelimiter(&quot;\\Z&quot;).next());
-        mergeManager.setTextMessage(new Scanner(new File(txtfilename)).useDelimiter(&quot;\\Z&quot;).next());
+        mergeManager.setRawAddresses(new Scanner(new File(adrfilename)).useDelimiter("\\Z").next());
+        mergeManager.setHtmlMessage(new Scanner(new File(htmlfilename)).useDelimiter("\\Z").next());
+        mergeManager.setTextMessage(new Scanner(new File(txtfilename)).useDelimiter("\\Z").next());
         mergeManager.setFrom(sender);
         
         // Spin up Notes
         NotesThread.sinitThread();
         Session s = NotesFactory.createSession();
-        Database userMail = s.getDatabase(&quot;&quot;, dbName);
+        Database userMail = s.getDatabase("", dbName);
         // Set mailbox to null if you only want to generate the mails
         // but not send them
-        Database mailbox = s.getDatabase(&quot;&quot;, &quot;mail.box&quot;);
+        Database mailbox = s.getDatabase("", "mail.box");
 
         mergeManager.process(s, userMail, mailbox);
 
@@ -244,7 +244,7 @@ public class MergeManager implements Serializable {
     private final Map&lt;String, Map&lt;String, String&gt;&gt; rcpData          = new TreeMap&lt;String, Map&lt;String, String&gt;&gt;();
     private String                                 htmlMessage;
     private String                                 textMessage;
-    private String                                 eMailField       = &quot;eMail&quot;;
+    private String                                 eMailField       = "eMail";
     private final ArrayList&lt;String&gt;                fields           = new ArrayList&lt;String&gt;();
     private final MustacheFactory                  factory          = new DefaultMustacheFactory();
 
@@ -254,7 +254,7 @@ public class MergeManager implements Serializable {
         Map&lt;String, String&gt; oneLine = new HashMap&lt;String, String&gt;();
         String key = raw; // Backup pla
         try {
-            String[] dataItems = raw.split(&quot;,&quot;);
+            String[] dataItems = raw.split(",");
             for (int i = 0; i &lt; dataItems.length; i++) {
                 oneLine.put(fields.get(i), dataItems[i]);
                 if (fields.get(i).equalsIgnoreCase(this.eMailField)) {
@@ -270,7 +270,7 @@ public class MergeManager implements Serializable {
     }
 
     private void getFields(ArrayList&lt;String&gt; list, String raw) {
-        String[] fieldNames = raw.split(&quot;,&quot;);
+        String[] fieldNames = raw.split(",");
         list.clear();
         for (int i = 0; i &lt; fieldNames.length; i++) {
             list.add(fieldNames[i]);
@@ -285,43 +285,43 @@ public class MergeManager implements Serializable {
     private void populateMail(Session s, Document mail, String htmlBody, String textBody, String receipient) throws NotesException {
         s.setConvertMime(false);
 
-        final MIMEEntity emailRoot = mail.createMIMEEntity(&quot;Body&quot;);
+        final MIMEEntity emailRoot = mail.createMIMEEntity("Body");
 
         // Primary Header
         String fromSender = this.from;
-        MIMEHeader emailHeader = emailRoot.createHeader(&quot;Return-Path&quot;);
+        MIMEHeader emailHeader = emailRoot.createHeader("Return-Path");
         emailHeader.setHeaderVal(fromSender);
-        emailHeader = emailRoot.createHeader(&quot;From&quot;);
+        emailHeader = emailRoot.createHeader("From");
         emailHeader.setHeaderVal(fromSender);
-        emailHeader = emailRoot.createHeader(&quot;Sender&quot;);
+        emailHeader = emailRoot.createHeader("Sender");
         emailHeader.setHeaderVal(fromSender);
 
-        emailHeader = emailRoot.createHeader(&quot;Recipients&quot;);
+        emailHeader = emailRoot.createHeader("Recipients");
         emailHeader.setHeaderVal(receipient);
 
-        emailHeader = emailRoot.createHeader(&quot;To&quot;);
+        emailHeader = emailRoot.createHeader("To");
         emailHeader.setHeaderVal(receipient);
 
-        emailHeader = emailRoot.createHeader(&quot;Subject&quot;);
+        emailHeader = emailRoot.createHeader("Subject");
         emailHeader.setHeaderVal(this.subject);
 
         // Text and HTML Body
         MIMEEntity emailRootChild = emailRoot.createChildEntity();
-        final String boundary = System.currentTimeMillis() + &quot;-&quot; + String.valueOf(this.hashCode());
-        emailHeader = emailRootChild.createHeader(&quot;Content-Type&quot;);
-        emailHeader.setHeaderVal(&quot;multipart/alternative; boundary=\&quot;&quot; + boundary + &quot;\&quot;&quot;);
+        final String boundary = System.currentTimeMillis() + "-" + String.valueOf(this.hashCode());
+        emailHeader = emailRootChild.createHeader("Content-Type");
+        emailHeader.setHeaderVal("multipart/alternative; boundary=\"" + boundary + "\"");
 
         MIMEEntity emailChild = emailRootChild.createChildEntity();
 
         Stream stream = s.createStream();
         stream.writeText(textBody);
-        emailChild.setContentFromText(stream, &quot;text/plain; charset=\&quot;UTF-8\&quot;&quot;, MIMEEntity.ENC_NONE);
+        emailChild.setContentFromText(stream, "text/plain; charset=\"UTF-8\"", MIMEEntity.ENC_NONE);
         stream.close();
 
         emailChild = emailRootChild.createChildEntity();
         stream = s.createStream();
         stream.writeText(htmlBody);
-        emailChild.setContentFromText(stream, &quot;text/html; charset=\&quot;UTF-8\&quot;&quot;, MIMEEntity.ENC_NONE);
+        emailChild.setContentFromText(stream, "text/html; charset=\"UTF-8\"", MIMEEntity.ENC_NONE);
         stream.close();
         stream.recycle();
         stream = null;
@@ -329,8 +329,8 @@ public class MergeManager implements Serializable {
     }
 
     public void process(Session s, Database database, Database mailbox) {
-        Mustache mHTML = this.factory.compile(new StringReader(this.htmlMessage), &quot;eMailHTML&quot;);
-        Mustache mText = this.factory.compile(new StringReader(this.textMessage), &quot;eMailPlain&quot;);
+        Mustache mHTML = this.factory.compile(new StringReader(this.htmlMessage), "eMailHTML");
+        Mustache mText = this.factory.compile(new StringReader(this.textMessage), "eMailPlain");
         for (Map&lt;String, String&gt; oneRecord : this.rcpData.values()) {
             this.sendOneMessage(s, database, mailbox, mHTML, mText, oneRecord);
         }
@@ -350,7 +350,7 @@ public class MergeManager implements Serializable {
                 this.addOneDataLine(this.rcpData, this.fields, scanner.nextLine());
             }
         }
-        this.statusMessages.append(String.format(&quot;%x Records loaded and ready\n&quot;, this.rcpData.size()));
+        this.statusMessages.append(String.format("%x Records loaded and ready\n", this.rcpData.size()));
         try {
             in.close();
         } catch (IOException e) {
@@ -369,19 +369,19 @@ public class MergeManager implements Serializable {
         try {
             Document mail = database.createDocument();
             String rcpt = oneRecord.get(this.eMailField);
-            mail.replaceItemValue(&quot;Form&quot;, &quot;Memo&quot;);
+            mail.replaceItemValue("Form", "Memo");
             this.populateMail(s, mail, htmlBody.toString(), textBody.toString(), rcpt);
             mail.save();
             if (mailbox != null) {
                 mail.copyToDatabase(mailbox);
             }
             mail.recycle();
-            this.statusMessages.append(&quot;Mail send to &quot;);
+            this.statusMessages.append("Mail send to ");
             this.statusMessages.append(rcpt);
-            this.statusMessages.append(&quot;\n&quot;);
+            this.statusMessages.append("\n");
         } catch (Exception &lt;e) {
             this.statusMessages.append(e.getMessage());
-            this.statusMessages.append(&quot;\n&quot;);
+            this.statusMessages.append("\n");
         }
     }
 
@@ -413,7 +413,7 @@ public class MergeManager implements Serializable {
     }
 }
 </pre> 
-<br /> As usual YMMV</div>
+<br> As usual YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -441,8 +441,8 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 30 December 2014 AD - 02:43 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 30 December 2014 AD - 02:43 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   <p>Of course nobody would manually call the command line (**we wouldn't**). However in a batch file that might come handy.</p>
@@ -478,7 +478,7 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -509,7 +509,7 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

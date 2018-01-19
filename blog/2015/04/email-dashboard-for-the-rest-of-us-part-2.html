@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -171,72 +171,72 @@ ga('send', 'pageview');
  <li>People involved come in Notes addresses, groups and internet addresses, they need to be dealt with</li> 
 </ul> Since I have 
 <a href="http://en.wiktionary.org/wiki/if_all_you_have_is_a_hammer,_everything_looks_like_a_nail">more than a hammer</a>, I can split the data retrieval into different tooling. Dealing with names vs. groups is something best done with LDAP code or lookups into an address book. So I leave that to Java later on. Also running a counter when reading individual entries works quite well in Java. 
-<br /> Everything else, short of the icons for the people, can be supplied by a classis Notes view (your knowledge of formula language finally pays off).To make this really fast, two things need to be taken care of: 
+<br> Everything else, short of the icons for the people, can be supplied by a classis Notes view (your knowledge of formula language finally pays off).To make this really fast, two things need to be taken care of: 
 <ol> 
  <li>All information needed has to be in the view, so a <code>ViewNavigator</code> is sufficient in providing the data. ViewNavigators are fast</li> 
  <li>The view should only contain relevant data: in my example 14 days. Now the tempation would be big to use @Today in the view selection formula - which is a bad idea for performance. I will use a static value, that is replaced by Java code on an as-needed basis</li> 
 </ol> So here we go. My view called 
 <code>($DashboardProvider)</code> consists of one view selection formula and 5 columns: 
-<br /> 
+<br> 
 <h4>View Selection Formula</h4> 
 <pre class="brush : text">
-ExcludedForms := &quot;Group&quot;:&quot;Mailrule&quot;:&quot;Person&quot;:&quot;(GroupCalendar)&quot;:&quot;STMeeting&quot;:
-                 &quot;Personal Stationery&quot;:&quot;NonDelivery Report&quot;:&quot;eProductivityShadowEmail&quot;;
+ExcludedForms := "Group":"Mailrule":"Person":"(GroupCalendar)":"STMeeting":
+                 "Personal Stationery":"NonDelivery Report":"eProductivityShadowEmail";
 StartDay := 20150328;
 EndDay   := 20150413;
-FullDate := @If(FollowUpDate != &quot;&quot;; @Date(FollowUpDate);
-                CalendarDateTime!=&quot;&quot;;CalendarDateTime;
-                DeliveredDate != &quot;&quot;; DeliveredDate;
-                PostedDate != &quot;&quot;; PostedDate; @Created);
+FullDate := @If(FollowUpDate != ""; @Date(FollowUpDate);
+                CalendarDateTime!="";CalendarDateTime;
+                DeliveredDate != ""; DeliveredDate;
+                PostedDate != ""; PostedDate; @Created);
 EntryDate := @Year(FullDate)*10000+@Month(FullDate)*100+@Day(FullDate);
 SELECT @IsNotMember(Form;ExcludedForms)
        &amp; !@IsAvailable($Conflict)
        &amp; (EntryDate &gt; StartDay)
        &amp; (EntryDate &lt; EndDay)
 </pre> 
-<br /> One little catch here: repeating entries and multi-day events carry all date values, so this needs to be taken care of in the Java class 
+<br> One little catch here: repeating entries and multi-day events carry all date values, so this needs to be taken care of in the Java class 
 <h4>Column 1: Date as number (categorized)</h4> 
 <pre class="brush : text">
-FullDate := @If(FollowUpDate != &quot;&quot;; @Date(FollowUpDate);
-                CalendarDateTime!=&quot;&quot;;CalendarDateTime;
-                DeliveredDate != &quot;&quot;; DeliveredDate;
-                PostedDate != &quot;&quot;; PostedDate;
+FullDate := @If(FollowUpDate != ""; @Date(FollowUpDate);
+                CalendarDateTime!="";CalendarDateTime;
+                DeliveredDate != ""; DeliveredDate;
+                PostedDate != ""; PostedDate;
                 @Created);
 @Year(FullDate)*10000+@Month(FullDate)*100+@Day(FullDate)
 </pre> 
 <h4>Column 2: The form (almost)</h4> 
 <pre class="brush : text">
-@If(FollowUpDate != &quot;&quot;;
-    @If(From=@UserName;&quot;FollowupWaiting&quot;;
-        &quot;FollowupAction&quot;);
+@If(FollowUpDate != "";
+    @If(From=@UserName;"FollowupWaiting";
+        "FollowupAction");
     Form)
 </pre> 
 <h4>Column 3: The person</h4> 
 <pre class="brush : text">
 eMailNames := @If(From=@UserName;SendTo;From);
 allNames   := @If(@IsAvailable(Chair);Chair;eMailNames);
-candidates := @Name([Abbreviate];@Trim(@Unique(@Replace(allNames;@UserName;&quot;&quot;))));
-result     := &quot;&quot;;
+candidates := @Name([Abbreviate];@Trim(@Unique(@Replace(allNames;@UserName;""))));
+result     := "";
 elements   := @Elements(candidates)+1;
 @For(x := 1; x&lt; elements; x :=x+1;
-      tmp := @Explode(candidates[x];&quot;@&quot;);
+      tmp := @Explode(candidates[x];"@");
       result := @Trim(result:
-                      @If((@Elements(tmp)&gt;1) &amp; @Contains(@Subset(tmp;-1);&quot;.&quot;);
+                      @If((@Elements(tmp)&gt;1) &amp; @Contains(@Subset(tmp;-1);".");
                            candidates[x];
                            @Subset(tmp;1)))
 );
-@If(result=&quot;&quot;;@Name([Abbreviate];@UserName);result)
+@If(result="";@Name([Abbreviate];@UserName);result)
 </pre> 
 <h4>Column 4: Start time (mostly needed for calendar)</h4> 
 <pre class="brush : text">
-@If(@IsAvailable(StartDateTime);@Time(StartDateTime);&quot;&quot;)
+@If(@IsAvailable(StartDateTime);@Time(StartDateTime);"")
 </pre> 
 <h4>Column 5: the subject</h4> 
 <pre class="brush : text">
 Subject
 </pre> 
-<br /> Using this view, all information that will form the data for the email dashbaord can be retrieved easily. The next task at hand, for the next installment: build a Java implementation that checks the view, the selection formula and implements our interfaces defined in the first article. 
-<br /> Stay tuned!</div>
+<br> Using this view, all information that will form the data for the email dashbaord can be retrieved easily. The next task at hand, for the next installment: build a Java implementation that checks the view, the selection formula and implements our interfaces defined in the first article. 
+<br> Stay tuned!</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -264,8 +264,8 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>  <a href="/
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/d4d8ad795bdaa2d6113003d7091d7594.jpg?s=88" class="gravatarimg" />
-							posted by <b>Eric Mack</b> on <i>Monday 13 April 2015 AD - 10:22 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/d4d8ad795bdaa2d6113003d7091d7594.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Eric Mack</b> on <i>Monday 13 April 2015 AD - 10:22 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Nice overview Stephan. Good to see that you continue to think and develop outside of the box. 
@@ -308,7 +308,7 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>  <a href="/
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -339,7 +339,7 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>  <a href="/
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

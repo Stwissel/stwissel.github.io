@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -148,11 +148,11 @@ ga('send', 'pageview');
 <a href="http://jamesshore.com/Articles/Business/Software%20Profitability%20Newsletter/Design%20Debt.html">more of this</a>. A better way to separate concerns is to remove RDBMS connections from your code and let the server handle that. In Domino you can use 
 <a href="http://www.ibm.com/developerworks/lotus/documentation/decs/">DECS</a> (Domino Enterprise Connection Service) and 
 <a href="http://www.ibm.com/lotus/lei">LEI</a> (Lotus Enterprise Integrator) for that. DECS comes with Notes since some R5 version, LEI is happily sold to you by your local IBM sales rep. I will focus on DECS for this post. 
-<br /> The typical DECS use is to define a data connection (tip use OLEDB not ODBC to connect to MS-SQL), a data-form mapping and import the primary keys. In the data form mapping (a.k.a Activity in DECS terminology) you set what events you want to monitor: create, read, update, delete. Typically works like a charm. Any data that is updated on the RDBMS is automatically pulled into the Notes form when opened. The biggest drawback: DECS doesn't monitor record creation or deletion on the RDBMS side (that is what besides other capabilities LEI is made for). So DECS seems to be confined to cases where creation/deletion is limited to a Domino side activity. Also DECS can't trigger stored procedures. With a little creativity however you can push the use of DECS far beyond that. I'll describe some use cases I came across where DECS was used to avoid mixing Domino and RDBMS code in a function or an agent: 
+<br> The typical DECS use is to define a data connection (tip use OLEDB not ODBC to connect to MS-SQL), a data-form mapping and import the primary keys. In the data form mapping (a.k.a Activity in DECS terminology) you set what events you want to monitor: create, read, update, delete. Typically works like a charm. Any data that is updated on the RDBMS is automatically pulled into the Notes form when opened. The biggest drawback: DECS doesn't monitor record creation or deletion on the RDBMS side (that is what besides other capabilities LEI is made for). So DECS seems to be confined to cases where creation/deletion is limited to a Domino side activity. Also DECS can't trigger stored procedures. With a little creativity however you can push the use of DECS far beyond that. I'll describe some use cases I came across where DECS was used to avoid mixing Domino and RDBMS code in a function or an agent: 
 <ul> 
  <li>Employee information is stored in a RDBMS as part of the HRMS. The employee ID is populated into the Domino Directory (yes it has a field for that). In an Notes application data is needed from the RDBMS. Instead of writing LCLSX code the application simply looks up the empPara document that is linked to the RDBMS using DECS. The document might not exist yet (if the user never had used that application before). If it does not exist it is created and populated just with the EmpID. When closed and reopened it will pull the employee information from the RDBMS. This is possible since the DECS task only monitors read/update. A scheduled agent removes documents when there is no more match in the Domino directory. In summary: if you can anticipate or know the primary key of a record you need, you can use DECS by not monitoring creation/deletion.</li> 
  <li>Based on a workflow stored procedures in a Oracle database need to be triggered. Here some work both on the RDBMS and the Domino side was done, clearly separating both. An auxiliary table was created in Oracle with an INSERT trigger, that would execute the stored procedure using parameters given in that table and write back the success of the operation. Initially it was planned to purge the table regularly (using a Domino agent deleting the documents) but then audit loved the additional documentation, so just archival was established. During the project there were a lot of changes on both ends, however the approach of using a trigger driven table proved to be very efficient to separate the two environments minimizing interference. E.g. one stored procedure would generate a unique identifier according to some obscure, constantly changing rule. By storing that result into the aux table and creating (after reading the document linked to that table) a corresponding Notes document (again create was not monitored in that scenario) application flow was seamless.</li> 
- <li>Enterprise parameter management <b>[Updated]</b> was created in a RDBMS application. Many Domino applications would need to use these parameters. Instead of having LotusScript code in every application doing RDBMS lookups DECS was used to populate and update a parameter NSF. In the activity the option &quot;leave values in documents&quot; was selected, so fast selections (like @DBColumn or NotesView.getColumnValues) would work. Since parameter changes happened rarely a copy of the populate keys agent from the DECSAdm database was created that would periodically shut down the activity for the parameter NSF (only the activity not the whole DECS server), pull the keys from the RDBMS based on the activity definition but only insert new keys (the original agent duplicates keys when you run it twice). Lastly it restarts the activities in DECS. </li> 
+ <li>Enterprise parameter management <b>[Updated]</b> was created in a RDBMS application. Many Domino applications would need to use these parameters. Instead of having LotusScript code in every application doing RDBMS lookups DECS was used to populate and update a parameter NSF. In the activity the option "leave values in documents" was selected, so fast selections (like @DBColumn or NotesView.getColumnValues) would work. Since parameter changes happened rarely a copy of the populate keys agent from the DECSAdm database was created that would periodically shut down the activity for the parameter NSF (only the activity not the whole DECS server), pull the keys from the RDBMS based on the activity definition but only insert new keys (the original agent duplicates keys when you run it twice). Lastly it restarts the activities in DECS. </li> 
 </ul> You of course can rightfully ask: why shouldn't I just use some LCLX code to connect. It isn't much more trouble. The answer is short: DECS allows separation of concern. Your Domino developers deal with what they know best: Domino. You retain the interface (and interfaces are the pieces that can make and brake an upgrade of any system) configurable 
 <b>outside</b> of your own code. The whole UI for configuring and mapping has been tried and tested for years and you can open a PMR (the IBM lingo for: bug report) against it for IBM to deal with problems. You can't do that with your own code. DECS also deals with format translation and relives you from the temptation to write inefficient SQL, last not least DECS taking care of connections and connection pooling.</div>
 					<hr />
@@ -182,8 +182,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/bae388754db81376d44b4efd70e4366d.jpg?s=88" class="gravatarimg" />
-							posted by <b>David Leedy</b> on <i>Saturday 22 November 2008 AD - 18:57 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/bae388754db81376d44b4efd70e4366d.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>David Leedy</b> on <i>Saturday 22 November 2008 AD - 18:57 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Doesn't DECS have a limitation where the backend data needs to be on the same box as the Domino Server?? We run most of our servers on an iSeries. But our business applications and data are on different iSeries. I thought that if I set up DECS I couldn't pull data from the foreign iSeries... 
@@ -195,8 +195,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Saturday 22 November 2008 AD - 22:57 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Saturday 22 November 2008 AD - 22:57 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   @David: Nope. DECS doesn't need data parity. DECS only will be able to pull data it &quot;knows&quot; about, means: where a document with the primary key of that table exists. By not monitoring the creation events you can add missing keys. 
@@ -207,8 +207,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/abe4dc369e169f942c5ad00dc362c255.jpg?s=88" class="gravatarimg" />
-							posted by <b>Gerry Shappell</b> on <i>Saturday 22 November 2008 AD - 23:25 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/abe4dc369e169f942c5ad00dc362c255.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Gerry Shappell</b> on <i>Saturday 22 November 2008 AD - 23:25 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Just to affirm, you dont need your data to reside on the same server. In fact, I have connected to a db2 file on a AIX box through a subnet from a wintel netfinity. Depending on OS's you made need to create connections/accts that will give you access to that other box and file. Also, the argument for DECS and LSX will really vary by application. With some apps, I found it easier to use LSX to pull back the data that I needed for a web application...other times DECS was the answer. Lots of factors to take into acct, the experience of your developers, the traffic of your application, application availability(some backup solutions require DECS to be shut down during backup), web vs notes ui, etc...
@@ -216,8 +216,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/74c991ff6cc962c59eab1b924c359789.jpg?s=88" class="gravatarimg" />
-							posted by <b>Slawek</b> on <i>Sunday 23 November 2008 AD - 21:02 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/74c991ff6cc962c59eab1b924c359789.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Slawek</b> on <i>Sunday 23 November 2008 AD - 21:02 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   I take it that by &quot;real live&quot; in the third sentence you mean data that people use in their interactions. 
@@ -229,8 +229,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Sunday 23 November 2008 AD - 23:39 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Sunday 23 November 2008 AD - 23:39 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   @Slawek: with &quot;real live&quot; I refer to tangible documents which predate IT and are still very much in use today. The Universal Business Language (UBL) is expressed as documents (XML in that case). An it it actually the other way around: Documents are the business artifact which we mentally split into tables and relations. A RDBMS is just one, ok - the most prevalent, way to serialize/persist documents. From a business perspective RDBMS are irrelevant, they are just the tool that helps to deliver the business functionality (I'm ending on the RDBMS developers' most hated list for that). For every example why RDBMS are needed and their related SQLs you can produce an XPath or XQuery statement with equivalent functionality. 
@@ -241,8 +241,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/74c991ff6cc962c59eab1b924c359789.jpg?s=88" class="gravatarimg" />
-							posted by <b>Slawek</b> on <i>Monday 24 November 2008 AD - 01:25 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/74c991ff6cc962c59eab1b924c359789.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Slawek</b> on <i>Monday 24 November 2008 AD - 01:25 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   Documents certainly capture the communication (flow of information) necessary to carry on a business. They are also used to summarize and embellish the data that is the life blood of the machinery of business. 
@@ -256,8 +256,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/cf488db4ae55646d595c982059f0bc46.jpg?s=88" class="gravatarimg" />
-							posted by <b>Charles Robinson</b> on <i>Tuesday 25 November 2008 AD - 23:28 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/cf488db4ae55646d595c982059f0bc46.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Charles Robinson</b> on <i>Tuesday 25 November 2008 AD - 23:28 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   My problem with DECS was always the initialization of keys. The ERP database I work with doesn't use primary keys (or indexes for that matter) and it can take upwards of a dozen fields to establish record uniqueness. This makes any work with this database extremely difficult. 
@@ -298,7 +298,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -329,7 +329,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

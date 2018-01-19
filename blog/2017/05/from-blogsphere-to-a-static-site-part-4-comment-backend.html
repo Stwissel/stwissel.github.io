@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -170,8 +170,8 @@ ga('send', 'pageview');
 /**
  * Wink implementation of Comment service
  */
-@Workspace(workspaceTitle = &quot;Blog Comments&quot;, collectionTitle = &quot;Create or display comments&quot;)
-@Path(value = &quot;/comments&quot;)
+@Workspace(workspaceTitle = "Blog Comments", collectionTitle = "Create or display comments")
+@Path(value = "/comments")
 @Produces(MediaType.TEXT_HTML)
 @Consumes(MediaType.APPLICATION_JSON)
 public class CommentService extends CommentResponse {
@@ -180,8 +180,8 @@ public class CommentService extends CommentResponse {
 
     @POST
     public Response createComment(@Context HttpServletRequest request) {
-        final Monitor mon = MonitorFactory.start(&quot;CommentService#createComment&quot;);
-        String result = &quot;Sorry I can't process your comment at this time&quot;;
+        final Monitor mon = MonitorFactory.start("CommentService#createComment");
+        String result = "Sorry I can't process your comment at this time";
         ResponseBuilder builder = Response.ok();
 
         try {
@@ -199,7 +199,7 @@ public class CommentService extends CommentResponse {
 
         } catch (Exception e) {
             String errorMessage = e.getMessage();
-            builder.entity((((errorMessage == null) || errorMessage.equals(&quot;&quot;)) ? &quot;Undefined error&quot; : errorMessage)).type(
+            builder.entity((((errorMessage == null) || errorMessage.equals("")) ? "Undefined error" : errorMessage)).type(
                     MediaType.TEXT_HTML_TYPE);
             Utils.logError(this.logger, e);
         }
@@ -209,25 +209,25 @@ public class CommentService extends CommentResponse {
     }
 
     @GET
-    public Response getComments(@QueryParam(&quot;parentid&quot;) final String parentid) {
+    public Response getComments(@QueryParam("parentid") final String parentid) {
         Response response = null;
-        final Monitor mon = MonitorFactory.start(&quot;CommentService#getComments&quot;);
+        final Monitor mon = MonitorFactory.start("CommentService#getComments");
         final ResponseBuilder builder = Response.ok();
         final Collection&lt;BlogComment&gt; bc = CommentManager.INSTANCE.loadComments(parentid);
 
         if ((bc == null) || bc.isEmpty()) {
             builder.status(Status.NO_CONTENT);
         } else {
-            response = this.renderOutput(bc, &quot;comment.mustache&quot;);
+            response = this.renderOutput(bc, "comment.mustache");
         }
         mon.stop();
         return (response == null) ? builder.build() : response;
     }
 
     private void captureSubmissionDetails(HttpServletRequest request, BlogComment comment) {
-        final Monitor mon = MonitorFactory.start(&quot;CommentService#captureSubmissionDetails&quot;);
+        final Monitor mon = MonitorFactory.start("CommentService#captureSubmissionDetails");
         try {
-            @SuppressWarnings(&quot;rawtypes&quot;)
+            @SuppressWarnings("rawtypes")
             Enumeration hn = request.getHeaderNames();
             if (hn != null) {
                 while (hn.hasMoreElements()) {
@@ -235,7 +235,7 @@ public class CommentService extends CommentResponse {
                     comment.addParameter(key, request.getHeader(key));
                 }
             }
-            @SuppressWarnings(&quot;rawtypes&quot;)
+            @SuppressWarnings("rawtypes")
             Enumeration pn = request.getParameterNames();
             if (pn != null) {
                 while (pn.hasMoreElements()) {
@@ -243,15 +243,15 @@ public class CommentService extends CommentResponse {
                     String[] values = request.getParameterValues(key);
                     comment.addParameters(key, values);
 
-                    if (key.equals(&quot;referer&quot;)) {
+                    if (key.equals("referer")) {
                         comment.setReferer(values[0]);
-                    } else if (key.equals(&quot;user-agent&quot;)) {
+                    } else if (key.equals("user-agent")) {
                         comment.setUserAgent(values[0]);
                     }
 
                 }
             }
-            @SuppressWarnings(&quot;rawtypes&quot;)
+            @SuppressWarnings("rawtypes")
             Enumeration an = request.getAttributeNames();
             if (an != null) {
                 while (an.hasMoreElements()) {
@@ -263,9 +263,9 @@ public class CommentService extends CommentResponse {
                     }
                 }
             }
-            comment.addParameter(&quot;REMOTE_HOST&quot;, request.getRemoteHost());
-            comment.addParameter(&quot;REMOTE_ADDR&quot;, request.getRemoteAddr());
-            comment.addParameter(&quot;REMOTE_USER&quot;, request.getRemoteUser());
+            comment.addParameter("REMOTE_HOST", request.getRemoteHost());
+            comment.addParameter("REMOTE_ADDR", request.getRemoteAddr());
+            comment.addParameter("REMOTE_USER", request.getRemoteUser());
 
             // Needed for Captcha
             comment.setRemoteAddress(request.getRemoteAddr());
@@ -285,17 +285,17 @@ public class CommentService extends CommentResponse {
 
         @Override
         public Collection&lt;BlogComment&gt; load(String parentId) throws CommentException {
-            Monitor mon = MonitorFactory.start(&quot;CommentManager#CommentLoader#load&quot;);
+            Monitor mon = MonitorFactory.start("CommentManager#CommentLoader#load");
             CouchDbConnector db;
             List&lt;BlogComment&gt; result = null;
 
             try {
                 db = CommentManager.this.getDB();
-                ViewQuery query = new ViewQuery().designDocId(&quot;_design/comments&quot;).viewName(&quot;byParentId&quot;).key(parentId);
+                ViewQuery query = new ViewQuery().designDocId("_design/comments").viewName("byParentId").key(parentId);
                 result = db.queryView(query, BlogComment.class);
             } catch (MalformedURLException e) {
                 Utils.logError(this.logger, e);
-                throw new CommentException(&quot;Comment retrieval failed&quot;, e);
+                throw new CommentException("Comment retrieval failed", e);
             }
 
             if (result != null) {
@@ -361,10 +361,10 @@ public Collection&lt;BlogComment&gt; loadComments(final String parentId) {
 <pre class="brush: java">
 public String getGravatarURL() {
 
-        if ((this.gravatarURL == null) || this.gravatarURL.trim().equals(&quot;&quot;)) {
+        if ((this.gravatarURL == null) || this.gravatarURL.trim().equals("")) {
             if (this.eMail != null) {
                 String emailHash = DigestUtils.md5Hex(this.eMail.toLowerCase().trim());
-                this.setGravatarURL(GRAVATAR_URL + emailHash + &quot;.jpg?s=&quot; + GRAVATAR_SIZE);
+                this.setGravatarURL(GRAVATAR_URL + emailHash + ".jpg?s=" + GRAVATAR_SIZE);
             }
         }
 
@@ -421,8 +421,8 @@ categories:  <a href="/blog/categories/Blog.html">Blog</a>
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/cafb0f8c988a2712fbe49c28a9ffc74b.jpg?s=88" class="gravatarimg" />
-							posted by <b>Torben Bang</b> on <i>Monday 12 June 2017 AD - 14:28 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/cafb0f8c988a2712fbe49c28a9ffc74b.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Torben Bang</b> on <i>Monday 12 June 2017 AD - 14:28 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   <p>Nice work Stephan. Are you still planning to post the source on github? Thank you</p>
@@ -430,8 +430,8 @@ categories:  <a href="/blog/categories/Blog.html">Blog</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 13 June 2017 AD - 10:28 Singapore Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 13 June 2017 AD - 10:28 Korea Standard Time</i>:<br /> <html>
  <head></head>
  <body>
   <p>@Torben: yes there will be some GIT repositories. Current working theory: One each for renderer, comment backend and comment front-end. Super busy right now, so it might take some time.</p>
@@ -467,7 +467,7 @@ categories:  <a href="/blog/categories/Blog.html">Blog</a>
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -498,7 +498,7 @@ categories:  <a href="/blog/categories/Blog.html">Blog</a>
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"

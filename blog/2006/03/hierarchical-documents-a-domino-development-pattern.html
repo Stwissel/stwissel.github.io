@@ -42,15 +42,15 @@ ga('send', 'pageview');
 <meta name="xing:author"
 	content="https://www.xing.com/profile/StephanH_Wissel" />
 
-<link rel="stylesheet" type="text/css" href="/blog/css/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shThemeMidnight.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/blogcodedisplay.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/shariff.complete.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -145,27 +145,27 @@ ga('send', 'pageview');
 					<h1><small>Hierarchical documents - a Domino development pattern</small></h1>
 					<hr />
 					<div>Notes provides us with a build in hierarchy for documents. You have documents, responses and responses to responses. This looks like sufficient to cover most hierarchical requirements. Nevertheless it often is not the right fit. For example: would you consider the head of a department a main document and her staff response documents? Rather not. Especially moving a response document around (when you switch departments) is a pain in the neck. Enter the Hierarchical document pattern. I will describe the principle, you can adopt it to your specific needs. 
-<br /> 
-<br />Step1: Compute your document ID. Use a field 
+<br> 
+<br>Step1: Compute your document ID. Use a field 
 <b>DocID</b> and the formula @Text(@DocumentUniqueId). The field can be computed when composed or computed. If you opt for computed when composed you need to take care of the Copy &amp; Paste operations (Take care does not mean: suppress it, life is hard enough for your users). 
-<br /> 
-<br />Step 2: Create a field 
-<b>Parent[xxx]ID</b>. Replace the [xxx] with the logical relationship e.g. ParentManagerID, ParentRequestID, ParentDocID. You can have as many as you want (thus a difference to the mono-inheritance of the build-in hierarchy. You need to populate this fields according to your business logic. If you only have ParentDocID you could put it above the DocID, switch on &quot;Inherit values&quot; in the form and use DocID as formula for a computed when composed field. If you have multiple fields your mileage might vary. 
-<br /> 
-<br />Step 3: Since it is often necessary to get values up the hierarchy we create additional fields. E.g. you have an appraisal form (HR stuff), where you want that your manager, your dotted-line manager and their bosses and their bosses bosses can read how 
+<br> 
+<br>Step 2: Create a field 
+<b>Parent[xxx]ID</b>. Replace the [xxx] with the logical relationship e.g. ParentManagerID, ParentRequestID, ParentDocID. You can have as many as you want (thus a difference to the mono-inheritance of the build-in hierarchy. You need to populate this fields according to your business logic. If you only have ParentDocID you could put it above the DocID, switch on "Inherit values" in the form and use DocID as formula for a computed when composed field. If you have multiple fields your mileage might vary. 
+<br> 
+<br>Step 3: Since it is often necessary to get values up the hierarchy we create additional fields. E.g. you have an appraisal form (HR stuff), where you want that your manager, your dotted-line manager and their bosses and their bosses bosses can read how 
 <strike>
   miserable you felt 
 </strike> much you appreciated the ever changing challenges. There you have two options: pull the values on the fly when saving the document using some lengthy script code - or store the values directly in the document. You need to consider: does my hierarchy change often (every minute) or rather rarely (twice a month). Our approach fits well for the later. 
-<br />For every Parent[xxx]ID field you create one field 
-<b>Parent[xxx]IDtree</b>. This field will have the following formula (adjust as needed) @if(ParentDocID=&quot;&quot;;DocID;@GetDocField(ParentDocID;&quot;ParentDocIDtree&quot;):DocID). Some error handling needs to be added and the field needs to be multi-value of course. Now you have all DocIDs of the tree above the document in one field. This comes VERY handy in a view, when you want to get all documents that &quot;hang below&quot; a specific one regardless of depth of the hierarchy. It also allows (but we might avoid it) that you loop through the various document using @GetDocField to pull values. 
-<br /> 
-<br />Step 4: Extend the pattern. Besides storing the IDs you could store also normal fields like Manager or Subject in a redundant hierarchical fashion (data normalizers will shoot me for that &quot;high-performance&quot; approach. Typical examples: Show me all my managers, show me the project structure etc. Instead of pulling the values at view time using a @For loop and @Getdocfield for a computed for display field, we use computed fields: 
-<br />e.g. SubjectDocTree, FullNameManagerTree, CompletionDateProjectTree etc. The formula for the computed field would be similar to above: @if(ParentDocID=&quot;&quot;;Subject;@GetDocField(ParentDocID;&quot;SubjectDocTree&quot;):Subject), repeat this for all fields you need. 
-<br /> 
-<br />Why are we doing that this way? Very simple: @Fomulas perform typically faster than LotusScript code. Also the pattern is easily extendible. Need another hierarchy: just add the fields. The only caveat: when you change a value &quot;up in the tree&quot; you need to cascade down the branches to the leaves. However after having identified the documents (Step 2 and the matching view) a simple doc.computewithform will do, so you Script Code will be generic. 
-<br /> 
-<br />I know your next question: Where is the code? I'll post the LotusScript for the updates and a sample database on an upcoming Show-and-tell Thursday soon. 
-<br /></div>
+<br>For every Parent[xxx]ID field you create one field 
+<b>Parent[xxx]IDtree</b>. This field will have the following formula (adjust as needed) @if(ParentDocID="";DocID;@GetDocField(ParentDocID;"ParentDocIDtree"):DocID). Some error handling needs to be added and the field needs to be multi-value of course. Now you have all DocIDs of the tree above the document in one field. This comes VERY handy in a view, when you want to get all documents that "hang below" a specific one regardless of depth of the hierarchy. It also allows (but we might avoid it) that you loop through the various document using @GetDocField to pull values. 
+<br> 
+<br>Step 4: Extend the pattern. Besides storing the IDs you could store also normal fields like Manager or Subject in a redundant hierarchical fashion (data normalizers will shoot me for that "high-performance" approach. Typical examples: Show me all my managers, show me the project structure etc. Instead of pulling the values at view time using a @For loop and @Getdocfield for a computed for display field, we use computed fields: 
+<br>e.g. SubjectDocTree, FullNameManagerTree, CompletionDateProjectTree etc. The formula for the computed field would be similar to above: @if(ParentDocID="";Subject;@GetDocField(ParentDocID;"SubjectDocTree"):Subject), repeat this for all fields you need. 
+<br> 
+<br>Why are we doing that this way? Very simple: @Fomulas perform typically faster than LotusScript code. Also the pattern is easily extendible. Need another hierarchy: just add the fields. The only caveat: when you change a value "up in the tree" you need to cascade down the branches to the leaves. However after having identified the documents (Step 2 and the matching view) a simple doc.computewithform will do, so you Script Code will be generic. 
+<br> 
+<br>I know your next question: Where is the code? I'll post the LotusScript for the updates and a sample database on an upcoming Show-and-tell Thursday soon. 
+<br></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -224,7 +224,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as "Cloud Program Architect" for Salesforce. I'm based in Singapore.
+						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
@@ -255,7 +255,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 						capacity. In short, these are my words and this is my site, not
 						my current or former employers' - and don't even begin to think otherwise.</p>
 					<p>
-						<b>&copy; 2003 - 2017 Stephan H. Wissel - some rights reserved</b> as
+						<b>&copy; 2003 - 2018 Stephan H. Wissel - some rights reserved</b> as
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"
