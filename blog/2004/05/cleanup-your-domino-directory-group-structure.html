@@ -169,7 +169,7 @@ ga('send', 'pageview');
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 2004-05-17 10:56
 <span class="divider">|</span>
-<a href="/blog/2004/05/cleanup-your-domino-directory-group-structure.html#comments">Comments (6)</a>
+<a href="/blog/2004/05/cleanup-your-domino-directory-group-structure.html#comments">Comments (c)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a href="/blog/categories/IBM Notes.html">IBM Notes</a> 
 
@@ -192,7 +192,23 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 					<ol id="commentList">
 						<li>
 <img src="//www.gravatar.com/avatar/a3da111721f82e69e618644155fe1bf1.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Oswald</b> on <i>Monday 24 May 2004 AD - 17:26 Korea Standard Time</i>:<br /> <html>
+							posted by <b>Oswald</b> on <i>Monday 24 May 2004 AD - 08:26 Coordinated Universal Time</i>:<br /> hello, 
+  <br /> 
+  <br />The @For in step 2 is not working in Notes R5. Do you or does someone know how to format this without @For? 
+  <br /> 
+  <br />Thanks in advance
+							<hr style="clear : both" />
+						</li> 						<li>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Monday 24 May 2004 AD - 15:11 Coordinated Universal Time</i>:<br /> Hi Oswald, 
+  <br />neither @For nor [FailSilent] is working in R5. One of the reasons to upgrade. In R5 you have to resort to Lotus Script to achive similar results. 
+  <br />Hth 
+  <br /> 
+  <img src="/blog/images/emoticons/wink.gif" border="0" alt="Emoticon wink.gif" /> stw
+							<hr style="clear : both" />
+						</li> 						<li>
+<img src="//www.gravatar.com/avatar/a3da111721f82e69e618644155fe1bf1.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Oswald</b> on <i>Monday 24 May 2004 AD - 17:26 Coordinated Universal Time</i>:<br /> <html>
  <head></head>
  <body>
   hello, 
@@ -205,7 +221,7 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 							<hr style="clear : both" />
 						</li> 						<li>
 <img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 25 May 2004 AD - 00:11 Korea Standard Time</i>:<br /> <html>
+							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 25 May 2004 AD - 00:11 Coordinated Universal Time</i>:<br /> <html>
  <head></head>
  <body>
   Hi Oswald, 
@@ -218,7 +234,94 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 							<hr style="clear : both" />
 						</li> 						<li>
 <img src="//www.gravatar.com/avatar/59471cad043b6b5366ed0524e152945b.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Patrick Tippner</b> on <i>Thursday 12 March 2009 AD - 17:18 Korea Standard Time</i>:<br /> <html>
+							posted by <b>Patrick Tippner</b> on <i>Thursday 12 March 2009 AD - 08:18 Coordinated Universal Time</i>:<br /> since i had some trouble with the above @formula-based agent whenever i dealt with really large groups, i decided to rewrite the whole agent in lotus script. here's how it looks (quick &amp; dirty): 
+  <br /> 
+  <br />Sub Initialize 
+  <br /> 
+  <br /> Dim session As New NotesSession 
+  <br /> Dim db As NotesDatabase 
+  <br /> Dim collection As NotesDocumentCollection 
+  <br /> Dim view As NotesView 
+  <br /> Dim item As notesitem 
+  <br /> Dim doc, vdoc As NotesDocument 
+  <br /> Dim count , max_count As Integer 
+  <br /> Dim viewname As String 
+  <br /> Dim mbrArray As Variant 
+  <br /> Dim rsltList_good() As String 
+  <br /> Dim rsltList_bad() As String 
+  <br /> Dim exceptionList List As String 
+  <br /> Dim listname, tmp 
+  <br /> 
+  <br /> 
+  <br />'specify groups that you don't want the script to touch 
+  <br /> exceptionList(&quot;XXXDominoServer&quot;) = &quot;&quot; 
+  <br /> exceptionList(&quot;DeveloperDomainServers&quot;) = &quot;&quot; 
+  <br /> exceptionList(&quot;DeveloperServer2&quot;) = &quot;&quot; 
+  <br /> exceptionList(&quot;HostedDomainServers&quot;) = &quot;&quot; 
+  <br /> exceptionList(&quot;XNotes-NoAnswer&quot;) = &quot;&quot; 
+  <br /> 
+  <br /> count = 0 
+  <br /> viewname=&quot;GroupCleanup&quot; 
+  <br /> 
+  <br /> Set db = session.CurrentDatabase 
+  <br /> Set collection = db.UnprocessedDocuments 
+  <br /> Set doc = collection.GetFirstDocument() 
+  <br /> Set view = db.GetView(viewname) 
+  <br /> 
+  <br /> 'cycle through all selected documents 
+  <br /> While Not (doc Is Nothing) 
+  <br /> listname = doc.getitemvalue(&quot;Listname&quot;) 
+  <br /> If Iselement(exceptionList(listname(0))) = False Then 
+  <br /> mbrArray = doc.getitemvalue(&quot;Members&quot;) 
+  <br /> max_count = Ubound (mbrArray) 
+  <br /> Redim rsltList_good(max_count) 
+  <br /> Redim rsltList_bad(max_count) 
+  <br /> 'cycle through all group members 
+  <br /> Dim gc,bc As Integer 
+  <br /> gc=0 
+  <br /> bc=0 
+  <br /> Forall member In mbrArray 
+  <br /> Set vdoc = view.GetDocumentByKey(member) 
+  <br /> If Not (vdoc Is Nothing) Or Instr(member,&quot;@&quot;)&gt;0 Or Instr(member,&quot;*&quot;)&gt;0 Then 
+  <br /> rsltList_good(gc)=member 
+  <br /> gc=gc+1 
+  <br /> Else 
+  <br /> rsltList_bad(bc)=member 
+  <br /> bc=bc+1 
+  <br /> End If 
+  <br /> End Forall 
+  <br /> mbrArray = doc.getitemvalue(&quot;RemovedMembers&quot;) 
+  <br /> tmp = Arrayunique(Arrayappend(mbrArray, rsltList_bad),1) 
+  <br /> Set item = doc.replaceitemvalue(&quot;Members&quot;,Fulltrim(rsltList_good)) 
+  <br /> Set item = doc.replaceitemvalue(&quot;RemovedMembers&quot;,Fulltrim(tmp)) 
+  <br /> Call doc.save (True, False) 
+  <br /> End If 
+  <br /> Set doc = collection.GetNextDocument(doc) 
+  <br /> 
+  <br /> Wend 
+  <br /> Set view = Nothing 
+  <br /> Set collection = Nothing 
+  <br /> Set doc= Nothing 
+  <br /> Set db= Nothing 
+  <br /> 
+  <br />End Sub 
+  <br /> 
+  <br /> 
+  <br />Insert the script as an agent with the target &quot;selected documents&quot; to your domino servers names.nsf. My lotus script relies on the same view the @formula-based script does, with one exception: I also included the mailin-databases in the view-formula, since they are also quite important: 
+  <br /> 
+  <br />SELECT ( Type= &quot;Person&quot;:&quot;Group&quot;:&quot;Server&quot;:&quot;Database&quot; )
+							<hr style="clear : both" />
+						</li> 						<li>
+<img src="//www.gravatar.com/avatar/59471cad043b6b5366ed0524e152945b.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Patrick Tippner</b> on <i>Thursday 12 March 2009 AD - 08:26 Coordinated Universal Time</i>:<br /> I forgot to mention one point: 
+  <br /> 
+  <br />the script also excludes internet-mail-addresses like abc@def.gh from processing (based on the @-sign contained in the string value). If you have mailing-lists or groups containing external email-addresses not defined in your directory, you'll need this 
+  <img alt="Emoticon wink.gif" src="/blog/images/emoticons/wink.gif" border="0" /> 
+  <br />Additionaly, the script won't process entries containing an asterisk '*', example: */Srv/DomainXYZ
+							<hr style="clear : both" />
+						</li> 						<li>
+<img src="//www.gravatar.com/avatar/59471cad043b6b5366ed0524e152945b.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Patrick Tippner</b> on <i>Thursday 12 March 2009 AD - 17:18 Coordinated Universal Time</i>:<br /> <html>
  <head></head>
  <body>
   since i had some trouble with the above @formula-based agent whenever i dealt with really large groups, i decided to rewrite the whole agent in lotus script. here's how it looks (quick &amp; dirty): 
@@ -302,7 +405,7 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 							<hr style="clear : both" />
 						</li> 						<li>
 <img src="//www.gravatar.com/avatar/59471cad043b6b5366ed0524e152945b.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Patrick Tippner</b> on <i>Thursday 12 March 2009 AD - 17:26 Korea Standard Time</i>:<br /> <html>
+							posted by <b>Patrick Tippner</b> on <i>Thursday 12 March 2009 AD - 17:26 Coordinated Universal Time</i>:<br /> <html>
  <head></head>
  <body>
   I forgot to mention one point: 
@@ -315,7 +418,13 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 							<hr style="clear : both" />
 						</li> 						<li>
 <img src="//www.gravatar.com/avatar/2be052dd6087c906c20d8be94ebb2d7b.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Patrick Tippner</b> on <i>Wednesday 08 September 2010 AD - 22:23 Korea Standard Time</i>:<br /> <html>
+							posted by <b>Patrick Tippner</b> on <i>Wednesday 08 September 2010 AD - 13:23 Coordinated Universal Time</i>:<br /> ...also make sure to be careful with users that have just been renamed by the admin-process! if the name in the person document has already changed, it doesn't mean that the corresponding entries in the group documents have done so, too 
+  <img alt="Emoticon wink.gif" src="/blog/images/emoticons/wink.gif" border="0" /> 
+  <br />in case that anything goes wrong, have a look at the &quot;RemovedMembers&quot;-field in each modified group document.
+							<hr style="clear : both" />
+						</li> 						<li>
+<img src="//www.gravatar.com/avatar/2be052dd6087c906c20d8be94ebb2d7b.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Patrick Tippner</b> on <i>Wednesday 08 September 2010 AD - 22:23 Coordinated Universal Time</i>:<br /> <html>
  <head></head>
  <body>
   ...also make sure to be careful with users that have just been renamed by the admin-process! if the name in the person document has already changed, it doesn't mean that the corresponding entries in the group documents have done so, too 
@@ -326,7 +435,13 @@ categories:  <a href="/blog/categories/Lotus Notes.html">Lotus Notes</a>  <a hre
 							<hr style="clear : both" />
 						</li> 						<li>
 <img src="//www.gravatar.com/avatar/c2c2c31e566f5ed515efb608b4e5b8fc.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Gurmeet</b> on <i>Thursday 07 October 2010 AD - 22:42 Korea Standard Time</i>:<br /> <html>
+							posted by <b>Gurmeet</b> on <i>Thursday 07 October 2010 AD - 13:42 Coordinated Universal Time</i>:<br /> @2 Thanks Patric, exactly what I needed. You save me couple hours of code time... 
+  <br /> 
+  <br />much appreciated.
+							<hr style="clear : both" />
+						</li> 						<li>
+<img src="//www.gravatar.com/avatar/c2c2c31e566f5ed515efb608b4e5b8fc.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Gurmeet</b> on <i>Thursday 07 October 2010 AD - 22:42 Coordinated Universal Time</i>:<br /> <html>
  <head></head>
  <body>
   @2 Thanks Patric, exactly what I needed. You save me couple hours of code time... 

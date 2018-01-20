@@ -636,7 +636,7 @@ ga('send', 'pageview');
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 2013-07-23 11:29
 <span class="divider">|</span>
-<a href="/blog/2013/07/notessessions-xpages-and-threads.html#comments">Comments (7)</a>
+<a href="/blog/2013/07/notessessions-xpages-and-threads.html#comments">Comments (e)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/XPages.html">XPages</a> 
 
@@ -659,7 +659,25 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 					<ol id="commentList">
 						<li>
 <img src="//www.gravatar.com/avatar/d624e774e5f1cb9d58b25ba7610ba4f7.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Nathan T. Freeman</b> on <i>Tuesday 23 July 2013 AD - 21:11 Korea Standard Time</i>:<br /> <html>
+							posted by <b>Nathan T. Freeman</b> on <i>Tuesday 23 July 2013 AD - 12:11 Coordinated Universal Time</i>:<br /> Wonderful article. Concurrency is something that Domino developers really should learn more about. 
+  <br /> 
+  <br />&quot;...The Notes Session class is not threadsave(sic) and can't be shared between threads...&quot; 
+  <br /> 
+  <br />We're all friends here, so I'm going to be a little pedantic, because I used to think this too. 
+  <br /> 
+  <br />It's not that you can't share a Session (or a Database or a Collection or whatever) between threads; it's that Domino objects *must* be recycled on the same thread in which they were established. So if you have Thread 1, and you have a Session and a Database that you then give to Thread 2, which creates Views, DocumentCollections, Documents and Items from there, all those View, DCs, Docs and Items must be recycled on Thread 2, but the Database and the Session MUST NOT be recycled on Thread 2. They can only be recycled on Thread 1 and obviously only after Thread 2 finishes its work. (Technically you *can* recycle on a different thread, if you don't mind the side-effect of crashing your client or server.) 
+  <br /> 
+  <br />What deepens the challenge still further is the following: Let's say you have Thread 1 with a Session, and you create Threads 2 and 3 with the same Session. Thread 2 gets a handle on foo.nsf and begins some processing. Thread 3 is processing something else, but also needs a handle on foo.nsf a few milliseconds later. Now you have a problem -- 2 and 3, because they share a Session, actually get the same handle on foo.nsf. But you don't really have any way of knowing that. 
+  <br /> 
+  <br />Recycle in 3, and you crash. Recycle in 2, and if 3 is still working, it gets the dreaded &quot;Object has been removed or recycled&quot; error. 
+  <br /> 
+  <br />You can try to keep track of who got what objects first, and who else accessed them and whether they still need them. And then you can .join all your Threads so they don't release any concurrently accessed objects until everyone else is finished with them. But you have to do all this with a lot of synchronized Maps and it's a serious performance killer. At some point, you ask yourself: why am I bothering with multiple threads when I have to synchronize everything that's happening anyway? 
+  <br /> 
+  <br />Or at least, that's what I did when trying to solve the problem for the OpenNTF Domino API. Once I got a mostly workable solution done, I ran some benchmarks, found that it was about 8 times slower, and said &quot;this is dumb. Just don't share Sessions between threads.&quot;
+							<hr style="clear : both" />
+						</li> 						<li>
+<img src="//www.gravatar.com/avatar/d624e774e5f1cb9d58b25ba7610ba4f7.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Nathan T. Freeman</b> on <i>Tuesday 23 July 2013 AD - 21:11 Coordinated Universal Time</i>:<br /> <html>
  <head></head>
  <body>
   Wonderful article. Concurrency is something that Domino developers really should learn more about. 
@@ -682,7 +700,12 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 							<hr style="clear : both" />
 						</li> 						<li>
 <img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Stephan Wissel</b> on <i>Tuesday 12 November 2013 AD - 03:08 Korea Standard Time</i>:<br /> <html>
+							posted by <b>Stephan Wissel</b> on <i>Monday 11 November 2013 AD - 18:08 Coordinated Universal Time</i>:<br /> To keep my simple mind from blowing up, I invented the simple rule: if you make them, you dispose them. So if a method defines a NotesObject that object must be removed in the same method. Works most of the time. 
+  <img alt="Emoticon biggrin.gif" src="/blog/images/emoticons/biggrin.gif" border="0" /> stw
+							<hr style="clear : both" />
+						</li> 						<li>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan Wissel</b> on <i>Tuesday 12 November 2013 AD - 03:08 Coordinated Universal Time</i>:<br /> <html>
  <head></head>
  <body>
   To keep my simple mind from blowing up, I invented the simple rule: if you make them, you dispose them. So if a method defines a NotesObject that object must be removed in the same method. Works most of the time. 
@@ -692,7 +715,31 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 							<hr style="clear : both" />
 						</li> 						<li>
 <img src="//www.gravatar.com/avatar/f66ab73b87b16a8c7b78cdd9efaeb3f3.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Greg</b> on <i>Friday 29 November 2013 AD - 18:31 Korea Standard Time</i>:<br /> <html>
+							posted by <b>Greg</b> on <i>Friday 29 November 2013 AD - 09:31 Coordinated Universal Time</i>:<br /> Thanks a lot for this article, it is something that I sorely need! (I don't like making a user wait while the application goes off on its own little tangent (task). 
+  <br /> 
+  <br />I was playing around with this because I want to create multiple documents while dynamically calculating and fetching configuration documents from other databases etc. And I keep getting the following error in the server log: 
+  <br /> 
+  <br />29.11.2013 11:14:17 HTTP JVM: Exception in thread &quot;pool-4-thread-1&quot; 
+  <br />29.11.2013 11:14:17 HTTP JVM: java.lang.IllegalStateException: NotesContext not initialized for the thread 
+  <br />29.11.2013 11:14:17 HTTP JVM: at com.ibm.domino.xsp.module.nsf.NotesContext.getCurrent(NotesContext.java:123) 
+  <br />29.11.2013 11:14:17 HTTP JVM: at com.ibm.domino.xsp.module.nsf.ModuleClassLoader$DynamicClassLoader.loadClass(ModuleClassLoader.java:383) 
+  <br />29.11.2013 11:14:17 HTTP JVM: at java.lang.ClassLoader.loadClass(ClassLoader.java:638) 
+  <br />29.11.2013 11:14:17 HTTP JVM: at de.holistic.utils.multithreading.AbstractBackgroundTask.run(AbstractBackgroundTask.java:29) 
+  <br />29.11.2013 11:14:17 HTTP JVM: at java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.java:906) 
+  <br />29.11.2013 11:14:17 HTTP JVM: at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:929) 
+  <br />29.11.2013 11:14:17 HTTP JVM: at java.lang.Thread.run(Thread.java:738) 
+  <br /> 
+  <br />(sorry if that is a bit difficult to work with) 
+  <br /> 
+  <br />I am using Domino 901, Notes 900, and the latest 900 ExtLibs. Do you have any idea why I might be getting the IllegalStateException / NotesContext not initialized for the thread message? I am guessing that my first step should be to get my versions consistent with each other and try again, but I wanted to ask for your input as well.
+							<hr style="clear : both" />
+						</li> 						<li>
+<img src="//www.gravatar.com/avatar/f66ab73b87b16a8c7b78cdd9efaeb3f3.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Greg</b> on <i>Friday 29 November 2013 AD - 14:31 Coordinated Universal Time</i>:<br /> to make it easier: [link= stackoverflow.com/questions/20285907/xpage-concurrency-notescontext-not-initialized] here is a stack overflow question [/link]
+							<hr style="clear : both" />
+						</li> 						<li>
+<img src="//www.gravatar.com/avatar/f66ab73b87b16a8c7b78cdd9efaeb3f3.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Greg</b> on <i>Friday 29 November 2013 AD - 18:31 Coordinated Universal Time</i>:<br /> <html>
  <head></head>
  <body>
   Thanks a lot for this article, it is something that I sorely need! (I don't like making a user wait while the application goes off on its own little tangent (task). 
@@ -717,7 +764,7 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 							<hr style="clear : both" />
 						</li> 						<li>
 <img src="//www.gravatar.com/avatar/f66ab73b87b16a8c7b78cdd9efaeb3f3.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Greg</b> on <i>Friday 29 November 2013 AD - 23:31 Korea Standard Time</i>:<br /> <html>
+							posted by <b>Greg</b> on <i>Friday 29 November 2013 AD - 23:31 Coordinated Universal Time</i>:<br /> <html>
  <head></head>
  <body>
   to make it easier: [link= stackoverflow.com/questions/20285907/xpage-concurrency-notescontext-not-initialized] here is a stack overflow question [/link]
@@ -726,7 +773,17 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 							<hr style="clear : both" />
 						</li> 						<li>
 <img src="//www.gravatar.com/avatar/90081e38e95aa5970949dadcb7fbd719.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Panu Haaramo</b> on <i>Monday 13 October 2014 AD - 22:22 Korea Standard Time</i>:<br /> <html>
+							posted by <b>Panu Haaramo</b> on <i>Monday 13 October 2014 AD - 13:22 Coordinated Universal Time</i>:<br /> I'm getting the same exception as Greg, NotesContext.getCurrent() fails. 
+  <br /> 
+  <br />Any idea why the same code works for you but not for us? Thanks.
+							<hr style="clear : both" />
+						</li> 						<li>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Monday 13 October 2014 AD - 13:31 Coordinated Universal Time</i>:<br /> I haven't revisited the code for a rather long time. The smartest way is to move on and use the OpenNTF Domino API. Nathan did an outstanding job to make that even easier.
+							<hr style="clear : both" />
+						</li> 						<li>
+<img src="//www.gravatar.com/avatar/90081e38e95aa5970949dadcb7fbd719.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Panu Haaramo</b> on <i>Monday 13 October 2014 AD - 22:22 Coordinated Universal Time</i>:<br /> <html>
  <head></head>
  <body>
   I'm getting the same exception as Greg, NotesContext.getCurrent() fails. 
@@ -737,7 +794,7 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 							<hr style="clear : both" />
 						</li> 						<li>
 <img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Monday 13 October 2014 AD - 22:31 Korea Standard Time</i>:<br /> <html>
+							posted by <b>Stephan H. Wissel</b> on <i>Monday 13 October 2014 AD - 22:31 Coordinated Universal Time</i>:<br /> <html>
  <head></head>
  <body>
   I haven't revisited the code for a rather long time. The smartest way is to move on and use the OpenNTF Domino API. Nathan did an outstanding job to make that even easier.
@@ -746,7 +803,11 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 							<hr style="clear : both" />
 						</li> 						<li>
 <img src="//www.gravatar.com/avatar/90081e38e95aa5970949dadcb7fbd719.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Panu Haaramo</b> on <i>Tuesday 14 October 2014 AD - 15:37 Korea Standard Time</i>:<br /> <html>
+							posted by <b>Panu Haaramo</b> on <i>Tuesday 14 October 2014 AD - 06:37 Coordinated Universal Time</i>:<br /> Thanks, haven't tried that yet. Actually your code works. I was not getting module and SessionCloner in the constructor.
+							<hr style="clear : both" />
+						</li> 						<li>
+<img src="//www.gravatar.com/avatar/90081e38e95aa5970949dadcb7fbd719.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Panu Haaramo</b> on <i>Tuesday 14 October 2014 AD - 15:37 Coordinated Universal Time</i>:<br /> <html>
  <head></head>
  <body>
   Thanks, haven't tried that yet. Actually your code works. I was not getting module and SessionCloner in the constructor.
