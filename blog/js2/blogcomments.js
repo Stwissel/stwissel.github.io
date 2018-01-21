@@ -36,25 +36,24 @@ function addComment(form, recaptchaid, parentId) {
 		data : postData,
 		success : function(result) {
 			// TODO: Render result from JSON!
-			$("#alertContainer").html("<pre>"+JSON.stringify(result)+"</pre>").addClass("alert-error").delay(
+			$("#alertContainer").html("<pre>"+result.message+"</pre>").addClass("alert-error").delay(
 					5000).hide(200, function() {
-				resetComment(recaptchaid, parentId);
+				resetComment(recaptchaid, parentId, true);
 			});
 		},
 		error : function(err) {
 			var realError = (err.responseText) ? err.responseText : "Something went wrong";
 			$("#alertContainer").html("<pre>"+JSON.stringify(realError)+"</pre>").addClass("alert-error")
 					.delay(5000).hide(200, function() {
-						resetComment(recaptchaid, parentId);
+						resetComment(recaptchaid, parentId, false);
 					});
 		}
 	});
 	return false;
 }
 
-function resetComment(recaptchaid, parentId) {
-	var hasSuccess = $("div.commentsuccess");
-	if (hasSuccess.length == 0) {
+function resetComment(recaptchaid, parentId, hasSuccess) {
+	if (!hasSuccess) {
 		// It didn't work!
 		$("#alertContainer").show();
 		$('#commentsubmit').show();
