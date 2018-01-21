@@ -36,14 +36,14 @@ function addComment(form, recaptchaid, parentId) {
 		data : postData,
 		success : function(result) {
 			// TODO: Render result from JSON!
-			$("#alertContainer").html("<pre>"+result+"</pre>").addClass("alert-error").delay(
+			$("#alertContainer").html("<pre>"+JSON.stringify(result)+"</pre>").addClass("alert-error").delay(
 					5000).hide(200, function() {
 				resetComment(recaptchaid, parentId);
 			});
 		},
 		error : function(err) {
 			var realError = (err.responseText) ? err.responseText : "Something went wrong";
-			$("#alertContainer").html("<pre>"+realError+"</pre>").addClass("alert-error")
+			$("#alertContainer").html("<pre>"+JSON.stringify(realError)+"</pre>").addClass("alert-error")
 					.delay(5000).hide(200, function() {
 						resetComment(recaptchaid, parentId);
 					});
