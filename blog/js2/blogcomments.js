@@ -32,9 +32,11 @@ function addComment(form, recaptchaid, parentId) {
 			Body : this["wmd-input"].value,
 			rChallenge : this.recaptcha_challenge_field.value,
 			rResponse : this.recaptcha_response_field.value,
+			captcha : grecaptcha.getResponse(),
 			parentId : parentId
 		},
 		success : function(result) {
+			// TODO: Render result from JSON!
 			$("#alertContainer").html(result).addClass("alert-error").delay(
 					2000).hide(200, function() {
 				resetComment(recaptchaid, parentId);
@@ -67,14 +69,18 @@ function renderComment(recaptchaid, parentId) {
 	var fid = "#commentform_" + parentId;
 	var form = getCommentForm(recaptchaid, parentId);
 	$(fid).empty().append(form);
-	if (Recaptcha) {
+	if (grecaptcha) {
 		var theDiv = document.getElementById("captchadiv");
-		Recaptcha.create(recaptchaid, theDiv, {
-			tabindex : 1,
-			theme : "clean" /*
-							 * , callback : Recaptcha.focus_response_field
-							 */
+		grecaptcha.render(theDiv, {
+			sitekey : recaptchaid,
+			theme: "light"
 		});
+		// Recaptcha.create(recaptchaid, theDiv, {
+		// 	tabindex : 1,
+		// 	theme : "clean" /*
+		// 					 * , callback : Recaptcha.focus_response_field
+		// 					 */
+		// });
 	}
 
 	// Markdown
@@ -82,23 +88,24 @@ function renderComment(recaptchaid, parentId) {
 	var editor1 = new Markdown.Editor(converter1);
 	editor1.run();
 
+	// We only have static comments moving forward
 	// Comments that are not yet static
-	$.ajax({
-		url: destinationURL + "?parentid=" + parentId,
-		type: 'GET',
-		async: true,
-		success: function(data){
-			if (data && data.length > 0) {
-				$("li.dynamicComments").remove();
-				$("#nocomments").remove();
-				$("#commentList").append(data);
-			}
-		},
-		error: function(data) {
-			// Crude error handling
-			$("#alertContainer").html(data).show();
-		}
-	});
+	// $.ajax({
+	// 	url: destinationURL + "?parentid=" + parentId,
+	// 	type: 'GET',
+	// 	async: true,
+	// 	success: function(data){
+	// 		if (data && data.length > 0) {
+	// 			$("li.dynamicComments").remove();
+	// 			$("#nocomments").remove();
+	// 			$("#commentList").append(data);
+	// 		}
+	// 	},
+	// 	error: function(data) {
+	// 		// Crude error handling
+	// 		$("#alertContainer").html(data).show();
+	// 	}
+	// });
 }
 
 jQuery.extend({
