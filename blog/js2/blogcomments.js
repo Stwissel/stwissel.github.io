@@ -1,4 +1,4 @@
-var destinationURL = "/blog/comments";
+var destinationURL = "https://senseicomments.herokuapp.com/blogcomments";
 
 function getCommentForm(recaptchaid, parentId) {
 	var params = {};
@@ -23,28 +23,28 @@ function addComment(form, recaptchaid, parentId) {
 	$("#alertContainer").html("One moment please, submitting comment...")
 			.show();
 
+	var postData = {};
+	postData.Commentor = this.Commentor.value;
+	postData.eMail = this.Email.value;
+	postData.webSite = this.webSite.value;
+	postData.Body = this["wmd-input"].value;
+	postData.captcha = grecaptcha.getResponse();
+	postData.parentId = parentId;
+
 	$.postJSON({
 		url : destinationURL,
-		data : {
-			Commentor : this.Commentor.value,
-			eMail : this.Email.value,
-			webSite : this.webSite.value,
-			Body : this["wmd-input"].value,
-			rChallenge : this.recaptcha_challenge_field.value,
-			rResponse : this.recaptcha_response_field.value,
-			captcha : grecaptcha.getResponse(),
-			parentId : parentId
-		},
+		data : postData,
 		success : function(result) {
 			// TODO: Render result from JSON!
-			$("#alertContainer").html(result).addClass("alert-error").delay(
-					2000).hide(200, function() {
+			$("#alertContainer").html("<pre>"+result+"</pre>").addClass("alert-error").delay(
+					5000).hide(200, function() {
 				resetComment(recaptchaid, parentId);
 			});
 		},
 		error : function(err) {
-			$("#alertContainer").html(err.responseText).addClass("alert-error")
-					.delay(1000).hide(200, function() {
+			var realError = (err.responseText) ? err.responseText : "Something went wrong";
+			$("#alertContainer").html("<pre>"+realError+"</pre>").addClass("alert-error")
+					.delay(5000).hide(200, function() {
 						resetComment(recaptchaid, parentId);
 					});
 		}
@@ -71,41 +71,17 @@ function renderComment(recaptchaid, parentId) {
 	$(fid).empty().append(form);
 	if (grecaptcha) {
 		var theDiv = document.getElementById("captchadiv");
+		$(theDiv).empty();
 		grecaptcha.render(theDiv, {
 			sitekey : recaptchaid,
 			theme: "light"
 		});
-		// Recaptcha.create(recaptchaid, theDiv, {
-		// 	tabindex : 1,
-		// 	theme : "clean" /*
-		// 					 * , callback : Recaptcha.focus_response_field
-		// 					 */
-		// });
 	}
 
 	// Markdown
 	var converter1 = Markdown.getSanitizingConverter();
 	var editor1 = new Markdown.Editor(converter1);
 	editor1.run();
-
-	// We only have static comments moving forward
-	// Comments that are not yet static
-	// $.ajax({
-	// 	url: destinationURL + "?parentid=" + parentId,
-	// 	type: 'GET',
-	// 	async: true,
-	// 	success: function(data){
-	// 		if (data && data.length > 0) {
-	// 			$("li.dynamicComments").remove();
-	// 			$("#nocomments").remove();
-	// 			$("#commentList").append(data);
-	// 		}
-	// 	},
-	// 	error: function(data) {
-	// 		// Crude error handling
-	// 		$("#alertContainer").html(data).show();
-	// 	}
-	// });
 }
 
 jQuery.extend({
