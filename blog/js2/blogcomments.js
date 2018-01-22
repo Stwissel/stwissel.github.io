@@ -43,7 +43,8 @@ function addComment(form, recaptchaid, parentId) {
 		},
 		error : function(err) {
 			var realError = (err.responseText) ? err.responseText : "Something went wrong";
-			$("#alertContainer").html("<pre>"+JSON.stringify(realError)+"</pre>").addClass("alert-error")
+			var displayStuff = (realError.message) ? realError.message : JSON.stringify(realError);
+			$("#alertContainer").html("<pre>"+displayStuff+"</pre>").addClass("alert-error")
 					.delay(5000).hide(200, function() {
 						resetComment(recaptchaid, parentId, false);
 					});
