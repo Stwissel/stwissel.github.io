@@ -125,7 +125,7 @@ ga('send', 'pageview');
   <li><a href="/blog/2013/">2013</a> <span class="divider">/</span></li>
   <li><a href="/blog/2013/07/">July</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/XPages.html">XPages</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
 </ul>
 
@@ -146,9 +146,9 @@ ga('send', 'pageview');
 					<hr />
 					<div>One of the hallmarks and success factors of IBM Notes was the openness of the design of all Notes applications. Since lots of people put 
 <a href="http://en.wikipedia.org/wiki/Blood,_Sweat_%26_Tears">blood, sweat and tears</a> into their applications, Lotus added the possibility to hide the design of an application to protect it from spying eyes. While I don't like hidden designs I can understand the rationale. 
-<br> 
+<br /> 
 <a href="http://www.eproductivity.com">Others</a> keep their design open, but compile the LotusScript libraries with references to lss files outside, so the core business logic is protected. 
-<br> Hiding the design 
+<br /> Hiding the design 
 <a href="http://www.eknori.de/2013-07-13/hacking-notes-applications-with-hidden-design/">doesn't work for XPages</a>, you can 
 <a href="http://www.ytria.com/">poke around</a> and get back to the source. So what are your options? 
 <ul> 
@@ -160,14 +160,14 @@ ga('send', 'pageview');
 <a href="http://java-source.net/open-source/obfuscators">Java obfuscation</a>, but then you might have crossed the line between precaution and 
 <a href="http://en.wikipedia.org/wiki/Paranoia">paranoia</a> (to my best knowledge IBM doesn't use obfuscation in Java products). An additional level of protection is offered using 
 <a href="http://www.waterfall2006.com/gorman.html">Refuctoring</a> (no, that's not a typo). 
-<br> So how would a typical workflow look like? There seem to be quite some moving parts involved: 
-<br> 
-<img src="/blog/images/2013/ProtectXPages.jpg" border="0" alt="Protecting XPages Workflow"> 
+<br /> So how would a typical workflow look like? There seem to be quite some moving parts involved: 
+<br /> 
+<img src="/blog/images/2013/ProtectXPages.jpg" border="0" alt="Protecting XPages Workflow" /> 
 <ol> 
  <li>Develop and test your application as per normal. Keep items you want to protect in custom controls and Java classes</li> 
  <li>Make sure you have your project build before doing the next steps </li> 
- <li>Link your database to an On Disk Project for version control (but you do that anyway don't you?). Let's call that project "<i>OnDisk Open</i>"</li> 
- <li>Have your target database (the one that you will deliver to your customer) setup in a similar way. Let's call that project "<i>OnDisk Closed</i>"</li> 
+ <li>Link your database to an On Disk Project for version control (but you do that anyway don't you?). Let's call that project &quot;<i>OnDisk Open</i>&quot;</li> 
+ <li>Have your target database (the one that you will deliver to your customer) setup in a similar way. Let's call that project &quot;<i>OnDisk Closed</i>&quot;</li> 
  <li>Copy all elements you want to keep open (Forms, Views, XPages, CSS etc.) from <i>OnDisk Open</i> to <i>OnDisk Closed</i></li> 
  <li>Copy your Java source files and the generated Java source files for your custom controls (found in the <b>Local</b> directory, actually outside the NSF) in <i>OnDisk Open</i> to a src structure. Custom controls live in the xsp package. Your code lives in your packages</li> 
  <li>Compile your Java</li> 
@@ -180,158 +180,158 @@ ga('send', 'pageview');
 <a href="https://ant.apache.org/">Apache ANT</a>. Ant can copy, compile, stuff in Jar, update properties files etc. There are pointers to consider when using ANT in a Domino project: 
 <ul> 
  <li>ANT is unaware of the <a href="http://help.eclipse.org/indigo/index.jsp?topic=%2Forg.eclipse.platform.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fcore%2Ffilesystem%2FEFS.html">EFS</a> (Eclipse Virtual File System), it acts on regular files only, so your operations need to run against the OnDisk projects rather the NSF directly</li> 
- <li>The Java compile command is unaware of Eclipse and its classpath too. You need to specify that. Is is easier than it looks. Use the Navigator view to locate the <code>build.properties</code> file, right click on it, select PDETools - Create ANT build file. It will create a build.xml you can use for starters. The piece you are interested in is <code>&lt;path id="Plug-in Dependencies.libraryclasspath"&gt;</code>. You need to add that to your compile classpath together with your bin directory in a statement like this:<br> <code>&lt;path id="YourBeans.classpath"&gt;&lt;pathelement location="bin" /&gt;&lt;path refid="Plug-in Dependencies.libraryclasspath" /&gt;&lt;/path&gt;</code></li> 
+ <li>The Java compile command is unaware of Eclipse and its classpath too. You need to specify that. Is is easier than it looks. Use the Navigator view to locate the <code>build.properties</code> file, right click on it, select PDETools - Create ANT build file. It will create a build.xml you can use for starters. The piece you are interested in is <code>&lt;path id=&quot;Plug-in Dependencies.libraryclasspath&quot;&gt;</code>. You need to add that to your compile classpath together with your bin directory in a statement like this:<br /> <code>&lt;path id=&quot;YourBeans.classpath&quot;&gt;&lt;pathelement location=&quot;bin&quot; /&gt;&lt;path refid=&quot;Plug-in Dependencies.libraryclasspath&quot; /&gt;&lt;/path&gt;</code></li> 
  <li>Configure your Domino Designer to automatically pick up changes from the file system. File - Preferences - Workspace - Refresh automatically</li> 
  <li>While you are on it, generate your JavaDocs too</li> 
 </ul> A complete ANT build script could look like this (I took out the content of 
 <i>Plug-in Dependencies.libraryclasspath</i>): 
 <div class="xml"> 
- <span class="sc3"><span class="re1">&lt;?xml</span> <span class="re0">version</span>=<span class="st0">"1.0"</span><span class="re2">?&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;project</span> <span class="re0">name</span>=<span class="st0">"Protect XPages"</span> <span class="re0">default</span>=<span class="st0">"main"</span> <span class="re0">basedir</span>=<span class="st0">"."</span><span class="re2">&gt;</span></span> 
- <br> 
+ <span class="sc3"><span class="re1">&lt;?xml</span> <span class="re0">version</span>=<span class="st0">&quot;1.0&quot;</span><span class="re2">?&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;project</span> <span class="re0">name</span>=<span class="st0">&quot;Protect XPages&quot;</span> <span class="re0">default</span>=<span class="st0">&quot;main&quot;</span> <span class="re0">basedir</span>=<span class="st0">&quot;.&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> 
  <span class="sc-1">&lt;!-- Sets variables which can later be used. --&gt;</span> 
- <br> 
+ <br /> 
  <span class="sc-1">&lt;!-- The value of a property is accessed via ${} --&gt;</span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;property</span> <span class="re0">name</span>=<span class="st0">"src.dir"</span> <span class="re0">location</span>=<span class="st0">"src"</span> <span class="re2">/&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;property</span> <span class="re0">name</span>=<span class="st0">"build.dir"</span> <span class="re0">location</span>=<span class="st0">"bin"</span> <span class="re2">/&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;property</span> <span class="re0">name</span>=<span class="st0">"docs.dir"</span> <span class="re0">location</span>=<span class="st0">"doc"</span> <span class="re2">/&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;property</span> <span class="re0">name</span>=<span class="st0">"closed.project.dir"</span> <span class="re0">location</span>=<span class="st0">"C:\ondisk\closed"</span> <span class="re2">/&gt;</span></span> 
- <br> 
- <br> 
- <span class="sc3"><span class="re1">&lt;path</span> <span class="re0">id</span>=<span class="st0">"Plug-in Dependencies.libraryclasspath"</span><span class="re2">&gt;</span></span> 
- <br> ... 
- <br> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;property</span> <span class="re0">name</span>=<span class="st0">&quot;src.dir&quot;</span> <span class="re0">location</span>=<span class="st0">&quot;src&quot;</span> <span class="re2">/&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;property</span> <span class="re0">name</span>=<span class="st0">&quot;build.dir&quot;</span> <span class="re0">location</span>=<span class="st0">&quot;bin&quot;</span> <span class="re2">/&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;property</span> <span class="re0">name</span>=<span class="st0">&quot;docs.dir&quot;</span> <span class="re0">location</span>=<span class="st0">&quot;doc&quot;</span> <span class="re2">/&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;property</span> <span class="re0">name</span>=<span class="st0">&quot;closed.project.dir&quot;</span> <span class="re0">location</span>=<span class="st0">&quot;C:\ondisk\closed&quot;</span> <span class="re2">/&gt;</span></span> 
+ <br /> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;path</span> <span class="re0">id</span>=<span class="st0">&quot;Plug-in Dependencies.libraryclasspath&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> ... 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/path<span class="re2">&gt;</span></span></span> 
- <br> 
- <br> 
- <span class="sc3"><span class="re1">&lt;path</span> <span class="re0">id</span>=<span class="st0">"YourBeans.classpath"</span><span class="re2">&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;pathelement</span> <span class="re0">location</span>=<span class="st0">"bin"</span> <span class="re2">/&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;path</span> <span class="re0">refid</span>=<span class="st0">"Plug-in Dependencies.libraryclasspath"</span> <span class="re2">/&gt;</span></span> 
- <br> 
+ <br /> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;path</span> <span class="re0">id</span>=<span class="st0">&quot;YourBeans.classpath&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;pathelement</span> <span class="re0">location</span>=<span class="st0">&quot;bin&quot;</span> <span class="re2">/&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;path</span> <span class="re0">refid</span>=<span class="st0">&quot;Plug-in Dependencies.libraryclasspath&quot;</span> <span class="re2">/&gt;</span></span> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/path<span class="re2">&gt;</span></span></span> 
- <br> 
- <br> 
- <span class="sc3"><span class="re1">&lt;path</span> <span class="re0">id</span>=<span class="st0">"JavaDoc.classpath"</span><span class="re2">&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;pathelement</span> <span class="re0">location</span>=<span class="st0">"bin"</span> <span class="re2">/&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;path</span> <span class="re0">refid</span>=<span class="st0">"Plug-in Dependencies.libraryclasspath"</span> <span class="re2">/&gt;</span></span> 
- <br> 
+ <br /> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;path</span> <span class="re0">id</span>=<span class="st0">&quot;JavaDoc.classpath&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;pathelement</span> <span class="re0">location</span>=<span class="st0">&quot;bin&quot;</span> <span class="re2">/&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;path</span> <span class="re0">refid</span>=<span class="st0">&quot;Plug-in Dependencies.libraryclasspath&quot;</span> <span class="re2">/&gt;</span></span> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/path<span class="re2">&gt;</span></span></span> 
- <br> 
- <br> 
+ <br /> 
+ <br /> 
  <span class="sc-1">&lt;!-- Compiles the java code (including the usage of library for JUnit) --&gt;</span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;target</span> <span class="re0">name</span>=<span class="st0">"compile"</span><span class="re2">&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;javac</span> <span class="re0">srcdir</span>=<span class="st0">"${src.dir}"</span> <span class="re0">destdir</span>=<span class="st0">"${build.dir}"</span><span class="re2">&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;classpath</span> <span class="re0">refid</span>=<span class="st0">"YourBeans.classpath"</span> <span class="re2">/&gt;</span></span> 
- <br> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;target</span> <span class="re0">name</span>=<span class="st0">&quot;compile&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;javac</span> <span class="re0">srcdir</span>=<span class="st0">&quot;${src.dir}&quot;</span> <span class="re0">destdir</span>=<span class="st0">&quot;${build.dir}&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;classpath</span> <span class="re0">refid</span>=<span class="st0">&quot;YourBeans.classpath&quot;</span> <span class="re2">/&gt;</span></span> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/javac<span class="re2">&gt;</span></span></span> 
- <br> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/target<span class="re2">&gt;</span></span></span> 
- <br> 
- <br> 
+ <br /> 
+ <br /> 
  <span class="sc-1">&lt;!-- Creates Javadoc --&gt;</span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;target</span> <span class="re0">name</span>=<span class="st0">"docs"</span> <span class="re0">depends</span>=<span class="st0">"compile"</span><span class="re2">&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;javadoc</span> <span class="re0">packagenames</span>=<span class="st0">"src"</span> <span class="re0">sourcepath</span>=<span class="st0">"${src.dir}"</span> <span class="re0">destdir</span>=<span class="st0">"${docs.dir}"</span><span class="re2">&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;classpath</span> <span class="re0">refid</span>=<span class="st0">"JavaDoc.classpath"</span> <span class="re2">/&gt;</span></span> 
- <br> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;target</span> <span class="re0">name</span>=<span class="st0">&quot;docs&quot;</span> <span class="re0">depends</span>=<span class="st0">&quot;compile&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;javadoc</span> <span class="re0">packagenames</span>=<span class="st0">&quot;src&quot;</span> <span class="re0">sourcepath</span>=<span class="st0">&quot;${src.dir}&quot;</span> <span class="re0">destdir</span>=<span class="st0">&quot;${docs.dir}&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;classpath</span> <span class="re0">refid</span>=<span class="st0">&quot;JavaDoc.classpath&quot;</span> <span class="re2">/&gt;</span></span> 
+ <br /> 
  <span class="sc-1">&lt;!-- Define which files / directory should get included, we include all Java --&gt;</span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;fileset</span> <span class="re0">dir</span>=<span class="st0">"${src.dir}"</span><span class="re2">&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;include</span> <span class="re0">name</span>=<span class="st0">"**/*.java"</span><span class="re2">/&gt;</span></span> 
- <br> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;fileset</span> <span class="re0">dir</span>=<span class="st0">&quot;${src.dir}&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;include</span> <span class="re0">name</span>=<span class="st0">&quot;**/*.java&quot;</span><span class="re2">/&gt;</span></span> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/fileset<span class="re2">&gt;</span></span></span> 
- <br> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/javadoc<span class="re2">&gt;</span></span></span> 
- <br> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/target<span class="re2">&gt;</span></span></span> 
- <br> 
- <br> 
+ <br /> 
+ <br /> 
  <span class="sc-1">&lt;!--Creates the deployable jar file --&gt;</span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;target</span> <span class="re0">name</span>=<span class="st0">"jar"</span> <span class="re0">depends</span>=<span class="st0">"compile"</span><span class="re2">&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;jar</span> <span class="re0">destfile</span>=<span class="st0">"${closed.project.dir}/WebContent/WEB-INF/lib/YourBeans.jar"</span><span class="re2">&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;fileset</span> <span class="re0">dir</span>=<span class="st0">"${build.dir}"</span> <span class="re2">/&gt;</span></span> 
- <br> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;target</span> <span class="re0">name</span>=<span class="st0">&quot;jar&quot;</span> <span class="re0">depends</span>=<span class="st0">&quot;compile&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;jar</span> <span class="re0">destfile</span>=<span class="st0">&quot;${closed.project.dir}/WebContent/WEB-INF/lib/YourBeans.jar&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;fileset</span> <span class="re0">dir</span>=<span class="st0">&quot;${build.dir}&quot;</span> <span class="re2">/&gt;</span></span> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;manifest<span class="re2">&gt;</span></span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;attribute</span> <span class="re0">name</span>=<span class="st0">"Main-Class"</span> <span class="re0">value</span>=<span class="st0">"com.notessensei.Test"</span> <span class="re2">/&gt;</span></span> 
- <br> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;attribute</span> <span class="re0">name</span>=<span class="st0">&quot;Main-Class&quot;</span> <span class="re0">value</span>=<span class="st0">&quot;com.notessensei.Test&quot;</span> <span class="re2">/&gt;</span></span> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/manifest<span class="re2">&gt;</span></span></span> 
- <br> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/jar<span class="re2">&gt;</span></span></span> 
- <br> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/target<span class="re2">&gt;</span></span></span> 
- <br> 
- <br> 
+ <br /> 
+ <br /> 
  <span class="sc-1">&lt;!-- Copies the java and .xsp-config files, careful with the selections here</span> 
- <br> 
+ <br /> 
  <span class="sc-1"> use individual copy statements or file sets --&gt;</span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;target</span> <span class="re0">name</span>=<span class="st0">"copy"</span><span class="re2">&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;copy</span> <span class="re0">todir</span>=<span class="st0">"${src.dir}"</span><span class="re2">&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;fileset</span> <span class="re0">dir</span>=<span class="st0">"Local"</span><span class="re2">&gt;</span></span> 
- <br> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;target</span> <span class="re0">name</span>=<span class="st0">&quot;copy&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;copy</span> <span class="re0">todir</span>=<span class="st0">&quot;${src.dir}&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;fileset</span> <span class="re0">dir</span>=<span class="st0">&quot;Local&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> 
  <span class="sc-1">&lt;!-- presuming all your custom controls start with cc --&gt;</span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;include</span> <span class="re0">name</span>=<span class="st0">"**/cc*.java"</span><span class="re2">/&gt;</span></span> 
- <br> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;include</span> <span class="re0">name</span>=<span class="st0">&quot;**/cc*.java&quot;</span><span class="re2">/&gt;</span></span> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/fileset<span class="re2">&gt;</span></span></span> 
- <br> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/copy<span class="re2">&gt;</span></span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;copy</span> <span class="re0">todir</span>=<span class="st0">"${closed.project.dir}/WebContent/WEB-INF"</span><span class="re2">&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;fileset</span> <span class="re0">dir</span>=<span class="st0">"CustomControls"</span><span class="re2">&gt;</span></span> 
- <br> 
- <span class="sc3"><span class="re1">&lt;include</span> <span class="re0">name</span>=<span class="st0">"**/*.xsp-config"</span><span class="re2">/&gt;</span></span> 
- <br> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;copy</span> <span class="re0">todir</span>=<span class="st0">&quot;${closed.project.dir}/WebContent/WEB-INF&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;fileset</span> <span class="re0">dir</span>=<span class="st0">&quot;CustomControls&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;include</span> <span class="re0">name</span>=<span class="st0">&quot;**/*.xsp-config&quot;</span><span class="re2">/&gt;</span></span> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/fileset<span class="re2">&gt;</span></span></span> 
- <br> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/copy<span class="re2">&gt;</span></span></span> 
- <br> 
+ <br /> 
  <span class="sc-1">&lt;!-- 1:1 copy of forms/views and other stuff omitted here --&gt;</span> 
- <br> ... 
- <br> 
+ <br /> ... 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/target<span class="re2">&gt;</span></span></span> 
- <br> 
- <br> 
- <span class="sc3"><span class="re1">&lt;target</span> <span class="re0">name</span>=<span class="st0">"main"</span> <span class="re0">depends</span>=<span class="st0">"copy, compile, docs, jar"</span><span class="re2">&gt;</span></span> 
- <br> 
+ <br /> 
+ <br /> 
+ <span class="sc3"><span class="re1">&lt;target</span> <span class="re0">name</span>=<span class="st0">&quot;main&quot;</span> <span class="re0">depends</span>=<span class="st0">&quot;copy, compile, docs, jar&quot;</span><span class="re2">&gt;</span></span> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;description<span class="re2">&gt;</span></span></span>Do it all 
  <span class="sc3"><span class="re1">&lt;/description<span class="re2">&gt;</span></span></span> 
- <br> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/target<span class="re2">&gt;</span></span></span> 
- <br> 
+ <br /> 
  <span class="sc3"><span class="re1">&lt;/project<span class="re2">&gt;</span></span></span> 
-</div> You can run this ANT file, by right clicking on in in Domino Designer selecting "Run as ANT file". 
-<br> As usual YMMV</div>
+</div> You can run this ANT file, by right clicking on in in Domino Designer selecting &quot;Run as ANT file&quot;. 
+<br /> As usual YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 2013-07-24 12:47
 <span class="divider">|</span>
-<a href="/blog/2013/07/protecting-your-xpages-application.html#comments">Comments (8)</a>
+<a href="/blog/2013/07/protecting-your-xpages-application.html#comments">Comments (4)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/XPages.html">XPages</a> 
+categories:  <a href="/blog/categories/.html"></a> 
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2013/07/protecting-your-xpages-application.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Protecting your XPages Application"></div>
 						<script type="text/javascript">
@@ -351,14 +351,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/7cda9fa3aa81ab0b0e48b00066f05a47.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Paul Withers</b> on <i>Wednesday 24 July 2013 AD - 07:53 Coordinated Universal Time</i>:<br /> It confused me when I tried to create the build.xml but couldn't see it in Designer. I right-clicked the build.properties in the NSF version (it wasn't in the on disk project), selected PDE Tools - Create ANT build file, but couldn't see it in Designer. But I found it in the local files on my PC, in &lt;Data&gt;\workspace\myServerName\myNSF.nsf folder. 
-  <br /> 
-  <br />I managed to create one that was visible in designer by right-clicking the project, selecting Export - Ant Buildfiles and selecting the defaults.
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/7cda9fa3aa81ab0b0e48b00066f05a47.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Paul Withers</b> on <i>Wednesday 24 July 2013 AD - 16:53 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/7cda9fa3aa81ab0b0e48b00066f05a47.jpg?s=88" class="gravatarimg" />
+							posted by <b>Paul Withers</b> on <i>Wednesday 24 July 2013 AD - 16:53 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   It confused me when I tried to create the build.xml but couldn't see it in Designer. I right-clicked the build.properties in the NSF version (it wasn't in the on disk project), selected PDE Tools - Create ANT build file, but couldn't see it in Designer. But I found it in the local files on my PC, in &lt;Data&gt;\workspace\myServerName\myNSF.nsf folder. 
@@ -368,12 +362,8 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/0467547577bffec54fbc187cb730e11a.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Egor Margineanu</b> on <i>Friday 26 July 2013 AD - 08:12 Coordinated Universal Time</i>:<br /> Interesting. This opens the possibility to use Continous Integration tools (hudson/jenkins). At least some part of it.
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/0467547577bffec54fbc187cb730e11a.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Egor Margineanu</b> on <i>Friday 26 July 2013 AD - 17:12 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/0467547577bffec54fbc187cb730e11a.jpg?s=88" class="gravatarimg" />
+							posted by <b>Egor Margineanu</b> on <i>Friday 26 July 2013 AD - 17:12 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   Interesting. This opens the possibility to use Continous Integration tools (hudson/jenkins). At least some part of it.
@@ -381,29 +371,18 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/100f577293cc80262cf80d63226cc61b.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Stefan Zehnder</b> on <i>Monday 29 September 2014 AD - 14:56 Coordinated Universal Time</i>:<br /> Thirst of all, thanks for the great idea, this is exactly what we need for our project. 
-  <br />But unfortunately, I was not able to make it work. When I try to run an xPage I'm getting the error &quot;HTTP Code: 500 javax.servlet.ServletException: java.lang.Error: Resource not found for setting access rights&quot;. It seems that something is still missing. The compiled class for the Custom Control is in the Jar. The Jar is readable by in the Designer, included in the build path and in the lib folder. The &quot;xsp-config&quot; file is also in the &quot;Web-Inf&quot; folder. I'm not sure if it is the Jar that can???t be found or maybe the ???composite-file??? property in the xsp-config file points to the wrong file or class. If you have any ideas what is going wrong, I would appreciate the input.
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/100f577293cc80262cf80d63226cc61b.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Stefan Zehnder</b> on <i>Monday 29 September 2014 AD - 23:56 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/100f577293cc80262cf80d63226cc61b.jpg?s=88" class="gravatarimg" />
+							posted by <b>Stefan Zehnder</b> on <i>Monday 29 September 2014 AD - 23:56 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   Thirst of all, thanks for the great idea, this is exactly what we need for our project. 
-  <br />But unfortunately, I was not able to make it work. When I try to run an xPage I'm getting the error &quot;HTTP Code: 500 javax.servlet.ServletException: java.lang.Error: Resource not found for setting access rights&quot;. It seems that something is still missing. The compiled class for the Custom Control is in the Jar. The Jar is readable by in the Designer, included in the build path and in the lib folder. The &quot;xsp-config&quot; file is also in the &quot;Web-Inf&quot; folder. I'm not sure if it is the Jar that can???t be found or maybe the ???composite-file??? property in the xsp-config file points to the wrong file or class. If you have any ideas what is going wrong, I would appreciate the input.
+  <br />But unfortunately, I was not able to make it work. When I try to run an xPage I'm getting the error &quot;HTTP Code: 500 javax.servlet.ServletException: java.lang.Error: Resource not found for setting access rights&quot;. It seems that something is still missing. The compiled class for the Custom Control is in the Jar. The Jar is readable by in the Designer, included in the build path and in the lib folder. The &quot;xsp-config&quot; file is also in the &quot;Web-Inf&quot; folder. I'm not sure if it is the Jar that can’t be found or maybe the “composite-file” property in the xsp-config file points to the wrong file or class. If you have any ideas what is going wrong, I would appreciate the input.
  </body>
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/2da678ac3f18dcaeb3cc3b43e130a5b1.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Pornthep Suwantanapanich</b> on <i>Saturday 26 September 2015 AD - 12:12 Coordinated Universal Time</i>:<br /> Dear Mr. Stefan Zehnder, 
-  <br /> 
-  <br />I encountered same as yours. Did you fix it.
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/2da678ac3f18dcaeb3cc3b43e130a5b1.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Pornthep Suwantanapanich</b> on <i>Saturday 26 September 2015 AD - 21:12 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/2da678ac3f18dcaeb3cc3b43e130a5b1.jpg?s=88" class="gravatarimg" />
+							posted by <b>Pornthep Suwantanapanich</b> on <i>Saturday 26 September 2015 AD - 21:12 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   Dear Mr. Stefan Zehnder, 
@@ -430,7 +409,7 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
   <li><a href="/blog/2013/">2013</a> <span class="divider">/</span></li>
   <li><a href="/blog/2013/07/">July</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/XPages.html">XPages</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
 </ul>
 

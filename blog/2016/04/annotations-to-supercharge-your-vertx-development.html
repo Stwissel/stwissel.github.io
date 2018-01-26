@@ -125,7 +125,7 @@ ga('send', 'pageview');
   <li><a href="/blog/2016/">2016</a> <span class="divider">/</span></li>
   <li><a href="/blog/2016/04/">April</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/vert.x.html">vert.x</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
 </ul>
 
@@ -146,17 +146,17 @@ ga('send', 'pageview');
 					<hr />
 					<div>ProjectCastle is well under way. Part of it, the part talking to Domino, is written in Java8 and 
 <a href="http://vertx.io">vert.x</a>. With some prior experience in node.js development vert.x will look familiar: base on event loop and callbacks, you develop in a very similar way. The big differences: vert.x runs on the JVM8, it is by nature of the JVM multi-threaded, features an event bus and is polyglot - you can develop in a mix of languages: Java, JavaScript, Jython, Groovy etc. 
-<br> This post reflects some of the approaches I found useful developing with vert.x in Java. There are 3 components which are core to vert.x development: 
+<br /> This post reflects some of the approaches I found useful developing with vert.x in Java. There are 3 components which are core to vert.x development: 
 <ul> 
  <li><h4>Verticle</h4> A unit of compute running with an event loop. Usually you start one Verticle (optional with multiple instances) as your application, but you might want/need to start additional ones for longer running tasks. A special version is the worker verticle, that runs from a thread pool to allow execution of blocking operations</li> 
  <li><h4>EventBus</h4> The different components of your application message each other via the EventBus. Data send over the EventBus can be a String, a JsonObject or a buffer. You also can send any arbitrary Java class as message once you have defined a codec for it </li> 
  <li><h4>Route</h4> Like in node.js a vert.x web application can register routes and their handlers to react on web input under various conditions. Routes can be defined using URLs, HTTP Verbs, Content-Types ( for POST/PUT/PATCH operations)</li> 
 </ul> Ideally when defining a route and a handler, a verticle or a potential message for the EventBus, all necessary code stays contained in the respective source code file. The challenge here is to register the components when the application starts. Your main Verticle doesn't know what components are in your application and manually maintain a loader code is a pain to keep in sync (besides leading to merge conflicts when working in a team). 
-<br> Java annotations to the rescue! If you are new to annotations, go and check out 
+<br /> Java annotations to the rescue! If you are new to annotations, go and check out 
 <a href="">this tutorial</a> to get up to speed. For my project I defined three of them, with one being able to be applied multiple times. 
-<h3>CastleRequest</h3> A class annotated with CastleRequest registers its handler with the EventBus, so the class can be sent over the EventBus and get encoded/decode appropriately. A special value for the annotation is "self" which indicates, that the class itself implements the 
+<h3>CastleRequest</h3> A class annotated with CastleRequest registers its handler with the EventBus, so the class can be sent over the EventBus and get encoded/decode appropriately. A special value for the annotation is &quot;self&quot; which indicates, that the class itself implements the 
 <a href="http://vertx.io/docs/apidocs/io/vertx/core/eventbus/MessageCodec.html">MessageCodec</a> interface 
-<br> 
+<br /> 
 <pre 'brush:="" java'="">
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
@@ -169,7 +169,7 @@ public @interface CastleRequest {
 }
 </pre> 
 <h3>CastleRoute</h3> This annotation can be assigned multiple times, so 2 annotation interfaces are needed 
-<br> 
+<br /> 
 <pre 'brush:="" java'="">
 @Documented
 @Repeatable(CastleRoutes.class)
@@ -178,12 +178,12 @@ public @interface CastleRequest {
 public @interface CastleRoute {
   String route();
   String description();
-  String mimetype() default "any";
-  String method() default "any";
+  String mimetype() default &quot;any&quot;;
+  String method() default &quot;any&quot;;
 }
 </pre> 
-<br> and the repeatability annotation (new with Java8): 
-<br> 
+<br /> and the repeatability annotation (new with Java8): 
+<br /> 
 <pre 'brush:="" java'="">
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
@@ -193,19 +193,19 @@ public @interface CastleRoutes {
 }
 </pre> 
 <h3>CastleVerticle</h3> Classes marked with this annotation are loaded as verticles. They can implement listeners to the whole spectrum of vert.x listening capabilities 
-<br> 
+<br /> 
 <pre 'brush:="" java'="">
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 public @interface CastleVerticle {
-  String type() default "worker";
+  String type() default &quot;worker&quot;;
   int instances() default 0;
   boolean multithreaded() default false;
 }
 </pre><h3>Loading it all</h3> With a little glue code (see below), all Verticles, Routes and Codecs get loaded by looking up the annotations. You add a new file or remove one: no additional action is required. 
-<br> Since traversing all classes is expensive, we have one method that does that once calling the 3 different annotation processors once for each class 
-<br> 
+<br /> Since traversing all classes is expensive, we have one method that does that once calling the 3 different annotation processors once for each class 
+<br /> 
 <pre 'brush:="" java'="">
 private void loadClassesByAnnotation(final Router router) {
     try {
@@ -213,10 +213,10 @@ private void loadClassesByAnnotation(final Router router) {
       final ClassPath classPath = ClassPath.from(this.getClass().getClassLoader());
       // Extract the package name from the full class name
       String packageName = this.getClass().getName();
-      packageName = packageName.substring(0, packageName.lastIndexOf("."));
+      packageName = packageName.substring(0, packageName.lastIndexOf(&quot;.&quot;));
       // Get all classes in this tree
       for (final ClassInfo classInfo : classPath.getTopLevelClassesRecursive(packageName)) {
-        @SuppressWarnings("rawtypes")
+        @SuppressWarnings(&quot;rawtypes&quot;)
         final Class candidate = classInfo.load();
         this.loadVerticleByAnnotation(candidate);
         this.loadCodecByAnnotation(candidate);
@@ -227,7 +227,7 @@ private void loadClassesByAnnotation(final Router router) {
     }
  }
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
+  @SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
   private void loadCodecByAnnotation(final Class candidate) {
     EventBus eventBus = this.vertx.eventBus();
     final Annotation[] annotation = candidate.getAnnotationsByType(CastleRequest.class);
@@ -237,7 +237,7 @@ private void loadClassesByAnnotation(final Router router) {
         final CastleRequest cr = (CastleRequest) annotation[i];
         final String codecClassName = cr.value();
         Object codecCandidate;
-        if (codecClassName.equalsIgnoreCase("self")) {
+        if (codecClassName.equalsIgnoreCase(&quot;self&quot;)) {
           // The object contains its own message codec
           codecCandidate = candidate.newInstance();
         } else {
@@ -247,7 +247,7 @@ private void loadClassesByAnnotation(final Router router) {
           MessageCodec messageCodec = (MessageCodec) codecCandidate;
           eventBus.registerDefaultCodec(candidate, messageCodec);
         } else {
-          this.logger.error("Class with CastleRequest Annotation has wrong codec type:" + codecClassName);
+          this.logger.error(&quot;Class with CastleRequest Annotation has wrong codec type:&quot; + codecClassName);
         }
       } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
         this.logger.error(e);
@@ -255,7 +255,7 @@ private void loadClassesByAnnotation(final Router router) {
     }
   }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
+  @SuppressWarnings({ &quot;unchecked&quot;, &quot;rawtypes&quot; })
   private void loadRouteByAnnotation(final Class candidate) {
     final Annotation[] annotation = candidate.getAnnotationsByType(CastleRoute.class);
     for (int i = 0; i &lt; annotation.length; i++) {
@@ -267,9 +267,7 @@ private void loadClassesByAnnotation(final Router router) {
           // than once but that's acceptable
           final Class
  
- 
  <castleroutehandler>
-  
   
    toBeloaded = candidate;
           CastleRouteHandler crh = toBeloaded.newInstance();
@@ -278,7 +276,7 @@ private void loadClassesByAnnotation(final Router router) {
           this.routeList.put(cr.route(), cr.description());
           this.routeHandlers.add(crh);
         } else {
-          this.logger.error("Class with CastleRouter Annotation has wrong type:" + candidate.getName());
+          this.logger.error(&quot;Class with CastleRouter Annotation has wrong type:&quot; + candidate.getName());
         }
       } catch (InstantiationException | IllegalAccessException e) {
         this.logger.error(e);
@@ -286,7 +284,7 @@ private void loadClassesByAnnotation(final Router router) {
     }
   }
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
   private void loadVerticleByAnnotation(final Class candidate) {
     final Annotation[] annotation = candidate.getAnnotationsByType(CastleVerticle.class);
     for (int i = 0; i &lt; annotation.length; i++) {
@@ -294,7 +292,7 @@ private void loadClassesByAnnotation(final Router router) {
         final CastleVerticle cv = (CastleVerticle) annotation[i];
         final String verticleID = candidate.getName();
         final DeploymentOptions options = new DeploymentOptions();
-        if (cv.type().equalsIgnoreCase("worker")) {
+        if (cv.type().equalsIgnoreCase(&quot;worker&quot;)) {
           options.setWorker(true);
         }
         // Overwrite the instances if number is specified
@@ -304,14 +302,14 @@ private void loadClassesByAnnotation(final Router router) {
         options.setMultiThreaded(cv.multithreaded());
         this.vertx.deployVerticle(verticleID, options, result -&gt; {
           if (result.succeeded()) {
-            this.logger.info(verticleID + " started as " + result.result());
+            this.logger.info(verticleID + &quot; started as &quot; + result.result());
             this.localVerticles.add(result.result());
           } else {
             this.logger.error(result.cause());
           }
         });
       } else {
-        this.logger.error("Class with CastleVerticle Annotation has wrong type:" + candidate.getName());
+        this.logger.error(&quot;Class with CastleVerticle Annotation has wrong type:&quot; + candidate.getName());
       }
     }
   }
@@ -338,25 +336,25 @@ public AbstractCastleRouteHandler init(final Vertx vertx, final Router router, f
     this.vertx = vertx;
     this.description = description;
     this.route = route;
-    this.logger.info("Loading " + this.getClass().getName() + " for " + this.getRoute() + " .. " + description);
+    this.logger.info(&quot;Loading &quot; + this.getClass().getName() + &quot; for &quot; + this.getRoute() + &quot; .. &quot; + description);
     Route localRoute = null;
-    if ("any".equalsIgnoreCase(method) || "GET".equalsIgnoreCase(method)) {
+    if (&quot;any&quot;.equalsIgnoreCase(method) || &quot;GET&quot;.equalsIgnoreCase(method)) {
       localRoute = router.get(route).handler(this::handleGet);
     }
-    if ("any".equalsIgnoreCase(method) || "POST".equalsIgnoreCase(method)) {
+    if (&quot;any&quot;.equalsIgnoreCase(method) || &quot;POST&quot;.equalsIgnoreCase(method)) {
       localRoute = router.post(route).handler(this::handlePost);
     }
-    if ("any".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method)) {
+    if (&quot;any&quot;.equalsIgnoreCase(method) || &quot;PUT&quot;.equalsIgnoreCase(method)) {
       localRoute = router.put(route).handler(this::handlePut);
     }
-    if ("any".equalsIgnoreCase(method) || "PATCH".equalsIgnoreCase(method)) {
+    if (&quot;any&quot;.equalsIgnoreCase(method) || &quot;PATCH&quot;.equalsIgnoreCase(method)) {
       localRoute = router.put(route).handler(this::handlePatch);
     }
-    if ("any".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method)) {
+    if (&quot;any&quot;.equalsIgnoreCase(method) || &quot;DELETE&quot;.equalsIgnoreCase(method)) {
       localRoute = router.delete(route).handler(this::handleDelete);
     }
 
-    if (localRoute != null &amp;&amp; !"any".equalsIgnoreCase(mimetype)) {
+    if (localRoute != null &amp;&amp; !&quot;any&quot;.equalsIgnoreCase(mimetype)) {
       localRoute.consumes(mimetype);
     }
 
@@ -368,10 +366,9 @@ public AbstractCastleRouteHandler init(final Vertx vertx, final Router router, f
   }
 
  
- 
  </castleroutehandler></pre> 
-<br> Left as an exercise to the reader: runs the analysis at compile time instead of runtime. 
-<br>As usual: YMMV</div>
+<br /> Left as an exercise to the reader: runs the analysis at compile time instead of runtime. 
+<br />As usual: YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -379,7 +376,7 @@ Stephan H Wissel</a> on 2016-04-02 08:01
 <span class="divider">|</span>
 <a href="/blog/2016/04/annotations-to-supercharge-your-vertx-development.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/vert.x.html">vert.x</a> 
+categories:  <a href="/blog/categories/.html"></a> 
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2016/04/annotations-to-supercharge-your-vertx-development.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Annotations to supercharge your vert.x development"></div>
 						<script type="text/javascript">
@@ -419,7 +416,7 @@ categories:  <a href="/blog/categories/vert.x.html">vert.x</a>
   <li><a href="/blog/2016/">2016</a> <span class="divider">/</span></li>
   <li><a href="/blog/2016/04/">April</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/vert.x.html">vert.x</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
 </ul>
 

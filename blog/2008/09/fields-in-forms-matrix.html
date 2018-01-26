@@ -125,7 +125,7 @@ ga('send', 'pageview');
   <li><a href="/blog/2008/">2008</a> <span class="divider">/</span></li>
   <li><a href="/blog/2008/09/">September</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Thursday</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
 </ul>
 
@@ -145,897 +145,640 @@ ga('send', 'pageview');
 					<h1><small>Fields in Forms Matrix</small></h1>
 					<hr />
 					<div>When cleaning up existing applications it is good to have an overview what fields are used across forms. Unfortunately the synopsis isn't very helpful there. However with a few lines of LotusScript one can create a matrix that serves as an overview. It is a comparison by name only and doesn't tell you anything about computation mode or data-type. But it is a start. YMMV 
-<br><pre>
- 
+<br /><pre>
  
  <div class="lotusscript">
 
-  
   
   <font class="ls-comment">'CreateFieldMatrixReport: </font>
 
 
   
-  
   <font class="ls-keyword">Option</font> 
-  
   
   <font class="ls-keyword">Public</font>
 
   
-  
   <font class="ls-keyword">Option</font> 
-  
   
   <font class="ls-keyword">Declare</font>
 
 
   
-  
   <font class="ls-statement">Dim</font> fieldList 
-  
   
   <font class="ls-keyword">List</font> 
   
-  
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">Integer</font> 
-  
   
   <font class="ls-comment">'The row for a specific field name</font>
 
   
-  
   <font class="ls-statement">Dim</font> fieldCount 
-  
   
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">Integer</font> 
-  
   
   <font class="ls-comment">'How many unique fieldnames do we have 0 based</font>
 
 
   
-  
   <font class="ls-statement">Sub</font> 
-  
   
   <font class="ls-keyword">Initialize</font>
 	
   
-  
   <font class="ls-statement">Dim</font> db 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesDatabase</font>
 	
   
-  
   <font class="ls-statement">Dim</font> s 
-  
   
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">New</font> 
-  
   
   <font class="ls-class">NotesSession</font>
 	
   
-  
   <font class="ls-statement">Dim</font> out 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesStream</font>
 	
   
-  
   <font class="ls-statement">Dim</font> curForm 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesForm</font>
 	
   
-  
   <font class="ls-statement">Dim</font> filename 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-keyword">String</font>
 	
 	
   
-  
   <font class="ls-statement">Dim</font> formList 
-  
   
   <font class="ls-keyword">List</font> 
   
-  
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">Variant</font>	
-  
   
   <font class="ls-comment">'A list with arrays of fiields </font>
 	
   
-  
   <font class="ls-statement">Dim</font> formCount 
-  
   
   <font class="ls-keyword">As</font> 
   
-  
   <font class="ls-keyword">Integer</font> 
-  
   
   <font class="ls-comment">'How many forms do we have 0 based</font>
 	
   
-  
   <font class="ls-statement">Dim</font> fieldArray
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-operator">)</font> 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-keyword">Boolean</font>
 	
 	
   
-  
   <font class="ls-statement">On</font> 
   
-  
   <font class="ls-function">Error</font> 
-  
   
   <font class="ls-keyword">Goto</font> Err_Initialize
 	
 	fileName 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-function">Inputbox</font>
   
-  
   <font class="ls-operator">(</font>
   
-  
-  <font class="ls-quote">"Where to store the result"</font>
-  
+  <font class="ls-quote">&quot;Where to store the result&quot;</font>
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-statement">If</font> fileName 
-  
   
   <font class="ls-operator">=</font> 
   
-  
-  <font class="ls-quote">""</font> 
-  
+  <font class="ls-quote">&quot;&quot;</font> 
   
   <font class="ls-statement">Then</font>
 		
   
-  
   <font class="ls-statement">Exit</font> 
-  
   
   <font class="ls-statement">Sub</font>
 	
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">If</font>
 	
 	
   
-  
   <font class="ls-statement">Set</font> out 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CreateStream
 	
   
-  
   <font class="ls-function">Call</font> out
-  
   
   <font class="ls-operator">.</font>
   
-  
   <font class="ls-function">Open</font>
   
-  
   <font class="ls-operator">(</font>fileName
-  
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-function">Call</font> out
-  
   
   <font class="ls-operator">.</font>Truncate
 	
 	formCount 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-operator">-</font>1
 	fieldCount 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-operator">-</font>1
 	
 	
   
-  
   <font class="ls-statement">Set</font> db 
   
-  
   <font class="ls-operator">=</font> s
-  
   
   <font class="ls-operator">.</font>CurrentDatabase
 	
 	
   
-  
   <font class="ls-comment">'Extract all the fields and forms</font>
 	
   
-  
   <font class="ls-statement">Forall</font> f In db
-  
   
   <font class="ls-operator">.</font>Forms
 		formCount 
   
-  
   <font class="ls-operator">=</font> formCount 
-  
   
   <font class="ls-operator">+</font> 1
 		
   
-  
   <font class="ls-statement">Set</font> curForm 
-  
   
   <font class="ls-operator">=</font> f
 		formList
   
-  
   <font class="ls-operator">(</font>curForm
-  
   
   <font class="ls-operator">.</font>
   
-  
   <font class="ls-function">Name</font>
-  
   
   <font class="ls-operator">)</font> 
   
-  
   <font class="ls-operator">=</font> curForm
-  
   
   <font class="ls-operator">.</font>Fields
 		
   
-  
   <font class="ls-function">Call</font> extractFields
-  
   
   <font class="ls-operator">(</font>curForm
   
-  
   <font class="ls-operator">.</font>Fields
-  
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Forall</font>
 	
 	
   
-  
   <font class="ls-comment">'Now size the array</font>
 	
   
-  
   <font class="ls-statement">Redim</font> fieldArray
-  
   
   <font class="ls-operator">(</font>fieldCount
   
-  
   <font class="ls-operator">,</font>formCount
-  
   
   <font class="ls-operator">)</font>
 	
 	
-  
   
   <font class="ls-comment">'Header</font>
 	out
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;html&gt;&lt;head&gt;&lt;title&gt;Field Matrix&lt;/title&gt;&lt;/head&gt;&lt;style&gt;.yes {background-color : red; color : white }|</font>
-  
   
   <font class="ls-operator">)</font>
 	out
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">| .no { color : white} table {width : 100%} td {text-align : center}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;table&gt;|</font>
-  
   
   <font class="ls-operator">)</font>
 	
 	
   
-  
   <font class="ls-comment">'Now fill the array</font>
 	
   
-  
   <font class="ls-statement">Dim</font> i 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-keyword">Integer</font>
 	
   
-  
   <font class="ls-statement">Dim</font> j 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-keyword">Integer</font>	
 	
 	
   
-  
   <font class="ls-comment">'Now fill the array and the first table</font>
 	out
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;tr&gt;&lt;th&gt;Field/Form&lt;/th&gt;|</font>
-  
   
   <font class="ls-operator">)</font>
 	i 
   
-  
   <font class="ls-operator">=</font> 
   
-  
   <font class="ls-operator">-</font>1 
-  
   
   <font class="ls-comment">'Reset i as Rowcounter</font>
 	
   
-  
   <font class="ls-statement">Forall</font> curFields In formList
 		i 
   
-  
   <font class="ls-operator">=</font> i 
-  
   
   <font class="ls-operator">+</font> 1
 		
   
-  
   <font class="ls-statement">For</font> j 
-  
   
   <font class="ls-operator">=</font> 0 
   
-  
   <font class="ls-statement">To</font> 
-  
   
   <font class="ls-function">Ubound</font>
   
-  
   <font class="ls-operator">(</font>curFields
-  
   
   <font class="ls-operator">)</font>
 			fieldArray
   
-  
   <font class="ls-operator">(</font>fieldList
-  
   
   <font class="ls-operator">(</font>curFields
   
-  
   <font class="ls-operator">(</font>j
   
-  
   <font class="ls-operator">)</font>
   
-  
   <font class="ls-operator">)</font>
-  
   
   <font class="ls-operator">,</font>i
   
-  
   <font class="ls-operator">)</font> 
-  
   
   <font class="ls-operator">=</font> 
   
-  
   <font class="ls-constant">True</font>
 		
-  
   
   <font class="ls-statement">Next</font>
 		
 		
   
-  
   <font class="ls-function">Call</font> out
-  
   
   <font class="ls-operator">.</font>WriteText
   
-  
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;th&gt;|</font>
-  
   
   <font class="ls-operator">)</font>	
 		out
   
-  
   <font class="ls-operator">.</font>WriteText 
-  
   
   <font class="ls-function">Listtag</font>
   
-  
   <font class="ls-operator">(</font>curFields
-  
   
   <font class="ls-operator">)</font>
 		
   
-  
   <font class="ls-function">Call</font> out
-  
   
   <font class="ls-operator">.</font>WriteText
   
-  
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;/th&gt;|</font>
-  
   
   <font class="ls-operator">)</font>
 		
 	
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Forall</font>
 	
   
-  
   <font class="ls-function">Call</font> out
-  
   
   <font class="ls-operator">.</font>WriteText
   
-  
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;/tr&gt;|</font>
-  
   
   <font class="ls-operator">)</font>
 	
 	
-  
   
   <font class="ls-comment">'Now the matrix in its full beauty</font>
 	
 	
   
-  
   <font class="ls-statement">Forall</font> curFields2 In FieldList
 		out
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;tr&gt;&lt;td&gt;|</font>
   
-  
   <font class="ls-operator">+</font>
-  
   
   <font class="ls-function">Listtag</font>
   
-  
   <font class="ls-operator">(</font>curFields2
   
-  
   <font class="ls-operator">)</font>
-  
   
   <font class="ls-operator">+</font>
   
-  
   <font class="ls-quote">|&lt;/td&gt;|</font>
-  
   
   <font class="ls-operator">)</font>
 		
-  
   
   <font class="ls-comment">'curFields2 has the row, we loop through the columns</font>
 		
 		
   
-  
   <font class="ls-statement">For</font> j 
   
-  
   <font class="ls-operator">=</font> 0 
-  
   
   <font class="ls-statement">To</font> formCount
 			
   
-  
   <font class="ls-statement">If</font> fieldArray
-  
   
   <font class="ls-operator">(</font>curFields2
   
-  
   <font class="ls-operator">,</font>j
-  
   
   <font class="ls-operator">)</font> 
   
-  
   <font class="ls-statement">Then</font> 
-  
   
   <font class="ls-comment">'it is boolean after all</font>
 				out
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>
   
-  
-  <font class="ls-quote">|&lt;td class="yes"&gt;+&lt;/td&gt;|</font>
-  
+  <font class="ls-quote">|&lt;td class=&quot;yes&quot;&gt;+&lt;/td&gt;|</font>
   
   <font class="ls-operator">)</font>
 			
-  
   
   <font class="ls-statement">Else</font>
 				out
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>
   
-  
-  <font class="ls-quote">|&lt;td class="no"&gt;-&lt;/td&gt;|</font>
-  
+  <font class="ls-quote">|&lt;td class=&quot;no&quot;&gt;-&lt;/td&gt;|</font>
   
   <font class="ls-operator">)</font>
 			
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">If</font>
 		
   
-  
   <font class="ls-statement">Next</font>		
 		out
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;/tr&gt;|</font>
-  
   
   <font class="ls-operator">)</font>
 	
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Forall</font>
 	
 	
   
-  
   <font class="ls-comment">'Footer</font>
 	out
   
-  
   <font class="ls-operator">.</font>WriteText
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">|&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;|</font>
-  
   
   <font class="ls-operator">)</font>
 	
 Exit_Initialize
   
-  
   <font class="ls-operator">:</font>
 	
   
-  
   <font class="ls-statement">On</font> 
-  
   
   <font class="ls-function">Error</font> 
   
-  
   <font class="ls-statement">Resume</font> 
-  
   
   <font class="ls-statement">Next</font>
 	
   
-  
   <font class="ls-function">Call</font> out
   
-  
   <font class="ls-operator">.</font>
-  
   
   <font class="ls-function">Close</font>
 	
   
-  
   <font class="ls-statement">Exit</font> 
-  
   
   <font class="ls-statement">Sub</font>	
 	
 Err_Initialize
   
-  
   <font class="ls-operator">:</font>
 	
   
-  
   <font class="ls-function">Msgbox</font> 
-  
   
   <font class="ls-function">Error$</font>
 	
-  
   
   <font class="ls-statement">Resume</font> Exit_Initialize
 	
 
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Sub</font>
 
 
 
   
-  
   <font class="ls-statement">Sub</font> extractFields
-  
   
   <font class="ls-operator">(</font>allFields 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-keyword">Variant</font>
   
-  
   <font class="ls-operator">)</font>
 	
-  
   
   <font class="ls-comment">'fieldList, fieldcount are globla</font>
 	
 	
   
-  
   <font class="ls-statement">Forall</font> curFieldName In allFields
 		
   
-  
   <font class="ls-statement">If</font> 
-  
   
   <font class="ls-operator">Not</font> 
   
-  
   <font class="ls-function">Iselement</font>
-  
   
   <font class="ls-operator">(</font>fieldList
   
-  
   <font class="ls-operator">(</font>curFieldName
-  
   
   <font class="ls-operator">)</font>
   
-  
   <font class="ls-operator">)</font> 
-  
   
   <font class="ls-statement">Then</font>
 			
   
-  
   <font class="ls-comment">'We only add fields we don't have in the list</font>
 			fieldcount 
   
-  
   <font class="ls-operator">=</font> fieldCount 
-  
   
   <font class="ls-operator">+</font> 1
 			fieldList
   
-  
   <font class="ls-operator">(</font>curFieldName
   
-  
   <font class="ls-operator">)</font> 
-  
   
   <font class="ls-operator">=</font> fieldCount
 		
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">If</font>
 	
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Forall</font>
 
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Sub</font>
 
 
- 
  
  </div></pre> 
 <div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;"> 
  <center>
    This LotusScript was converted to HTML using the 
   <b><i>ls2html</i></b> routine, 
-  <br>provided by Julian Robichaux at 
+  <br />provided by Julian Robichaux at 
   <a href="http://www.nsftools.com" target="_blank">nsftools.com</a>. 
  </center> 
 </div></div>
@@ -1044,9 +787,9 @@ Err_Initialize
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 2008-09-15 04:44
 <span class="divider">|</span>
-<a href="/blog/2008/09/fields-in-forms-matrix.html#comments">Comments (6)</a>
+<a href="/blog/2008/09/fields-in-forms-matrix.html#comments">Comments (3)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Thursday</a> 
+categories:  <a href="/blog/categories/.html"></a> 
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2008/09/fields-in-forms-matrix.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Fields in Forms Matrix"></div>
 						<script type="text/javascript">
@@ -1066,30 +809,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Marius Neumann</b> on <i>Monday 15 September 2008 AD - 08:18 Coordinated Universal Time</i>:<br /> Thanks for the nice piece of code. Its working fine here! 
-  <br /> 
-  <br />Unfortunately, for me it's usually not sufficient to search for forms when it comes to cleaning up or renaming Notes fields. I prefer searching then whole DB design, e.g. with a free tool like this one: { 
-  <a href="http://www.openntf.org/Projects/pmt.nsf/0/9DA70A4256BF60AC8625718B002F84D6" rel="nofollow" target="blank">Link</a> }
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/1203a8ae6ee407df82539ef45c1efed4.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Theo Heselmans</b> on <i>Monday 15 September 2008 AD - 10:48 Coordinated Universal Time</i>:<br /> Very interesting. Tx Stephan
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8a2a807da5b24e308efead7a39603b87.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Kevin Pettitt</b> on <i>Monday 15 September 2008 AD - 13:35 Coordinated Universal Time</i>:<br /> Great idea Stephan. Certainly a good free option. You can get a similar data using one of the &quot;Design views&quot; in SuperNTF, which shows all fields categorized by Form/Subform. 
-  <br /> 
-  <br />However, I normally use Teamstudio Analyzer for this, which does provide information about datatype, and I even created a custom view for the Analyzer template to show more of this detail. You can download my &quot;Analyzer Plus&quot; custom views from OpenNTF here: { 
-  <a href="http://www.openntf.org/Projects/codebin/codebin.nsf/0/0AC60BFB44AAD422862570DF0081E40D" rel="nofollow" target="blank">Link</a> } 
-  <br /> 
-  <br />One idea for enhancing this general technique here would be to parsing the form DXL, which also provides datatype and fieldtype detail (and much more). For example: 
-  <br /> 
-  <br />&lt;field type=&quot;text&quot; kind=&quot;editable&quot; name=&quot;Form&quot; allowmultivalues=&quot;false&quot; protected=&quot;false&quot; sign=&quot;false&quot; computeaftervalidation=&quot;false&quot; defaultfocus=&quot;false&quot; showdelimiters=&quot;true&quot; allowtabout=&quot;false&quot; useappletinbrowser=&quot;false&quot; storelocally=&quot;false&quot; dataconnectionfield=&quot;data&quot;&gt;
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Marius Neumann</b> on <i>Monday 15 September 2008 AD - 17:18 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.jpg?s=88" class="gravatarimg" />
+							posted by <b>Marius Neumann</b> on <i>Monday 15 September 2008 AD - 17:18 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   Thanks for the nice piece of code. Its working fine here! 
@@ -1100,8 +821,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/1203a8ae6ee407df82539ef45c1efed4.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Theo Heselmans</b> on <i>Monday 15 September 2008 AD - 19:48 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/1203a8ae6ee407df82539ef45c1efed4.jpg?s=88" class="gravatarimg" />
+							posted by <b>Theo Heselmans</b> on <i>Monday 15 September 2008 AD - 19:48 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   Very interesting. Tx Stephan
@@ -1109,8 +830,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8a2a807da5b24e308efead7a39603b87.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Kevin Pettitt</b> on <i>Monday 15 September 2008 AD - 22:35 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8a2a807da5b24e308efead7a39603b87.jpg?s=88" class="gravatarimg" />
+							posted by <b>Kevin Pettitt</b> on <i>Monday 15 September 2008 AD - 22:35 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   Great idea Stephan. Certainly a good free option. You can get a similar data using one of the &quot;Design views&quot; in SuperNTF, which shows all fields categorized by Form/Subform. 
@@ -1142,7 +863,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
   <li><a href="/blog/2008/">2008</a> <span class="divider">/</span></li>
   <li><a href="/blog/2008/09/">September</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Thursday</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
 </ul>
 

@@ -125,7 +125,7 @@ ga('send', 'pageview');
   <li><a href="/blog/2009/">2009</a> <span class="divider">/</span></li>
   <li><a href="/blog/2009/05/">May</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Thursday</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
 </ul>
 
@@ -135,8 +135,8 @@ ga('send', 'pageview');
 				<p>This article is part of a mini series. Read them all (latest on top):</p>
 				<h3>Domino Design Pattern</h3>
 				<ol reversed class="nav nav-list">
-					<li  class="active"><a href="/blog/2009/05/notes-pattern-inversion-of-logging.html">Notes pattern : Inversion of logging</a></li>
 					<li ><a href="/blog/2014/04/domino-design-pattern-secret-documents.html">Domino Design Pattern: Secret documents</a></li>
+					<li  class="active"><a href="/blog/2009/05/notes-pattern-inversion-of-logging.html">Notes pattern : Inversion of logging</a></li>
 				</ol>
 			</div>	
 
@@ -152,21 +152,21 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Notes pattern : Inversion of logging</small></h1>
 					<hr />
-					<div>A typical requirement in applications is to keep a log of changes. The simplest form is to keep fields with the author and date/time of the latest change (which has the distinct disadvantage not knowing what has been changed by whom). The next level would be to keep the list of all authors and change times (still leaving the question " 
+					<div>A typical requirement in applications is to keep a log of changes. The simplest form is to keep fields with the author and date/time of the latest change (which has the distinct disadvantage not knowing what has been changed by whom). The next level would be to keep the list of all authors and change times (still leaving the question &quot; 
 <i>what</i> unanswered) followed by very sophisticated tools like 
 <a href="http://www.openntf.org/Projects/pmt.nsf/ProjectLookup/Audit%20Manager">Audit Manager</a> or similar home grown solutions. 
-<br> All these solutions have in common, that they "merely" record changes made (typically in a query or post save event) 
+<br /> All these solutions have in common, that they &quot;merely&quot; record changes made (typically in a query or post save event) 
 <b>after</b> they happened (From a big picture perspective, a log on query-save is technically before, but after the trigger that will commit the change). While this works reasonable well for audit, adding another typical requirement calls for a different solution. More often than not the parts of a (workflow) document which can be altered by any given user change in the course of an [workflow] application. While Author fields protect a document at large, safeguarding individual fields becomes more tedious, especially when you can't group them in access controlled sections (e.g. in a web application). 
-<br> In a related use case: documents could be updated by users, who have current information, but don't "own" the documents. Typically they send an email to the document owner (if that is visible) asking for the update of that information. Asking somebody to update data into some other system, that involves copy &amp; paste from an eMail *is* a sign of a broken process. The solution to that seemingly contrary requirements: "update of certain fields" only and "update by anybody" can be solved using a pattern that I christianed " 
-<b>Inversion of Logging</b>": 
-<br> Instead of logging what has changed an application using this pattern creates a change request, stating what 
+<br /> In a related use case: documents could be updated by users, who have current information, but don't &quot;own&quot; the documents. Typically they send an email to the document owner (if that is visible) asking for the update of that information. Asking somebody to update data into some other system, that involves copy &amp; paste from an eMail *is* a sign of a broken process. The solution to that seemingly contrary requirements: &quot;update of certain fields&quot; only and &quot;update by anybody&quot; can be solved using a pattern that I christianed &quot; 
+<b>Inversion of Logging</b>&quot;: 
+<br /> Instead of logging what has changed an application using this pattern creates a change request, stating what 
 <b>will</b> be changed. This request is then processed by a central system and checked against system constraints. If an authorized user requests a change, the changes are applied without further user interaction. The change request is kept as record. If an unauthorized user requests a change a workflow is kicked of to determine if the request is suitable for approval to be then routed to the data owner (or data guardian) for approval. Once approved the changes are applied to the main document. 
-<br> 
-<img src="/blog/images/2009/InversionOfLoggingFlowChart.gif" alt="Flow of Inversion of Logging"> 
-<br> To make this internal flow transparent and pleasant to the users a few considerations need to be made:<ul> 
+<br /> 
+<img src="/blog/images/2009/InversionOfLoggingFlowChart.gif" alt="Flow of Inversion of Logging" /> 
+<br /> To make this internal flow transparent and pleasant to the users a few considerations need to be made:<ul> 
  <li>Default Access to Database is Author, but documents don't contain Author fields. So users can create new documents, but can't edit existing documents.</li> 
  <li>You need to handle QueryOpen (mode=edit) and QueryModeChange events (from read to edit) in Notes clients as well as ?EditDocument in web applications. Ideally to a user it <b>looks like</b> going into edit mode, so the inner workings of the solution stay transparent.</li> 
- <li>You need a mail-in database (Default access=Depositor) to collect the change requests. If the interval of the "if new mail arrives" agent is too long for you, you might consider an XPage and a @URLOpen agent as faster trigger option (more on that in another post)</li> 
+ <li>You need a mail-in database (Default access=Depositor) to collect the change requests. If the interval of the &quot;if new mail arrives&quot; agent is too long for you, you might consider an XPage and a @URLOpen agent as faster trigger option (more on that in another post)</li> 
  <li>You need to have a rule book for what fields can be updated in which application by whom based on what document status. This sounds awfully like business process engineering and as a matter of fact: it is.</li> 
  <li>You need to make a call how do you want to handle pending changes. For one you probably want to display a hint on the form. That costs you one @DBLookup (which should be bearable). You could also include the pending changes into the working copy of the document. The interesting question here: how to handle the flow if such a pending change is rejected. Or - if you base the working copy on the existing document, what if the changes requested match a pending change request (e.g. waiting for approval) and would get auto-approval. So you need to plan for a potential resequencing.</li> 
  <li>Don't resort to email as the default notification mechanism. Rather add a record to a notification application (using a web service for that seems like an excellent idea) where a user could define how (s)he wants to be notified and what eventual notification exceptions (e.g. delegation of authority) exist.</li> 
@@ -174,16 +174,16 @@ ga('send', 'pageview');
  <li>Plan your archive well. You can keep the current archive in a profile in the change request database and switch based on calendar, size or number of entries</li> 
  <li>The change request database should have a short deletion stub lifecycle (default is 30 days, cut it to 5) since you create and delete a lot of documents during the course of the application. You could consider to delete/recreate that database during a time-out period (or use 2 different database names based on the day of week, so you can recreate savely on alternate days.</li> 
  <li>Make sure that in a multi-server environment the apply-changes agent is running only on one server. Make sure to plan for agent fail-over in a cluster environment.</li> 
- <li>Provide an easy UI for data integrity checks. I don't think an automatic check would be needed in most of the cases. It might be smart to record the archive databases in the main document, so lookups will be faster. However you want to have an "Auditor" function that does a deep check. Eventually you would send a request to a mail-in database, so the UI isn't blocked while a lot of archives get queried.</li> 
+ <li>Provide an easy UI for data integrity checks. I don't think an automatic check would be needed in most of the cases. It might be smart to record the archive databases in the main document, so lookups will be faster. However you want to have an &quot;Auditor&quot; function that does a deep check. Eventually you would send a request to a mail-in database, so the UI isn't blocked while a lot of archives get queried.</li> 
 </ul> As usual YMMV.</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2009-05-03 11:15
+Stephan H Wissel</a> on 2009-05-03 07:59
 <span class="divider">|</span>
-<a href="/blog/2009/05/notes-pattern-inversion-of-logging.html#comments">Comments (18)</a>
+<a href="/blog/2009/05/notes-pattern-inversion-of-logging.html#comments">Comments (c)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Thursday</a> 
+categories:  <a href="/blog/categories/.html"></a> 
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2009/05/notes-pattern-inversion-of-logging.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Notes pattern : Inversion of logging"></div>
 						<script type="text/javascript">
@@ -203,42 +203,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/07b6641fb4796d85d6357b7bfd47ebbb.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Patrick Picard</b> on <i>Sunday 03 May 2009 AD - 15:13 Coordinated Universal Time</i>:<br /> Very interesting concept. As a non-notes programmer, i'd love to see this in action. Do you have a sample db implementing this pattern?
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/3cd04ed374ebaa5190c930f955b8dcc7.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Ian Randall</b> on <i>Sunday 03 May 2009 AD - 22:42 Coordinated Universal Time</i>:<br /> Thanks for posting this, it helps to share techniques and practical experience with workflows with the community. To add to your comments, we also provide the option of a Document Change Request (DCR)workflow in our application that includes a document management system, although there are some differences to the model that you have described: 
-  <br /> 
-  <br />1) Our DCR workflow is optional for each document, because some changes might be trivial (e.g. correcting a spelling mistake). 
-  <br /> 
-  <br />2) Only one DCR workflow is allowed at any one time on a given document version. 
-  <br /> 
-  <br />3) We only allow the controlled document to be changed after the DCR workflow has been completed. 
-  <br /> 
-  <br />4) We archive the DCR workflow (even if no change is approved) with the document version to be changed. 
-  <br /> 
-  <br />5) We employ a &quot;Gatekeeper&quot; Role to ensure that change requests are reasonable, before the Change request is released to the reviewers. 
-  <br /> 
-  <br />6) All persons in the DCR workflow are assigned by Roles. 
-  <br /> 
-  <br />7) There is an &quot;Approver&quot; Role that authorises a change to take place. (Note: This &quot;Approver&quot; may not actually have edit rights to the controlled document). 
-  <br /> 
-  <br />8) We record all activities (what, when, why, who, comments and rich text) into an audit trail field in the controlled document, even if the change request is rejected. In this way a record is kept of what was changed and NOT changed and why. 
-  <br /> 
-  <br />9) Once the &quot;Approver&quot; has approved or rejected the change, the change request is locked but responses delayed due to replication are recorded as input after the DCR workflow is closed in the audit trail. 
-  <br /> 
-  <br />10) If the controlled document is currently being changed (outside of the DCR workflow) we lock the record so that a new DCR cannot be activated. 
-  <br /> 
-  <br />11) The DCR workflow can be configured to include both serial and parallel workflows. 
-  <br /> 
-  <br />12) The DCR workflow is not managed in a separate database buit within the database where the controlled documents are stored. 
-  <br /> 
-  <br />13) The DCR workflow can also record that a controlled document review too place, even if no change is to be made to the controlled document. In that way, reviews can be scheduled to occur on a regular cycle, even if no change is actually made to the controlled document. The DCR then becomes a record of the review.
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/07b6641fb4796d85d6357b7bfd47ebbb.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Patrick Picard</b> on <i>Monday 04 May 2009 AD - 00:13 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/07b6641fb4796d85d6357b7bfd47ebbb.jpg?s=88" class="gravatarimg" />
+							posted by <b>Patrick Picard</b> on <i>Monday 04 May 2009 AD - 00:13 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   Very interesting concept. As a non-notes programmer, i'd love to see this in action. Do you have a sample db implementing this pattern?
@@ -246,28 +212,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Monday 04 May 2009 AD - 05:44 Coordinated Universal Time</i>:<br /> @Patrick - code samples coming somewhen. The pattern itself isn''t limited to Notes or Domino. Actually SAP is using that for their configuration and data management too. 
-  <br /> 
-  <br />@Ian: Thanks for describing your workflow application. It looks interesting. However it has a flaw: there is no such thing as a &quot;minor change&quot;. There is a change or not. If you follow the principle &quot;every change needs to be documented&quot; you would submit even a spelling mistake to the internal workflow. Otherwise your non-repudiation or integrity check will fail. Of course you can design the workflow so minor changes are applied automatically. Advantages this pattern: multiple change request at any time, flexible change workflow and full accountability. Also important to note: that pattern fits well for business applications, not just for a document approval workflow. The instances we implemented that in the past all were line-of-business applications like price books, CRM, Master part lists etc. How it works out exactly is a question of your workflow implementation.
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/3cd04ed374ebaa5190c930f955b8dcc7.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Ian Randall</b> on <i>Monday 04 May 2009 AD - 06:42 Coordinated Universal Time</i>:<br /> Stephan, 
-  <br /> 
-  <br />There are lots of different ways to skin a cat. 
-  <br /> 
-  <br />I don't think that our workflow has a flaw, as we can trigger a change to a controlled document through the document change request workflow, or the document approver can bypass the document change request workflow altogether and revise a new version of the controlled document and approve it. Regardless of the change trigger, all changes are logged in an audit trail in the controlled document, therefore all changes are documented. 
-  <br /> 
-  <br />I am just pointing out that even if a change is not made, or all or part of a change request is rejected, there are benefits to record the change request workflow. In this way you can record periodic reviews of controlled documents even when no changes have been made, as well as be able to maintain a record of what was not changed and why. Normal redlining and markup generally only record what has been accepted and does not necessarily make it easy to record what was considered for a change and was rejected. 
-  <br /> 
-  <br />Also in our change workflow we log who has been notified about each change, as well as provide an option of scheduling training (either classroom or computer based training) for each member of revision notification groups for each change, or alternatively trigger a competency assessment questionnaire to ensure that they demonstrate an understanding of each change. The questionnaire can be as simple as &quot;Did you read and understand this change&quot; to a series of questions that must be answered correctly in order for someone to demonstrate a good understanding of the revision. We also email each revision notifee a brief synopsis of each change in their revision notification email. 
-  <br /> 
-  <br />Additionally we retain a record of each persons competency assessment or training record for each controlled document revision as well as against their employee record.
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/3cd04ed374ebaa5190c930f955b8dcc7.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Ian Randall</b> on <i>Monday 04 May 2009 AD - 07:42 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/3cd04ed374ebaa5190c930f955b8dcc7.jpg?s=88" class="gravatarimg" />
+							posted by <b>Ian Randall</b> on <i>Monday 04 May 2009 AD - 07:42 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   Thanks for posting this, it helps to share techniques and practical experience with workflows with the community. To add to your comments, we also provide the option of a Document Change Request (DCR)workflow in our application that includes a document management system, although there are some differences to the model that you have described: 
@@ -301,20 +247,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Monday 04 May 2009 AD - 12:24 Coordinated Universal Time</i>:<br /> @Ian: having a change log is the *classical* way of doing things. Nothing is wrong with that and tons of applications work well that way. And it seems that your requirement (e.g. Only one pending change at a time) is well covered by your approach. It is just not the *inversion of logging* pattern in use. I'm also not saying that the pattern is the only way or best way. The pattern however has a few distinct advantages: 
-  <br />- no direct edit of the master data is possible, so a little extra button in your Notes client can't screw up the data. 
-  <br />- The log can sit elsewhere, so you can design the solution with strong non-repudiation measures (like signed eMails for change requests). 
-  <br />- Workflow and logging become one (less moving parts). 
-  <br />- The change log can be used to automatically recreate the original document (but that works for your solution too). 
-  <br />- Modeled after the way transaction logs work (and there is a lot of literature on that) 
-  <br />- Recovery from disruption 
-  <br /> 
-  <br />I really appreciate, that you stop by and keep a discussion going.
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Monday 04 May 2009 AD - 14:44 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Monday 04 May 2009 AD - 14:44 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   @Patrick - code samples coming somewhen. The pattern itself isn''t limited to Notes or Domino. Actually SAP is using that for their configuration and data management too. 
@@ -324,8 +258,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/3cd04ed374ebaa5190c930f955b8dcc7.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Ian Randall</b> on <i>Monday 04 May 2009 AD - 15:42 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/3cd04ed374ebaa5190c930f955b8dcc7.jpg?s=88" class="gravatarimg" />
+							posted by <b>Ian Randall</b> on <i>Monday 04 May 2009 AD - 15:42 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   Stephan, 
@@ -343,8 +277,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Monday 04 May 2009 AD - 21:24 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Monday 04 May 2009 AD - 21:24 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   @Ian: having a change log is the *classical* way of doing things. Nothing is wrong with that and tons of applications work well that way. And it seems that your requirement (e.g. Only one pending change at a time) is well covered by your approach. It is just not the *inversion of logging* pattern in use. I'm also not saying that the pattern is the only way or best way. The pattern however has a few distinct advantages: 
@@ -360,23 +294,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/63b2cd78827470ac6441d98097fca53e.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Marie Scott</b> on <i>Monday 04 May 2009 AD - 21:43 Coordinated Universal Time</i>:<br /> Thanks for posting this concept. A quick question - what do you use to create diagrams? They are always so clear and concise! Even an end user could understand this one! 
-  <img alt="Emoticon smile.gif" src="/blog/images/emoticons/smile.gif" border="0" />
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/3cd04ed374ebaa5190c930f955b8dcc7.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Ian Randall</b> on <i>Tuesday 05 May 2009 AD - 00:34 Coordinated Universal Time</i>:<br /> I guess we are talking totally different revision control paradigms. 
-  <br /> 
-  <br />I do see the advantages of your &quot;inversion logging&quot; approach which you describe is akin to a typical transaction log. Actually for controlled documents it seems more like a redlining or markup approach which helps to track what's been added, changed or deleted. 
-  <br /> 
-  <br />As you said, we just take a different approach. 
-  <br /> 
-  <br />Viva la difference!
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/63b2cd78827470ac6441d98097fca53e.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Marie Scott</b> on <i>Tuesday 05 May 2009 AD - 06:43 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/63b2cd78827470ac6441d98097fca53e.jpg?s=88" class="gravatarimg" />
+							posted by <b>Marie Scott</b> on <i>Tuesday 05 May 2009 AD - 06:43 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   Thanks for posting this concept. A quick question - what do you use to create diagrams? They are always so clear and concise! Even an end user could understand this one! 
@@ -385,8 +304,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/3cd04ed374ebaa5190c930f955b8dcc7.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Ian Randall</b> on <i>Tuesday 05 May 2009 AD - 09:34 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/3cd04ed374ebaa5190c930f955b8dcc7.jpg?s=88" class="gravatarimg" />
+							posted by <b>Ian Randall</b> on <i>Tuesday 05 May 2009 AD - 09:34 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   I guess we are talking totally different revision control paradigms. 
@@ -400,14 +319,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/37a6259cc0c1dae299a7866489dff0bd.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Erik Brooks</b> on <i>Thursday 07 May 2009 AD - 01:10 Coordinated Universal Time</i>:<br /> &quot;if new mail arrives&quot; agent is too long for you, you might consider an XPage and a @URLOpen agent as faster trigger option (more on that in another post)&quot; 
-  <br /> 
-  <br />I'm curious...
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/37a6259cc0c1dae299a7866489dff0bd.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Erik Brooks</b> on <i>Thursday 07 May 2009 AD - 10:10 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/37a6259cc0c1dae299a7866489dff0bd.jpg?s=88" class="gravatarimg" />
+							posted by <b>Erik Brooks</b> on <i>Thursday 07 May 2009 AD - 10:10 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   &quot;if new mail arrives&quot; agent is too long for you, you might consider an XPage and a @URLOpen agent as faster trigger option (more on that in another post)&quot; 
@@ -417,18 +330,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/0a8947a1d1ddb778ed7b7db1a3f85fa1.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>James Fricker</b> on <i>Friday 15 February 2013 AD - 00:03 Coordinated Universal Time</i>:<br /> [QUOTE]You need a mail-in database (Default access=Depositor) to collect the change requests.[/QUOTE] 
-  <br /> 
-  <br />Why does the Mail-in need default access Depositor? 
-  <br /> 
-  <br />That access level is only used for mail.box in my experience. 
-  <br /> 
-  <br />mail.box != mail-in
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/0a8947a1d1ddb778ed7b7db1a3f85fa1.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>James Fricker</b> on <i>Friday 15 February 2013 AD - 09:03 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/0a8947a1d1ddb778ed7b7db1a3f85fa1.jpg?s=88" class="gravatarimg" />
+							posted by <b>James Fricker</b> on <i>Friday 15 February 2013 AD - 09:03 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   [QUOTE]You need a mail-in database (Default access=Depositor) to collect the change requests.[/QUOTE] 
@@ -442,16 +345,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Monday 25 February 2013 AD - 02:12 Coordinated Universal Time</i>:<br /> @James: time to upgrade your experience. Depositor access means: I can add a document, but I can't see or alter any documents in there. In a processing queue the whole point is to prevent anybody but the queue engine to change submitted entries. Also nobody should see what other entries (with potentially sensitive data, they don't have access to in the orginating database) have been submitted. You could start fiddling with Reader fields, but that adds an unneccesary complexity when Depositor is the perfect access level. 
-  <br /> 
-  <br />You are right mail-in != mail.box. A mail.box is ONE special use case of mail-in: It is known automatically by the mail routing task without the need for a mail-in document and it has one specific template that must be used. Other mail-in databases can have any design they want, but they need a mail-in document. 
-  <br /> 
-  <br />But you are mistaken to limit the use of Depositor access to mail.box. While it is the the premier use case, there are others too (besides the one outlined on the post) e.g: Submitting voting results. Once you submit your vote, you can't see it anymore (like in real live). One probably can think of a few more.
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Monday 25 February 2013 AD - 11:12 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Monday 25 February 2013 AD - 11:12 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   @James: time to upgrade your experience. Depositor access means: I can add a document, but I can't see or alter any documents in there. In a processing queue the whole point is to prevent anybody but the queue engine to change submitted entries. Also nobody should see what other entries (with potentially sensitive data, they don't have access to in the orginating database) have been submitted. You could start fiddling with Reader fields, but that adds an unneccesary complexity when Depositor is the perfect access level. 
@@ -463,16 +358,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/0a8947a1d1ddb778ed7b7db1a3f85fa1.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>James Fricker</b> on <i>Tuesday 14 May 2013 AD - 00:00 Coordinated Universal Time</i>:<br /> @Stephan: If the mail-in receives the updates by email then the default access should be no-access. The mail.box needs depositor as the Notes client writes to it directly when sending mail. The only thing that writes to a mail-in db is the router, so the default access does not need to be any higher than no-access.
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 14 May 2013 AD - 00:50 Coordinated Universal Time</i>:<br /> @James: if it is a pure mail-in db services by the router only you are right. In a mixed model where change requests are directly written into the database by the local instance, the recommended Depositor is what you need - that's what I had in mind.
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/0a8947a1d1ddb778ed7b7db1a3f85fa1.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>James Fricker</b> on <i>Tuesday 14 May 2013 AD - 09:00 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/0a8947a1d1ddb778ed7b7db1a3f85fa1.jpg?s=88" class="gravatarimg" />
+							posted by <b>James Fricker</b> on <i>Tuesday 14 May 2013 AD - 09:00 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   @Stephan: If the mail-in receives the updates by email then the default access should be no-access. The mail.box needs depositor as the Notes client writes to it directly when sending mail. The only thing that writes to a mail-in db is the router, so the default access does not need to be any higher than no-access.
@@ -480,8 +367,8 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 14 May 2013 AD - 09:50 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 14 May 2013 AD - 09:50 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   @James: if it is a pure mail-in db services by the router only you are right. In a mixed model where change requests are directly written into the database by the local instance, the recommended Depositor is what you need - that's what I had in mind.
@@ -506,7 +393,7 @@ categories:  <a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Th
   <li><a href="/blog/2009/">2009</a> <span class="divider">/</span></li>
   <li><a href="/blog/2009/05/">May</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/Show-N-Tell Thursday.html">Show-N-Tell Thursday</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
 </ul>
 

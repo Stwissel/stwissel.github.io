@@ -125,13 +125,13 @@ ga('send', 'pageview');
   <li><a href="/blog/2015/">2015</a> <span class="divider">/</span></li>
   <li><a href="/blog/2015/03/">March</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/CouchDB.html">CouchDB</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/Java.html">Java</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/Bluemix.html">Bluemix</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
 </ul>
 
@@ -158,9 +158,9 @@ ga('send', 'pageview');
 <h3>develop local, deploy (Bluemix) global</h3> The task at hand is to develop a Java 
 <a href="https://developer.ibm.com/wasdev/blog/2013/03/29/introducing_the_liberty_profile/">Liberty</a> based application, that uses CouchDB/Cloudant as its NoSQL data store. I want to be able to develop/test the application while being completely 
 <a href="http://offlinefirst.org/">offline</a> and deploy it to Bluemix. I don't want any code to have conditions offline/online, but rather use configuration of the runtimes for it. 
-<br> Luckily I have access to 
+<br /> Luckily I have access to 
 <a href="https://twitter.com/Sai_Vennam">really smart developers</a> (thx Sai), so I succeeded. 
-<br> This is what I found out, I needed to do. The list serves as reference for myself and others living in a latency/bandwidth challenged environment. 
+<br /> This is what I found out, I needed to do. The list serves as reference for myself and others living in a latency/bandwidth challenged environment. 
 <ol> 
  <li><b>Read</b>: There are a number of articles around, that contain bits and pieces of the information required. In no specific order: 
   <ul> 
@@ -187,15 +187,15 @@ ga('send', 'pageview');
    <li>Replication between your local CouchDB instance and the Cloudant server database (if you want to keep the data in sync)</li> 
   </ul> </li> 
 </ol> The flow of the data access looks like this 
-<br> 
-<img src="/blog/images/2015/BlueMixLocal.jpg" border="0" alt="Develop local, deploy global"><h3>Code</h3> 
+<br /> 
+<img src="/blog/images/2015/BlueMixLocal.jpg" border="0" alt="Develop local, deploy global" /><h3>Code</h3> 
 <p>I consider configuration setting code too. So we have web.xml, server.xml (only the local one, the Bluemix server.xml is <b>automagic</b>), your Java code and the replication from/to local and couchDB</p> 
 <h4>Local server.xml</h4> In Eclipse you configure a new liberty server, and then edit the server.xml. In the directory where the server.xml can be found, add a directory 
 <code>lib</code> that will contain the jars to make everything work. I will list the jars, that are current at the time of writing this, but at any time you can peek at the Bluemix server.xml to see what is there (Sai mentioned, his team was contemplating local magic as well). 
-<br> 
+<br /> 
 <pre class="brush: xml">
-&lt;server description="stw local test server"&gt;
-  &lt;include location="local-variables.xml" /&gt;
+&lt;server description=&quot;stw local test server&quot;&gt;
+  &lt;include location=&quot;local-variables.xml&quot; /&gt;
   &lt;!-- Enable features --&gt;
   &lt;featureManager&gt;
     &lt;feature&gt;jsp-2.2&lt;/feature&gt;
@@ -204,10 +204,10 @@ ga('send', 'pageview');
     &lt;feature&gt;jndi-1.0&lt;/feature&gt;
   &lt;/featureManager&gt;
   &lt;!-- To access this server from a remote client add a host attribute to 
-       the following element, e.g. host="*" --&gt;
-  &lt;httpEndpoint httpPort="9080" httpsPort="9443" id="defaultHttpEndpoint" /&gt;
-  &lt;applicationMonitor updateTrigger="mbean" /&gt;
-  &lt;library id="couchdb-lib"&gt;
+       the following element, e.g. host=&quot;*&quot; --&gt;
+  &lt;httpEndpoint httpPort=&quot;9080&quot; httpsPort=&quot;9443&quot; id=&quot;defaultHttpEndpoint&quot; /&gt;
+  &lt;applicationMonitor updateTrigger=&quot;mbean&quot; /&gt;
+  &lt;library id=&quot;couchdb-lib&quot;&gt;
     &lt;fileset dir='${server.config.dir}/lib'
           includes='commons-codec-1.6.jar        
 					commons-io-2.0.1.jar
@@ -223,28 +223,28 @@ ga('send', 'pageview');
 					slf4j-api-1.6.6.jar
 					slf4j-jdk14-1.6.6.jar' /&gt;
   &lt;/library&gt;
-  &lt;couchdb id="cloudantNoSQLDB-smartpollscouch"
-       jndiName="couchdb/smartpollscouch"
-       libraryRef="couchdb-lib"
-       password="${cloud.services.smartpollscouch.connection.password}"
-       url="${cloud.services.smartpollscouch.connection.url}"
-       username="${cloud.services.smartpollscouch.connection.username}" /&gt;
-  &lt;webApplication id="SmartPolls" location="SmartPolls.war" name="SmartPolls"&gt;
-    &lt;classloader commonLibraryRef="couchdb-lib" /&gt;
+  &lt;couchdb id=&quot;cloudantNoSQLDB-smartpollscouch&quot;
+       jndiName=&quot;couchdb/smartpollscouch&quot;
+       libraryRef=&quot;couchdb-lib&quot;
+       password=&quot;${cloud.services.smartpollscouch.connection.password}&quot;
+       url=&quot;${cloud.services.smartpollscouch.connection.url}&quot;
+       username=&quot;${cloud.services.smartpollscouch.connection.username}&quot; /&gt;
+  &lt;webApplication id=&quot;SmartPolls&quot; location=&quot;SmartPolls.war&quot; name=&quot;SmartPolls&quot;&gt;
+    &lt;classloader commonLibraryRef=&quot;couchdb-lib&quot; /&gt;
   &lt;/webApplication&gt;
 &lt;/server&gt;
 </pre> 
-<br> You want to make sure that you have the 
+<br /> You want to make sure that you have the 
 <a href="https://dl.dropboxusercontent.com/u/865725/BlueMixEktorpLibsMarch2015.zip">exact</a> versions of the Java classes in the lib directory. 
 <h4>web.xml</h4> The web.xml is easy, it needs to map to the jndiName you created in the server.xml, which needs to be the name you gave your Cloudant Blumix instance for the automagic to work. 
-<br> 
+<br /> 
 <pre class="brush: xml">
 &lt;resource-env-ref&gt;
 	&lt;resource-env-ref-name&gt;couchdb/smartpollscouch&lt;/resource-env-ref-name&gt;
 	&lt;resource-env-ref-type&gt;org.ektorp.CouchDbInstance&lt;/resource-env-ref-type&gt;
 &lt;/resource-env-ref&gt;
 </pre> 
-<br> 
+<br /> 
 <h4>local-variables.xml</h4> 
 <pre class="brush: xml">
 &lt;server&gt;
@@ -254,11 +254,11 @@ ga('send', 'pageview');
 &lt;/server&gt;
 </pre> 
 <h4>Java Class</h4> Of course you could read the web.xml and look for the name there, but the simplest way is just to specify the name: 
-<br> 
+<br /> 
 <pre class="brush: java">
 public class Couch() {
-	public final static String COUCH_JAVANAME = "java:comp/env/couchdb/smartpollscouch";
-    public final static String DBNAME         = "smartpolls";
+	public final static String COUCH_JAVANAME = &quot;java:comp/env/couchdb/smartpollscouch&quot;;
+    public final static String DBNAME         = &quot;smartpolls&quot;;
     
     public static CouchDbConnector getDB() throws MalformedURLException, NamingException {
         CouchDbInstance dbi = (CouchDbInstance) new InitialContext().lookup(COUCH_JAVANAME);
@@ -267,31 +267,31 @@ public class Couch() {
     }
 }
 </pre> 
-<br> You then simply call 
+<br /> You then simply call 
 <code>Couch.getDB();</code> to access the database. Following these steps you get a valid connection both in Bluemix as well as in your local instance. The final step is replication. 
 <h4>Replication</h4> Replication (or in newspeak: sync) in Cloudant/CouchDB is always one way. To get a full sync you issue 2 commands, one each for each direction. The easiest one is in the Fauxton UI of your local CouchDB, but you can 
 <code>POST</code> to localhost too. The format would be: 
-<br> 
+<br /> 
 <code>curl http://localuser:localpassword@localhost:5984/_replicator -X POST -k -H 'Content-type: application/json' --data @replicateToServer.json</code> 
-<br> The JSON file would look like this: 
-<br> 
+<br /> The JSON file would look like this: 
+<br /> 
 <pre class="brush: js">
 {
-	"source": "smartpolls",
-	"target": "https://cloudantuser:cloudantpassword@cloudanturl_from_VACAP/smartpolls",
-	"connection_timeout": 60000
+	&quot;source&quot;: &quot;smartpolls&quot;,
+	&quot;target&quot;: &quot;https://cloudantuser:cloudantpassword@cloudanturl_from_VACAP/smartpolls&quot;,
+	&quot;connection_timeout&quot;: 60000
 }
 </pre> 
-<br>To pull from the server, you just swap source and target. 
-<br>As usual YMMV</div>
+<br />To pull from the server, you just swap source and target. 
+<br />As usual YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 2015-03-03 12:14
 <span class="divider">|</span>
-<a href="/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html#comments">Comments (6)</a>
+<a href="/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html#comments">Comments (3)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/CouchDB.html">CouchDB</a>  <a href="/blog/categories/Java.html">Java</a>  <a href="/blog/categories/Bluemix.html">Bluemix</a> 
+categories:  <a href="/blog/categories/.html"></a>  <a href="/blog/categories/.html"></a>  <a href="/blog/categories/.html"></a> 
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Develop local, deploy (cloud) global - Java and CouchDB"></div>
 						<script type="text/javascript">
@@ -311,12 +311,8 @@ categories:  <a href="/blog/categories/CouchDB.html">CouchDB</a>  <a href="/blog
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/fff83d84d4368c1e8323119e2b54c48d.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Mikkel</b> on <i>Monday 02 March 2015 AD - 17:49 Coordinated Universal Time</i>:<br /> Another must-learn technique for the modern world is using mock objects. It always will remove a lot of complexity when doing local appdev as you stub out the remote services and make testing easier.
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/fff83d84d4368c1e8323119e2b54c48d.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Mikkel</b> on <i>Tuesday 03 March 2015 AD - 02:49 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/fff83d84d4368c1e8323119e2b54c48d.jpg?s=88" class="gravatarimg" />
+							posted by <b>Mikkel</b> on <i>Tuesday 03 March 2015 AD - 02:49 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   Another must-learn technique for the modern world is using mock objects. It always will remove a lot of complexity when doing local appdev as you stub out the remote services and make testing easier.
@@ -324,12 +320,8 @@ categories:  <a href="/blog/categories/CouchDB.html">CouchDB</a>  <a href="/blog
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/cdc317a84ffba08e8794ade813d9f6dc.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Andrea</b> on <i>Sunday 08 March 2015 AD - 07:14 Coordinated Universal Time</i>:<br /> <p>This is cool, Stephan!</p>
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/cdc317a84ffba08e8794ade813d9f6dc.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Andrea</b> on <i>Sunday 08 March 2015 AD - 16:14 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/cdc317a84ffba08e8794ade813d9f6dc.jpg?s=88" class="gravatarimg" />
+							posted by <b>Andrea</b> on <i>Sunday 08 March 2015 AD - 16:14 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   <p>This is cool, Stephan!</p>
@@ -337,12 +329,8 @@ categories:  <a href="/blog/categories/CouchDB.html">CouchDB</a>  <a href="/blog
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/c1bf4376f58116093acce64f4a9f7c05.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Nanyou</b> on <i>Thursday 05 November 2015 AD - 02:17 Coordinated Universal Time</i>:<br /> <p>Thank you for sharing Stephan. I learn a lot from reading your blog. </p>
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/c1bf4376f58116093acce64f4a9f7c05.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Nanyou</b> on <i>Thursday 05 November 2015 AD - 11:17 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/c1bf4376f58116093acce64f4a9f7c05.jpg?s=88" class="gravatarimg" />
+							posted by <b>Nanyou</b> on <i>Thursday 05 November 2015 AD - 11:17 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   <p>Thank you for sharing Stephan. I learn a lot from reading your blog. </p>
@@ -367,13 +355,13 @@ categories:  <a href="/blog/categories/CouchDB.html">CouchDB</a>  <a href="/blog
   <li><a href="/blog/2015/">2015</a> <span class="divider">/</span></li>
   <li><a href="/blog/2015/03/">March</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/CouchDB.html">CouchDB</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/Java.html">Java</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/Bluemix.html">Bluemix</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
 </ul>
 

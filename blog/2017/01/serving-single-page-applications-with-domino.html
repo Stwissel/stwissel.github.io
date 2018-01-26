@@ -125,10 +125,10 @@ ga('send', 'pageview');
   <li><a href="/blog/2017/">2017</a> <span class="divider">/</span></li>
   <li><a href="/blog/2017/01/">January</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/IBM Notes.html">IBM Notes</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/XPages.html">XPages</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
 </ul>
 
@@ -154,26 +154,26 @@ ga('send', 'pageview');
  <li>authentication is often long lasting (remember me...) based on <a href="https://jwt.io/">JWT</a></li> 
  <li>authentication is highly flexible: login with {facebook|google|linkedin|twitter} or a corporate account. Increasingly 2 factor authentication is used (especially <a href="http://eur-lex.europa.eu/eli/reg/2016/679/oj">in Europe</a>)</li> 
 </ul> How does Domino fit into the picture with its integrated http stack, authentication and database? The answer isn't very straight forward. Bundling components creates ease of administration, but carries the risk that new technologies are implemented late (or not at all). For anything internet facing that's quite some risk. So here is what I would do: 
-<br> 
-<img src="/blog/images/2017/DominoAPIServer.jpg" border="0" alt="Red/Green Zone layout for Domino"> 
-<br>The main rationale for this approach is a best in breed selection of components separated by firewall components. In detail: 
+<br /> 
+<img src="/blog/images/2017/DominoAPIServer.jpg" border="0" alt="Red/Green Zone layout for Domino" /> 
+<br />The main rationale for this approach is a best in breed selection of components separated by firewall components. In detail: 
 <ul> 
  <li>The front facing machine is a <a href="http://nginx.org/">NGINX</a> http server. I would configure it to support http/2, <a href="https://developers.google.com/speed/pagespeed/module/">PageSpeed</a> and <a href="https://certbot.eff.org/">Certbot</a>. All calls to http would get redirected to https provided by <a href="https://letsencrypt.org/">LetsEncrypt</a> (or buy your own). Running in a VM or a Container I would wipe it from time to time (daily), so anything that might have established a foothold dies then</li> 
  <li>The http server would contain the SPA with proper manifest and http expiry headers. That makes delivery fast and saves server resources up the chain. Deployment would be bound to the VM/Container creation process, so the http server would be mainly readonly</li> 
  <li>The authProxy would be a <a href="https://nodejs.org/en/">NodeJS</a> application using the <a href="http://passportjs.org/">PassportJS</a> framework. It offers an unparalleled selection of more than 300 ways to authenticate. The identified user then can be <a href="http://www-01.ibm.com/support/docview.wss?uid=swg21970409">passed on to Domino</a>. In addition some URL sanitisation could be performed. Since only API calls would land there, checking them for plausibility can be done cheap and easy</li> 
  <li>The Domino server's role is the provision of API access powered by its NoSQL NSF store. If so choosen its LDAP could serve as the identity source for the passport authentication</li> 
 </ul> Who is member of the green or red zone is subject to debate, so you might want to go with a different approach like the one below. 
-<br> 
-<img src="/blog/images/2017/DominoAPIServer2.jpg" border="0" alt="Alternate layout for Domino SPA"> 
-<br> As usual: YMMV</div>
+<br /> 
+<img src="/blog/images/2017/DominoAPIServer2.jpg" border="0" alt="Alternate layout for Domino SPA" /> 
+<br /> As usual: YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 2017-01-11 04:14
 <span class="divider">|</span>
-<a href="/blog/2017/01/serving-single-page-applications-with-domino.html#comments">Comments (6)</a>
+<a href="/blog/2017/01/serving-single-page-applications-with-domino.html#comments">Comments (5)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>  <a href="/blog/categories/XPages.html">XPages</a> 
+categories:  <a href="/blog/categories/.html"></a>  <a href="/blog/categories/.html"></a> 
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2017/01/serving-single-page-applications-with-domino.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Serving Single Page Applications with Domino"></div>
 						<script type="text/javascript">
@@ -193,23 +193,8 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>  <a href="/
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/5de1259a292099c1ae414c336c02a4d3.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Michael Bourak</b> on <i>Wednesday 11 January 2017 AD - 15:36 Coordinated Universal Time</i>:<br /> Can you pass the NodeJS Passeport user to Domino and have this user authentified on Domino (including Reader / Author fields and so on ?) 
-  <br />If so, how can you do that ? (Specific HTTP Header for IHS/Was plugin, other) 
-  <br /> 
-  <br />Thanks
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Wednesday 11 January 2017 AD - 16:18 Coordinated Universal Time</i>:<br /> @Michael: Yes you can using HTTP Headers and the HTTPEnableConnectorHeaders notes.ini variable. 
-  <br /> 
-  <br />Reader/Author fields have nothing to do with AUTHENTICATION. They are a matter of (document level) AUTHORIZATION which happens after the user is identified. Authorization is generally oblivious about the way authentication has happened. 
-  <br /> 
-  <br />Kind of: As long as I know who you are, no matter how I found out, I can tell what you are allowed to do.
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/5de1259a292099c1ae414c336c02a4d3.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Michael Bourak</b> on <i>Thursday 12 January 2017 AD - 00:36 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/5de1259a292099c1ae414c336c02a4d3.jpg?s=88" class="gravatarimg" />
+							posted by <b>Michael Bourak</b> on <i>Thursday 12 January 2017 AD - 00:36 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   Can you pass the NodeJS Passeport user to Domino and have this user authentified on Domino (including Reader / Author fields and so on ?) 
@@ -220,8 +205,8 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>  <a href="/
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Thursday 12 January 2017 AD - 01:18 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Thursday 12 January 2017 AD - 01:18 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   @Michael: Yes you can using HTTP Headers and the HTTPEnableConnectorHeaders notes.ini variable. 
@@ -233,19 +218,31 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>  <a href="/
 </html>
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/89766b69d02c5eed7d77dcc0a50a0182.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Nathan T Freeman</b> on <i>Thursday 26 January 2017 AD - 03:58 Coordinated Universal Time</i>:<br /> You'll find that people working on variants of this idea, including CrossWorlds, use the ODA to ensure that sessions for the API layer have the identity requested by the AuthProxy. 
-  <br /> 
-  <br />This principle alone would make me choose to put the AuthProxy in the Green Zone.
-							<hr style="clear : both" />
-						</li> 						<li>
-<img src="//www.gravatar.com/avatar/89766b69d02c5eed7d77dcc0a50a0182.jpg?s&#61;88" class="gravatarimg" />
-							posted by <b>Nathan T Freeman</b> on <i>Thursday 26 January 2017 AD - 12:58 Coordinated Universal Time</i>:<br /> <html>
+<img src="//www.gravatar.com/avatar/89766b69d02c5eed7d77dcc0a50a0182.jpg?s=88" class="gravatarimg" />
+							posted by <b>Nathan T Freeman</b> on <i>Thursday 26 January 2017 AD - 12:58 Singapore Time</i>:<br /> <html>
  <head></head>
  <body>
   You'll find that people working on variants of this idea, including CrossWorlds, use the ODA to ensure that sessions for the API layer have the identity requested by the AuthProxy. 
   <br /> 
   <br />This principle alone would make me choose to put the AuthProxy in the Green Zone.
+ </body>
+</html>
+							<hr style="clear : both" />
+						</li> 						<li>
+<img src="//www.gravatar.com/avatar/50655a35f1acaa142236879f04e630fd.jpg?s=88" class="gravatarimg" />
+							posted by <b>Smithe253</b> on <i>Wednesday 11 October 2017 AD - 12:22 Singapore Time</i>:<br /> <html>
+ <head></head>
+ <body>
+  Woah! I'm really loving the templatetheme of this website. It's simple, yet effective. A lot of times it's hard to get that perfect balance between usability and visual appeal. I must say you have done a great job with this. In addition, the blog loads super quick for me on Firefox. Excellent Blog! kkeeebdbfckaegdc
+ </body>
+</html>
+							<hr style="clear : both" />
+						</li> 						<li>
+<img src="//www.gravatar.com/avatar/e35a80a66fb6ad1be753bce3bb494208.jpg?s=88" class="gravatarimg" />
+							posted by <b>Smithe838</b> on <i>Tuesday 17 October 2017 AD - 06:36 Singapore Time</i>:<br /> <html>
+ <head></head>
+ <body>
+  Totally pent subject matter, appreciate it for selective information. deefbdakeekakecb
  </body>
 </html>
 							<hr style="clear : both" />
@@ -267,10 +264,10 @@ categories:  <a href="/blog/categories/IBM Notes.html">IBM Notes</a>  <a href="/
   <li><a href="/blog/2017/">2017</a> <span class="divider">/</span></li>
   <li><a href="/blog/2017/01/">January</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/IBM Notes.html">IBM Notes</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/XPages.html">XPages</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
 </ul>
 

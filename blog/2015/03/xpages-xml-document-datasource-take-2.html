@@ -125,7 +125,7 @@ ga('send', 'pageview');
   <li><a href="/blog/2015/">2015</a> <span class="divider">/</span></li>
   <li><a href="/blog/2015/03/">March</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/XPages.html">XPages</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
 </ul>
 
@@ -148,10 +148,10 @@ ga('send', 'pageview');
 <a href="/blog/d6plinks/SHWL-9NJLY6">storing XML documents</a> as MIME entries in Notes - while preserving some of the fields for use in views and the Notes client. 
 <a href="https://twitter.com/gidgerby">Jesse</a> suggested I should have a look at 
 <a href="http://www.javacodegeeks.com/2014/11/java-annotations-tutorial.html">annotations</a>. Turns out, it is easier that it sound. To create an annotation that works at runtime, I need a one liner only: 
-<br> 
+<br /> 
 <code>@Retention(RetentionPolicy.RUNTIME) public @interface ItemPathMappings { String[] value(); }</code> 
-<br> To further improve usefulness, I created a "BaseConfiguration" my classes will inherit from, that contains the common properties I want all my classes (and documents) to have. You might want to adjust it to your needs: 
-<br> 
+<br /> To further improve usefulness, I created a &quot;BaseConfiguration&quot; my classes will inherit from, that contains the common properties I want all my classes (and documents) to have. You might want to adjust it to your needs: 
+<br /> 
 <pre class="brush : java">
 ackage com.notessensei.domino;
 import java.io.Serializable;
@@ -163,11 +163,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * Common methods implemented by all classes to be Dominoserialized
  */
-@XmlRootElement(name = "BaseConfiguration")
+@XmlRootElement(name = &quot;BaseConfiguration&quot;)
 @XmlAccessorType(XmlAccessType.NONE)
 public abstract class BaseConfiguration implements Serializable, Comparable&lt;BaseConfiguration&gt; {
     private static final long serialVersionUID = 1L;
-    @XmlAttribute(name = "name")
+    @XmlAttribute(name = &quot;name&quot;)
     protected String          name;
 
     public int compareTo(BaseConfiguration bc) {
@@ -189,7 +189,7 @@ public abstract class BaseConfiguration implements Serializable, Comparable&lt;B
     }
 }
 </pre> 
-<br> The next building block is my Serializer support with a couple of static methods, that make dealing with XML and JSON easier. 
+<br /> The next building block is my Serializer support with a couple of static methods, that make dealing with XML and JSON easier. 
 <pre class="brush : java">
 package com.notessensei.domino;
 import java.io.ByteArrayInputStream;
@@ -261,7 +261,7 @@ public class Serializer {
         return doc;
     }
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings(&quot;rawtypes&quot;)
     public static Object fromByte(byte[] source, Class targetClass) throws JAXBException {
         ByteArrayInputStream in = new ByteArrayInputStream(source);
         JAXBContext context = JAXBContext.newInstance(targetClass);
@@ -270,9 +270,9 @@ public class Serializer {
     }
 }
 </pre> 
-<br> The key piece is for the XML serialization/deserialization to work is the abstract class 
+<br /> The key piece is for the XML serialization/deserialization to work is the abstract class 
 <code>AbstractXmlDocument</code>. That class contains the load and save methods that interact with Domino's MIME capabilities as well as executing the XPath expressions to store the Notes fields. The implementations of this abstract class will have annotations that combine the Notes field name, the type and the XPath expression. An implementation would look like this: 
-<br> 
+<br /> 
 <pre class="brush : java">
 package com.notessensei.domino.xmldocument;
 import javax.xml.bind.JAXBException;
@@ -285,22 +285,22 @@ import com.notessensei.domino.Serializer;
 import com.notessensei.domino.xmldocument.AbstractXmlDocument.ItemPathMappings;
 
 // The ItemPathMappings are application specific!
-@ItemPathMappings({ "Subject|Text|/Application/@name",
-					"Description|Text|/Application/description",
-					"Unid|Text|/Application/@unid",
-					"Audience|Text|/Application/Audiences/Audience",
-					"NumberOfViews|Number|count(/Application/Views/View)",
-					"NumberOfForms|Number|count(/Application/Forms/Form)",
-					"NumberOfColumns|Number|count(/Application/Views/View/columns/column)",
-					"NumberOfFields|Number|count(/Application/Forms/Form/fields/field)",
-					"NumberOfActions|Number|count(//action)" })
+@ItemPathMappings({ &quot;Subject|Text|/Application/@name&quot;,
+					&quot;Description|Text|/Application/description&quot;,
+					&quot;Unid|Text|/Application/@unid&quot;,
+					&quot;Audience|Text|/Application/Audiences/Audience&quot;,
+					&quot;NumberOfViews|Number|count(/Application/Views/View)&quot;,
+					&quot;NumberOfForms|Number|count(/Application/Forms/Form)&quot;,
+					&quot;NumberOfColumns|Number|count(/Application/Views/View/columns/column)&quot;,
+					&quot;NumberOfFields|Number|count(/Application/Forms/Form/fields/field)&quot;,
+					&quot;NumberOfActions|Number|count(//action)&quot; })
 public class ApplicationXmlDocument extends AbstractXmlDocument {
 
     public ApplicationXmlDocument(String formName) {
         super(formName);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings(&quot;unchecked&quot;)
     @Override
     public ApplicationConfiguration load(Session session, Document d) {
 
@@ -318,7 +318,7 @@ public class ApplicationXmlDocument extends AbstractXmlDocument {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings(&quot;unchecked&quot;)
     @Override
     public ApplicationConfiguration load(Session session, Database db, String unid) {
         Document doc;
@@ -338,8 +338,8 @@ public class ApplicationXmlDocument extends AbstractXmlDocument {
     }
 }
 </pre> 
-<br>Here is the base class: 
-<br> 
+<br />Here is the base class: 
+<br /> 
 <pre class="brush : java">
 package com.notessensei.domino.xmldocument;
 
@@ -389,7 +389,7 @@ public abstract class AbstractXmlDocument {
      */
     public class FieldExtractDefinition implements Comparable&lt;FieldExtractDefinition&gt; {
 
-        public final static String ELEMENT_SEPARATOR = "\\|";
+        public final static String ELEMENT_SEPARATOR = &quot;\\|&quot;;
         private final String       path;
         private final String       itemName;
         private final FieldType    fieldType;
@@ -443,8 +443,8 @@ public abstract class AbstractXmlDocument {
 
     }
 
-    private final String                             MIME_FIELD_NAME = "Body";
-    private final String                             FORM_NAME       = "Form";
+    private final String                             MIME_FIELD_NAME = &quot;Body&quot;;
+    private final String                             FORM_NAME       = &quot;Form&quot;;
 
     private final Collection&lt;FieldExtractDefinition&gt; definitions     = new HashSet&lt;FieldExtractDefinition&gt;();
 
@@ -495,29 +495,29 @@ public abstract class AbstractXmlDocument {
 
             // Create the top mime entry
             MIMEEntity root = d.createMIMEEntity(MIME_FIELD_NAME);
-            MIMEHeader header = root.createHeader("Content-Type");
-            header.setHeaderVal("multipart/mixed");
+            MIMEHeader header = root.createHeader(&quot;Content-Type&quot;);
+            header.setHeaderVal(&quot;multipart/mixed&quot;);
 
             MIMEEntity body = root.createChildEntity();
-            MIMEHeader bheader = body.createHeader("Content-Type");
-            bheader.setHeaderVal("multipart/alternative");
+            MIMEHeader bheader = body.createHeader(&quot;Content-Type&quot;);
+            bheader.setHeaderVal(&quot;multipart/alternative&quot;);
 
             MIMEEntity textMime = body.createChildEntity();
-            MIMEHeader textHeader = textMime.createHeader("Content-Type");
-            String cType = (this.style == null) ? "text/plain" : "text/html";
+            MIMEHeader textHeader = textMime.createHeader(&quot;Content-Type&quot;);
+            String cType = (this.style == null) ? &quot;text/plain&quot; : &quot;text/html&quot;;
             textHeader.setHeaderVal(cType);
 
             Stream stream2 = session.createStream();
             stream2.write(this.dom2Byte(domDoc, this.style));
-            textMime.setContentFromBytes(stream2, cType + "; charset=\"UTF-8\"", MIMEEntity.ENC_NONE);
+            textMime.setContentFromBytes(stream2, cType + &quot;; charset=\&quot;UTF-8\&quot;&quot;, MIMEEntity.ENC_NONE);
 
             MIMEEntity xmlMime = body.createChildEntity();
-            MIMEHeader xmlHeader = xmlMime.createHeader("Content-Type");
-            xmlHeader.setHeaderVal("application/xml");
+            MIMEHeader xmlHeader = xmlMime.createHeader(&quot;Content-Type&quot;);
+            xmlHeader.setHeaderVal(&quot;application/xml&quot;);
 
             Stream stream = session.createStream();
             stream.write(this.dom2Byte(domDoc, null));
-            xmlMime.setContentFromBytes(stream, "application/xml; charset=\"UTF-8\"", MIMEEntity.ENC_NONE);
+            xmlMime.setContentFromBytes(stream, &quot;application/xml; charset=\&quot;UTF-8\&quot;&quot;, MIMEEntity.ENC_NONE);
 
             // Now extract the fields
             this.extractFields(domDoc, d, body);
@@ -578,7 +578,7 @@ public abstract class AbstractXmlDocument {
         }
 
         if (d == null) {
-            System.out.println("DOM from stream generation failed:\n");
+            System.out.println(&quot;DOM from stream generation failed:\n&quot;);
         }
 
         this.style = d;
@@ -603,14 +603,14 @@ public abstract class AbstractXmlDocument {
 
             // Load the TOP mime entitiy - must be multipart/mixed
             MIMEEntity root = d.getMIMEEntity(MIME_FIELD_NAME);
-            if (root != null &amp;&amp; root.getContentType().equals("multipart") &amp;&amp; root.getContentSubType().equals("mixed")) {
+            if (root != null &amp;&amp; root.getContentType().equals(&quot;multipart&quot;) &amp;&amp; root.getContentSubType().equals(&quot;mixed&quot;)) {
                 // We check for the body whtou should be multipart/alternate
                 MIMEEntity body = root.getFirstChildEntity();
-                if (body != null &amp;&amp; body.getContentType().equals("multipart") &amp;&amp; body.getContentSubType().equals("alternative")) {
+                if (body != null &amp;&amp; body.getContentType().equals(&quot;multipart&quot;) &amp;&amp; body.getContentSubType().equals(&quot;alternative&quot;)) {
                     // Now we go after Content-Type = application/xml
                     MIMEEntity payload = body.getFirstChildEntity();
 
-                    while (payload != null &amp;&amp; !payload.getContentSubType().equals("xml")) {
+                    while (payload != null &amp;&amp; !payload.getContentSubType().equals(&quot;xml&quot;)) {
                         System.out.println(payload.getContentType());
                         System.out.println(payload.getContentSubType());
                         MIMEEntity nextMime = payload.getNextEntity();
@@ -656,7 +656,7 @@ public abstract class AbstractXmlDocument {
             }
 
             // We don't want the XML declaration in front
-            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, &quot;yes&quot;);
 
             transformer.transform(source, xResult);
 
@@ -718,7 +718,7 @@ public abstract class AbstractXmlDocument {
         try {
             exprResult = xpath.evaluate(xPathString, domDoc);
         } catch (final XPathExpressionException e) {
-            System.err.println("XPATH failed for " + xPathString);
+            System.err.println(&quot;XPATH failed for &quot; + xPathString);
             System.err.println(e.getMessage());
         }
         // if it failed we abort
@@ -731,8 +731,8 @@ public abstract class AbstractXmlDocument {
     }
 }
 </pre> 
-<br> As time permits I will provide a full working example. 
-<br> YMMV!</div>
+<br /> As time permits I will provide a full working example. 
+<br /> YMMV!</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -740,7 +740,7 @@ Stephan H Wissel</a> on 2015-03-05 04:53
 <span class="divider">|</span>
 <a href="/blog/2015/03/xpages-xml-document-datasource-take-2.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/XPages.html">XPages</a> 
+categories:  <a href="/blog/categories/.html"></a> 
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2015/03/xpages-xml-document-datasource-take-2.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="XPages XML Document DataSource - Take 2"></div>
 						<script type="text/javascript">
@@ -780,7 +780,7 @@ categories:  <a href="/blog/categories/XPages.html">XPages</a>
   <li><a href="/blog/2015/">2015</a> <span class="divider">/</span></li>
   <li><a href="/blog/2015/03/">March</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/XPages.html">XPages</a>
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
 </ul>
 
