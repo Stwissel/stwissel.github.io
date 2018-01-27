@@ -151,18 +151,18 @@ ga('send', 'pageview');
 <p>Verse on premises was a long (out)standing promise to the IBM customer base. Not everybody is ready to embrace the cloud, but interested in <a href="https://twitter.com/search?f=tweets&amp;vertical=default&amp;q=%23newwaytowork&amp;src=typd">the new way to work</a>. In SmartCloud Notes, the backend for Verse in the Cloud, all search is powered by <a href="http://lucene.apache.org/solr/">Apache SOLR</a>. If Verse got delivered as is, that would have required substantial hardware and skill investments for the on-premises customers.</p> 
 <p> So I made a bet with <a href="https://www.linkedin.com/in/michaelguyalexander">Michael Alexander</a>, whom I worked with on TPTSNBN, that we could use standard Domino capabilities, not requiring Solr. Based on prototypes with <a href="http://vertx.io/">vert.x</a> and Java8 we gained confidence and got the go ahead to build the search component as OSGi plug-in (in Java6). So the search part (not the UI or other functionality) is on me.</p> 
 <h2>The team(s)</h2> 
-<p>There were two distinct teams working on the delivery of Verse on Premises (VoP): The core Verse team, that owns UI, functionality and features for both cloud and on premises and the search plugin team responsible to replace the Solr capabilities with native Domino calls. <br />The former is rather large, distributed between the US, Ireland and China. The later was led by the distinguished engineer <a href="https://www.linkedin.com/in/david-byrd-401668a">David Byrd</a> and just a few core coding members: David, Michael, <a href="https://www.linkedin.com/in/cheltzel">Christopher</a>, <a href="https://sg.linkedin.com/in/raj-j-rajendran-226a9456">Raj</a> and myself.<br /> We were supported by a team of testers in Belarus and the Philippines. The test teams wrote hundreds of <a href="http://junit.org/">JUnit</a> and <a href="https://www.getpostman.com/">Postman</a> tests, just for the search API.</p> 
+<p>There were two distinct teams working on the delivery of Verse on Premises (VoP): The core Verse team, that owns UI, functionality and features for both cloud and on premises and the search plugin team responsible to replace the Solr capabilities with native Domino calls. <br>The former is rather large, distributed between the US, Ireland and China. The later was led by the distinguished engineer <a href="https://www.linkedin.com/in/david-byrd-401668a">David Byrd</a> and just a few core coding members: David, Michael, <a href="https://www.linkedin.com/in/cheltzel">Christopher</a>, <a href="https://sg.linkedin.com/in/raj-j-rajendran-226a9456">Raj</a> and myself.<br> We were supported by a team of testers in Belarus and the Philippines. The test teams wrote hundreds of <a href="http://junit.org/">JUnit</a> and <a href="https://www.getpostman.com/">Postman</a> tests, just for the search API.</p> 
 <h2>The Orangebox</h2> 
 <p>Each project needs a good <a href="#" title="A nice one: TPTSNBN = The Project That Shall Not Be Named">code name</a>. The original Verse code name was <a href="https://en.wikipedia.org/wiki/Sequoia_National_Park ">Sequoia</a>, which is reflected in the name of the plugins for core and UI functionality.</p> 
-<p>The search component, not being part of RealVerse™, needed a different name. In an initial high level diagram, outlining the architecture for management, the search component was drawn as an orange box. Since we &quot;just&quot; had to code &quot;the orange box&quot;. The name stuck and led to our code name &quot;Project OrangeBox&quot; (PoB). <br /><img src="/blog/images/2016/OrangeBox.png" border="0 " alt="The inofficial Project Orange Box Logo" /> <br /> You <a href="http://jd.benow.ca/ " title="Don 't do this, it is most likely illegal" rel="nofollow">can find</a> Orangebox and POB in multiple places (including notes.ini variables and https calls the browser makes). So now you know where it is coming from.</p><h2>The challenges</h2> 
+<p>The search component, not being part of RealVerse™, needed a different name. In an initial high level diagram, outlining the architecture for management, the search component was drawn as an orange box. Since we "just" had to code "the orange box". The name stuck and led to our code name "Project OrangeBox" (PoB). <br><img src="/blog/images/2016/OrangeBox.png" border="0 " alt="The inofficial Project Orange Box Logo"> <br> You <a href="http://jd.benow.ca/ " title="Don 't do this, it is most likely illegal" rel="nofollow">can find</a> Orangebox and POB in multiple places (including notes.ini variables and https calls the browser makes). So now you know where it is coming from.</p><h2>The challenges</h2> 
 <p>We set out to build POB with the following constraints:</p> 
 <ul> 
- <li><b>No changes to the Verse UI code</b> <br /> The UI makes heavy use of <a href="https://github.com/OpenNTF/JavascriptAggregator" title="Some when they will move to webpack, once Dojo is history">JAGR</a> for aggregation and sends SOLR syntax queries over HTTPS. Short of the message bodies almost everything the Verse client requests is a SOLR search query, including opening the inbox.<br />For your enlightenment: Open the developer tools in Chrome and watch what is transmitted over the wire. <br /> The UI code is completely identical to the code running in the cloud, no splitting of code streams was a design mandate - and no changes from the running production code</li> 
- <li><b>Java8 would not be ready in time</b> <br /> So no Vert.x library, no RxJava (it uses threads heavily and that kills the Domino Java6 JVM performance), no lambda functions. Initially I used <a href="https://github.com/ReactiveX/RxJava">RxJava</a> to process resultsets into the required JSON. However that didn't survive our load tests, mainly attributed to the JVM struggling with rapid thread transitions</li> 
- <li><b>Only public APIs</b> <br /> Any of the calls made from the search plugin to Domino use only publicly documented Java APIs. Since we frequently load tested the application, I learned a big deal on behaviour under heavy load. One example: My initial approach was to use a list of item names I needed and then use <code>document.getFirstItem</code> in a loop to retrieve them. Turns out, under heavy load it is faster to use <code>document.getItems</code> and loop through those, picking the values I needed</li> 
- <li><b>Light on template changes</b> <br /> In VoP 1.0 the only changes to the mail template are a few additional views. So you can keep your modified R9 template (eventually) for now - unless you messed with the search order in views and folders.<br /> However the Verse Client requires data for its list column, that is not in any current view (column). As a result we have to read each and every document that's displayed in the list. <a href="https://www.ibm.com/Search/?q=Nirmala+Venkatraman">Nirmala</a> our Chief of Performance made us work hard to get this fast. <br /> One of the nice side effects of this effort: <a href="https://www.linkedin.com/in/james-cooper-9082474">Jim Cooper</a>, C expert in the core Domino team, provided code updates (also included in the upcoming FP8), that dramatically improve read performance for any document - a big bonus for all Domino based applications </li> 
+ <li><b>No changes to the Verse UI code</b> <br> The UI makes heavy use of <a href="https://github.com/OpenNTF/JavascriptAggregator" title="Some when they will move to webpack, once Dojo is history">JAGR</a> for aggregation and sends SOLR syntax queries over HTTPS. Short of the message bodies almost everything the Verse client requests is a SOLR search query, including opening the inbox.<br>For your enlightenment: Open the developer tools in Chrome and watch what is transmitted over the wire. <br> The UI code is completely identical to the code running in the cloud, no splitting of code streams was a design mandate - and no changes from the running production code</li> 
+ <li><b>Java8 would not be ready in time</b> <br> So no Vert.x library, no RxJava (it uses threads heavily and that kills the Domino Java6 JVM performance), no lambda functions. Initially I used <a href="https://github.com/ReactiveX/RxJava">RxJava</a> to process resultsets into the required JSON. However that didn't survive our load tests, mainly attributed to the JVM struggling with rapid thread transitions</li> 
+ <li><b>Only public APIs</b> <br> Any of the calls made from the search plugin to Domino use only publicly documented Java APIs. Since we frequently load tested the application, I learned a big deal on behaviour under heavy load. One example: My initial approach was to use a list of item names I needed and then use <code>document.getFirstItem</code> in a loop to retrieve them. Turns out, under heavy load it is faster to use <code>document.getItems</code> and loop through those, picking the values I needed</li> 
+ <li><b>Light on template changes</b> <br> In VoP 1.0 the only changes to the mail template are a few additional views. So you can keep your modified R9 template (eventually) for now - unless you messed with the search order in views and folders.<br> However the Verse Client requires data for its list column, that is not in any current view (column). As a result we have to read each and every document that's displayed in the list. <a href="https://www.ibm.com/Search/?q=Nirmala+Venkatraman">Nirmala</a> our Chief of Performance made us work hard to get this fast. <br> One of the nice side effects of this effort: <a href="https://www.linkedin.com/in/james-cooper-9082474">Jim Cooper</a>, C expert in the core Domino team, provided code updates (also included in the upcoming FP8), that dramatically improve read performance for any document - a big bonus for all Domino based applications </li> 
 </ul> 
-<p>To solve the challenges I devised an architecture where any incoming query would run through code determining the execution strategy. If determined feasible, VoP would just read a view or folder (eventually with a category and a date limit).<br /> When that wouldn't fit we hand it off to a fulltext query. Raj designed and coded the Query parser that, for the use cases of VoP, translates the SOLR query syntax into Notes FTSearch syntax. Quite a feast in code, <b>kudos to Raj!</b></p> 
+<p>To solve the challenges I devised an architecture where any incoming query would run through code determining the execution strategy. If determined feasible, VoP would just read a view or folder (eventually with a category and a date limit).<br> When that wouldn't fit we hand it off to a fulltext query. Raj designed and coded the Query parser that, for the use cases of VoP, translates the SOLR query syntax into Notes FTSearch syntax. Quite a feast in code, <b>kudos to Raj!</b></p> 
 <h2>Operating it</h2> 
 <p>Make sure, you <a href="https://www.ibm.com/support/knowledgecenter/SS4RQV_1.0.0/admin/topics/vop_configuring_server.html">read the instructions carefully</a>. There are a number of preconditions to be met. Missing any of these and VoP will not work for that users. My suggestion to auto-fix some of them didn't make it into VoP 1.0</p> 
 <ul> 
@@ -174,22 +174,22 @@ ga('send', 'pageview');
  <li>In a cluster: the clustered mail databases must have the same file path (relative to the data directory) and name on all servers</li> 
 </ul> 
 <h2>Watch the log</h2> 
-<p>The users will not get error indicators beyond: &quot;Talk to your admin&quot;, but the log files (the one in workspace/logs) will capture details what is missing. It will also log any other errors that might arise. VoP was subjected to thousands of automation test as well as human testing. Nevertheless, it is software, you know where this is going. <b>The PMR system is your friend</b> (and ours too)!</p> 
+<p>The users will not get error indicators beyond: "Talk to your admin", but the log files (the one in workspace/logs) will capture details what is missing. It will also log any other errors that might arise. VoP was subjected to thousands of automation test as well as human testing. Nevertheless, it is software, you know where this is going. <b>The PMR system is your friend</b> (and ours too)!</p> 
 <h2>Under the hood</h2> 
 <p>Watching the HTTPS traffic is quite enlightening. I usually use the Chrome tools for it. <b>Go and watch!</b></p> 
 <p>To be super clear: <b>Nothing</b> of the data going forth (HTTPS Form submissions) and back (JSON) is documented or guaranteed to stay and can change in any future version (Very much like iNotes, see <a href="/blog/d6plinks/SHWL-9R44N4">my articles</a> about that). So don't count on it.</p> 
 <p>For adventurous souls: the search plugin is using <a href="https://wink.apache.org/">Apache WINK</a> which gives some information away at its base URL <code>/pob/api/search</code>. Go and check it out. Some of the URLs you will find there:</p> 
 <ul> 
- <li><code>/pob/api/search/inbox</code> <br />Returns an extended inbox in JSON format</li> 
- <li><code>/pob/api/search/suggestimportant</code> <br />Lists the people Verse believe belong into</li> 
- <li><code>/pob/api/search/needsaction</code> <br />Incoming mail that has been flagged as &quot;Needs Action&quot;</li> 
- <li><code>/pob/api/search/waitingform</code> <br />outgoing mail that has been flagged as &quot;Waiting for&quot;</li> 
+ <li><code>/pob/api/search/inbox</code> <br>Returns an extended inbox in JSON format</li> 
+ <li><code>/pob/api/search/suggestimportant</code> <br>Lists the people Verse believe belong into</li> 
+ <li><code>/pob/api/search/needsaction</code> <br>Incoming mail that has been flagged as "Needs Action"</li> 
+ <li><code>/pob/api/search/waitingform</code> <br>outgoing mail that has been flagged as "Waiting for"</li> 
  <li>If you happen to be a member of the <code>LocalDomainAdmins</code> or <code>OrangeBoxAdmins</code> group, there are a few more, which are secret and undocumented - and can't be subject to a PMR: 
   <ul> 
-   <li><code>/pob/api/search/info</code> <br />Shows the version number and some cache information</li> 
-   <li><code>/pob/api/search/monitor</code> <br />Real time statistics on search performance (also to be seen in the server stats!)</li> 
-   <li><code>/pob/api/search/parser?query=something</code> <br />Takes a SOLR syntax query and shows its Domino FTIndex equivalent. Keep in mind: it isn't an universal translator, but tailored to Verse use cases (you don't want to learn SOLR syntax anyway)</li> 
-   <li><code>/pob/api/search/design</code> <br />Various options like show/update design information or extract the current &quot;Verse additional design elements&quot; Template: 
+   <li><code>/pob/api/search/info</code> <br>Shows the version number and some cache information</li> 
+   <li><code>/pob/api/search/monitor</code> <br>Real time statistics on search performance (also to be seen in the server stats!)</li> 
+   <li><code>/pob/api/search/parser?query=something</code> <br>Takes a SOLR syntax query and shows its Domino FTIndex equivalent. Keep in mind: it isn't an universal translator, but tailored to Verse use cases (you don't want to learn SOLR syntax anyway)</li> 
+   <li><code>/pob/api/search/design</code> <br>Various options like show/update design information or extract the current "Verse additional design elements" Template: 
     <ul> 
      <li><code>?createtemplate=1</code> extracts the template with the additional Verse design elements. Fresh and crispy</li> 
      <li><code>?showviews=1</code> renders the view design of the additional Verse views for inspection (to check if they are right)</li> 
@@ -210,7 +210,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2016/12/the-totally-inofficial-guide-to-verse-on-premises.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="The totally inofficial guide to Verse on Premises"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2016/12/the-totally-inofficial-guide-to-verse-on-premises.html";
+							var permaLink = "https://wissel.net/blog/2016/12/the-totally-inofficial-guide-to-verse-on-premises.html";
 						</script>
 					</p>
 
@@ -226,30 +226,22 @@ categories:  <a href="/blog/categories/.html"></a>
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/92de00ed9b92229d182df3c573af0113.jpg?s=88" class="gravatarimg" />
-							posted by <b>Lars Berntrop-Bos</b> on <i>Monday 02 January 2017 AD - 17:59 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/92de00ed9b92229d182df3c573af0113.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Lars Berntrop-Bos</b> on <i>Monday 02 January 2017 AD - 17:59 Singapore Time</i>:<br /> 
   Wow, great stuff! Thanks for all the hard work on getting this out the door, and many thanks for sharing all the isider info. That helps us implement this a lot easier! 
   <br /> 
   <br />Cheers and kudos to the Project OrangeBox team!
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/f9b9e432bce491b493825a1aee4f94fb.jpg?s=88" class="gravatarimg" />
-							posted by <b>Chris Whisonant</b> on <i>Wednesday 04 January 2017 AD - 02:23 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/f9b9e432bce491b493825a1aee4f94fb.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Chris Whisonant</b> on <i>Wednesday 04 January 2017 AD - 02:23 Singapore Time</i>:<br /> 
   Thanks for the information. I especially like the information at the end about the additional options for Admins. Thanks also for all of the hard work on this project to you and the rest of the IBM team members.
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/f9b9e432bce491b493825a1aee4f94fb.jpg?s=88" class="gravatarimg" />
-							posted by <b>Chris Whisonant</b> on <i>Wednesday 04 January 2017 AD - 03:13 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/f9b9e432bce491b493825a1aee4f94fb.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Chris Whisonant</b> on <i>Wednesday 04 January 2017 AD - 03:13 Singapore Time</i>:<br /> 
   I've been trying to get the admin URLs to work but have run into some issues. 
   <br /> 
   <br />If I go to /pob/api/search/info I get the following in the browser: 
@@ -266,44 +258,32 @@ categories:  <a href="/blog/categories/.html"></a>
   <br /> 
   <br /> 
   <br />
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Wednesday 04 January 2017 AD - 11:44 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Wednesday 04 January 2017 AD - 11:44 Singapore Time</i>:<br /> 
   Chris: You need to have a look into the log to see what was happening. The Java API that we use to determine group membership only works in the context of a database, so I use mail.box (Which usually works even when you have more than one mailbox). So what's in the log?
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/7cda9fa3aa81ab0b0e48b00066f05a47.jpg?s=88" class="gravatarimg" />
-							posted by <b>Paul Withers</b> on <i>Wednesday 04 January 2017 AD - 16:33 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/7cda9fa3aa81ab0b0e48b00066f05a47.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Paul Withers</b> on <i>Wednesday 04 January 2017 AD - 16:33 Singapore Time</i>:<br /> 
   Thanks for the efforts of you and the team (especially including Jim). The benefits and lessons learned for all developers are welcome. I hope there will be further enhancements in future versions, especially leveraging non-IBM code.
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/545f3179efc50a9cf53ac2d69b98199c.jpg?s=88" class="gravatarimg" />
-							posted by <b>Carsten Lührmann</b> on <i>Wednesday 04 January 2017 AD - 20:37 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/545f3179efc50a9cf53ac2d69b98199c.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Carsten Lührmann</b> on <i>Wednesday 04 January 2017 AD - 20:37 Singapore Time</i>:<br /> 
   Great article, thanks for sharing some insight into IBMs development and the technology behind the scenes. 
   <br /> 
   <br />„[...] Jim Cooper, C expert in the core Domino team, provided code updates (also included in the upcoming FP8), that dramatically improve read performance for any document [...]“ 
   <br />Sounds great to me. However, maybe IBM should also deal with the Domino time creep issue (modifying documents at a rate greater than the time stamp resolution may lead to modification dates creeping into the future), this would make these performance gains even more useful.
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/f9b9e432bce491b493825a1aee4f94fb.jpg?s=88" class="gravatarimg" />
-							posted by <b>Chris Whisonant</b> on <i>Wednesday 04 January 2017 AD - 21:26 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/f9b9e432bce491b493825a1aee4f94fb.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Chris Whisonant</b> on <i>Wednesday 04 January 2017 AD - 21:26 Singapore Time</i>:<br /> 
   Stephan, thank you for the response. 
   <br /> 
   <br />I decided to create a mail.box (we have mail1.box and mail2.box) and that has stopped us from getting the &quot;Database %1 has not been opened yet.&quot; error message. However, from the browser we get the same error at https: //server.com/pob/api/search/info that I posted above about authorization. The only thing we get now in the error-log-0.xml on the server is the following. 
@@ -329,23 +309,17 @@ categories:  <a href="/blog/categories/.html"></a>
   <br />If I go to https: //server.com/pob/api/search/monitor, I get nothing in the logs but I get this in the browser. Same message but it's formatted better. 
   <br /> 
   <br />&quot;You need to be admin, but you aren't&quot;
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/f9b9e432bce491b493825a1aee4f94fb.jpg?s=88" class="gravatarimg" />
-							posted by <b>Chris Whisonant</b> on <i>Thursday 05 January 2017 AD - 23:14 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/f9b9e432bce491b493825a1aee4f94fb.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Chris Whisonant</b> on <i>Thursday 05 January 2017 AD - 23:14 Singapore Time</i>:<br /> 
   Just an update after Stephan and I chatted further about my issue. We decided to try deleting the existing mail1.box, mail2.box, and mail.box files and starting the server back configured to only use a single mail.box. After doing this, the search metrics started to work in the browser. Thanks, Stephan, again.
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/87bb7d342341ebd998f436f4e5e62df0.jpg?s=88" class="gravatarimg" />
-							posted by <b>Tony Byrne</b> on <i>Tuesday 10 January 2017 AD - 20:01 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/87bb7d342341ebd998f436f4e5e62df0.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Tony Byrne</b> on <i>Tuesday 10 January 2017 AD - 20:01 Singapore Time</i>:<br /> 
   Hi Stephan, 
   <br /> 
   <br />It looks good but my folders don't work, they give an error saying, 'Something went wrong. We are having trouble displaying your messages.' The console shows... 
@@ -355,90 +329,68 @@ categories:  <a href="/blog/categories/.html"></a>
   <br /> 
   <br />Any help would be appreciated. 
   <br />
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 10 January 2017 AD - 21:47 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 10 January 2017 AD - 21:47 Singapore Time</i>:<br /> 
   Tony, 
   <br />the article mentions all you need: 
   <br />- read your log 
   <br />- the PMR system is your friend
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/f9b9e432bce491b493825a1aee4f94fb.jpg?s=88" class="gravatarimg" />
-							posted by <b>Chris Whisonant</b> on <i>Wednesday 11 January 2017 AD - 04:41 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/f9b9e432bce491b493825a1aee4f94fb.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Chris Whisonant</b> on <i>Wednesday 11 January 2017 AD - 04:41 Singapore Time</i>:<br /> 
   I do have another question about the technology. When you mentioned that the core changes will &quot;dramatically improve read performance for any document - a big bonus for all Domino based applications&quot; do you mean &quot;Domino&quot; as in only HTTP client reads or Notes client reads also?
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/703285019f9251be2668bd18cd97fe4e.jpg?s=88" class="gravatarimg" />
-							posted by <b>Tihomir Pantovic</b> on <i>Thursday 19 January 2017 AD - 17:01 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/703285019f9251be2668bd18cd97fe4e.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Tihomir Pantovic</b> on <i>Thursday 19 January 2017 AD - 17:01 Singapore Time</i>:<br /> 
   Just put IF2 for 9.0.1FP7 and it looks like it broke something... 
   <br /> 
   <br />Might be some regional settings stuff, I'll try to discover later today. 
   <br /> 
   <br />&quot;Something went wrong. We are having trouble displaying your messages.&quot; in UI and on console: 
   <br />19.01.2017 09:55:10 - Formula Error [/mail/vuser1.nsf/0/13B772902415FFB2C12580A8006612B0/?OpenDocument&amp;sq=1&amp;Form=l_JSVars&amp;PresetFields=s_HandleAttachmentNames;1,s_HandleMime;1,s_HandleStoredForm;1,s_OpenUI;1,s_HideImages;0,s_HideRemoteImage;1,s_MIMEInIframe;0,s_CDInIframe;0,s_ForceUseInLineHtml;1,s_AppSupportsFormList;memo%7Cappointment%7Creply%7Cnotice%7Cpersonal%20stationery%7C,l_GetBodyEE;1,HTMLOptions;RowAtATimeTa and 30 more bytes] CN=User1 LastName1/O=Domain
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/703285019f9251be2668bd18cd97fe4e.jpg?s=88" class="gravatarimg" />
-							posted by <b>Tihomir Pantovic</b> on <i>Friday 20 January 2017 AD - 04:28 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/703285019f9251be2668bd18cd97fe4e.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Tihomir Pantovic</b> on <i>Friday 20 January 2017 AD - 04:28 Singapore Time</i>:<br /> 
   Submitted PMR, looks like FP7 bug with Non-US regional settings: 
   <br /> 
   <br />{ 
   <a href="https://tixomir.wordpress.com/2017/01/19/ibm-domino-9-0-1-fp2-if2-regression-testing-anyone-formula-error/" rel="nofollow" target="blank">Link</a> }
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/d3dd3778b87844a43fed666cd2868843.jpg?s=88" class="gravatarimg" />
-							posted by <b>Andrew Magerman</b> on <i>Friday 20 January 2017 AD - 06:45 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/d3dd3778b87844a43fed666cd2868843.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Andrew Magerman</b> on <i>Friday 20 January 2017 AD - 06:45 Singapore Time</i>:<br /> 
   <p>I like the design decisions you made. Looks nice and clean, and won't bite you, hopefully. Last time I was this impressed by a Domino design decision was for DAOS, and before that, the new @Formula Engine that Damien Katz wrote.</p> 
   <p>Happy that some of the improvements done for Verse serendipitously also improve the performance of the Domino Server. </p>
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/703285019f9251be2668bd18cd97fe4e.jpg?s=88" class="gravatarimg" />
-							posted by <b>Tihomir Pantovic</b> on <i>Saturday 21 January 2017 AD - 05:45 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/703285019f9251be2668bd18cd97fe4e.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Tihomir Pantovic</b> on <i>Saturday 21 January 2017 AD - 05:45 Singapore Time</i>:<br /> 
   Update #3 (last one, i promise 
   <img alt="Emoticon biggrin.gif" src="/blog/images/emoticons/biggrin.gif" border="0" /> ) 
   <br />IF3 for iNotes solves this issue.
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/fc7d74d3f7ca42b4d4e8e0cdccd7f3e9.jpg?s=88" class="gravatarimg" />
-							posted by <b>Daniel Reimann</b> on <i>Wednesday 08 February 2017 AD - 00:51 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/fc7d74d3f7ca42b4d4e8e0cdccd7f3e9.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Daniel Reimann</b> on <i>Wednesday 08 February 2017 AD - 00:51 Singapore Time</i>:<br /> 
   Regarding Tony Byrne's issue above (Comment #9): I had the exact same problem although I definitely followed all instructions. This here solved it for me and I would have never come to that solution myself. Kudos to Yingle Jia! 
   <br /> 
   <br />{ 
   <a href="http://www-10.lotus.com/ldd/ndseforum.nsf/xpTopicThread.xsp?documentId=79821FAC2151A2FF852580B9005BD833" rel="nofollow" target="blank">Link</a> } 
   <br /> 
   <br />It's the setting &quot;Make this site accessible to web search site crawlers&quot; that has to be DISABLED for folders to work in Verse On Premises altogether.
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 					</ol>
 				</div>

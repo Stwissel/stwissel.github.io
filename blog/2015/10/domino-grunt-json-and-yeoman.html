@@ -145,8 +145,8 @@ ga('send', 'pageview');
 					<h1><small>Domino, Extlib, GRUNT, JSON and Yeoman</small></h1>
 					<hr />
 					<div><h3>TL:TR</h3> With a few tweaks and clever setup, you can have web developers deliver front-ends for Domino without ever touching it. 
-<br /> Contemporary web development workflows separate front-end and back-end through a JSON API and HTTP (that's 21st century 3270 for you). The approach in these workflows is to treat the webserver as source of static files (HTML, CSS, JS) and JSON payload data being shuffled back and forth. This article describes how my development setup makes all this work with Domino and Domino designer. 
-<br /> 
+<br> Contemporary web development workflows separate front-end and back-end through a JSON API and HTTP (that's 21st century 3270 for you). The approach in these workflows is to treat the webserver as source of static files (HTML, CSS, JS) and JSON payload data being shuffled back and forth. This article describes how my development setup makes all this work with Domino and Domino designer. 
+<br> 
 <h3>The full monty</h3> The front-end tools I use are: 
 <ul> 
  <li><a href="https://nodejs.org/">Node.js</a>: a JavaScript runtime based on Google's V8 engine. It provides all runtime for all the other tools. If you don't have a node.js installation on your developer workstation, where were you hiding the last 2 years?</li> 
@@ -160,53 +160,53 @@ ga('send', 'pageview');
 <a href="http://www.eclipse.org/">one</a> or 
 <a href="https://www.jetbrains.com/webstorm/">the other</a> IDE or 
 <a href="https://www.sourcetreeapp.com/">version control client</a>, since theses choices don't influence the workflow steps or setup. Pick what you like. 
-<br /> My general directory layout starts with a project folder that has entries for code, documentation, nsf and a misc. folder. I only put the 
+<br> My general directory layout starts with a project folder that has entries for code, documentation, nsf and a misc. folder. I only put the 
 <code>code</code> folder into the GIT version control. 
-<br /> 
-<img src="/blog/images/2015/FrontEndBackEndDevelopment.jpg" border="0" alt="Seperation of concerns for frontend and backend development" /> 
-<br /> The front-end developer doesn't need any of the Domino components available to create user interface and interaction models. The back-end developer will use exclusively the REST controls from the Domino XPages Extension library (which is part of a default current Domino server install). The two directory structures are linked in a GIT project, but that isn't mandatory. One step that made my live much easier: take the 
+<br> 
+<img src="/blog/images/2015/FrontEndBackEndDevelopment.jpg" border="0" alt="Seperation of concerns for frontend and backend development"> 
+<br> The front-end developer doesn't need any of the Domino components available to create user interface and interaction models. The back-end developer will use exclusively the REST controls from the Domino XPages Extension library (which is part of a default current Domino server install). The two directory structures are linked in a GIT project, but that isn't mandatory. One step that made my live much easier: take the 
 <code>dist</code> directory and link it to 
 <code>WebContent</code>. This saves me the step to copy things around. The fine-tuning of the setup is where the fun starts.But first things first: 
 <h3>Installation</h3> You follow the 
 <a href="https://nodejs.org/">Node.js</a> instructions for your platform to get a running node.js version (v4.2.1 as time of writing). Thereafter you install as admin ( 
 <code>sudo</code> for Linux/Mac) Bower, Grunt and Yeoman: 
-<br /> 
+<br> 
 <pre class="brush: bash">
 npm install -g bower
 npm install -g grunt-cli
 npm install -g yo
 npm install -g generator-karma generator-angular
 </pre> 
-<br /> I use the 
+<br> I use the 
 <a href="https://github.com/yeoman/generator-angular">generator-angular</a>, but looking very promising is 
 <a href="https://github.com/mcfly-io/generator-mcfly">mcfly</a>. Go and checkout the 
 <a href="http://yeoman.io/">Yeoman</a> website for the many more options you have for generators. 
-<br /> Change to the Frontend directory and initialize your new front-end application using 
-<br /> 
+<br> Change to the Frontend directory and initialize your new front-end application using 
+<br> 
 <pre class="brush: bash">
  yo angular myAwesomeApp
 </pre> You get walked through a series of questions, node.js does some magic (requires internet connection) and you have a basic 
 <a href="https://angularjs.org/">Angular.js</a> application ready. There are tons of tutorials how to use Yeoman, Bower, Grunt and Angular.js, so go google them, I'll limit myself to the tweaks I made to make my Domino live easier. 
-<br /> Once the 
+<br> Once the 
 <code>yo</code> magic work concludes, you can use 
-<br /> 
+<br> 
 <pre class="brush: bash">
 grunt serve
 </pre> to have a first look at your new frontend in action (by default on port 9000). As long as that grunt task is running, any change you save will automatically reload the browser and show you the new result (praise to the second monitor). 
-<br /> 
+<br> 
 <h3>Tweaks</h3> 
 <ul> 
- <li>All my JSON controls live on an XPage with the name <code>api.xsp</code>.<br /> I create a <b>directory</b> under the app directory named api.xsp and add one file each that matches the path property in the XPages REST controls (api.xsp/people, api.xsp/setup.json etc). These files contain sample JSON of what the Domino REST control eventually will return.</li> 
- <li>To prevent that directory to be copied into the NSF (when <code>grunt build</code> runs), I edit the <code>Gruntfile.js</code> and change the copy:dist:files:src array to include <code>'!api.xsp'</code>.<br /> If you use more XPages you could use a wildcard. Be careful to include the exclamation mark which stands for <i>not</i></li> 
- <li>With the file open, I adjust the <b>clean</b> section where I add <code>'!&lt;%= yeoman.dist %&gt;/WEB-INF{,*/}*'</code> to <code>clean:dist:files:src</code>.<br /> Again don't forget the exclamation mark. This allows me to keep WebContent and dist linked and the build task won't wipe out the WEB-INF directory.<br /> Now we can make JSON calls (in Angular services/providers) to our REST endpoints without having anything Domino installed (which allows you to use a Mac or Linux for this part of the exercise). The only missing step: posting things back.</li> 
+ <li>All my JSON controls live on an XPage with the name <code>api.xsp</code>.<br> I create a <b>directory</b> under the app directory named api.xsp and add one file each that matches the path property in the XPages REST controls (api.xsp/people, api.xsp/setup.json etc). These files contain sample JSON of what the Domino REST control eventually will return.</li> 
+ <li>To prevent that directory to be copied into the NSF (when <code>grunt build</code> runs), I edit the <code>Gruntfile.js</code> and change the copy:dist:files:src array to include <code>'!api.xsp'</code>.<br> If you use more XPages you could use a wildcard. Be careful to include the exclamation mark which stands for <i>not</i></li> 
+ <li>With the file open, I adjust the <b>clean</b> section where I add <code>'!&lt;%= yeoman.dist %&gt;/WEB-INF{,*/}*'</code> to <code>clean:dist:files:src</code>.<br> Again don't forget the exclamation mark. This allows me to keep WebContent and dist linked and the build task won't wipe out the WEB-INF directory.<br> Now we can make JSON calls (in Angular services/providers) to our REST endpoints without having anything Domino installed (which allows you to use a Mac or Linux for this part of the exercise). The only missing step: posting things back.</li> 
  <li>This part is 
   <strike>
     a little trickier 
-  </strike> easy when you ask <a href="https://www.linkedin.com/pub/benjamin-kroeger/81/290/19a">the right people</a>:<br /> in a frontend dev environment you don't want to fully simulate the server, a static reply or just echo the submitted JSON does suffice.<br /> The default configuration of the Gruntfile.js only caters to GET requests, but I wasn't <a href="http://stackoverflow.com/questions/16361931/yeoman-1-0-make-development-server-accept-post-calls">the first to ask</a>, so there's precedence. It turned out, that it is just a few lines of changes at the top of your Gruntfile.js (and 2 lines down): <pre class="brush: js">
-var bodyParser = require(&quot;body-parser&quot;);
+  </strike> easy when you ask <a href="https://www.linkedin.com/pub/benjamin-kroeger/81/290/19a">the right people</a>:<br> in a frontend dev environment you don't want to fully simulate the server, a static reply or just echo the submitted JSON does suffice.<br> The default configuration of the Gruntfile.js only caters to GET requests, but I wasn't <a href="http://stackoverflow.com/questions/16361931/yeoman-1-0-make-development-server-accept-post-calls">the first to ask</a>, so there's precedence. It turned out, that it is just a few lines of changes at the top of your Gruntfile.js (and 2 lines down): <pre class="brush: js">
+var bodyParser = require("body-parser");
 var postResponder = function(request, response, next) {
 if (request.method === 'POST') {
-   console.log(request.method+&quot; &quot;+request.url);
+   console.log(request.method+" "+request.url);
    response.setHeader('Content-Type', 'application/json');
    response.statusCode = 200;
    response.end(JSON.stringify(request.body));
@@ -214,7 +214,7 @@ if (request.method === 'POST') {
      next();
   }
 };
-</pre><br /> and to the <code>connect.livereload.options.middleware</code> object:<br /> <pre class="brush: js">
+</pre><br> and to the <code>connect.livereload.options.middleware</code> object:<br> <pre class="brush: js">
 function (connect) {
    return [
       connect().use('/api.xsp', bodyParser.json()),
@@ -225,10 +225,10 @@ function (connect) {
       connect.static(appConfig.app)
    ];
 }
-</pre><br /> Note: You only add the first two lines after the return statement, the others are already there. </li> 
+</pre><br> Note: You only add the first two lines after the return statement, the others are already there. </li> 
 </ul> Musing (insider pun intended) to put all this into a generator 
-<img src="http://www.wissel.net/blog/emoticons/DLYH-5MZVLU/$File/wink.gif" />. 
-<br /> As usual YMMV!</div>
+<img src="http://www.wissel.net/blog/emoticons/DLYH-5MZVLU/$File/wink.gif">. 
+<br> As usual YMMV!</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -240,7 +240,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2015/10/domino-grunt-json-and-yeoman.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Domino, Extlib, GRUNT, JSON and Yeoman"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2015/10/domino-grunt-json-and-yeoman.html";
+							var permaLink = "https://wissel.net/blog/2015/10/domino-grunt-json-and-yeoman.html";
 						</script>
 					</p>
 
@@ -256,35 +256,26 @@ categories:  <a href="/blog/categories/.html"></a>
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/29df80a5fa9e1128f5a80d1754999978.jpg?s=88" class="gravatarimg" />
-							posted by <b>Arun Agnihotri</b> on <i>Saturday 31 October 2015 AD - 13:02 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/29df80a5fa9e1128f5a80d1754999978.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Arun Agnihotri</b> on <i>Saturday 31 October 2015 AD - 13:02 Singapore Time</i>:<br /> 
   Steve...great post as usual.. one thing where most of it gets stuck is file attachment handling... can you tell us a little bit more about handling attachments in above scenario??
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Monday 02 November 2015 AD - 15:50 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Monday 02 November 2015 AD - 15:50 Singapore Time</i>:<br /> 
   The short answer: you don't. 
   <br /> 
   <br />The long answer: A JSON based REST service serves JSON. An attachment is binary data. JSON != binary. You could start shoehorning files into a JSON API, but that's most likely not a brilliant idea. 
   <br /> 
   <br />You have 2 use cases: extending existing application where you need to preserve attachments inside your main document and new applications where you can do what you deem fit. In the later case you save yourself a lot of trouble storing attachments in their own documents. In the former you deal with XPages native way to upload files (e.g. using the multi-upload control). I'll blog about this as need arises in my projects
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/38e9570a26e67435bad71bbf49ad2fc5.jpg?s=88" class="gravatarimg" />
-							posted by <b>Avi Haiat</b> on <i>Wednesday 04 November 2015 AD - 11:55 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/38e9570a26e67435bad71bbf49ad2fc5.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Avi Haiat</b> on <i>Wednesday 04 November 2015 AD - 11:55 Singapore Time</i>:<br /> 
   Hi there, nice article, and thks for mentioning the generator-mcfly
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 					</ol>
 				</div>

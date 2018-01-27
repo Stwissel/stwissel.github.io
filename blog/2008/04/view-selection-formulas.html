@@ -148,7 +148,7 @@ ga('send', 'pageview');
 <strike>
   databases 
 </strike> applications for maintainance there is no real easy way to get an overview what view selection formulas have been used. So I did write myself a function that creates a document with such an overview table.See the function below. To test it I simply copy it into an agent and call it for the current database. 
-<br /> Of course you could think of running it against multiple databases or altering the html with some Ajax stuff to make it sortable. Here is my test agent: 
+<br> Of course you could think of running it against multiple databases or altering the html with some Ajax stuff to make it sortable. Here is my test agent: 
 <style>.lotusscript { font-family: sans-serif; font-size: 9pt; color: black; }
 .ls-comment { color: green; }
 .ls-quote { color: black; }
@@ -162,592 +162,839 @@ ga('send', 'pageview');
 </style> 
 <pre>
  
+ 
  <div class="lotusscript">
 
   
+  
   <font class="ls-keyword">Option</font> 
+  
   
   <font class="ls-keyword">Public</font>
 
   
+  
   <font class="ls-keyword">Option</font> 
+  
   
   <font class="ls-keyword">Declare</font>
 
 
   
+  
   <font class="ls-statement">Sub</font> 
+  
   
   <font class="ls-keyword">Initialize</font>
 	
   
+  
   <font class="ls-statement">Dim</font> s 
+  
   
   <font class="ls-keyword">As</font> 
   
+  
   <font class="ls-keyword">New</font> 
+  
   
   <font class="ls-class">NotesSession</font>
 	
   
+  
   <font class="ls-statement">Dim</font> db 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesDatabase</font>
 	
   
+  
   <font class="ls-statement">Dim</font> doc 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesDocument</font>
 	
 	
   
+  
   <font class="ls-statement">Set</font> db 
   
+  
   <font class="ls-operator">=</font> s
+  
   
   <font class="ls-operator">.</font>CurrentDatabase
 	
   
+  
   <font class="ls-statement">Set</font> doc 
   
+  
   <font class="ls-operator">=</font> db
+  
   
   <font class="ls-operator">.</font>CreateDocument
 	
   
+  
   <font class="ls-function">Call</font> ReportViewSelectionFormulas
+  
   
   <font class="ls-operator">(</font>db
   
+  
   <font class="ls-operator">,</font> doc
+  
   
   <font class="ls-operator">)</font>
 	
+  
   
   <font class="ls-function">Call</font> doc
   
+  
   <font class="ls-operator">.</font>send
+  
   
   <font class="ls-operator">(</font>
   
+  
   <font class="ls-constant">False</font>
+  
   
   <font class="ls-operator">,</font>s
   
+  
   <font class="ls-operator">.</font>UserName
+  
   
   <font class="ls-operator">)</font>
 	
 
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">Sub</font>
 
+ 
  
  </div></pre> 
 <div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;"> 
  <center>
    This LotusScript was converted to HTML using the 
   <b><i>ls2html</i></b> routine, 
-  <br />provided by Julian Robichaux at 
+  <br>provided by Julian Robichaux at 
   <a href="http://www.nsftools.com" target="_blank">nsftools.com</a>. 
  </center> 
 </div> 
 <b>Update</b>: Sorry folks, got the wrong code in the core functionsm fixed now. Enjoy!and here the core function: 
-<br /> 
+<br> 
 <pre>
+ 
  
  <div class="lotusscript">
 
   
+  
   <font class="ls-statement">Sub</font> ReportViewSelectionFormulas
+  
   
   <font class="ls-operator">(</font>db 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesDatabase</font>
   
+  
   <font class="ls-operator">,</font> doc 
+  
   
   <font class="ls-keyword">As</font> 
   
+  
   <font class="ls-class">NotesDocument</font>
+  
   
   <font class="ls-operator">)</font>
 	
   
+  
   <font class="ls-statement">Dim</font> s 
+  
   
   <font class="ls-keyword">As</font> 
   
+  
   <font class="ls-keyword">New</font> 
+  
   
   <font class="ls-class">NotesSession</font>
 	
   
+  
   <font class="ls-statement">Dim</font> v 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesView</font>
 	
   
+  
   <font class="ls-statement">Dim</font> out 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesStream</font>
 	
   
+  
   <font class="ls-statement">Dim</font> mime 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesMimeEntity</font>
 	
   
+  
   <font class="ls-statement">Dim</font> header 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesMimeHeader</font>
 	
   
+  
   <font class="ls-statement">Dim</font> body 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesMimeEntity</font>
 	
   
+  
   <font class="ls-statement">Dim</font> oddRow 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-keyword">Boolean</font>
 	s
   
+  
   <font class="ls-operator">.</font>ConvertMIME 
+  
   
   <font class="ls-operator">=</font> 
   
+  
   <font class="ls-constant">False</font> 
+  
   
   <font class="ls-comment">' Do not convert MIME to rich text</font>
 	
 	
   
+  
   <font class="ls-function">Call</font> doc
+  
   
   <font class="ls-operator">.</font>ReplaceItemValue
   
+  
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;Form&quot;</font>
+  
+  <font class="ls-quote">"Form"</font>
+  
   
   <font class="ls-operator">,</font>
   
-  <font class="ls-quote">&quot;Memo&quot;</font>
+  
+  <font class="ls-quote">"Memo"</font>
+  
   
   <font class="ls-operator">)</font>
 	
   
+  
   <font class="ls-statement">Set</font> mime 
   
+  
   <font class="ls-operator">=</font> doc
+  
   
   <font class="ls-operator">.</font>CreateMIMEEntity
 	
   
+  
   <font class="ls-statement">Set</font> header 
+  
   
   <font class="ls-operator">=</font> mime
   
+  
   <font class="ls-operator">.</font>CreateHeader
+  
   
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;Subject&quot;</font>
+  
+  <font class="ls-quote">"Subject"</font>
+  
   
   <font class="ls-operator">)</font>
 	
   
+  
   <font class="ls-statement">Set</font> body 
   
+  
   <font class="ls-operator">=</font> mime
+  
   
   <font class="ls-operator">.</font>CreateChildEntity
 	
   
+  
   <font class="ls-function">Call</font> header
+  
   
   <font class="ls-operator">.</font>SetHeaderVal
   
+  
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;View selection formula report for &quot;</font>
+  
+  <font class="ls-quote">"View selection formula report for "</font>
+  
   
   <font class="ls-operator">+</font>db
   
+  
   <font class="ls-operator">.</font>Title
+  
   
   <font class="ls-operator">)</font>
 	
+  
   
   <font class="ls-statement">Set</font> header 
   
+  
   <font class="ls-operator">=</font> mime
+  
   
   <font class="ls-operator">.</font>CreateHeader
   
+  
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;SendTo&quot;</font>
+  
+  <font class="ls-quote">"SendTo"</font>
+  
   
   <font class="ls-operator">)</font>
 	
+  
   
   <font class="ls-function">Call</font> header
   
+  
   <font class="ls-operator">.</font>SetHeaderVal
+  
   
   <font class="ls-operator">(</font>s
   
+  
   <font class="ls-operator">.</font>UserName
+  
   
   <font class="ls-operator">)</font>
 	
 	
   
+  
   <font class="ls-statement">Set</font> out 
   
+  
   <font class="ls-operator">=</font> s
+  
   
   <font class="ls-operator">.</font>CreateStream
 	oddRow 
   
+  
   <font class="ls-operator">=</font> 
+  
   
   <font class="ls-constant">True</font>
 	out
   
+  
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>
+  
   
   <font class="ls-quote">|&lt;style&gt;|</font>
   
+  
   <font class="ls-operator">)</font>
 	out
   
+  
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>
+  
   
   <font class="ls-quote">|table {width : 100%; padding : 3px; border-left : 1px solid gray; border-top : 1px solid gray} |</font>
   
+  
   <font class="ls-operator">)</font>
 	out
   
+  
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>
+  
   
   <font class="ls-quote">|body, th, td {text-align : left, font-family : Verdana, Arial, sans-serif} |</font>
   
+  
   <font class="ls-operator">)</font>
 	out
   
+  
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>
+  
   
   <font class="ls-quote">|th {background-color : #FFCCCC} |</font>
   
+  
   <font class="ls-operator">)</font>
 	out
   
+  
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>
+  
   
   <font class="ls-quote">|h1 {background-color : #FF9999; border-bottom : 2px black; font-family : Arial, sans-serif; font-size : large} |</font>
   
+  
   <font class="ls-operator">)</font>
 	out
   
+  
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>
+  
   
   <font class="ls-quote">|td, th { border-bottom : 1px solid gray; border-right : 1px solid gray} |</font>
   
+  
   <font class="ls-operator">)</font>
 	out
   
+  
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>
+  
   
   <font class="ls-quote">|&lt;/style&gt;|</font>
   
+  
   <font class="ls-operator">)</font>
 	out
   
+  
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>
+  
   
   <font class="ls-quote">|&lt;h1&gt;|</font>
   
+  
   <font class="ls-operator">)</font>
 	out
   
+  
   <font class="ls-operator">.</font>WriteText
+  
   
   <font class="ls-operator">(</font>db
   
+  
   <font class="ls-operator">.</font>Title
+  
   
   <font class="ls-operator">)</font>
 	out
   
+  
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>
+  
   
   <font class="ls-quote">|&lt;/h1&gt;|</font>
   
+  
   <font class="ls-operator">)</font>
 	out
   
+  
   <font class="ls-operator">.</font>WriteText
+  
   
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">|&lt;table width=&quot;100%&quot;&gt;&lt;tr&gt;&lt;th&gt;View&lt;/th&gt;&lt;th&gt;Alias&lt;/th&gt;&lt;th&gt;Selection Formula&lt;/th&gt;&lt;/tr&gt;|</font>
+  
+  <font class="ls-quote">|&lt;table width="100%"&gt;&lt;tr&gt;&lt;th&gt;View&lt;/th&gt;&lt;th&gt;Alias&lt;/th&gt;&lt;th&gt;Selection Formula&lt;/th&gt;&lt;/tr&gt;|</font>
+  
   
   <font class="ls-operator">)</font>
 	
   
+  
   <font class="ls-statement">Forall</font> curView In db
+  
   
   <font class="ls-operator">.</font>Views
 		
   
+  
   <font class="ls-statement">Set</font> v 
+  
   
   <font class="ls-operator">=</font> curView
 		
   
+  
   <font class="ls-statement">If</font> oddRow 
+  
   
   <font class="ls-statement">Then</font>
 			out
   
+  
   <font class="ls-operator">.</font>WriteText
+  
   
   <font class="ls-operator">(</font>
   
+  
   <font class="ls-quote">|&lt;tr&gt;&lt;td&gt;|</font>
+  
   
   <font class="ls-operator">)</font>
 			oddRow 
   
+  
   <font class="ls-operator">=</font> 
+  
   
   <font class="ls-constant">False</font>
 		
   
+  
   <font class="ls-statement">Else</font>
 			out
   
+  
   <font class="ls-operator">.</font>WriteText
+  
   
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">|&lt;tr style=&quot;background-color : #EEEEEE&quot;&gt;&lt;td&gt;|</font>
+  
+  <font class="ls-quote">|&lt;tr style="background-color : #EEEEEE"&gt;&lt;td&gt;|</font>
+  
   
   <font class="ls-operator">)</font>
 			oddRow 
   
+  
   <font class="ls-operator">=</font> 
+  
   
   <font class="ls-constant">True</font>
 		
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">If</font>
 		out
   
+  
   <font class="ls-operator">.</font>WriteText
+  
   
   <font class="ls-operator">(</font>v
   
+  
   <font class="ls-operator">.</font>
   
+  
   <font class="ls-function">Name</font>
+  
   
   <font class="ls-operator">)</font>
 		out
   
+  
   <font class="ls-operator">.</font>WriteText
+  
   
   <font class="ls-operator">(</font>
   
+  
   <font class="ls-quote">|&lt;/td&gt;&lt;td&gt;|</font>
+  
   
   <font class="ls-operator">)</font>
 		
+  
   
   <font class="ls-comment">'The view alias</font>
 		
   
+  
   <font class="ls-statement">If</font> 
+  
   
   <font class="ls-function">Isempty</font>
   
+  
   <font class="ls-operator">(</font>v
+  
   
   <font class="ls-operator">.</font>Aliases
   
+  
   <font class="ls-operator">)</font> 
+  
   
   <font class="ls-statement">Then</font>
 			out
   
+  
   <font class="ls-operator">.</font>Writetext
+  
   
   <font class="ls-operator">(</font>
   
+  
   <font class="ls-quote">|./.|</font>
+  
   
   <font class="ls-operator">)</font>
 		
+  
   
   <font class="ls-statement">Else</font>
 			
   
+  
   <font class="ls-statement">Forall</font> curAlias In v
+  
   
   <font class="ls-operator">.</font>Aliases
 				out
   
+  
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>curAlias
+  
   
   <font class="ls-operator">)</font>
 				out
   
+  
   <font class="ls-operator">.</font>WriteText
+  
   
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot; &quot;</font>
+  
+  <font class="ls-quote">" "</font>
+  
   
   <font class="ls-operator">)</font>
 			
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">Forall</font>
 		
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">If</font>
 		out
   
+  
   <font class="ls-operator">.</font>WriteText
+  
   
   <font class="ls-operator">(</font>
   
+  
   <font class="ls-quote">|&lt;/td&gt;&lt;td&gt;|</font>
+  
   
   <font class="ls-operator">)</font>
 		out
   
+  
   <font class="ls-operator">.</font>WriteText
+  
   
   <font class="ls-operator">(</font>v
   
+  
   <font class="ls-operator">.</font>SelectionFormula
+  
   
   <font class="ls-operator">)</font>		
 		out
   
+  
   <font class="ls-operator">.</font>WriteText
+  
   
   <font class="ls-operator">(</font>
   
+  
   <font class="ls-quote">|&lt;/td&gt;&lt;/tr&gt;|</font>
+  
   
   <font class="ls-operator">)</font>
 	
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">Forall</font>
 	out
   
+  
   <font class="ls-operator">.</font>Position 
+  
   
   <font class="ls-operator">=</font> 0
 	out
   
+  
   <font class="ls-operator">.</font>WriteText
+  
   
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;&lt;/table&gt;&quot;</font>
+  
+  <font class="ls-quote">"&lt;/table&gt;"</font>
+  
   
   <font class="ls-operator">)</font>
 	
   
+  
   <font class="ls-function">Call</font> body
+  
   
   <font class="ls-operator">.</font>SetContentFromText
   
+  
   <font class="ls-operator">(</font>out
+  
   
   <font class="ls-operator">,</font>
   
-  <font class="ls-quote">&quot;text/html; charset=UTF-8&quot;</font>
+  
+  <font class="ls-quote">"text/html; charset=UTF-8"</font>
+  
   
   <font class="ls-operator">,</font> ENC_IDENTITY_7BIT
+  
   
   <font class="ls-operator">)</font>
 	s
   
+  
   <font class="ls-operator">.</font>ConvertMIME 
+  
   
   <font class="ls-operator">=</font> 
   
+  
   <font class="ls-constant">True</font> 
+  
   
   <font class="ls-comment">' Restore conversion</font>
 	
 
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">Sub</font>
 
+ 
  
  </div></pre> 
 <div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;"> 
  <center>
    This LotusScript was converted to HTML using the 
   <b><i>ls2html</i></b> routine, 
-  <br />provided by Julian Robichaux at 
+  <br>provided by Julian Robichaux at 
   <a href="http://www.nsftools.com" target="_blank">nsftools.com</a>. 
  </center> 
 </div></div>
@@ -762,7 +1009,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2008/04/view-selection-formulas.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="View Selection Formulas"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2008/04/view-selection-formulas.html";
+							var permaLink = "https://wissel.net/blog/2008/04/view-selection-formulas.html";
 						</script>
 					</p>
 
@@ -778,29 +1025,21 @@ categories:  <a href="/blog/categories/.html"></a>
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/6dacdb0e7ca82c5590bf25b2751976bf.jpg?s=88" class="gravatarimg" />
-							posted by <b>Giuseppe</b> on <i>Saturday 05 April 2008 AD - 04:35 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/6dacdb0e7ca82c5590bf25b2751976bf.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Giuseppe</b> on <i>Saturday 05 April 2008 AD - 04:35 Singapore Time</i>:<br /> 
   something wrong with the &quot;core function&quot; ?
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/729bd47ad816d9474ec6f4fb5afe4e3e.jpg?s=88" class="gravatarimg" />
-							posted by <b>tom</b> on <i>Saturday 05 April 2008 AD - 12:55 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/729bd47ad816d9474ec6f4fb5afe4e3e.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>tom</b> on <i>Saturday 05 April 2008 AD - 12:55 Singapore Time</i>:<br /> 
   I concur with #1. Methinks there was a cut/paste malfunction. 
   <img alt="Emoticon biggrin.gif" src="/blog/images/emoticons/biggrin.gif" border="0" />
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/99fb011bce1970faa1e6cad0063d186d.jpg?s=88" class="gravatarimg" />
-							posted by <b>Thomas BAhn</b> on <i>Thursday 10 April 2008 AD - 03:22 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/99fb011bce1970faa1e6cad0063d186d.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Thomas BAhn</b> on <i>Thursday 10 April 2008 AD - 03:22 Singapore Time</i>:<br /> 
   Hi Stephan, 
   <br /> 
   <br />for the fast overview the Design Synopsis could be sufficient. Just deactivate everything in the details for views, but the selection formula, and add all views to the synopsis. 
@@ -808,25 +1047,19 @@ categories:  <a href="/blog/categories/.html"></a>
   <br />It not nice, but fast, and works without design modifications. 
   <br /> 
   <br />Thomas
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Thursday 10 April 2008 AD - 08:27 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Thursday 10 April 2008 AD - 08:27 Singapore Time</i>:<br /> 
   @Thomas, 
   <br /> 
   <br />you are right, Synopsis would work. My example code however is taken out of context. I added the sub initialize for illustration only. The full code actually lives in a utility database, that scans the design of external databases, so I actually don't change the design either. It is one part of a &quot;brute force&quot; view tuning tool. Stay tuned for more on that.
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/6f61939e470fcc4a518aaed27456248c.jpg?s=88" class="gravatarimg" />
-							posted by <b>Eric Yan</b> on <i>Thursday 17 December 2009 AD - 11:24 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/6f61939e470fcc4a518aaed27456248c.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Eric Yan</b> on <i>Thursday 17 December 2009 AD - 11:24 Singapore Time</i>:<br /> 
   Set header = mime.CreateHeader(&quot;Subject&quot;) 
   <br />Call header.SetHeaderVal( subject ) 
   <br /> 
@@ -834,8 +1067,7 @@ categories:  <a href="/blog/categories/.html"></a>
   <br />many &quot;!!&quot; have being added to the subject. 
   <br /> 
   <br />
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 					</ol>
 				</div>

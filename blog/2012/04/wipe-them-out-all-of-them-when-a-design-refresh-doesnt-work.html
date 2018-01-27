@@ -144,230 +144,230 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Wipe them out - all of them (when a design refresh doesn&apos;t work)</small></h1>
 					<hr />
-					<div>You created that shiney new version of your application, ran (in no particular order) fixup, compact and updall and replaced the design. Still some of the design elements haven't updated. Typically that happens when no attention was paid to the &quot;prohibit design refresh&quot; flag of the database design (all your predecessor's fault of course). 
-<br /> While you can go in and hunt the settings down one-by-one (tip: use an DXL export and just look for the property), it is sometimes faster and more profound to strip the offending database(s) from their design entirely before applying the &quot;Replace Design&quot; action. 
-<br /> To do that I use a script in my little universal toolbox. A word of caution: 
+					<div>You created that shiney new version of your application, ran (in no particular order) fixup, compact and updall and replaced the design. Still some of the design elements haven't updated. Typically that happens when no attention was paid to the "prohibit design refresh" flag of the database design (all your predecessor's fault of course). 
+<br> While you can go in and hunt the settings down one-by-one (tip: use an DXL export and just look for the property), it is sometimes faster and more profound to strip the offending database(s) from their design entirely before applying the "Replace Design" action. 
+<br> To do that I use a script in my little universal toolbox. A word of caution: 
 <ul> 
  <li>Use it at your own risk</li> 
  <li>Backup the database beforehand</li> 
- <li>Check in Domino Designer's &quot;Navigator view&quot; (the Eclipse panel, not a Notes view) that they are all gone</li> 
+ <li>Check in Domino Designer's "Navigator view" (the Eclipse panel, not a Notes view) that they are all gone</li> 
  <li>You have been warned</li> 
 </ul> As usual YMMV<div class="lotusscript"> 
- <span class="coMULTI">%REM<br /> &nbsp; &nbsp; Class DesignWiper<br /> &nbsp; &nbsp; Description: Wipes out entire design of a database<br /> &nbsp; &nbsp; DEADLY for any folders that are user created<br /> &nbsp; &nbsp; DEADLY on templates<br /> &nbsp; &nbsp; Use at your own risk!<br /> %END REM</span> 
- <br /> 
+ <span class="coMULTI">%REM<br> &nbsp; &nbsp; Class DesignWiper<br> &nbsp; &nbsp; Description: Wipes out entire design of a database<br> &nbsp; &nbsp; DEADLY for any folders that are user created<br> &nbsp; &nbsp; DEADLY on templates<br> &nbsp; &nbsp; Use at your own risk!<br> %END REM</span> 
+ <br> 
  <span class="kw1">Public</span> 
  <span class="kw1">Class</span> DesignWiper 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">private</span> db 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDatabase</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
- <span class="coMULTI">%REM<br /> &nbsp; &nbsp; &nbsp; &nbsp; Sub New<br /> &nbsp; &nbsp; &nbsp; &nbsp; Description: The database is handed over in the constructor<br /> &nbsp; &nbsp; %END REM</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; Sub New<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: The database is handed over in the constructor<br> &nbsp; &nbsp; %END REM</span> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Sub</span> 
  <span class="kw1">New</span> 
  <span class="br0">(</span>dbToWipe 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDatabase</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> 
  <span class="kw1">me</span>. 
  <span class="me1">db</span> = dbToWipe 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">Sub</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
- <span class="coMULTI">%REM<br /> &nbsp; &nbsp; &nbsp; &nbsp; Sub wipeDesign<br /> &nbsp; &nbsp; &nbsp; &nbsp; Description: Wipes all design, might spare folders<br /> &nbsp; &nbsp; %END REM</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; Sub wipeDesign<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: Wipes all design, might spare folders<br> &nbsp; &nbsp; %END REM</span> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Public</span> 
  <span class="kw1">Sub</span> wipeDesign 
  <span class="br0">(</span>preserveFolders 
  <span class="kw1">As</span> 
  <span class="kw1">Boolean</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Dim</span> morituri 
  <span class="kw1">As</span> 
  <span class="kw2">NotesNoteCollection</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Dim</span> curId 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Dim</span> nextId 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">If</span> 
  <span class="kw1">me</span>. 
  <span class="me1">thisIsATemplate</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">MsgBox</span> 
- <span class="st0">&quot;I won't kill a template&quot;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <span class="st0">"I won't kill a template"</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Exit</span> 
  <span class="kw1">sub</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="co1">'Select all elements and walk backwards</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> morituri = db. 
  <span class="me1">Createnotecollection</span> 
  <span class="br0">(</span> 
  <span class="kw1">true</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> morituri. 
  <span class="me1">Selectalladminnotes</span> 
  <span class="br0">(</span> 
  <span class="kw1">false</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> morituri. 
  <span class="me1">Selectalldatanotes</span> 
  <span class="br0">(</span> 
  <span class="kw1">false</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">If</span> preserveFolders 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; morituri. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; morituri. 
  <span class="me1">Selectfolders</span> = 
  <span class="kw1">false</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> morituri. 
  <span class="me1">Buildcollection</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; curId = morituri. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; curId = morituri. 
  <span class="me1">Getfirstnoteid</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Do</span> 
  <span class="kw1">Until</span> curId = 
- <span class="st0">&quot;&quot;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; nextId = morituri. 
+ <span class="st0">""</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; nextId = morituri. 
  <span class="me1">Getnextnoteid</span> 
  <span class="br0">(</span>curId 
  <span class="br0">)</span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> 
  <span class="kw1">me</span>. 
  <span class="me1">wipeOne</span> 
  <span class="br0">(</span>curId 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; curId = nextId 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; curId = nextId 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Loop</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">MsgBox</span> 
- <span class="st0">&quot;It is done, please run fixup, compact and design replace&quot;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <span class="st0">"It is done, please run fixup, compact and design replace"</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">Sub</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
- <span class="coMULTI">%REM<br /> &nbsp; &nbsp; &nbsp; &nbsp; Sub wipeOne<br /> &nbsp; &nbsp; &nbsp; &nbsp; Description: Wipes one design element<br /> &nbsp; &nbsp; &nbsp; &nbsp; might go wrong, so the error handler skips it<br /> &nbsp; &nbsp; %END REM</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; Sub wipeOne<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: Wipes one design element<br> &nbsp; &nbsp; &nbsp; &nbsp; might go wrong, so the error handler skips it<br> &nbsp; &nbsp; %END REM</span> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Private</span> 
  <span class="kw1">Sub</span> wipeOne 
  <span class="br0">(</span>Noteid 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Dim</span> doc 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDocument</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">On</span> 
  <span class="kw1">Error</span> 
  <span class="kw1">GoTo</span> Err_wipeOne 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> doc = 
  <span class="kw1">me</span>. 
  <span class="me1">db</span>. 
  <span class="me1">Getdocumentbyid</span> 
  <span class="br0">(</span>Noteid 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">If</span> 
  <span class="kw1">Not</span> doc 
  <span class="kw1">Is</span> 
  <span class="kw1">Nothing</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> doc. 
  <span class="kw1">Remove</span> 
  <span class="br0">(</span> 
  <span class="kw1">true</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">if</span> 
- <br /> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; Exit_wipeOne: 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; Exit_wipeOne: 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Exit</span> 
  <span class="kw1">Sub</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> Err_wipeOne: 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> Err_wipeOne: 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Print</span> 
- <span class="st0">&quot;Error removing &quot;</span> &amp; NoteId &amp; 
- <span class="st0">&quot;(Error: &quot;</span> &amp; 
+ <span class="st0">"Error removing "</span> &amp; NoteId &amp; 
+ <span class="st0">"(Error: "</span> &amp; 
  <span class="kw1">CStr</span> 
  <span class="br0">(</span> 
  <span class="kw1">Err</span> 
  <span class="br0">)</span> &amp; 
- <span class="st0">&quot; - &quot;</span> &amp; 
+ <span class="st0">" - "</span> &amp; 
  <span class="kw1">Error$</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Resume</span> Exit_wipeOne 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">Sub</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
- <span class="coMULTI">%REM<br /> &nbsp; &nbsp; &nbsp; &nbsp; Function thisIsATemplate<br /> &nbsp; &nbsp; &nbsp; &nbsp; Description: checks if the database is a template<br /> &nbsp; &nbsp; %END REM</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; Function thisIsATemplate<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: checks if the database is a template<br> &nbsp; &nbsp; %END REM</span> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Private</span> 
  <span class="kw1">Function</span> thisIsATemplate 
  <span class="kw1">As</span> 
  <span class="kw1">Boolean</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; thisIsATemplate = 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; thisIsATemplate = 
  <span class="br0">(</span>db. 
  <span class="me1">Templatename</span> &lt;&gt; 
- <span class="st0">&quot;&quot;</span> 
+ <span class="st0">""</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">Function</span> 
- <br /> &nbsp; &nbsp; 
- <br /> 
+ <br> &nbsp; &nbsp; 
+ <br> 
  <span class="kw1">End</span> 
  <span class="kw1">Class</span> 
 </div></div>
@@ -382,7 +382,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2012/04/wipe-them-out-all-of-them-when-a-design-refresh-doesnt-work.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Wipe them out - all of them (when a design refresh doesn&apos;t work)"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2012/04/wipe-them-out-all-of-them-when-a-design-refresh-doesnt-work.html";
+							var permaLink = "https://wissel.net/blog/2012/04/wipe-them-out-all-of-them-when-a-design-refresh-doesnt-work.html";
 						</script>
 					</p>
 
@@ -398,10 +398,8 @@ categories:  <a href="/blog/categories/.html"></a>
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/aa53d52b26dfd8f7f9b1735fb5891d94.jpg?s=88" class="gravatarimg" />
-							posted by <b>Karsten Lehmann</b> on <i>Thursday 05 April 2012 AD - 20:23 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/aa53d52b26dfd8f7f9b1735fb5891d94.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Karsten Lehmann</b> on <i>Thursday 05 April 2012 AD - 20:23 Singapore Time</i>:<br /> 
   Really funny things can happen if you delete design elements, wait a few months or years depending on the settings of the database and then somebody comes along and replicates the database with an old replica. 
   <br /> 
   <br />In that case, all the old design elements return from the death and you have everything twice (I'm seeing this in the MindPlan developer databases every few months). 
@@ -409,56 +407,41 @@ categories:  <a href="/blog/categories/.html"></a>
   <br />For 8.5.3, I guess this can be avoided by using the new PIRC feature: 
   <br />{ 
   <a href="http://www-01.ibm.com/support/docview.wss?uid=swg21501675" rel="nofollow" target="blank">Link</a> }
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Thursday 05 April 2012 AD - 23:55 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Thursday 05 April 2012 AD - 23:55 Singapore Time</i>:<br /> 
   @Karsten: agree. What I usually do: make sure the ones who have Designer access are responsible (what an assumption &lt;rofl&gt;). With lower access design wouldn't get replicated back. And I use the catalog to find all server databases and blow the design on all of them. As you mentioned: in 8.5.3 it gets easier with PIRC (wasn't that the name of the captain in 
   <a href="http://www.starwreck.com/">Star Wreck: In the Pirkinning</a>) 
   <br /> 
   <img alt="Emoticon biggrin.gif" src="/blog/images/emoticons/biggrin.gif" border="0" /> stw
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/d4d8ad795bdaa2d6113003d7091d7594.jpg?s=88" class="gravatarimg" />
-							posted by <b>Eric Mack</b> on <i>Friday 06 April 2012 AD - 00:05 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/d4d8ad795bdaa2d6113003d7091d7594.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Eric Mack</b> on <i>Friday 06 April 2012 AD - 00:05 Singapore Time</i>:<br /> 
   Some of our users accomplish this by creating a new template with no design elements and using that to replace the design of the suspect file. Net result is it removes design elements not in the template. 
   <br /> 
   <br />In your experience, is there an advantage to one approach over the other? 
   <br />
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Friday 06 April 2012 AD - 00:13 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Friday 06 April 2012 AD - 00:13 Singapore Time</i>:<br /> 
   @Eric: When a design element for whatever reason is set to &quot;prohibit design refresh&quot; any replace template won't overwrite it (at least that is how it is advertised). Also when you inherit design elements individually from other templates wiping is the only save way to get rid of them.
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/d4d8ad795bdaa2d6113003d7091d7594.jpg?s=88" class="gravatarimg" />
-							posted by <b>Eric Mack</b> on <i>Friday 06 April 2012 AD - 00:39 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/d4d8ad795bdaa2d6113003d7091d7594.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Eric Mack</b> on <i>Friday 06 April 2012 AD - 00:39 Singapore Time</i>:<br /> 
   Thanks, Stephan, I've seen this done successfully and used it myself. Notes simply sees the element as not existing so it removes it. (Perhaps design replace only applies to replace, not remove). But, I agree, there's probably a more thorough way to do it. In any case, thanks for the post.
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/7689bbffc665b31e084af506d9b45c9a.jpg?s=88" class="gravatarimg" />
-							posted by <b>Sean Cull</b> on <i>Friday 06 April 2012 AD - 20:20 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/7689bbffc665b31e084af506d9b45c9a.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Sean Cull</b> on <i>Friday 06 April 2012 AD - 20:20 Singapore Time</i>:<br /> 
   @Erik, 
   <br /> 
   <br />I use a varation of this. I replace the current design with a template called &quot;blank&quot;. 
@@ -468,34 +451,25 @@ categories:  <a href="/blog/categories/.html"></a>
   <br />I then go to the proper template and the latest dev build, check those same design elements for the prohibit flag ( which is often still there ) and correct those settings before applying the template. 
   <br /> 
   <br />Doing it this way sorts the problem out for the future.
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/d40d76672383990d98ab48d81f00f622.jpg?s=88" class="gravatarimg" />
-							posted by <b>sami</b> on <i>Saturday 07 April 2012 AD - 12:10 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/d40d76672383990d98ab48d81f00f622.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>sami</b> on <i>Saturday 07 April 2012 AD - 12:10 Singapore Time</i>:<br /> 
   i simply use version control system for problems like this..it is much easier.
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Saturday 07 April 2012 AD - 14:49 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Saturday 07 April 2012 AD - 14:49 Singapore Time</i>:<br /> 
   @Eric: if the 'blank template method works on 'prohibit design refresh', then you would loose all your folders when applying that to a mail database. Is that so? 
   <br /> 
   <br />@Sami: Could you elaborate how a version control system helps with failed design replacement? The version control can house all the various templates - but that's not the problem here.
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/d40d76672383990d98ab48d81f00f622.jpg?s=88" class="gravatarimg" />
-							posted by <b>sami</b> on <i>Saturday 07 April 2012 AD - 19:23 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/d40d76672383990d98ab48d81f00f622.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>sami</b> on <i>Saturday 07 April 2012 AD - 19:23 Singapore Time</i>:<br /> 
   i'm a manager and don't know technical things much.. sorry. 
   <br /> 
   <br />I asked my technical consltant, and this is how he responds: 
@@ -503,31 +477,24 @@ categories:  <a href="/blog/categories/.html"></a>
   <br />&quot;We use a combination of DXL &amp; ANT script (we coded a custom ANT task) to automate deployment from a source control tool&quot; 
   <br /> 
   <br />I'm hoping it answers..he is external consultant and he helping us with domino issues...he brings some tools for us..
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Saturday 07 April 2012 AD - 21:11 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Saturday 07 April 2012 AD - 21:11 Singapore Time</i>:<br /> 
   @Sami: Get him to blog about it, sounds interesting
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/f6130f852fa32f7f1209023f333f4d7b.jpg?s=88" class="gravatarimg" />
-							posted by <b>Tommy Valand</b> on <i>Tuesday 10 April 2012 AD - 16:46 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/f6130f852fa32f7f1209023f333f4d7b.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Tommy Valand</b> on <i>Tuesday 10 April 2012 AD - 16:46 Singapore Time</i>:<br /> 
   In 8.5.3, there's a simple way to toggle &quot;Prohibit design refresh&quot; for all design elements. 
   <br /> 
   <br />{ 
   <a href="http://www.intec.co.uk/one-reason-for-installing-at-least-one-8-5-3-designer-client/" rel="nofollow" target="blank">Link</a> } 
   <br /> 
   <br />If I remember correctly, it might not work on all the items that's only visible from Package Manager (java code/properties files/etc).
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 					</ol>
 				</div>

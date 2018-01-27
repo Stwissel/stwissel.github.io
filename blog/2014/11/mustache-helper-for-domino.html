@@ -135,13 +135,13 @@ ga('send', 'pageview');
 				<p>This article is part of a mini series. Read them all (latest on top):</p>
 				<h3>Fun with {{Mustache}}</h3>
 				<ol reversed class="nav nav-list">
-					<li ><a href="/blog/2014/12/command-line-mail-merge.html">Command line mail merge</a></li>
-					<li ><a href="/blog/2014/12/mail-merge-with-xpages.html">Mail Merge with XPages</a></li>
-					<li  class="active"><a href="/blog/2014/11/mustache-helper-for-domino.html">{{Mustache}} Helper for Domino and XPages</a></li>
-					<li ><a href="/blog/2014/09/creating-nginx-configurations-for-domino-ssl.html">Creating nginx configurations for Domino SSL</a></li>
-					<li ><a href="/blog/2014/04/mustache-and-ckeditor-round-two.html">Mustache and CKEditor - Round two</a></li>
-					<li ><a href="/blog/2014/04/ckeditor-and-mustache-become-friends.html">CKEditor and Mustache become friends</a></li>
 					<li ><a href="/blog/2014/03/fun-with-mustache-and-notes-forms.html">Fun with {{Mustache}} and Notes Forms</a></li>
+					<li ><a href="/blog/2014/04/ckeditor-and-mustache-become-friends.html">CKEditor and Mustache become friends</a></li>
+					<li ><a href="/blog/2014/04/mustache-and-ckeditor-round-two.html">Mustache and CKEditor - Round two</a></li>
+					<li ><a href="/blog/2014/09/creating-nginx-configurations-for-domino-ssl.html">Creating nginx configurations for Domino SSL</a></li>
+					<li  class="active"><a href="/blog/2014/11/mustache-helper-for-domino.html">{{Mustache}} Helper for Domino and XPages</a></li>
+					<li ><a href="/blog/2014/12/mail-merge-with-xpages.html">Mail Merge with XPages</a></li>
+					<li ><a href="/blog/2014/12/command-line-mail-merge.html">Command line mail merge</a></li>
 				</ol>
 			</div>	
 
@@ -159,17 +159,17 @@ ga('send', 'pageview');
 					<hr />
 					<div>Previously we had a look, how to use 
 <a href="/blog/d6plinks/SHWL-9J3BJ3">Mustache with the CKEditor</a> to have an editing environment for templates. I glossed over the part where to store and how to use these templates. Let me continue there. 
-<br /> I'll store the template in Notes documents and use an application managed bean to transform a document (and later other things) using these templates. 
-<br /> I have 2 use cases in mind: one is to allow the configuration of HTML notification messages in applications and the other to configure the display of workflow details (more on Workflow in a later post). The approach has two parts: 
+<br> I'll store the template in Notes documents and use an application managed bean to transform a document (and later other things) using these templates. 
+<br> I have 2 use cases in mind: one is to allow the configuration of HTML notification messages in applications and the other to configure the display of workflow details (more on Workflow in a later post). The approach has two parts: 
 <ol> 
  <li>loading (or reloading) the existing templates</li> 
  <li>using the templates</li> 
 </ol> The first one should need to run only once in the application lifecycle. Since managed beans can't have constructors with parameters, I created a seperate load function, so inside the bean there is nothing that depends on the XPages runtime environment. You therefore can use that bean in an agent, application or a plug-in. 
-<br /> I also opted to load all templates into memory at once, but only compile them when actually needed. If you plan to have lots of them, you want to look for a different solution. 
-<br /> The class that does the work is the 
+<br> I also opted to load all templates into memory at once, but only compile them when actually needed. If you plan to have lots of them, you want to look for a different solution. 
+<br> The class that does the work is the 
 <code>MustacheHelper.java</code>. To make it easy to use, I wrap it into a managed bean and a small SSJS Helper function: 
 <pre class="brush: xml">
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;faces-config&gt;
   &lt;managed-bean&gt;
     &lt;managed-bean-name&gt;Mustache&lt;/managed-bean-name&gt;
@@ -181,13 +181,13 @@ ga('send', 'pageview');
   &lt;!--AUTOGEN-END-BUILDER: End of automatically generated section--&gt;
 &lt;/faces-config&gt;
 </pre> 
-<br /> 
+<br> 
 <pre class="brush: js">
 function applyTemplate(doc, templateName) {
 	try {
 		// Check for init
 		if (!Mustache.isInitialized()) {
-			var templateView:NotesView = database.getView(&quot;templates&quot;);
+			var templateView:NotesView = database.getView("templates");
 			Mustache.initFromView(session, templateView);
 			templateView.recycle();	
 		}
@@ -197,17 +197,17 @@ function applyTemplate(doc, templateName) {
 	}
 }
 </pre> 
-<br /> With this done transforming a document becomes a one liner in SSJS: 
-<code>return applyTemplate(document1.getDocument(),&quot;Color&quot;);</code>. To demo how it works, I created a sample database.In 
+<br> With this done transforming a document becomes a one liner in SSJS: 
+<code>return applyTemplate(document1.getDocument(),"Color");</code>. To demo how it works, I created a sample database.In 
 <a href="https://dl.dropboxusercontent.com/u/865725/Mustache.nsf.zip">that database</a> I use 2 computed fields to demo the transfomation of a document into plain text and HTML. You might ask: so what? Keep in mind, that this is only to demo the technique. Real use cases would be notification eMails or cnfigurable summaries from documents where you don't know the fields while you design the solution. 
-<br /> There are some interesting details: Mustache has the capability to use partials (think subforms) using the syntax 
+<br> There are some interesting details: Mustache has the capability to use partials (think subforms) using the syntax 
 <code>{{&gt; common/header}}</code>. By default Mustache would try to read a file from a file system for that partial. Since we don't have the partials in the file system, we need to provide our own resolver to the Mustache factory: 
-<br /> 
+<br> 
 <code>factory = new DefaultMustacheFactory(new MustacheNotesResolver(templateStrings));</code> 
-<br /> The 
+<br> The 
 <code>templateStrings</code> are a 
 <a href="https://docs.oracle.com/javase/7/docs/api/java/util/Map.html">Map</a> containing the uncompiled Mustache templates. The Resolver code is quite lean: 
-<br /> 
+<br> 
 <pre class="brush: java">
 public class MustacheNotesResolver implements MustacheResolver {
     
@@ -226,10 +226,10 @@ public class MustacheNotesResolver implements MustacheResolver {
     }
 }
 </pre> 
-<br /> You will notice that the first time the transformation runs, there's a delay before the page displays. That's the step when all templates are loaded and the managed bean gets initialized. 
-<br /> Also have a look at the 
+<br> You will notice that the first time the transformation runs, there's a delay before the page displays. That's the step when all templates are loaded and the managed bean gets initialized. 
+<br> Also have a look at the 
 <code>DocumentResolver</code> that turns a document into something that Mustache can process. 
-<br /> 
+<br> 
 <pre class="brush: java">
 public class DefaultDocumentResolver implements DocumentResolver {
     @Override
@@ -256,11 +256,11 @@ public class DefaultDocumentResolver implements DocumentResolver {
     }
 }
 </pre> 
-<br /> Some documents might need special attention, e.g. when groups of field (multi-value or sequential named) form a table of values. You can provide your own resolver for them. 
-<br /> For now the templates are managed in the Notes client interface. Adding a template edit UI is left to your pleasure. 
-<br /> You can generate anything that can be expressed as ASCII stream: Plain Text, HTML, XML, JSON, XSL:FO, ODF, DOCX (the later two need to be zipped before delivery), PostScript, SVG etc. Get the 
+<br> Some documents might need special attention, e.g. when groups of field (multi-value or sequential named) form a table of values. You can provide your own resolver for them. 
+<br> For now the templates are managed in the Notes client interface. Adding a template edit UI is left to your pleasure. 
+<br> You can generate anything that can be expressed as ASCII stream: Plain Text, HTML, XML, JSON, XSL:FO, ODF, DOCX (the later two need to be zipped before delivery), PostScript, SVG etc. Get the 
 <a href="https://github.com/Stwissel/MustacheHelper">code on GitHub</a> 
-<br /> As usual YMMV. Next stop: transforming other stuff like views and adding more examples.</div>
+<br> As usual YMMV. Next stop: transforming other stuff like views and adding more examples.</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -272,7 +272,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2014/11/mustache-helper-for-domino.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="{{Mustache}} Helper for Domino and XPages"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2014/11/mustache-helper-for-domino.html";
+							var permaLink = "https://wissel.net/blog/2014/11/mustache-helper-for-domino.html";
 						</script>
 					</p>
 

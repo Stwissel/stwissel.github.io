@@ -145,13 +145,13 @@ ga('send', 'pageview');
 					<h1><small>Link to me: Notes Document Links as URL, Notes Link and Attachments</small></h1>
 					<hr />
 					<div>In the beginning the world was easy. You wanted to notify a user, just use @MailSend with [IncludeDocLink] and your email notification was done. It was obvious if your application was on a Notes client, your messaging application would be Notes as well. 
-<br /> Today the picture looks different. You might access your email through a portlet on the intranet or through a POP3 client. But you still want to be able to open that link in the Notes client right? I'm not aiming at web enablement here. What are your options: 
+<br> Today the picture looks different. You might access your email through a portlet on the intranet or through a POP3 client. But you still want to be able to open that link in the Notes client right? I'm not aiming at web enablement here. What are your options: 
 <ul> 
  <li>In a Notes client you can use NotesRichText.AppendDocLink</li> 
  <li>You could send a link with notes:// ...</li> 
- <li>You can create an attachment as NDL file: To see what you need in there you copy a document link and paste it into Notepad. You will get this result:<br /> <br />Wissel's Address Book - My Contacts<br /> &lt;NDL&gt;<br /> &lt;REPLICA 4825713F:00352EEC&gt;<br /> &lt;VIEW OF85255E01:001356A8-ON852554C2:00753106&gt;<br /> &lt;NOTE OFE3DB4DB9:F46B6DAE-ON482572F9:00366DC6&gt;<br /> &lt;HINT&gt;CN=d23m0120/OU=23/OU=M/O=IBM&lt;/HINT&gt;<br /> &lt;REM&gt;Wissel's Address Book&lt;/REM&gt;<br /> &lt;/NDL&gt;<br /> <br /> Looks utterly familiar. Inside the NOTE the document uniqueID is embedded similar to the value in the property box. The stuff around the NotesDocument.UniversalID is static, so we can construct that. The view is the uniqueID of the design document. Luckily you can replace that with the name or alias of that view</li> 
+ <li>You can create an attachment as NDL file: To see what you need in there you copy a document link and paste it into Notepad. You will get this result:<br> <br>Wissel's Address Book - My Contacts<br> &lt;NDL&gt;<br> &lt;REPLICA 4825713F:00352EEC&gt;<br> &lt;VIEW OF85255E01:001356A8-ON852554C2:00753106&gt;<br> &lt;NOTE OFE3DB4DB9:F46B6DAE-ON482572F9:00366DC6&gt;<br> &lt;HINT&gt;CN=d23m0120/OU=23/OU=M/O=IBM&lt;/HINT&gt;<br> &lt;REM&gt;Wissel's Address Book&lt;/REM&gt;<br> &lt;/NDL&gt;<br> <br> Looks utterly familiar. Inside the NOTE the document uniqueID is embedded similar to the value in the property box. The stuff around the NotesDocument.UniversalID is static, so we can construct that. The view is the uniqueID of the design document. Luckily you can replace that with the name or alias of that view</li> 
 </ul> Since all 3 cases are needed over and over again I added a little utility class to my script tools.The class gets initialized with the target document and provides methods that allow you to extract/attach a Notes document link, a Notes URL or an attached NDL file. Of course one could extend the class to generate the http URL as well (Be aware that this might not be that selfcontained anymore since you need to resolve http vs. https and the DNS name of the Domino server. Here is the class: 
-<br /> 
+<br> 
 <style>.lotusscript { font-family: sans-serif; font-size: 9pt; color: black; }
 .ls-comment { color: green; }
 .ls-quote { color: black; }
@@ -165,730 +165,1052 @@ ga('send', 'pageview');
 </style> 
 <pre>
  
+ 
  <div class="lotusscript">
 
   
+  
   <font class="ls-keyword">Public</font> 
+  
   
   <font class="ls-statement">Class</font> DocLinkHelper
 	
   
+  
   <font class="ls-keyword">Private</font> s 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesSession</font>
 	
   
+  
   <font class="ls-keyword">Private</font> db 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesDatabase</font>
 	
   
+  
   <font class="ls-keyword">Private</font> doc 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesDocument</font>
 	
   
+  
   <font class="ls-keyword">Private</font> v 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesView</font>
 	
 	
   
+  
   <font class="ls-statement">Sub</font> 
+  
   
   <font class="ls-keyword">New</font> 
   
+  
   <font class="ls-operator">(</font>curDoc 
+  
   
   <font class="ls-keyword">As</font> 
   
+  
   <font class="ls-class">NotesDocument</font>
+  
   
   <font class="ls-operator">)</font>
 		
   
+  
   <font class="ls-statement">Set</font> doc 
+  
   
   <font class="ls-operator">=</font> curDoc
 		
   
+  
   <font class="ls-statement">Set</font> s 
+  
   
   <font class="ls-operator">=</font> 
   
+  
   <font class="ls-keyword">New</font> 
+  
   
   <font class="ls-class">NotesSession</font>
 		
   
+  
   <font class="ls-statement">Set</font> db 
   
+  
   <font class="ls-operator">=</font> doc
+  
   
   <font class="ls-operator">.</font>ParentDatabase
 		
   
+  
   <font class="ls-statement">Set</font> v 
   
+  
   <font class="ls-operator">=</font> doc
+  
   
   <font class="ls-operator">.</font>ParentView		
 	
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">Sub</font>
 	
 	
   
+  
   <font class="ls-statement">Function</font> NotesURL 
+  
   
   <font class="ls-keyword">As</font> 
   
+  
   <font class="ls-keyword">String</font>
 		
+  
   
   <font class="ls-statement">Dim</font> vName 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-keyword">String</font>
 		
 		
   
+  
   <font class="ls-statement">If</font> v 
+  
   
   <font class="ls-operator">Is</font> 
   
+  
   <font class="ls-constant">Nothing</font> 
+  
   
   <font class="ls-statement">Then</font>
 			vName 
   
+  
   <font class="ls-operator">=</font> 
   
-  <font class="ls-quote">&quot;/0/&quot;</font>
+  
+  <font class="ls-quote">"/0/"</font>
 		
+  
   
   <font class="ls-statement">Else</font>
 			
   
+  
   <font class="ls-statement">If</font> 
+  
   
   <font class="ls-function">Isarray</font>
   
+  
   <font class="ls-operator">(</font>v
+  
   
   <font class="ls-operator">.</font>Aliases
   
+  
   <font class="ls-operator">)</font> 
+  
   
   <font class="ls-statement">Then</font>
 				vName 
   
+  
   <font class="ls-operator">=</font> 
   
-  <font class="ls-quote">&quot;/&quot;</font> 
+  
+  <font class="ls-quote">"/"</font> 
+  
   
   <font class="ls-operator">+</font> v
   
+  
   <font class="ls-operator">.</font>Aliases
+  
   
   <font class="ls-operator">(</font>0
   
+  
   <font class="ls-operator">)</font> 
+  
   
   <font class="ls-operator">+</font> 
   
-  <font class="ls-quote">&quot;/&quot;</font>
+  
+  <font class="ls-quote">"/"</font>
 			
+  
   
   <font class="ls-statement">Else</font>
 				vName 
   
+  
   <font class="ls-operator">=</font> 
   
-  <font class="ls-quote">&quot;/&quot;</font> 
+  
+  <font class="ls-quote">"/"</font> 
+  
   
   <font class="ls-operator">+</font> v
   
+  
   <font class="ls-operator">.</font>
+  
   
   <font class="ls-function">Name</font> 
   
+  
   <font class="ls-operator">+</font> 
   
-  <font class="ls-quote">&quot;/&quot;</font>
+  
+  <font class="ls-quote">"/"</font>
 			
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">If</font>
 		
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">If</font>
 		NotesURL 
   
+  
   <font class="ls-operator">=</font> 
   
-  <font class="ls-quote">&quot;notes://&quot;</font>
+  
+  <font class="ls-quote">"notes://"</font>
+  
   
   <font class="ls-operator">+</font>db
   
+  
   <font class="ls-operator">.</font>Server
+  
   
   <font class="ls-operator">+</font>vName
   
+  
   <font class="ls-operator">+</font>doc
+  
   
   <font class="ls-operator">.</font>UniversalID
 	
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">Function</font>
 	
 	
   
+  
   <font class="ls-statement">Sub</font> AppendLink
+  
   
   <font class="ls-operator">(</font>rt 
   
+  
   <font class="ls-keyword">As</font> 
   
+  
   <font class="ls-class">NotesRichTextItem</font>
+  
   
   <font class="ls-operator">)</font>
 		
   
+  
   <font class="ls-function">Call</font> rt
+  
   
   <font class="ls-operator">.</font>AppendDocLink
   
+  
   <font class="ls-operator">(</font>doc
+  
   
   <font class="ls-operator">,</font>doc
   
+  
   <font class="ls-operator">.</font>form
+  
   
   <font class="ls-operator">(</font>0
   
+  
   <font class="ls-operator">)</font>
+  
   
   <font class="ls-operator">)</font>
 	
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">Sub</font>
 	
 	
   
+  
   <font class="ls-statement">Sub</font> AttachNotesLink
+  
   
   <font class="ls-operator">(</font>mailDoc 
   
+  
   <font class="ls-keyword">As</font> 
   
+  
   <font class="ls-class">NotesDocument</font>
+  
   
   <font class="ls-operator">)</font>
 		
   
+  
   <font class="ls-statement">Dim</font> out 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesStream</font>
 		
   
+  
   <font class="ls-statement">Dim</font> linkFileName 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-keyword">String</font>
 		
   
+  
   <font class="ls-statement">Dim</font> rt 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-class">NotesRichTextItem</font>
 		
   
+  
   <font class="ls-statement">Dim</font> repID 
+  
   
   <font class="ls-keyword">As</font> 
   
+  
   <font class="ls-keyword">String</font>
 		
+  
   
   <font class="ls-statement">Dim</font> viewID 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-keyword">String</font>
 		
+  
   
   <font class="ls-statement">Dim</font> noteID 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-keyword">String</font>
 		
   
+  
   <font class="ls-statement">Dim</font> unid 
   
+  
   <font class="ls-keyword">As</font> 
+  
   
   <font class="ls-keyword">String</font>
 		
 		linkFileName 
   
+  
   <font class="ls-operator">=</font> 
   
-  <font class="ls-quote">&quot;NotesLink-&quot;</font>
+  
+  <font class="ls-quote">"NotesLink-"</font>
+  
   
   <font class="ls-operator">+</font>doc
   
+  
   <font class="ls-operator">.</font>UniversalID
+  
   
   <font class="ls-operator">+</font>
   
-  <font class="ls-quote">&quot;.ndl&quot;</font>
+  
+  <font class="ls-quote">".ndl"</font>
 		
+  
   
   <font class="ls-statement">Set</font> out 
   
+  
   <font class="ls-operator">=</font> s
+  
   
   <font class="ls-operator">.</font>CreateStream
 		
   
+  
   <font class="ls-statement">If</font> 
+  
   
   <font class="ls-function">Dir$</font>
   
+  
   <font class="ls-operator">(</font>linkFileName
+  
   
   <font class="ls-operator">)</font> 
   
+  
   <font class="ls-operator">&lt;</font>
+  
   
   <font class="ls-operator">&gt;</font> 
   
-  <font class="ls-quote">&quot;&quot;</font> 
+  
+  <font class="ls-quote">""</font> 
+  
   
   <font class="ls-statement">Then</font>
 			
   
+  
   <font class="ls-function">Kill</font> linkFileName
 		
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">If</font>
 		
   
+  
   <font class="ls-function">Call</font> out
+  
   
   <font class="ls-operator">.</font>
   
+  
   <font class="ls-function">Open</font>
+  
   
   <font class="ls-operator">(</font>linkFileName
   
+  
   <font class="ls-operator">)</font>
 
+  
   
   <font class="ls-comment">%REM The NDL Format looks like this: Wissel's Address Book - My Contacts &lt;NDL&gt; &lt;REPLICA 4825713F:00352EEC&gt; &lt;VIEW OF85255E01:001356A8-ON852554C2:00753106&gt; &lt;NOTE OFE3DB4DB9:F46B6DAE-ON482572F9:00366DC6&gt; &lt;HINT&gt;CN=d23m0120/OU=23/OU=M/O=IBM&lt;/HINT&gt; &lt;REM&gt;Wissel's Address Book&lt;/REM&gt; &lt;/NDL&gt; %END REM</font>
 		
 		repId 
   
+  
   <font class="ls-operator">=</font> 
+  
   
   <font class="ls-function">Left</font>
   
+  
   <font class="ls-operator">(</font>db
+  
   
   <font class="ls-operator">.</font>ReplicaID
   
+  
   <font class="ls-operator">,</font>8
+  
   
   <font class="ls-operator">)</font>
   
-  <font class="ls-operator">+</font>
-  
-  <font class="ls-quote">&quot;:&quot;</font>
   
   <font class="ls-operator">+</font>
+  
+  
+  <font class="ls-quote">":"</font>
+  
+  
+  <font class="ls-operator">+</font>
+  
   
   <font class="ls-function">Right</font>
   
+  
   <font class="ls-operator">(</font>db
+  
   
   <font class="ls-operator">.</font>ReplicaID
   
+  
   <font class="ls-operator">,</font>8
+  
   
   <font class="ls-operator">)</font>
 		
   
+  
   <font class="ls-statement">If</font> 
+  
   
   <font class="ls-function">Isarray</font>
   
+  
   <font class="ls-operator">(</font>v
+  
   
   <font class="ls-operator">.</font>Aliases
   
+  
   <font class="ls-operator">)</font> 
+  
   
   <font class="ls-statement">Then</font>
 			viewID
   
+  
   <font class="ls-operator">=</font> v
+  
   
   <font class="ls-operator">.</font>Aliases
   
+  
   <font class="ls-operator">(</font>0
+  
   
   <font class="ls-operator">)</font>
 		
+  
   
   <font class="ls-statement">Else</font>
 			viewID 
   
+  
   <font class="ls-operator">=</font> v
   
+  
   <font class="ls-operator">.</font>
+  
   
   <font class="ls-function">Name</font>
 		
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">If</font>
 		unid 
   
+  
   <font class="ls-operator">=</font> doc
+  
   
   <font class="ls-operator">.</font>UniversalID
 		noteID 
   
+  
   <font class="ls-operator">=</font> 
   
-  <font class="ls-quote">&quot;OF&quot;</font> 
+  
+  <font class="ls-quote">"OF"</font> 
+  
   
   <font class="ls-operator">+</font> 
+  
   
   <font class="ls-function">Left</font>
   
+  
   <font class="ls-operator">(</font>unid
   
+  
   <font class="ls-operator">,</font>8
+  
   
   <font class="ls-operator">)</font>
 		noteID 
   
+  
   <font class="ls-operator">=</font> noteID 
   
-  <font class="ls-operator">+</font> 
-  
-  <font class="ls-quote">&quot;:&quot;</font> 
   
   <font class="ls-operator">+</font> 
+  
+  
+  <font class="ls-quote">":"</font> 
+  
+  
+  <font class="ls-operator">+</font> 
+  
   
   <font class="ls-function">Mid</font>
   
+  
   <font class="ls-operator">(</font>unid
+  
   
   <font class="ls-operator">,</font>9
   
+  
   <font class="ls-operator">,</font>8
+  
   
   <font class="ls-operator">)</font>
 		noteID 
   
+  
   <font class="ls-operator">=</font> noteID 
   
-  <font class="ls-operator">+</font> 
-  
-  <font class="ls-quote">&quot;-ON&quot;</font> 
   
   <font class="ls-operator">+</font> 
+  
+  
+  <font class="ls-quote">"-ON"</font> 
+  
+  
+  <font class="ls-operator">+</font> 
+  
   
   <font class="ls-function">Mid</font>
   
+  
   <font class="ls-operator">(</font>unid
+  
   
   <font class="ls-operator">,</font>17
   
+  
   <font class="ls-operator">,</font>8
+  
   
   <font class="ls-operator">)</font>
 		noteID 
   
+  
   <font class="ls-operator">=</font> noteID 
   
-  <font class="ls-operator">+</font> 
-  
-  <font class="ls-quote">&quot;:&quot;</font> 
   
   <font class="ls-operator">+</font> 
+  
+  
+  <font class="ls-quote">":"</font> 
+  
+  
+  <font class="ls-operator">+</font> 
+  
   
   <font class="ls-function">Right</font>
   
+  
   <font class="ls-operator">(</font>unid
+  
   
   <font class="ls-operator">,</font>8
   
+  
   <font class="ls-operator">)</font>
 		
 		
   
+  
   <font class="ls-function">Call</font> out
   
+  
   <font class="ls-operator">.</font>WriteText
+  
   
   <font class="ls-operator">(</font>db
   
+  
   <font class="ls-operator">.</font>Title 
+  
   
   <font class="ls-operator">+</font> 
   
-  <font class="ls-quote">&quot; - &quot;</font> 
+  
+  <font class="ls-quote">" - "</font> 
+  
   
   <font class="ls-operator">+</font> v
   
+  
   <font class="ls-operator">.</font>
+  
   
   <font class="ls-function">Name</font>
   
+  
   <font class="ls-operator">,</font>EOL_CRLF
+  
   
   <font class="ls-operator">)</font>
 		
   
+  
   <font class="ls-function">Call</font> out
+  
   
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;&lt;NDL&gt;&quot;</font>
+  
+  <font class="ls-quote">"&lt;NDL&gt;"</font>
+  
   
   <font class="ls-operator">,</font>EOL_CRLF
+  
   
   <font class="ls-operator">)</font>
 		
   
+  
   <font class="ls-function">Call</font> out
+  
   
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;&lt;REPLICA &quot;</font>
+  
+  <font class="ls-quote">"&lt;REPLICA "</font>
+  
   
   <font class="ls-operator">+</font>repID
   
+  
   <font class="ls-operator">+</font>
   
-  <font class="ls-quote">&quot;&gt;&quot;</font>
+  
+  <font class="ls-quote">"&gt;"</font>
+  
   
   <font class="ls-operator">,</font>EOL_CRLF
+  
   
   <font class="ls-operator">)</font>
 		
   
+  
   <font class="ls-function">Call</font> out
+  
   
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;&lt;VIEW &quot;</font>
+  
+  <font class="ls-quote">"&lt;VIEW "</font>
+  
   
   <font class="ls-operator">+</font>viewID
   
+  
   <font class="ls-operator">+</font>
   
-  <font class="ls-quote">&quot;&gt;&quot;</font>
+  
+  <font class="ls-quote">"&gt;"</font>
+  
   
   <font class="ls-operator">,</font>EOL_CRLF
+  
   
   <font class="ls-operator">)</font>
 		
   
+  
   <font class="ls-function">Call</font> out
+  
   
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;&lt;NOTE &quot;</font>
+  
+  <font class="ls-quote">"&lt;NOTE "</font>
+  
   
   <font class="ls-operator">+</font>noteID
   
+  
   <font class="ls-operator">+</font>
   
-  <font class="ls-quote">&quot;&gt;&quot;</font>
+  
+  <font class="ls-quote">"&gt;"</font>
+  
   
   <font class="ls-operator">,</font>EOL_CRLF
+  
   
   <font class="ls-operator">)</font>
 		
   
+  
   <font class="ls-function">Call</font> out
+  
   
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;&lt;HINT&gt;&quot;</font>
+  
+  <font class="ls-quote">"&lt;HINT&gt;"</font>
+  
   
   <font class="ls-operator">+</font>db
+  
   
   <font class="ls-operator">.</font>Server
   
+  
   <font class="ls-operator">+</font>
   
-  <font class="ls-quote">&quot;&lt;/HINT&gt;&quot;</font>
+  
+  <font class="ls-quote">"&lt;/HINT&gt;"</font>
+  
   
   <font class="ls-operator">,</font>EOL_CRLF
+  
   
   <font class="ls-operator">)</font>
 		
   
+  
   <font class="ls-function">Call</font> out
+  
   
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;&lt;REM&gt;&quot;</font>
+  
+  <font class="ls-quote">"&lt;REM&gt;"</font>
+  
   
   <font class="ls-operator">+</font>db
   
+  
   <font class="ls-operator">.</font>Title
+  
   
   <font class="ls-operator">+</font>
   
-  <font class="ls-quote">&quot;&lt;/REM&gt;&quot;</font>
+  
+  <font class="ls-quote">"&lt;/REM&gt;"</font>
+  
   
   <font class="ls-operator">,</font>EOL_CRLF
+  
   
   <font class="ls-operator">)</font>
 		
   
+  
   <font class="ls-function">Call</font> out
+  
   
   <font class="ls-operator">.</font>WriteText
   
+  
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;&lt;/NDL&gt;&quot;</font>
+  
+  <font class="ls-quote">"&lt;/NDL&gt;"</font>
+  
   
   <font class="ls-operator">,</font>EOL_CRLF
+  
   
   <font class="ls-operator">)</font>
 		
 		
   
+  
   <font class="ls-function">Call</font> out
   
+  
   <font class="ls-operator">.</font>
+  
   
   <font class="ls-function">Close</font>
 		
 		
   
+  
   <font class="ls-statement">If</font> mailDoc
+  
   
   <font class="ls-operator">.</font>HasItem
   
+  
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;Body&quot;</font>
+  
+  <font class="ls-quote">"Body"</font>
+  
   
   <font class="ls-operator">)</font> 
+  
   
   <font class="ls-statement">Then</font>
 			
   
+  
   <font class="ls-statement">Set</font> rt 
+  
   
   <font class="ls-operator">=</font> mailDoc
   
+  
   <font class="ls-operator">.</font>GetFirstItem
+  
   
   <font class="ls-operator">(</font>
   
-  <font class="ls-quote">&quot;Body&quot;</font>
+  
+  <font class="ls-quote">"Body"</font>
+  
   
   <font class="ls-operator">)</font>
 		
+  
   
   <font class="ls-statement">Else</font>
 			
   
+  
   <font class="ls-statement">Set</font> rt 
+  
   
   <font class="ls-operator">=</font> 
   
+  
   <font class="ls-keyword">New</font> 
+  
   
   <font class="ls-class">NotesRichTextItem</font>
   
+  
   <font class="ls-operator">(</font>mailDoc
+  
   
   <font class="ls-operator">,</font>
   
-  <font class="ls-quote">&quot;Body&quot;</font>
+  
+  <font class="ls-quote">"Body"</font>
+  
   
   <font class="ls-operator">)</font>
 		
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">If</font>
 		
 		
   
+  
   <font class="ls-function">Call</font> rt
+  
   
   <font class="ls-operator">.</font>EmbedObject
   
+  
   <font class="ls-operator">(</font>
+  
   
   <font class="ls-constant">EMBED_ATTACHMENT</font>
   
+  
   <font class="ls-operator">,</font>
   
-  <font class="ls-quote">&quot;&quot;</font>
+  
+  <font class="ls-quote">""</font>
+  
   
   <font class="ls-operator">,</font>linkFileName
+  
   
   <font class="ls-operator">)</font>
 		
 		
   
+  
   <font class="ls-function">Kill</font> linkFileName
 		
 	
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">Sub</font>
 	
@@ -896,17 +1218,20 @@ ga('send', 'pageview');
 	
 
   
+  
   <font class="ls-statement">End</font> 
+  
   
   <font class="ls-statement">Class</font>
 
+ 
  
  </div></pre> 
 <div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;"> 
  <center>
    This LotusScript was converted to HTML using the 
   <b><i>ls2html</i></b> routine, 
-  <br />provided by Julian Robichaux at 
+  <br>provided by Julian Robichaux at 
   <a href="http://www.nsftools.com" target="_blank">nsftools.com</a>. 
  </center> 
 </div></div>
@@ -921,7 +1246,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2007/11/link-to-me-notes-document-links-as-url-notes-link-and-attachments.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Link to me: Notes Document Links as URL, Notes Link and Attachments"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2007/11/link-to-me-notes-document-links-as-url-notes-link-and-attachments.html";
+							var permaLink = "https://wissel.net/blog/2007/11/link-to-me-notes-document-links-as-url-notes-link-and-attachments.html";
 						</script>
 					</p>
 
@@ -937,30 +1262,22 @@ categories:  <a href="/blog/categories/.html"></a>
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/e3000fdb6c2d287df2840028b7e78516.jpg?s=88" class="gravatarimg" />
-							posted by <b>Keith Strickland</b> on <i>Wednesday 28 November 2007 AD - 06:15 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/e3000fdb6c2d287df2840028b7e78516.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Keith Strickland</b> on <i>Wednesday 28 November 2007 AD - 06:15 Singapore Time</i>:<br /> 
   Cool, thanks for sharing. 
   <br /> 
   <br />Keith
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/74c991ff6cc962c59eab1b924c359789.jpg?s=88" class="gravatarimg" />
-							posted by <b>Slawek Rogulski</b> on <i>Wednesday 28 November 2007 AD - 09:19 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/74c991ff6cc962c59eab1b924c359789.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Slawek Rogulski</b> on <i>Wednesday 28 November 2007 AD - 09:19 Singapore Time</i>:<br /> 
   The little .NDL files are a way to link your ideas to (among others) a MindManager mind map. Although I think in a later version of either MM or Notes this linking has been improved.
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/855b564bdd17625865c8927da88240fc.jpg?s=88" class="gravatarimg" />
-							posted by <b>Rich Bayless</b> on <i>Thursday 28 January 2010 AD - 02:06 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/855b564bdd17625865c8927da88240fc.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Rich Bayless</b> on <i>Thursday 28 January 2010 AD - 02:06 Singapore Time</i>:<br /> 
   Stephan, 
   <br /> 
   <br />While cool, I'm not sure what benefits there are in using such a complicated solution (compared to just dynamically building a &quot;{ 
@@ -970,32 +1287,25 @@ categories:  <a href="/blog/categories/.html"></a>
   <br /> 
   <br />Thanks so much, 
   <br />-Rich
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Thursday 28 January 2010 AD - 04:55 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Thursday 28 January 2010 AD - 04:55 Singapore Time</i>:<br /> 
   @Rich: I like the links better than the NDL files too. There are however some use cases: 
   <br />a) the working style of the organization is file based. You can copy a NDL file into a directory, attach it to another eMail etc. a URL needs to be wrapped into a file first. To be clear: that is not my working style (I don't like files), but it is still quite common. 
   <br /> 
   <br />b) a Notes URL only works if the registry key is properly set and all apps have been configured to deal with them. If you have sloppy installations (I know a lot of them - notes program dirs just copied over since it worked) users can't do anything. With a file you get that dialog, pick Notes one time, check the box: do that automatic and it works.
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/9717b4abe0a2868fc8a67ac4913137d6.jpg?s=88" class="gravatarimg" />
-							posted by <b>Rickard Varnfors</b> on <i>Thursday 17 December 2015 AD - 15:46 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/9717b4abe0a2868fc8a67ac4913137d6.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Rickard Varnfors</b> on <i>Thursday 17 December 2015 AD - 15:46 Singapore Time</i>:<br /> 
   Thanks for sharing! Great post! FYI I added the replica id to the NotesURL line. According to my tests this is needed (or the path/filename to the nsf) 
   <br />New code: 
   <br />.../&quot;+db.Server+&quot;/&quot;+db.Replicaid+vName+doc.UniversalID 
   <br />
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 					</ol>
 				</div>

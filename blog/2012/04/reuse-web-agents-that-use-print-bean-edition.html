@@ -148,99 +148,99 @@ ga('send', 'pageview');
 <a href="http://xmage.gbs.com/blog.nsf/d6plinks/TTRY-8SPS89">performance advantages</a> especially when you can use 
 <a href="http://en.wikipedia.org/wiki/Unified_Expression_Language">EL</a> instead of SSJS. So I created the Java version of the 
 <a href="/blog/d6plinks/SHWL-8SF7AH">reuse web agents</a> post. You need to copy the Java either into your NSF or include it in your own extension library. Calling an agent is limited to the same database as the XPage resides in, I leave it to an exercise for my readers to improve on that. 
-<br /> You define the Java class as a managed bean: 
+<br> You define the Java class as a managed bean: 
 <div class="xml"> 
  <span class="sc3"><span class="re1">&lt;managed-bean<span class="re2">&gt;</span></span></span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="sc3"><span class="re1">&lt;managed-bean-name<span class="re2">&gt;</span></span></span>agentHelper 
  <span class="sc3"><span class="re1">&lt;/managed-bean-name<span class="re2">&gt;</span></span></span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="sc3"><span class="re1">&lt;managed-bean-class<span class="re2">&gt;</span></span></span>com.notessensei.xsp.utilities.LsAgentHelper 
  <span class="sc3"><span class="re1">&lt;/managed-bean-class<span class="re2">&gt;</span></span></span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="sc3"><span class="re1">&lt;managed-bean-scope<span class="re2">&gt;</span></span></span>request 
  <span class="sc3"><span class="re1">&lt;/managed-bean-scope<span class="re2">&gt;</span></span></span> 
- <br /> 
+ <br> 
  <span class="sc3"><span class="re1">&lt;/managed-bean<span class="re2">&gt;</span></span></span> 
 </div> and then simply include (e.g. in the value of a computed field) 
-<code>${agentHelper.agentResult(&quot;SampleAgent&quot;)}</code> as EL entry. You have to be careful to ensure your agent doesn't run twice. The agent side adjustments (the LotusScript stuff) is the same as for the SSJS version. The Java version is slightly more flexible since it allows String or Stream results and acting on a new or existing document.<div class="java"> 
+<code>${agentHelper.agentResult("SampleAgent")}</code> as EL entry. You have to be careful to ensure your agent doesn't run twice. The agent side adjustments (the LotusScript stuff) is the same as for the SSJS version. The Java version is slightly more flexible since it allows String or Stream results and acting on a new or existing document.<div class="java"> 
  <span class="kw1">package</span> 
  <span class="co2">com.notessensei.xsp.utilities</span> 
  <span class="sy0">;</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">java.io.IOException</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">java.io.OutputStream</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">java.io.OutputStreamWriter</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">java.io.Writer</span> 
  <span class="sy0">;</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">javax.faces.context.FacesContext</span> 
  <span class="sy0">;</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">lotus.domino.Agent</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">lotus.domino.Database</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">lotus.domino.Document</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">lotus.domino.MIMEEntity</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw1">import</span> 
  <span class="co2">lotus.domino.NotesException</span> 
  <span class="sy0">;</span> 
- <br /> 
- <br /> 
- <span class="co3">/**<br /> &nbsp;* @author Stephan H. Wissel<br /> &nbsp;* &nbsp; &nbsp; &nbsp; &nbsp;<br /> &nbsp;* The agentHelper is a managed bean that allows to<br /> &nbsp;* run a LotusScript agent from an XPage and get the result back. It has<br /> &nbsp;* the ability to run with a given document or with a temporary in<br /> &nbsp;* memory document as parameter<br /> &nbsp;*/</span> 
- <br /> 
+ <br> 
+ <br> 
+ <span class="co3">/**<br> &nbsp;* @author Stephan H. Wissel<br> &nbsp;* &nbsp; &nbsp; &nbsp; &nbsp;<br> &nbsp;* The agentHelper is a managed bean that allows to<br> &nbsp;* run a LotusScript agent from an XPage and get the result back. It has<br> &nbsp;* the ability to run with a given document or with a temporary in<br> &nbsp;* memory document as parameter<br> &nbsp;*/</span> 
+ <br> 
  <span class="kw1">public</span> 
  <span class="kw1">class</span> LsAgentHelper 
  <span class="br0">{</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">private</span> 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> resultFieldName 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">private</span> Database nsf 
  <span class="sy0">=</span> 
  <span class="kw2">null</span> 
  <span class="sy0">;</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">public</span> LsAgentHelper 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; resultFieldName 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; resultFieldName 
  <span class="sy0">=</span> 
- <span class="st0">&quot;AgentPrintOutputResult&quot;</span> 
+ <span class="st0">"AgentPrintOutputResult"</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">public</span> 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> agentResult 
  <span class="br0">(</span> 
@@ -248,7 +248,7 @@ ga('send', 'pageview');
  <span class="br0">)</span> 
  <span class="kw1">throws</span> NotesException 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Adocument+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Document</span></a> doc 
  <span class="sy0">=</span> 
  <span class="kw1">this</span>. 
@@ -256,7 +256,7 @@ ga('send', 'pageview');
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> result 
  <span class="sy0">=</span> 
  <span class="kw1">this</span>. 
@@ -264,31 +264,31 @@ ga('send', 'pageview');
  <span class="br0">(</span>agentName, doc 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; doc. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; doc. 
  <span class="me1">recycle</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">return</span> result 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">public</span> 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> agentResult 
  <span class="br0">(</span> 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> agentName, 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Adocument+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Document</span></a> doc 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">throws</span> NotesException 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> finalResult 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; Agent theAgent 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; Agent theAgent 
  <span class="sy0">=</span> 
  <span class="kw1">this</span>. 
  <span class="me1">getDatabase</span> 
@@ -298,20 +298,20 @@ ga('send', 'pageview');
  <span class="br0">(</span>agentName 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">if</span> 
  <span class="br0">(</span>theAgent 
  <span class="sy0">==</span> 
  <span class="kw2">null</span> 
  <span class="br0">)</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; finalResult 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; finalResult 
  <span class="sy0">=</span> 
- <span class="st0">&quot;Agent &quot;</span> 
+ <span class="st0">"Agent "</span> 
  <span class="sy0">+</span> agentName 
  <span class="sy0">+</span> 
- <span class="st0">&quot; not found in &quot;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <span class="st0">" not found in "</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="sy0">+</span> 
  <span class="kw1">this</span>. 
  <span class="me1">getDatabase</span> 
@@ -321,17 +321,17 @@ ga('send', 'pageview');
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span> 
  <span class="kw1">else</span> 
  <span class="br0">{</span> 
- <br /> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; theAgent. 
+ <br> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; theAgent. 
  <span class="me1">runWithDocumentContext</span> 
  <span class="br0">(</span>doc 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; MIMEEntity result 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; MIMEEntity result 
  <span class="sy0">=</span> doc. 
  <span class="me1">getMIMEEntity</span> 
  <span class="br0">(</span> 
@@ -341,68 +341,68 @@ ga('send', 'pageview');
  <span class="br0">)</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">if</span> 
  <span class="br0">(</span>result 
  <span class="sy0">!=</span> 
  <span class="kw2">null</span> 
  <span class="br0">)</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; finalResult 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; finalResult 
  <span class="sy0">=</span> result. 
  <span class="me1">getContentAsText</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. 
  <span class="me1">recycle</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span> 
  <span class="kw1">else</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; finalResult 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; finalResult 
  <span class="sy0">=</span> 
- <span class="st0">&quot;No result returned in field &quot;</span> 
+ <span class="st0">"No result returned in field "</span> 
  <span class="sy0">+</span> 
  <span class="kw1">this</span>. 
  <span class="me1">getResultFieldName</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">+</span> 
- <span class="st0">&quot; for agent &quot;</span> 
+ <span class="st0">" for agent "</span> 
  <span class="sy0">+</span>agentName 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; theAgent. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; theAgent. 
  <span class="me1">recycle</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">return</span> finalResult 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">public</span> 
  <span class="kw4">void</span> agentResultToStream 
  <span class="br0">(</span> 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> agentName, 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">OutputStream</span></a> out 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">throws</span> NotesException, 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aioexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">IOException</span></a> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Adocument+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Document</span></a> doc 
  <span class="sy0">=</span> 
  <span class="kw1">this</span>. 
@@ -410,61 +410,61 @@ ga('send', 'pageview');
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">this</span>. 
  <span class="me1">agentResultToStream</span> 
  <span class="br0">(</span>agentName, doc, out 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; doc. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; doc. 
  <span class="me1">recycle</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">public</span> 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> getResultFieldName 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">return</span> resultFieldName 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">public</span> 
  <span class="kw4">void</span> setResultFieldName 
  <span class="br0">(</span> 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> resultFieldName 
  <span class="br0">)</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">this</span>. 
  <span class="me1">resultFieldName</span> 
  <span class="sy0">=</span> resultFieldName 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">public</span> 
  <span class="kw4">void</span> agentResultToStream 
  <span class="br0">(</span> 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> agentName, 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Adocument+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Document</span></a> doc, 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">OutputStream</span></a> out 
  <span class="br0">)</span> 
  <span class="kw1">throws</span> NotesException, 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aioexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">IOException</span></a> 
  <span class="br0">{</span> 
- <br /> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Awriter+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Writer</span></a> w 
  <span class="sy0">=</span> 
  <span class="kw1">new</span> 
@@ -472,7 +472,7 @@ ga('send', 'pageview');
  <span class="br0">(</span>out 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; w. 
  <span class="me1">write</span> 
  <span class="br0">(</span> 
  <span class="kw1">this</span>. 
@@ -481,22 +481,22 @@ ga('send', 'pageview');
  <span class="br0">)</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; w. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; w. 
  <span class="me1">close</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">private</span> 
  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Adocument+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Document</span></a> getEmptyDocument 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="kw1">throws</span> NotesException 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">return</span> 
  <span class="kw1">this</span>. 
  <span class="me1">getDatabase</span> 
@@ -506,15 +506,15 @@ ga('send', 'pageview');
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">private</span> Database getDatabase 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">if</span> 
  <span class="br0">(</span> 
  <span class="kw1">this</span>. 
@@ -523,13 +523,13 @@ ga('send', 'pageview');
  <span class="kw2">null</span> 
  <span class="br0">)</span> 
  <span class="br0">{</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; FacesContext fc 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; FacesContext fc 
  <span class="sy0">=</span> FacesContext. 
  <span class="me1">getCurrentInstance</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">this</span>. 
  <span class="me1">nsf</span> 
  <span class="sy0">=</span> 
@@ -543,19 +543,19 @@ ga('send', 'pageview');
  <span class="br0">)</span>. 
  <span class="me1">resolveVariable</span> 
  <span class="br0">(</span>fc, 
- <span class="st0">&quot;database&quot;</span> 
+ <span class="st0">"database"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">return</span> 
  <span class="kw1">this</span>. 
  <span class="me1">nsf</span> 
  <span class="sy0">;</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="br0">}</span> 
- <br /> 
+ <br> 
  <span class="br0">}</span> 
 </div> As usual: YMMV</div>
 					<hr />
@@ -569,7 +569,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2012/04/reuse-web-agents-that-use-print-bean-edition.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Reuse web agents that use PRINT - Bean edition"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2012/04/reuse-web-agents-that-use-print-bean-edition.html";
+							var permaLink = "https://wissel.net/blog/2012/04/reuse-web-agents-that-use-print-bean-edition.html";
 						</script>
 					</p>
 

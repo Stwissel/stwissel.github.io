@@ -145,26 +145,26 @@ ga('send', 'pageview');
 					<h1><small>Brute Force View Tuning</small></h1>
 					<hr />
 					<div>Complex view selection formulas can slowdown your Domino performance substantially. So keeping them simple is a mandate for high performance applications. One of my favorite approaches here is to have a set of hidden fields in my forms that compute to true or false and then simply use 
-<code>SELECT vsf_Demo</code> as selection formula, where &quot; 
-<i>vfs</i>&quot; stands for &quot;View Selection Formula&quot;. In large applications that results in a rather nice performance. Downside of the approach: you need to compute these values on each alteration of a document (but that's not too hard). You can use this method even to retrofit existing applications to improve performance. These are the steps: 
+<code>SELECT vsf_Demo</code> as selection formula, where " 
+<i>vfs</i>" stands for "View Selection Formula". In large applications that results in a rather nice performance. Downside of the approach: you need to compute these values on each alteration of a document (but that's not too hard). You can use this method even to retrofit existing applications to improve performance. These are the steps: 
 <ol> 
  <li>Create a FORM with one field for each view that contains the view selection formula</li> 
  <li>Change the view selection formula (short of the <code>SELECT @All</code> ones) to point to that field</li> 
  <li>Alter/Create the QuerySave event to: switch to that form, do a computeWithForm, switch back to the original form</li> 
  <li>Create a script library with an easy function that takes a document and tells you if the document's selection formulas have been updated</li> 
  <li>Add a call to that function to all agents</li> 
- <li>Add an agent that runs on &quot;documents created or changed&quot; to catch any case where the two calls above didn't work (e.g. @Formula agents)</li> 
+ <li>Add an agent that runs on "documents created or changed" to catch any case where the two calls above didn't work (e.g. @Formula agents)</li> 
  <li>Test, Test, Test</li> 
  <li>Enjoy better performance</li> 
 </ol> The code you need to add to the querySave event is rather light: while this is the code in the querySave event of any form: 
 <div class="lotusscript"> 
  <span class="kw1">Option</span> 
  <span class="kw1">Declare</span> 
- <br /> 
+ <br> 
  <span class="kw1">Use</span> 
- <span class="st0">&quot;CoreHandlerLibrary&quot;</span> 
- <br /> 
- <br /> 
+ <span class="st0">"CoreHandlerLibrary"</span> 
+ <br> 
+ <br> 
  <span class="kw1">Sub</span> Querysave 
  <span class="br0">(</span>Source 
  <span class="kw1">As</span> 
@@ -172,97 +172,97 @@ ga('send', 'pageview');
  <span class="kw1">As</span> 
  <span class="kw1">Variant</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> handler 
  <span class="kw1">As</span> DocumentHandler 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> doc 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDocument</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Set</span> doc = Source. 
  <span class="me1">Document</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Set</span> handler = 
  <span class="kw1">New</span> DocumentHandler 
  <span class="br0">(</span>doc 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; 
  <span class="co1">'We recompute here, since we will save anyway we don't care for the result</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Call</span> handler. 
  <span class="me1">docHasChangedAfterUpdate</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> 
+ <br> 
  <span class="kw1">End</span> 
  <span class="kw1">Sub</span> 
 </div> Being lazy and notoriously prone to typos I created some code that does step 1 and 2 for me in one go. 
 <div class="lotusscript"> 
- <span class="coMULTI">%REM<br /> &nbsp; &nbsp; Class ViewTuner<br /> &nbsp; &nbsp; Description: Creates a form with all view selection formulas and updates all views<br /> %END REM</span> 
- <br /> 
+ <span class="coMULTI">%REM<br> &nbsp; &nbsp; Class ViewTuner<br> &nbsp; &nbsp; Description: Creates a form with all view selection formulas and updates all views<br> %END REM</span> 
+ <br> 
  <span class="kw1">Public</span> 
  <span class="kw1">Class</span> ViewTuner 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Private</span> ourForm 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDOMDocumentNode</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Private</span> formName 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Private</span> fieldNamesUsed 
  <span class="kw1">List</span> 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Private</span> resultStream 
  <span class="kw1">As</span> 
  <span class="kw2">NotesStream</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Private</span> parser 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDOMParser</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Private</span> s 
  <span class="kw1">As</span> 
  <span class="kw2">NotesSession</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Public</span> 
  <span class="kw1">Sub</span> 
  <span class="kw1">New</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; formName = 
- <span class="st0">&quot;ViewSelectionFormulas&quot;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; formName = 
+ <span class="st0">"ViewSelectionFormulas"</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> 
  <span class="kw1">me</span>. 
  <span class="me1">s</span> = 
  <span class="kw1">New</span> 
  <span class="kw2">NotesSession</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">Sub</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
- <span class="coMULTI">%REM<br /> &nbsp; &nbsp; &nbsp; &nbsp; Property Set formToUse<br /> &nbsp; &nbsp; &nbsp; &nbsp; Description: Overwrite the formName if necessary<br /> &nbsp; &nbsp; %END REM</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; Property Set formToUse<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: Overwrite the formName if necessary<br> &nbsp; &nbsp; %END REM</span> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Public</span> 
  <span class="kw1">Property</span> 
  <span class="kw1">Set</span> formToUse 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">me</span>. 
  <span class="me1">formName</span> = formToUse 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">Property</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
- <span class="coMULTI">%REM<br /> &nbsp; &nbsp; &nbsp; &nbsp; Function getEmptyForm<br /> &nbsp; &nbsp; &nbsp; &nbsp; Description: Get an empty form DOM in DXL<br /> &nbsp; &nbsp; %END REM</span> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
+ <span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; Function getEmptyForm<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: Get an empty form DOM in DXL<br> &nbsp; &nbsp; %END REM</span> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Private</span> 
  <span class="kw1">Function</span> getEmptyForm 
  <span class="br0">(</span>formName 
@@ -271,94 +271,94 @@ ga('send', 'pageview');
  <span class="br0">)</span> &nbsp; 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDOMDocumentNode</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Dim</span> rawform 
  <span class="kw1">As</span> 
  <span class="kw2">NotesStream</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Dim</span> s 
  <span class="kw1">As</span> 
  <span class="kw1">New</span> 
  <span class="kw2">NotesSession</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> rawForm = s. 
  <span class="me1">Createstream</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> resultStream = s. 
  <span class="me1">Createstream</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> rawform. 
  <span class="me1">Writetext</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;&lt;?xml version='1.0' encoding='utf-8'?&gt;&quot;</span> 
+ <span class="st0">"&lt;?xml version='1.0' encoding='utf-8'?&gt;"</span> 
  <span class="br0">)</span> 
- <br /> 
+ <br> 
 </div><div class="lotusscript">
   &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> rawform. 
  <span class="me1">Writetext</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;&lt;form name='(&quot;</span> + formName + 
- <span class="st0">&quot;)' alias='&quot;</span> + formName + 
- <span class="st0">&quot;'&gt;&quot;</span> 
+ <span class="st0">"&lt;form name='("</span> + formName + 
+ <span class="st0">")' alias='"</span> + formName + 
+ <span class="st0">"'&gt;"</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> rawform. 
  <span class="me1">Writetext</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;&lt;body&gt;&lt;richtext&gt;&quot;</span> 
+ <span class="st0">"&lt;body&gt;&lt;richtext&gt;"</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> rawform. 
  <span class="me1">Writetext</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;&lt;pardef id='1' hide='web mobile'/&gt;&quot;</span> 
+ <span class="st0">"&lt;pardef id='1' hide='web mobile'/&gt;"</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> rawform. 
  <span class="me1">Writetext</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;&lt;par def='1'&gt;&lt;run&gt;&lt;font color='red'/&gt;&amp;lt;!-- View selection formulas for all views in this application --&amp;gt;&lt;/run&gt;&lt;/par&gt;&lt;/richtext&gt;&lt;/body&gt;&lt;/subform&gt;&quot;</span> 
+ <span class="st0">"&lt;par def='1'&gt;&lt;run&gt;&lt;font color='red'/&gt;&amp;lt;!-- View selection formulas for all views in this application --&amp;gt;&lt;/run&gt;&lt;/par&gt;&lt;/richtext&gt;&lt;/body&gt;&lt;/subform&gt;"</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; rawform. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; rawform. 
  <span class="me1">Position</span> = 
  <span class="nu0">0</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> parser = s. 
  <span class="me1">Createdomparser</span> 
  <span class="br0">(</span>rawform, resultStream 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> parser. 
  <span class="me1">Process</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> getEmptyForm = parser. 
  <span class="me1">Document</span> 
- <br /> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> rawform. 
  <span class="kw1">Close</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">Function</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
- <span class="coMULTI">%REM<br /> &nbsp; &nbsp; &nbsp; &nbsp; Sub addField<br /> &nbsp; &nbsp; &nbsp; &nbsp; Description: Add a field to the form DOM<br /> &nbsp; &nbsp; %END REM</span> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
+ <span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; Sub addField<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: Add a field to the form DOM<br> &nbsp; &nbsp; %END REM</span> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Public</span> 
  <span class="kw1">Function</span> addField 
  <span class="br0">(</span>fieldName 
@@ -369,7 +369,7 @@ ga('send', 'pageview');
  <span class="br0">)</span> 
  <span class="kw1">As</span> 
  <span class="kw1">Boolean</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">If</span> 
  <span class="kw1">IsElement</span> 
  <span class="br0">(</span> 
@@ -379,39 +379,39 @@ ga('send', 'pageview');
  <span class="br0">)</span> 
  <span class="br0">)</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="co1">'We have that field already, can't use it again</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; addField = 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; addField = 
  <span class="kw1">False</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Exit</span> 
  <span class="kw1">function</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Dim</span> tmp 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDOMNodeList</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Dim</span> insertionpoint 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDOMNode</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Dim</span> newFieldElement 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDOMNode</span> 
- <br /> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="co1">'Lazy initialization</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">If</span> 
  <span class="kw1">me</span>. 
  <span class="me1">ourForm</span> 
  <span class="kw1">Is</span> 
  <span class="kw1">Nothing</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> 
  <span class="kw1">me</span>. 
  <span class="me1">ourForm</span> = 
@@ -421,47 +421,47 @@ ga('send', 'pageview');
  <span class="kw1">me</span>. 
  <span class="me1">formName</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span> 
- <br /> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> tmp = 
  <span class="kw1">me</span>. 
  <span class="me1">ourForm</span>. 
  <span class="me1">Getelementsbytagname</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;run&quot;</span> 
+ <span class="st0">"run"</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> insertionpoint = tmp. 
  <span class="me1">Getitem</span> 
  <span class="br0">(</span> 
  <span class="nu0">1</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> newFieldElement = 
  <span class="kw1">me</span>. 
  <span class="me1">getFieldElement</span> 
  <span class="br0">(</span>fieldname,fieldFormula 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> insertionpoint. 
  <span class="me1">Appendchild</span> 
  <span class="br0">(</span>newFieldElement 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">me</span>. 
  <span class="me1">fieldNamesUsed</span> 
  <span class="br0">(</span>fieldName 
  <span class="br0">)</span> = fieldFormula 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">Function</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
- <span class="coMULTI">%REM<br /> &nbsp; &nbsp; &nbsp; &nbsp; Function getFieldElement<br /> &nbsp; &nbsp; &nbsp; &nbsp; Description: Generate the XML representing a field with a selection formula<br /> &nbsp; &nbsp; %END REM</span> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
+ <span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; Function getFieldElement<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: Generate the XML representing a field with a selection formula<br> &nbsp; &nbsp; %END REM</span> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Private</span> 
  <span class="kw1">Function</span> getFieldElement 
  <span class="br0">(</span>fieldname 
@@ -472,111 +472,111 @@ ga('send', 'pageview');
  <span class="br0">)</span> 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDOMNode</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="coMULTI">%REM<br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; We need to create something like this:<br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;field &nbsp;type='number' kind='computed' name='vsf_DemoView'&gt;&lt;code<br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; event='defaultvalue'&gt;&lt;formula&gt;@If(Color=&quot;Blue&quot;;@True;@False)&lt;/formula&gt;&lt;/code&gt;&lt;/field&gt;<br /> &nbsp; &nbsp; &nbsp; &nbsp; %END REM</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; We need to create something like this:<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;field &nbsp;type='number' kind='computed' name='vsf_DemoView'&gt;&lt;code<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; event='defaultvalue'&gt;&lt;formula&gt;@If(Color="Blue";@True;@False)&lt;/formula&gt;&lt;/code&gt;&lt;/field&gt;<br> &nbsp; &nbsp; &nbsp; &nbsp; %END REM</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Dim</span> result 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDOMElementNode</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Dim</span> code 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDOMElementNode</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Dim</span> formula 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDOMElementNode</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Dim</span> formulaContent 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDOMTextNode</span> 
- <br /> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> result = 
  <span class="kw1">me</span>. 
  <span class="me1">ourForm</span>. 
  <span class="me1">Createelementnode</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;field&quot;</span> 
+ <span class="st0">"field"</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> result. 
  <span class="me1">Setattribute</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;type&quot;</span>, 
- <span class="st0">&quot;number&quot;</span> 
+ <span class="st0">"type"</span>, 
+ <span class="st0">"number"</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> result. 
  <span class="me1">Setattribute</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;kind&quot;</span>, 
- <span class="st0">&quot;computed&quot;</span> 
+ <span class="st0">"kind"</span>, 
+ <span class="st0">"computed"</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> result. 
  <span class="me1">Setattribute</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;name&quot;</span>, fieldname 
+ <span class="st0">"name"</span>, fieldname 
  <span class="br0">)</span> 
- <br /> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> code = 
  <span class="kw1">me</span>. 
  <span class="me1">ourForm</span>. 
  <span class="me1">Createelementnode</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;code&quot;</span> 
+ <span class="st0">"code"</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> code. 
  <span class="me1">Setattribute</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;event&quot;</span>, 
- <span class="st0">&quot;defaultvalue&quot;</span> 
+ <span class="st0">"event"</span>, 
+ <span class="st0">"defaultvalue"</span> 
  <span class="br0">)</span> 
- <br /> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> formula = 
  <span class="kw1">me</span>. 
  <span class="me1">ourForm</span>. 
  <span class="me1">Createelementnode</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;formula&quot;</span> 
+ <span class="st0">"formula"</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> formulaContent = 
  <span class="kw1">me</span>. 
  <span class="me1">ourForm</span>. 
  <span class="me1">Createtextnode</span> 
  <span class="br0">(</span>fieldFormula 
  <span class="br0">)</span> 
- <br /> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> formula. 
  <span class="me1">appendChild</span> 
  <span class="br0">(</span>formulaContent 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> code. 
  <span class="me1">Appendchild</span> 
  <span class="br0">(</span>formula 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> result. 
  <span class="me1">Appendchild</span> 
  <span class="br0">(</span>code 
  <span class="br0">)</span> 
- <br /> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> getFieldElement = result 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">Function</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
- <span class="coMULTI">%REM<br /> &nbsp; &nbsp; &nbsp; &nbsp; Function saveSubformIntoDatabase<br /> &nbsp; &nbsp; &nbsp; &nbsp; Description: Saves the subform into the database specified<br /> &nbsp; &nbsp; %END REM</span> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
+ <span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; Function saveSubformIntoDatabase<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: Saves the subform into the database specified<br> &nbsp; &nbsp; %END REM</span> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Function</span> saveSubformIntoDatabase 
  <span class="br0">(</span>db 
  <span class="kw1">As</span> 
@@ -584,174 +584,174 @@ ga('send', 'pageview');
  <span class="br0">)</span> 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Dim</span> importer 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDXLImporter</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="co1">'Write the changes into the stream</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> 
  <span class="kw1">me</span>. 
  <span class="me1">parser</span>. 
  <span class="me1">Serialize</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">me</span>. 
  <span class="me1">resultStream</span>. 
  <span class="me1">Position</span> = 
  <span class="nu0">0</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> importer = s. 
  <span class="me1">Createdxlimporter</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; importer. 
+ <br> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; importer. 
  <span class="me1">Designimportoption</span> = &nbsp; 
  <span class="nu0">6</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> importer. 
  <span class="me1">Setoutput</span> 
  <span class="br0">(</span>db 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> importer. 
  <span class="me1">Setinput</span> 
  <span class="br0">(</span> 
  <span class="kw1">me</span>. 
  <span class="me1">resultStream</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">On</span> 
  <span class="kw1">Error</span> 
  <span class="kw1">Resume</span> 
  <span class="kw1">next</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> importer. 
  <span class="me1">Process</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">If</span> 
  <span class="kw1">Err</span> &lt;&gt; 
  <span class="nu0">0</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">me</span>. 
  <span class="me1">resultstream</span>. 
  <span class="me1">Position</span> = 
  <span class="nu0">0</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">MsgBox</span> 
  <span class="kw1">me</span>. 
  <span class="me1">resultstream</span>. 
  <span class="me1">Readtext</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; saveSubformIntoDatabase = importer. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; saveSubformIntoDatabase = importer. 
  <span class="kw1">Log</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">Function</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">End</span> 
  <span class="kw1">Class</span> 
 </div> For handling changed documents this agents comes in handy: 
 <div class="lotusscript"> 
- <span class="coMULTI">%REM<br /> &nbsp; &nbsp; Created Jan 5, 2010 by Stephan H Wissel/Singapore/IBM<br /> &nbsp; &nbsp; Description: Agent Sample how to update changed view selection formulas<br /> %END REM</span> 
- <br /> 
+ <span class="coMULTI">%REM<br> &nbsp; &nbsp; Created Jan 5, 2010 by Stephan H Wissel/Singapore/IBM<br> &nbsp; &nbsp; Description: Agent Sample how to update changed view selection formulas<br> %END REM</span> 
+ <br> 
  <span class="kw1">Option</span> 
  <span class="kw1">Public</span> 
- <br /> 
+ <br> 
  <span class="kw1">Option</span> 
  <span class="kw1">Declare</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">Use</span> 
- <span class="st0">&quot;CoreHandlerLibrary&quot;</span> 
- <br /> 
+ <span class="st0">"CoreHandlerLibrary"</span> 
+ <br> 
  <span class="kw1">Use</span> 
- <span class="st0">&quot;AgentSupport&quot;</span> 
- <br /> 
+ <span class="st0">"AgentSupport"</span> 
+ <br> 
  <span class="kw1">Sub</span> Initialize 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> support 
  <span class="kw1">As</span> 
  <span class="kw1">New</span> AgentSupport 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> doc 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDocument</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> factory 
  <span class="kw1">As</span> 
  <span class="kw1">New</span> DH_Factory 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> dh 
  <span class="kw1">As</span> DocumentHandler 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Set</span> doc = support. 
  <span class="me1">docToProcess</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Do</span> 
  <span class="kw1">Until</span> doc 
  <span class="kw1">Is</span> 
  <span class="kw1">Nothing</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> dh = factory. 
  <span class="me1">getDocumentHandler</span> 
  <span class="br0">(</span>Doc 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">If</span> dh. 
  <span class="me1">docHasChangedAfterUpdate</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> dh. 
  <span class="me1">save</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span>&nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> support. 
  <span class="me1">Updateprocesseddoc</span> 
  <span class="br0">(</span>doc 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> doc = support. 
  <span class="me1">docToProcess</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Loop</span> 
- <br /> &nbsp; &nbsp; 
- <br /> 
+ <br> &nbsp; &nbsp; 
+ <br> 
  <span class="kw1">End</span> 
  <span class="kw1">Sub</span> 
- <br /> 
+ <br> 
 </div> You need the 
 <a href="/blog/downloads/2011/CoreHandlerLibrary.lss">CoreHandlerLibrary</a> and the 
 <a href="/blog/downloads/2011/AgentSupport.lss">AgentSupport</a> As usual YMMV</div>
@@ -766,7 +766,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2011/11/brute-force-view-tuning.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Brute Force View Tuning"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2011/11/brute-force-view-tuning.html";
+							var permaLink = "https://wissel.net/blog/2011/11/brute-force-view-tuning.html";
 						</script>
 					</p>
 
@@ -782,31 +782,23 @@ categories:  <a href="/blog/categories/.html"></a>
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/42a7ae7ee6755e986847cdccc873e849.jpg?s=88" class="gravatarimg" />
-							posted by <b>Nathan T. Freeman</b> on <i>Friday 25 November 2011 AD - 02:24 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/42a7ae7ee6755e986847cdccc873e849.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Nathan T. Freeman</b> on <i>Friday 25 November 2011 AD - 02:24 Singapore Time</i>:<br /> 
   Why not just use folders?
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Friday 25 November 2011 AD - 08:30 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Friday 25 November 2011 AD - 08:30 Singapore Time</i>:<br /> 
   In a Notes client app users can mess up by moving documents in an out of folders. So you need extra code to check for all documents, including the unchanged ones, that they are in all Folders they belong to and out any they are not supposed to be in. 
   <br />Also audit gets much harder. Definitely nothing you want to do in a retrofitting exercise. 
   <br /> 
   <img alt="Emoticon smile.gif" src="/blog/images/emoticons/smile.gif" border="0" /> stw
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/020a303ee498754e6c057ef2b5395520.jpg?s=88" class="gravatarimg" />
-							posted by <b>ursus</b> on <i>Friday 25 November 2011 AD - 15:58 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/020a303ee498754e6c057ef2b5395520.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>ursus</b> on <i>Friday 25 November 2011 AD - 15:58 Singapore Time</i>:<br /> 
   Hi Stefan 
   <br /> 
   <br />Cool idea - love your implementation, well done. 
@@ -818,8 +810,7 @@ categories:  <a href="/blog/categories/.html"></a>
   <br /> 
   <br />PS: you at LotusPhere this year? 
   <br />
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 					</ol>
 				</div>

@@ -151,19 +151,19 @@ ga('send', 'pageview');
 <a href="http://www.bluemix.net/">Bluemix</a> a best practise is to use 
 <a href="https://en.wikipedia.org/wiki/Java_Naming_and_Directory_Interface">JNDI</a> to access resources and services you use. In Cloud Foundry all services are listed in the 
 <a href="http://docs.run.pivotal.io/devguide/deploy-apps/environment-variable.html#VCAP-SERVICES"><code>VCAP_SERVICES</code></a> environment variable and could be parsed as JSON string. However this would make the application platform dependent, which is something you want to avoid. 
-<br /> Typically a JNDI service requires to edit the server.xml to point to the right service. However editing the server.xml in Bluemix is something you do want to avoid as much as possible. Luckily the 
+<br> Typically a JNDI service requires to edit the server.xml to point to the right service. However editing the server.xml in Bluemix is something you do want to avoid as much as possible. Luckily the 
 <a href="https://github.com/cloudfoundry/ibm-websphere-liberty-buildpack">Websphere Java Liberty Buildpack</a>, which is the one Bluemix uses for Java by default, does handle that for you 
 <i>automagic</i> and all Bluemix services turn into discoverable JNDI objects. So far in theory. I found myself in the tricky situation to check what services are actually there. So I wrote some code that turns the available JNDI objects into a JSON string. 
-<br /> 
+<br> 
 <pre class="brush:java">
     @GET
-    @Path(&quot;/jndi&quot;)
+    @Path("/jndi")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getJndi() {
         StringBuilder b = new StringBuilder();
-        b.append(&quot;{ \&quot;java:comp\&quot; : [&quot;);
-        this.renderJndi(&quot;java:comp&quot;, b);
-        b.append(&quot;]}&quot;);
+        b.append("{ \"java:comp\" : [");
+        this.renderJndi("java:comp", b);
+        b.append("]}");
 
         return Response.status(Status.OK).entity(b.toString()).build();
     }
@@ -176,38 +176,38 @@ ga('send', 'pageview');
             NamingEnumerationlt;NameClassPairgt; list = ic.list(prefix);
             while (list.hasMore()) {
                 if (!isFirst) {
-                    b.append(&quot;, \n&quot;);
+                    b.append(", \n");
                 }
 
                 NameClassPair ncp = list.next();
                 String theName = ncp.getName();
                 String className = ncp.getClassName();
 
-                b.append(&quot;{\&quot;name\&quot; : \&quot;&quot;);
+                b.append("{\"name\" : \"");
                 b.append(theName);
-                b.append(&quot;\&quot;,&quot;);
-                b.append(&quot;\&quot;javaClass\&quot; : \&quot;&quot;);
+                b.append("\",");
+                b.append("\"javaClass\" : \"");
 
                 b.append(className);
-                b.append(&quot;\&quot;&quot;);
-                if (&quot;javax.naming.Context&quot;.equals(className)) {
-                    b.append(&quot;, \&quot;children\&quot; : [&quot;);
-                    this.renderJndi(prefix + (prefix.endsWith(&quot;:&quot;) ? &quot;&quot; : &quot;/&quot;) + theName, b);
-                    b.append(&quot;]&quot;);
+                b.append("\"");
+                if ("javax.naming.Context".equals(className)) {
+                    b.append(", \"children\" : [");
+                    this.renderJndi(prefix + (prefix.endsWith(":") ? "" : "/") + theName, b);
+                    b.append("]");
                 }
-                b.append(&quot;}&quot;);
+                b.append("}");
                 isFirst = false;
             }
         } catch (Exception e) {
             e.printStackTrace();
-            b.append(&quot;\&quot;&quot;);
+            b.append("\"");
             b.append(e.getMessage());
-            b.append(&quot;\&quot;&quot;);
+            b.append("\"");
         }
 
     }
 </pre> 
-<br /> Enjoy - As usual you YMMV</div>
+<br> Enjoy - As usual you YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -219,7 +219,7 @@ categories:  <a href="/blog/categories/.html"></a>  <a href="/blog/categories/.h
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2015/06/investigating-jndi.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Investigating JNDI"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2015/06/investigating-jndi.html";
+							var permaLink = "https://wissel.net/blog/2015/06/investigating-jndi.html";
 						</script>
 					</p>
 

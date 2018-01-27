@@ -154,20 +154,20 @@ ga('send', 'pageview');
 <a href="http://opensocial.org/">Open Social Foundation</a> and can also be found in 
 <a href="http://www.ibm.com/connections/">IBM Connections</a> or Atlassian's 
 <a href="https://www.atlassian.com/software/confluence">Confluence Wiki</a>. 
-<br /> The use case for embedded experiences in eMail is simple: 
-<br /> &quot; 
-<i>Any application that sends a notification message to your attention and/or action can reduce the time and clicks required for processing by taking advantage of an embedded experience</i>&quot; 
-<br /> Ryan 
+<br> The use case for embedded experiences in eMail is simple: 
+<br> " 
+<i>Any application that sends a notification message to your attention and/or action can reduce the time and clicks required for processing by taking advantage of an embedded experience</i>" 
+<br> Ryan 
 <a href="https://www.ibmdw.net/social/docs/enabling-opensocial-gadget-support-on-ibm-notes-and-domino-9-0/">described in detail</a> how to switch on the processing of embedded experiences and the Wiki 
 <a href="http://www-10.lotus.com/ldd/dominowiki.nsf/dx/Integration_with_XPage_Embedded_Experiences_OSC90">tells how how to use XPages</a> to send them. The trouble with this: you need to touch every single application that sends out a notification. You might not have time, budget or source code access to them. 
-<br /> 
+<br> 
 <b>So are EE a nice idea, but confined to some niche applications?</b> 
-<br /> 
-<b>Not at all!</b> When peeking under the hood, you can see, that an EE enabled eMail has a HTML and a JSON Mime part. If a client doesn't understand EE (like mobile clients or any other eMail than IBM Notes), then the HTML message is rendered. Important here: even with Notes you must have a HTML part, a plain text message won't do. Using a &quot;when new mail arrives&quot; agent, you can turn an incoming message into an EE. 
-<br /> As long as the target system supports one of the authentications the 
+<br> 
+<b>Not at all!</b> When peeking under the hood, you can see, that an EE enabled eMail has a HTML and a JSON Mime part. If a client doesn't understand EE (like mobile clients or any other eMail than IBM Notes), then the HTML message is rendered. Important here: even with Notes you must have a HTML part, a plain text message won't do. Using a "when new mail arrives" agent, you can turn an incoming message into an EE. 
+<br> As long as the target system supports one of the authentications the 
 <a "http:="" www-10.lotus.com="" dd="" ewiki.nsf="" pdocviewer.xsp?lookupname="Lotus+Expeditor+6.2.3+Documentation#action=openDocument&amp;res_title=Accounts_framework_XPD623&amp;content=pdcontent&quot;">Account API</a> provides (Basic HTTP, JEE Form, SAML, Spengo, OS Credential, Siteminder, LTPA) this will work. This is Notes client only, for Connections or iNotes you are limited to SAML. 
-<br /> First thought was to use a &quot;Before mail arrives&quot; agent to make sure, that the mail gets delivered fully converted. However such an agent runs in the router context and might be a performance killer - the when new mail arrives option seems a suitable compromise. The approach works with signed eMails too, since signing covers the eMail body, but not headers and mime separators (you can't sign the header since each routing hop adds information there). 
-<br /> As an example I used a plain text eMail, that sends a notification with a number of field/values separated by colon and containing only one URL. For your use cases, you will need to adopt the code (or wait for a future blog, just saying). Since my original message only contained text/plain I had to add text/html and application/json mime parts.The Notes API 
+<br> First thought was to use a "Before mail arrives" agent to make sure, that the mail gets delivered fully converted. However such an agent runs in the router context and might be a performance killer - the when new mail arrives option seems a suitable compromise. The approach works with signed eMails too, since signing covers the eMail body, but not headers and mime separators (you can't sign the header since each routing hop adds information there). 
+<br> As an example I used a plain text eMail, that sends a notification with a number of field/values separated by colon and containing only one URL. For your use cases, you will need to adopt the code (or wait for a future blog, just saying). Since my original message only contained text/plain I had to add text/html and application/json mime parts.The Notes API 
 <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_MIMEENTITY_CLASS_JAVA.html">MimeEntity</a> class makes the code rather simple and does the conversion in less than 100 lines of code. It will work for any notification following this pattern. 
 <div class="lotusscript"> 
  <span class="kw1">Sub</span> ConvertToEE 
@@ -177,159 +177,159 @@ ga('send', 'pageview');
  <span class="kw1">As</span> 
  <span class="kw2">NotesDocument</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> body 
  <span class="kw1">As</span> 
  <span class="kw2">NotesMIMEEntity</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> parent 
  <span class="kw1">As</span> 
  <span class="kw2">NotesMIMEEntity</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> header 
  <span class="kw1">As</span> 
  <span class="kw2">NotesMIMEHeader</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> jsonEE 
  <span class="kw1">As</span> 
  <span class="kw2">NotesMIMEEntity</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> htmlEE 
  <span class="kw1">As</span> 
  <span class="kw2">NotesMIMEEntity</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> jsonStream 
  <span class="kw1">As</span> 
  <span class="kw2">NotesStream</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> htmlStream 
  <span class="kw1">As</span> 
  <span class="kw2">NotesStream</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> content 
  <span class="kw1">As</span> 
  <span class="kw2">NotesStream</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> headerName 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> headerValue 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> newHeaders 
  <span class="kw1">List</span> 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Set</span> content = s. 
  <span class="me1">Createstream</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Set</span> jsonStream = s. 
  <span class="me1">Createstream</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Set</span> htmlStream = s. 
  <span class="me1">Createstream</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; s. 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; s. 
  <span class="me1">Convertmime</span> = 
  <span class="kw1">False</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Set</span> body = doc. 
  <span class="me1">Getmimeentity</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;Body&quot;</span> 
+ <span class="st0">"Body"</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Call</span> body. 
  <span class="me1">Getcontentastext</span> 
  <span class="br0">(</span>content, 
  <span class="kw1">True</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Set</span> parent = body. 
  <span class="me1">Createparententity</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Call</span> addHeader 
  <span class="br0">(</span>parent, 
- <span class="st0">&quot;Content-Type&quot;</span>, 
- <span class="st0">&quot;multipart/alternative&quot;</span> 
+ <span class="st0">"Content-Type"</span>, 
+ <span class="st0">"multipart/alternative"</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Call</span> addHeader 
  <span class="br0">(</span>parent, 
- <span class="st0">&quot;MIME-Version&quot;</span>, 
- <span class="st0">&quot;1.0&quot;</span> 
+ <span class="st0">"MIME-Version"</span>, 
+ <span class="st0">"1.0"</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Call</span> generateEEParts 
  <span class="br0">(</span>content,jsonStream,htmlStream 
  <span class="br0">)</span> 
- <br /> 
- <br /> &nbsp; &nbsp; jsonStream. 
+ <br> 
+ <br> &nbsp; &nbsp; jsonStream. 
  <span class="me1">position</span> = 
  <span class="nu0">0</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Set</span> jsonEE = parent. 
  <span class="me1">Createchildentity</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Call</span> jsonEE. 
  <span class="me1">Setcontentfromtext</span> 
  <span class="br0">(</span>jsonStream, 
- <span class="st0">&quot;application/embed+json;charset=UTF-8&quot;</span>, ENC_IDENTITY_7BIT 
+ <span class="st0">"application/embed+json;charset=UTF-8"</span>, ENC_IDENTITY_7BIT 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; htmlStream. 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; htmlStream. 
  <span class="me1">position</span> = 
  <span class="nu0">0</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Set</span> htmlEE = parent. 
  <span class="me1">Createchildentity</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Call</span> htmlEE. 
  <span class="me1">Setcontentfromtext</span> 
  <span class="br0">(</span>htmlStream, 
- <span class="st0">&quot;text/html;charset=UTF-8&quot;</span>, ENC_IDENTITY_7BIT 
+ <span class="st0">"text/html;charset=UTF-8"</span>, ENC_IDENTITY_7BIT 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Call</span> doc. 
  <span class="me1">Replaceitemvalue</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;containsEE&quot;</span>, 
- <span class="st0">&quot;URL&quot;</span> 
+ <span class="st0">"containsEE"</span>, 
+ <span class="st0">"URL"</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Call</span> doc. 
  <span class="me1">Save</span> 
  <span class="br0">(</span> 
  <span class="kw1">true</span>, 
  <span class="kw1">true</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; s. 
+ <br> &nbsp; &nbsp; s. 
  <span class="me1">Convertmime</span> = 
  <span class="kw1">true</span> 
- <br /> 
+ <br> 
  <span class="kw1">End</span> 
  <span class="kw1">Sub</span> 
- <br /> 
- <span class="coMULTI">%REM<br /> &nbsp; &nbsp; Sub generateEEParts<br /> &nbsp; &nbsp; Description: Creates the body content for <br /> %END REM</span> 
- <br /> 
+ <br> 
+ <span class="coMULTI">%REM<br> &nbsp; &nbsp; Sub generateEEParts<br> &nbsp; &nbsp; Description: Creates the body content for <br> %END REM</span> 
+ <br> 
  <span class="kw1">Sub</span> generateEEParts 
  <span class="br0">(</span>stream 
  <span class="kw1">As</span> 
@@ -339,108 +339,108 @@ ga('send', 'pageview');
  <span class="kw1">As</span> 
  <span class="kw2">NotesStream</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> workstring 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> url 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> ParamName 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> ParamValue 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> position 
  <span class="kw1">As</span> 
  <span class="kw1">Integer</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> isFirst 
  <span class="kw1">As</span> 
  <span class="kw1">Boolean</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> eolChars 
  <span class="kw1">List</span> 
  <span class="kw1">As</span> 
  <span class="kw1">Integer</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> eolPos 
  <span class="kw1">As</span> 
  <span class="kw1">Integer</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> i 
  <span class="kw1">As</span> 
  <span class="kw1">Integer</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> x 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; eolChars 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; eolChars 
  <span class="br0">(</span> 
  <span class="nu0">0</span> 
  <span class="br0">)</span> = 
  <span class="nu0">10</span> 
- <br /> &nbsp; &nbsp; eolChars 
+ <br> &nbsp; &nbsp; eolChars 
  <span class="br0">(</span> 
  <span class="nu0">1</span> 
  <span class="br0">)</span> = 
  <span class="nu0">13</span> 
- <br /> &nbsp; &nbsp; eolChars 
+ <br> &nbsp; &nbsp; eolChars 
  <span class="br0">(</span> 
  <span class="nu0">2</span> 
  <span class="br0">)</span> = 
  <span class="nu0">42</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="co1">'Create the URL </span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Call</span> outHTML. 
  <span class="me1">writeText</span> 
  <span class="br0">(</span> 
- <span class="st0">|&lt;h1 style=&quot;background-color : Yellow; font-family: Verdana, Arial, sans-serif&quot;&gt;Workflow notification (URL)&lt;/h1&gt;|</span>,EOL_PLATFORM 
+ <span class="st0">|&lt;h1 style="background-color : Yellow; font-family: Verdana, Arial, sans-serif"&gt;Workflow notification (URL)&lt;/h1&gt;|</span>,EOL_PLATFORM 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Call</span> outHTML. 
  <span class="me1">writeText</span> 
  <span class="br0">(</span> 
- <span class="st0">|&lt;table border=&quot;0&quot; cellpadding=&quot;2&quot; cellspacing=&quot;2&quot;&gt;|</span>,EOL_PLATFORM 
+ <span class="st0">|&lt;table border="0" cellpadding="2" cellspacing="2"&gt;|</span>,EOL_PLATFORM 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Call</span> outHTML. 
  <span class="me1">writeText</span> 
  <span class="br0">(</span> 
- <span class="st0">|&lt;tr&gt;&lt;th style=&quot;border : 1px solid gray; font-family: Verdana, Arial, sans-serif&quot;&gt;Parameter&lt;/th&gt;&lt;th style=&quot;border: 1px solid gray; font-family: Verdana, Arial, sans-serif&quot;&gt;Value&lt;/th&gt;&lt;/tr&gt;|</span>,EOL_PLATFORM 
+ <span class="st0">|&lt;tr&gt;&lt;th style="border : 1px solid gray; font-family: Verdana, Arial, sans-serif"&gt;Parameter&lt;/th&gt;&lt;th style="border: 1px solid gray; font-family: Verdana, Arial, sans-serif"&gt;Value&lt;/th&gt;&lt;/tr&gt;|</span>,EOL_PLATFORM 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="co1">'Loop through all the items</span> 
- <br /> &nbsp; &nbsp; stream. 
+ <br> &nbsp; &nbsp; stream. 
  <span class="me1">Position</span> = 
  <span class="nu0">0</span> 
- <br /> &nbsp; &nbsp; workstring = stream. 
+ <br> &nbsp; &nbsp; workstring = stream. 
  <span class="me1">Readtext</span> 
  <span class="br0">(</span>STMREAD_LINE , EOL_ANY 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; isFirst = 
+ <br> &nbsp; &nbsp; isFirst = 
  <span class="kw1">true</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Do</span> 
  <span class="kw1">Until</span> workString = 
- <span class="st0">&quot;&quot;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <span class="st0">""</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">For</span> eolPos = 
  <span class="nu0">1</span> 
  <span class="kw1">To</span> 
  <span class="kw1">Len</span> 
  <span class="br0">(</span>workString 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; x = x + 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; x = x + 
  <span class="kw1">CStr</span> 
  <span class="br0">(</span> 
  <span class="kw1">Asc</span> 
@@ -451,56 +451,56 @@ ga('send', 'pageview');
  <span class="br0">)</span> 
  <span class="br0">)</span> 
  <span class="br0">)</span>+ 
- <span class="st0">&quot;-&quot;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <span class="st0">"-"</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Next</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="co1">'Cleanup workstring - remove 10/13 combinations</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">ForAll</span> curChar 
  <span class="kw1">In</span> eolChars 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; eolPos = 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; eolPos = 
  <span class="kw1">InStr</span> 
  <span class="br0">(</span>workstring, 
  <span class="kw1">Chr$</span> 
  <span class="br0">(</span>curChar 
  <span class="br0">)</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">While</span> 
  <span class="br0">(</span>eolPos &gt; 
  <span class="nu0">0</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; workstring = 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; workstring = 
  <span class="kw1">Left$</span> 
  <span class="br0">(</span>workstring,eolPos- 
  <span class="nu0">1</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; eolPos = 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; eolPos = 
  <span class="kw1">InStr</span> 
  <span class="br0">(</span>workstring, 
  <span class="kw1">Chr$</span> 
  <span class="br0">(</span>curChar 
  <span class="br0">)</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Wend</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">ForAll</span> 
- <br /> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; position = 
+ <br> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; position = 
  <span class="kw1">InStr</span> 
  <span class="br0">(</span>workstring, 
- <span class="st0">&quot;:&quot;</span> 
+ <span class="st0">":"</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">If</span> position &gt; 
  <span class="nu0">0</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="co1">'We have a line with a Name / Value Pair</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ParamName = 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ParamName = 
  <span class="kw1">Replace</span> 
  <span class="br0">(</span> 
  <span class="kw1">Trim$</span> 
@@ -510,10 +510,10 @@ ga('send', 'pageview');
  <span class="nu0">1</span> 
  <span class="br0">)</span> 
  <span class="br0">)</span>, 
- <span class="st0">|&quot;|</span>, 
- <span class="st0">|\&quot;|</span> 
+ <span class="st0">|"|</span>, 
+ <span class="st0">|\"|</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ParamValue = 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ParamValue = 
  <span class="kw1">Replace</span> 
  <span class="br0">(</span> 
  <span class="kw1">Trim$</span> 
@@ -523,80 +523,80 @@ ga('send', 'pageview');
  <span class="nu0">1</span> 
  <span class="br0">)</span> 
  <span class="br0">)</span>, 
- <span class="st0">|&quot;|</span>, 
- <span class="st0">|\&quot;|</span> 
+ <span class="st0">|"|</span>, 
+ <span class="st0">|\"|</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">If</span> 
  <span class="kw1">Left$</span> 
  <span class="br0">(</span>ParamValue, 
  <span class="nu0">4</span> 
  <span class="br0">)</span> = 
- <span class="st0">&quot;http&quot;</span> 
+ <span class="st0">"http"</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> outJSON. 
  <span class="me1">writeText</span> 
  <span class="br0">(</span> 
- <span class="st0">|{ &quot;url&quot; &nbsp;: &quot;|</span>+ParamValue+ 
- <span class="st0">|&quot; }|</span>,EOL_PLATFORM 
+ <span class="st0">|{ "url" &nbsp;: "|</span>+ParamValue+ 
+ <span class="st0">|" }|</span>,EOL_PLATFORM 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> outHTML. 
  <span class="me1">writeText</span> 
  <span class="br0">(</span> 
- <span class="st0">|&lt;tr&gt;&lt;td style=&quot;border: 1px solid gray; font-family: Verdana, Arial, sans-serif&quot;&gt;|</span>,EOL_PLATFORM 
+ <span class="st0">|&lt;tr&gt;&lt;td style="border: 1px solid gray; font-family: Verdana, Arial, sans-serif"&gt;|</span>,EOL_PLATFORM 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> outHTML. 
  <span class="me1">writeText</span> 
  <span class="br0">(</span>ParamName,EOL_PLATFORM 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> outHTML. 
  <span class="me1">writeText</span> 
  <span class="br0">(</span> 
- <span class="st0">|&lt;/td&gt;&lt;td style=&quot;border-bottom : 1px solid gray; border-right: 1px solid gray; font-family: Verdana, Arial, sans-serif&quot;&gt;|</span>,EOL_PLATFORM 
+ <span class="st0">|&lt;/td&gt;&lt;td style="border-bottom : 1px solid gray; border-right: 1px solid gray; font-family: Verdana, Arial, sans-serif"&gt;|</span>,EOL_PLATFORM 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> outHTML. 
  <span class="me1">writeText</span> 
  <span class="br0">(</span>ParamValue,EOL_PLATFORM 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> outHTML. 
  <span class="me1">writeText</span> 
  <span class="br0">(</span> 
  <span class="st0">|&lt;/td&gt;&lt;/tr&gt;|</span>,EOL_PLATFORM 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; workstring = stream. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; workstring = stream. 
  <span class="me1">Readtext</span> 
  <span class="br0">(</span>STMREAD_LINE , EOL_Platform 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Loop</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="co1">'Write out the closing</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Call</span> outHTML. 
  <span class="me1">writeText</span> 
  <span class="br0">(</span> 
  <span class="st0">|&lt;/table&gt;|</span>,EOL_PLATFORM 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
- <br /> 
+ <br> &nbsp; &nbsp; 
+ <br> 
  <span class="kw1">End</span> 
  <span class="kw1">Sub</span> 
- <br /> 
+ <br> 
  <span class="kw1">Sub</span> addHeader 
  <span class="br0">(</span>mime 
  <span class="kw1">As</span> 
@@ -606,34 +606,34 @@ ga('send', 'pageview');
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Dim</span> header 
  <span class="kw1">As</span> 
  <span class="kw2">NotesMIMEHeader</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> header = mime. 
  <span class="me1">CreateHeader</span> 
  <span class="br0">(</span>hName 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">If</span> header 
  <span class="kw1">Is</span> 
  <span class="kw1">Nothing</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> header = mime. 
  <span class="me1">Getnthheader</span> 
  <span class="br0">(</span>hname 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> header. 
  <span class="me1">SetHeaderVal</span> 
  <span class="br0">(</span>value 
  <span class="br0">)</span> 
- <br /> 
+ <br> 
  <span class="kw1">End</span> 
  <span class="kw1">Sub</span> 
 </div> As usual: YMMV</div>
@@ -648,7 +648,7 @@ categories:  <a href="/blog/categories/.html"></a>  <a href="/blog/categories/.h
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2013/11/driving-embedded-experiences-adoption.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Driving Embedded Experiences Adoption"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2013/11/driving-embedded-experiences-adoption.html";
+							var permaLink = "https://wissel.net/blog/2013/11/driving-embedded-experiences-adoption.html";
 						</script>
 					</p>
 
@@ -664,39 +664,30 @@ categories:  <a href="/blog/categories/.html"></a>  <a href="/blog/categories/.h
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/dabc8480fbeffac58f2207eb653ef440.jpg?s=88" class="gravatarimg" />
-							posted by <b>David Simpson</b> on <i>Monday 04 November 2013 AD - 07:54 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/dabc8480fbeffac58f2207eb653ef440.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>David Simpson</b> on <i>Monday 04 November 2013 AD - 07:54 Singapore Time</i>:<br /> 
   Hi Stephan, thanks for posting this. A minor correction Atlassian Confluence does not have embedded experience inbuilt. 
   <br /> 
   <br /> 
   <img alt="Emoticon smile.gif" src="/blog/images/emoticons/smile.gif" border="0" />
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan Wissel</b> on <i>Monday 04 November 2013 AD - 14:31 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan Wissel</b> on <i>Monday 04 November 2013 AD - 14:31 Singapore Time</i>:<br /> 
   @David, I just checked, and there are Gadgets listed for embedded experiences in a pretty plain Confluence installation, so they are there (just 
   <a href="https://www.google.com/search?client=ubuntu&amp;channel=fs&amp;q=conf-activitystream-gadget.xml" rel="nofollow" target="blank"> google it</a>). Also the 
   <a href="https://opensocial.atlassian.net/wiki/display/OSREF/Embedded+Experiences+Tutorial" rel="nofollow" target="blank">documetation for OpenSocial</a> is in Confluence. 
   <br /> 
   <br /> 
   <img alt="Emoticon biggrin.gif" src="/blog/images/emoticons/biggrin.gif" border="0" /> stw
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/d77ed7512cac00326633fb0e34104c1e.jpg?s=88" class="gravatarimg" />
-							posted by <b>Robert Ibsen Voith</b> on <i>Monday 04 November 2013 AD - 16:29 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/d77ed7512cac00326633fb0e34104c1e.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Robert Ibsen Voith</b> on <i>Monday 04 November 2013 AD - 16:29 Singapore Time</i>:<br /> 
   Thanks for sharing! Most interesting - and very timely!
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 					</ol>
 				</div>

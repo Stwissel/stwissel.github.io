@@ -138,11 +138,11 @@ ga('send', 'pageview');
 				<p>This article is part of a mini series. Read them all (latest on top):</p>
 				<h3>Extracting data from Domino into PDF using XSLT and XSL:FO</h3>
 				<ol reversed class="nav nav-list">
-					<li ><a href="/blog/2013/08/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-5.html">Extracting data from Domino into PDF using XSLT and XSL:FO (Part 5)</a></li>
-					<li ><a href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-4.html">Extracting data from Domino into PDF using XSLT and XSL:FO (Part 4)</a></li>
-					<li ><a href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-3.html">Extracting data from Domino into PDF using XSLT and XSL:FO (Part 3)</a></li>
-					<li  class="active"><a href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-2.html">Extracting data from Domino into PDF using XSLT and XSL:FO (Part 2)</a></li>
 					<li ><a href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-1.html">Extracting data from Domino into PDF using XSLT and XSL:FO (Part 1)</a></li>
+					<li  class="active"><a href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-2.html">Extracting data from Domino into PDF using XSLT and XSL:FO (Part 2)</a></li>
+					<li ><a href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-3.html">Extracting data from Domino into PDF using XSLT and XSL:FO (Part 3)</a></li>
+					<li ><a href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-4.html">Extracting data from Domino into PDF using XSLT and XSL:FO (Part 4)</a></li>
+					<li ><a href="/blog/2013/08/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-5.html">Extracting data from Domino into PDF using XSLT and XSL:FO (Part 5)</a></li>
 				</ol>
 			</div>	
 
@@ -163,39 +163,39 @@ ga('send', 'pageview');
 <a href="http://www.w3.org/TR/xslt/">XSLT</a> and 
 <a href="http://www.w3.org/TR/xsl/">XSL:FO</a> in 
 <a href="http://www-01.ibm.com/software/lotus/products/domino/">IBM Lotus Domino</a>. 
-<br /> 
-<br /> In 
+<br> 
+<br> In 
 <a href="/blog/d6plinks/SHWL-8TMM9D">Part 1</a> I discussed the process of getting data from Domino to PDF using only open standards. In this part I want to start backwards: If I have valid XSL:FO, how do I get the PDF output? In a later installment I will discuss what XSL:FO is capable of and how to create it using XSLT. Finally I will discuss how to extract XML from your data source (Domino or others). 
-<br /> I choose the backwards approach since it is easier to understand walking from the desired output towards a stylesheet than creating a stylesheet if the result isn't clear. Bear with me for this approach. 
-<br /> I will use 
+<br> I choose the backwards approach since it is easier to understand walking from the desired output towards a stylesheet than creating a stylesheet if the result isn't clear. Bear with me for this approach. 
+<br> I will use 
 <a href="http://xmlgraphics.apache.org/fop/index.html">Apache FOP</a> as my rendering engine. The 
 <a href="http://xmlgraphics.apache.org/fop/quickstartguide.html">Quickstart</a> compresses the needed steps neatly into 1-2-3 (pun intended): 
 <ol> 
- <li><b>Download</b><br />This is the easy part. Pick one of the <a href="http://www.apache.org/dyn/closer.cgi/xmlgraphics/fop">mirror servers</a> and get fop-1.0-bin.zip (24M) - check if you read this later if there is a newer version. Extract it to a directory of your choice, we will import/copy what we need from there</li> 
- <li><b>Configure</b><br />You have choices: 
+ <li><b>Download</b><br>This is the easy part. Pick one of the <a href="http://www.apache.org/dyn/closer.cgi/xmlgraphics/fop">mirror servers</a> and get fop-1.0-bin.zip (24M) - check if you read this later if there is a newer version. Extract it to a directory of your choice, we will import/copy what we need from there</li> 
+ <li><b>Configure</b><br>You have choices: 
   <ul> 
    <li>copy the Fop files into jvm/lib/ext (bad idea)</li> 
    <li>import it into an NSF (twice: once for agents, once for XPages)</li> 
    <li>create a plug-in (good for sidebar and XPages, not good for agents)</li> 
   </ul> Having coined the term <a href="/blog/d6plinks/shwl-7mgfbn&quot;">XAgent</a> I will stick to the XPages version with import into the NSF. Time permitting I'll add a plug-in approach to this little series.</li> 
- <li><b>Run</b><br /> The FOP website provides a good overview on <a href="http://xmlgraphics.apache.org/fop/1.0/embedding.html">general Java use</a> as well as <a href="http://xmlgraphics.apache.org/fop/1.0/servlets.html">servlet specifics</a>. Using that information as template it is not too hard to implement a managed bean that takes a XMLDocument and an optional Stylesheet and returns the rendered PDF as result </li> 
+ <li><b>Run</b><br> The FOP website provides a good overview on <a href="http://xmlgraphics.apache.org/fop/1.0/embedding.html">general Java use</a> as well as <a href="http://xmlgraphics.apache.org/fop/1.0/servlets.html">servlet specifics</a>. Using that information as template it is not too hard to implement a managed bean that takes a XMLDocument and an optional Stylesheet and returns the rendered PDF as result </li> 
 </ol> Since our output will be rendered by a managed bean, we need to configure it in the faces-config.xml: 
 <div class="xml"> 
  <span class="sc3"><span class="re1">&lt;faces-config<span class="re2">&gt;</span></span></span> 
- <br /> &nbsp; 
+ <br> &nbsp; 
  <span class="sc3"><span class="re1">&lt;managed-bean<span class="re2">&gt;</span></span></span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="sc3"><span class="re1">&lt;managed-bean-name<span class="re2">&gt;</span></span></span>PDF 
  <span class="sc3"><span class="re1">&lt;/managed-bean-name<span class="re2">&gt;</span></span></span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="sc3"><span class="re1">&lt;managed-bean-class<span class="re2">&gt;</span></span></span>com.notessensei.fop.PDFReport 
  <span class="sc3"><span class="re1">&lt;/managed-bean-class<span class="re2">&gt;</span></span></span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="sc3"><span class="re1">&lt;managed-bean-scope<span class="re2">&gt;</span></span></span>session 
  <span class="sc3"><span class="re1">&lt;/managed-bean-scope<span class="re2">&gt;</span></span></span> 
- <br /> &nbsp; 
+ <br> &nbsp; 
  <span class="sc3"><span class="re1">&lt;/managed-bean<span class="re2">&gt;</span></span></span> 
- <br /> 
+ <br> 
  <span class="sc3"><span class="re1">&lt;faces-config<span class="re2">&gt;</span></span></span> 
 </div> The 
 <a href="/blog/d6plinks/shwl-7mgfbn&quot;">XAgent</a> follows the usual pattern: 
@@ -206,62 +206,62 @@ ga('send', 'pageview');
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw2">var</span> response 
  <span class="sy0">=</span> exCon. 
  <span class="me1">getResponse</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="kw2">var</span> out 
  <span class="sy0">=</span> response. 
  <span class="me1">getOutputStream</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> response. 
+ <br> response. 
  <span class="me1">setContentType</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;application/pdf&quot;</span> 
+ <span class="st0">"application/pdf"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> response. 
+ <br> response. 
  <span class="me1">setHeader</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;Content-disposition&quot;</span> 
+ <span class="st0">"Content-disposition"</span> 
  <span class="sy0">,</span> 
- <span class="st0">&quot;inline; filename=result.pdf&quot;</span> 
+ <span class="st0">"inline; filename=result.pdf"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> response. 
+ <br> response. 
  <span class="me1">setHeader</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;Cache-Control&quot;</span> 
+ <span class="st0">"Cache-Control"</span> 
  <span class="sy0">,</span> 
- <span class="st0">&quot;no-cache&quot;</span> 
+ <span class="st0">"no-cache"</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="co1">// In this example the text in sessionScope.longText will be rendered</span> 
- <br /> 
+ <br> 
  <span class="kw2">var</span> written 
  <span class="sy0">=</span> sessionScope. 
  <span class="me1">longText</span> 
  <span class="sy0">!=</span> 
- <span class="st0">&quot;&quot;</span> 
+ <span class="st0">""</span> 
  <span class="sy0">?</span> 
- <span class="st0">&quot;&lt;text&gt;&quot;</span> 
+ <span class="st0">"&lt;text&gt;"</span> 
  <span class="sy0">+</span>sessionScope. 
  <span class="me1">longText</span> 
  <span class="sy0">+</span> 
- <span class="st0">&quot;&lt;/text&gt;&quot;</span> 
+ <span class="st0">"&lt;/text&gt;"</span> 
  <span class="sy0">:</span> 
  <span class="kw2">null</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="co1">// Writes the default rendering out</span> 
- <br /> PDF. 
+ <br> PDF. 
  <span class="me1">fopReportFromString</span> 
  <span class="br0">(</span>out 
  <span class="sy0">,</span>written 
@@ -269,14 +269,14 @@ ga('send', 'pageview');
  <span class="kw2">null</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> 
+ <br> 
  <span class="co1">// Stop the page from further processing;</span> 
- <br /> facesContext. 
+ <br> facesContext. 
  <span class="me1">responseComplete</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
  <span class="sy0">;</span> 
- <br /> out. 
+ <br> out. 
  <span class="kw3">close</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
@@ -290,8 +290,8 @@ ga('send', 'pageview');
  <li>serializer-2.7.0.jar</li> 
  <li>xmlgraphics-commons-1.4.jar</li> 
 </ol> The 
-<a href="/blog/downloads/2012/PDFReport.java">class for the PDFReport</a> contains just some wrapper code to render &quot;FO&quot; or &quot;XML with XSLT&quot; into a PDF. It is demo code, you want to add more robust error handling. Next stop: more about FO 
-<br /> As usual YMMV.</div>
+<a href="/blog/downloads/2012/PDFReport.java">class for the PDFReport</a> contains just some wrapper code to render "FO" or "XML with XSLT" into a PDF. It is demo code, you want to add more robust error handling. Next stop: more about FO 
+<br> As usual YMMV.</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -303,7 +303,7 @@ categories:  <a href="/blog/categories/.html"></a>  <a href="/blog/categories/.h
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-2.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Extracting data from Domino into PDF using XSLT and XSL:FO (Part 2)"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-2.html";
+							var permaLink = "https://wissel.net/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-2.html";
 						</script>
 					</p>
 
@@ -319,24 +319,18 @@ categories:  <a href="/blog/categories/.html"></a>  <a href="/blog/categories/.h
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/5b16df6cb8ea55f15d7fb44accc6e826.jpg?s=88" class="gravatarimg" />
-							posted by <b>Jeroen</b> on <i>Wednesday 14 August 2013 AD - 01:45 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/5b16df6cb8ea55f15d7fb44accc6e826.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Jeroen</b> on <i>Wednesday 14 August 2013 AD - 01:45 Singapore Time</i>:<br /> 
   I have been using FO to make PDF's since Notes version 5. Nowadays it is a servlet which enables you to post either a document reference or the raw data. The hard work is not so much the (java) code. It is the XSLT!!﻿
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H Wissel</b> on <i>Wednesday 14 August 2013 AD - 09:40 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H Wissel</b> on <i>Wednesday 14 August 2013 AD - 09:40 Singapore Time</i>:<br /> 
   @Jeroen I 100% agree. The pattern matching way of XSLT and FO are the real challenges. 
   <br /> 
   <br />If all you have done in your development is objects and functions, it can drive you mad. This is why a good debugger is gold (see also Part5)
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 					</ol>
 				</div>

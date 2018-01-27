@@ -155,7 +155,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/loosing-patience.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Loosing patience"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/loosing-patience.html";
+							var permaLink = "https://wissel.net/blog/2006/03/loosing-patience.html";
 						</script>
 					</p>
 
@@ -166,27 +166,27 @@ categories:  <a href="/blog/categories/.html"></a>
 					</h1>
 					<hr />
 					<div>Notes provides us with a build in hierarchy for documents. You have documents, responses and responses to responses. This looks like sufficient to cover most hierarchical requirements. Nevertheless it often is not the right fit. For example: would you consider the head of a department a main document and her staff response documents? Rather not. Especially moving a response document around (when you switch departments) is a pain in the neck. Enter the Hierarchical document pattern. I will describe the principle, you can adopt it to your specific needs. 
-<br /> 
-<br />Step1: Compute your document ID. Use a field 
+<br> 
+<br>Step1: Compute your document ID. Use a field 
 <b>DocID</b> and the formula @Text(@DocumentUniqueId). The field can be computed when composed or computed. If you opt for computed when composed you need to take care of the Copy &amp; Paste operations (Take care does not mean: suppress it, life is hard enough for your users). 
-<br /> 
-<br />Step 2: Create a field 
-<b>Parent[xxx]ID</b>. Replace the [xxx] with the logical relationship e.g. ParentManagerID, ParentRequestID, ParentDocID. You can have as many as you want (thus a difference to the mono-inheritance of the build-in hierarchy. You need to populate this fields according to your business logic. If you only have ParentDocID you could put it above the DocID, switch on &quot;Inherit values&quot; in the form and use DocID as formula for a computed when composed field. If you have multiple fields your mileage might vary. 
-<br /> 
-<br />Step 3: Since it is often necessary to get values up the hierarchy we create additional fields. E.g. you have an appraisal form (HR stuff), where you want that your manager, your dotted-line manager and their bosses and their bosses bosses can read how 
+<br> 
+<br>Step 2: Create a field 
+<b>Parent[xxx]ID</b>. Replace the [xxx] with the logical relationship e.g. ParentManagerID, ParentRequestID, ParentDocID. You can have as many as you want (thus a difference to the mono-inheritance of the build-in hierarchy. You need to populate this fields according to your business logic. If you only have ParentDocID you could put it above the DocID, switch on "Inherit values" in the form and use DocID as formula for a computed when composed field. If you have multiple fields your mileage might vary. 
+<br> 
+<br>Step 3: Since it is often necessary to get values up the hierarchy we create additional fields. E.g. you have an appraisal form (HR stuff), where you want that your manager, your dotted-line manager and their bosses and their bosses bosses can read how 
 <strike>
   miserable you felt 
 </strike> much you appreciated the ever changing challenges. There you have two options: pull the values on the fly when saving the document using some lengthy script code - or store the values directly in the document. You need to consider: does my hierarchy change often (every minute) or rather rarely (twice a month). Our approach fits well for the later. 
-<br />For every Parent[xxx]ID field you create one field 
-<b>Parent[xxx]IDtree</b>. This field will have the following formula (adjust as needed) @if(ParentDocID=&quot;&quot;;DocID;@GetDocField(ParentDocID;&quot;ParentDocIDtree&quot;):DocID). Some error handling needs to be added and the field needs to be multi-value of course. Now you have all DocIDs of the tree above the document in one field. This comes VERY handy in a view, when you want to get all documents that &quot;hang below&quot; a specific one regardless of depth of the hierarchy. It also allows (but we might avoid it) that you loop through the various document using @GetDocField to pull values. 
-<br /> 
-<br />Step 4: Extend the pattern. Besides storing the IDs you could store also normal fields like Manager or Subject in a redundant hierarchical fashion (data normalizers will shoot me for that &quot;high-performance&quot; approach. Typical examples: Show me all my managers, show me the project structure etc. Instead of pulling the values at view time using a @For loop and @Getdocfield for a computed for display field, we use computed fields: 
-<br />e.g. SubjectDocTree, FullNameManagerTree, CompletionDateProjectTree etc. The formula for the computed field would be similar to above: @if(ParentDocID=&quot;&quot;;Subject;@GetDocField(ParentDocID;&quot;SubjectDocTree&quot;):Subject), repeat this for all fields you need. 
-<br /> 
-<br />Why are we doing that this way? Very simple: @Fomulas perform typically faster than LotusScript code. Also the pattern is easily extendible. Need another hierarchy: just add the fields. The only caveat: when you change a value &quot;up in the tree&quot; you need to cascade down the branches to the leaves. However after having identified the documents (Step 2 and the matching view) a simple doc.computewithform will do, so you Script Code will be generic. 
-<br /> 
-<br />I know your next question: Where is the code? I'll post the LotusScript for the updates and a sample database on an upcoming Show-and-tell Thursday soon. 
-<br /></div>
+<br>For every Parent[xxx]ID field you create one field 
+<b>Parent[xxx]IDtree</b>. This field will have the following formula (adjust as needed) @if(ParentDocID="";DocID;@GetDocField(ParentDocID;"ParentDocIDtree"):DocID). Some error handling needs to be added and the field needs to be multi-value of course. Now you have all DocIDs of the tree above the document in one field. This comes VERY handy in a view, when you want to get all documents that "hang below" a specific one regardless of depth of the hierarchy. It also allows (but we might avoid it) that you loop through the various document using @GetDocField to pull values. 
+<br> 
+<br>Step 4: Extend the pattern. Besides storing the IDs you could store also normal fields like Manager or Subject in a redundant hierarchical fashion (data normalizers will shoot me for that "high-performance" approach. Typical examples: Show me all my managers, show me the project structure etc. Instead of pulling the values at view time using a @For loop and @Getdocfield for a computed for display field, we use computed fields: 
+<br>e.g. SubjectDocTree, FullNameManagerTree, CompletionDateProjectTree etc. The formula for the computed field would be similar to above: @if(ParentDocID="";Subject;@GetDocField(ParentDocID;"SubjectDocTree"):Subject), repeat this for all fields you need. 
+<br> 
+<br>Why are we doing that this way? Very simple: @Fomulas perform typically faster than LotusScript code. Also the pattern is easily extendible. Need another hierarchy: just add the fields. The only caveat: when you change a value "up in the tree" you need to cascade down the branches to the leaves. However after having identified the documents (Step 2 and the matching view) a simple doc.computewithform will do, so you Script Code will be generic. 
+<br> 
+<br>I know your next question: Where is the code? I'll post the LotusScript for the updates and a sample database on an upcoming Show-and-tell Thursday soon. 
+<br></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -198,7 +198,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/hierarchical-documents-a-domino-development-pattern.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Hierarchical documents - a Domino development pattern"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/hierarchical-documents-a-domino-development-pattern.html";
+							var permaLink = "https://wissel.net/blog/2006/03/hierarchical-documents-a-domino-development-pattern.html";
 						</script>
 					</p>
 
@@ -210,16 +210,16 @@ categories:  <a href="/blog/categories/.html"></a>
 					<hr />
 					<div>After 
 <a href="http://www.wissel.net/blog/d6plinks/SHWL-6N63EZ#comments" target="_blank">some teasing</a> and 
-<a href="http://www.wissel.net/blog/d6plinks/TANO-6N984N" target="_blank">cryptic thoughts</a>, here the conclusion. Linus Torvald said it in his keynote address during 1999' Lotus DevCon: &quot;If you love somebody, set them free&quot;. I put in a lot of work in TAO Consulting over the last 6 years and it is time to set it free. Ms. Ida Cheong will take over as Managing Director, Pitt will run the Notes consulting arm, Dr. Magaret Tan continues the Business consulting, Christoph Schaaf will cover UMsys. The position for a sales director has three hot candidates (more once its closed). We recently signed partner agreements with 
+<a href="http://www.wissel.net/blog/d6plinks/TANO-6N984N" target="_blank">cryptic thoughts</a>, here the conclusion. Linus Torvald said it in his keynote address during 1999' Lotus DevCon: "If you love somebody, set them free". I put in a lot of work in TAO Consulting over the last 6 years and it is time to set it free. Ms. Ida Cheong will take over as Managing Director, Pitt will run the Notes consulting arm, Dr. Magaret Tan continues the Business consulting, Christoph Schaaf will cover UMsys. The position for a sales director has three hot candidates (more once its closed). We recently signed partner agreements with 
 <a href="http://www.eworkplace.com.sg/" target="_blank">eWorkplace</a> and 
 <a href="http://www.cpucom.com/" target="_blank">CPUSoft</a> to resell our products, so expect more activities there. If you want to have your product represented in SE-Asia talk to the 
 <a href="mailto:contact@taoconsulting.sg">good folks</a> at TAO. 
-<br /> 
-<br />And I? Well think 
+<br> 
+<br>And I? Well think 
 <a href="http://www.lotusgeek.com/SapphireOak/LotusGeekBlog.nsf" target="_blank">Rock</a>, think 
 <a href="http://www.looseleaf.net/" target="_blank">Bob</a> 
-<br /> 
-<br />I will be the LTPA ....</div>
+<br> 
+<br>I will be the LTPA ....</div>
 					<hr />
  <a href="/blog/2006/03/if-you-love-somebody-set-them-free.html">Read more</a>
 					<p>
@@ -232,7 +232,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/if-you-love-somebody-set-them-free.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="If you love somebody, set them free"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/if-you-love-somebody-set-them-free.html";
+							var permaLink = "https://wissel.net/blog/2006/03/if-you-love-somebody-set-them-free.html";
 						</script>
 					</p>
 
@@ -242,9 +242,9 @@ categories:  <a href="/blog/categories/.html"></a>
 						<small><a href="/blog/2006/03/what-does-ltpa-stand-for.html">What does LTPA stand for?</a></small>
 					</h1>
 					<hr />
-					<div><p>Is there is another meaning besides &quot;Lightweight Third Party Authentication&quot;?</p> 
+					<div><p>Is there is another meaning besides "Lightweight Third Party Authentication"?</p> 
 <p>What is your take?</p> 
-<p><img src="http://www.wissel.net/blog/emoticons/DLYH-5MZVLY/$File/smile.gif" /> stw&nbsp;</p></div>
+<p><img src="http://www.wissel.net/blog/emoticons/DLYH-5MZVLY/$File/smile.gif"> stw&nbsp;</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -256,7 +256,7 @@ categories:  <a href="/blog/categories/.html"></a>  <a href="/blog/categories/.h
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/what-does-ltpa-stand-for.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="What does LTPA stand for?"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/what-does-ltpa-stand-for.html";
+							var permaLink = "https://wissel.net/blog/2006/03/what-does-ltpa-stand-for.html";
 						</script>
 					</p>
 
@@ -269,12 +269,12 @@ categories:  <a href="/blog/categories/.html"></a>  <a href="/blog/categories/.h
 					<div>There is a document called 
 <a href="http://www.rfc-ignorant.org/rfcs/rfc2142.php" target="_blank" title="RFC2142 with relevant text highlight">RFC2142</a>. This RFC defines some standard email addresses every provider is supposed to implement 
 <b>monitor and attend to</b>. Names like hostmaster, abuse etc. You would expect, that a very big provider would implement them to be a good net-citizen. Not so here: 
-<br /> 
-<br /> 
-<br /> 
-<i>Dear Stephan H. Wissel, <br /><br /> Emails sent directly to our mailbox are no longer attended to with <br /> immediate effect. Please use the online form at <br /> http://www.singnet.com.sg/tou/misc/ia_incidentreport.asp to submit your <br /> Internet Abuse Incident Report. <br /> <br /> For more information on Internet Security, please visit our website at <br /> http://www.singnet.com.sg/tou/security.asp <br /> <br /> We wish you a pleasant day ahead!<br /> <br /> <br /> Yours sincerely, <br /> SingNet Internet Security Team <br /> (this is a system automated reply)<br /> <br /> SingNet Homepage - http://www.singnet.com.sg<br /> Internet Security - http://www.singnet.com.sg/tou/security.asp<br /> </i> 
-<br /> &lt;rant&gt; !@#$%^&amp; 
-<br /> So when you just forward a virus message nicely with all headers, so they can notify the poor soul and rescue it, you get told: no we won't help unless you accommodate our process, that is in violation of internet standards. Hhm. Time for the ICT regulators to step forward and have a nice roster of fines for 
+<br> 
+<br> 
+<br> 
+<i>Dear Stephan H. Wissel, <br><br> Emails sent directly to our mailbox are no longer attended to with <br> immediate effect. Please use the online form at <br> http://www.singnet.com.sg/tou/misc/ia_incidentreport.asp to submit your <br> Internet Abuse Incident Report. <br> <br> For more information on Internet Security, please visit our website at <br> http://www.singnet.com.sg/tou/security.asp <br> <br> We wish you a pleasant day ahead!<br> <br> <br> Yours sincerely, <br> SingNet Internet Security Team <br> (this is a system automated reply)<br> <br> SingNet Homepage - http://www.singnet.com.sg<br> Internet Security - http://www.singnet.com.sg/tou/security.asp<br> </i> 
+<br> &lt;rant&gt; !@#$%^&amp; 
+<br> So when you just forward a virus message nicely with all headers, so they can notify the poor soul and rescue it, you get told: no we won't help unless you accommodate our process, that is in violation of internet standards. Hhm. Time for the ICT regulators to step forward and have a nice roster of fines for 
 <b>negligence</b>. An ISP should be held responsible for maleware traffic leaving their network. &lt;/rant&gt;</div>
 					<hr />
 					<p>
@@ -287,7 +287,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/hello-singnet-ever-heard-of-rfc2142.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Hello Singnet, ever heard of RFC2142?"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/hello-singnet-ever-heard-of-rfc2142.html";
+							var permaLink = "https://wissel.net/blog/2006/03/hello-singnet-ever-heard-of-rfc2142.html";
 						</script>
 					</p>
 
@@ -299,7 +299,7 @@ categories:  <a href="/blog/categories/.html"></a>
 					<hr />
 					<div>... there is hope: head over to the 
 <a href="http://emptybottle.org/bullshit/" title="Valuable phrases for Web 2.0 entrepreneurs" target="_blank">Web 2.0 Bullshit Generator</a> 
-<br /> via 
+<br> via 
 <a href="http://www.vowe.net/" title="Volker Weber's site" target="_blank">vowe</a></div>
 					<hr />
 					<p>
@@ -312,7 +312,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/if-you-are-short-of-web-20-vocabulary.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="If you are short of Web 2.0 vocabulary..."></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/if-you-are-short-of-web-20-vocabulary.html";
+							var permaLink = "https://wissel.net/blog/2006/03/if-you-are-short-of-web-20-vocabulary.html";
 						</script>
 					</p>
 
@@ -323,7 +323,7 @@ categories:  <a href="/blog/categories/.html"></a>
 					</h1>
 					<hr />
 					<div>I did some clean-up in my paper files and realized how time flies Twenty years ago I completed my internship with IBM. I still wonder till today why they took in a law school student as intern. Ten years ago I designed the new UI for UMsys which has stood the test of time since then (of course with the help of some facial and plenty of make-up). Nine years ago I became a CLP. Eight years ago I married into the adventure of an Intercultural relationship. Six years ago I moved to Singapore, became a father and started TAO Consulting. Three years ago I spoke on my first public conference. Last year I spoke for the first time on conferences in Iran, Vietnam, Pakistan and China. Two month ago I spoke for the first time on Lotusphere. 
-<br />More first time events are ahead. Stay tuned.</div>
+<br>More first time events are ahead. Stay tuned.</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -335,7 +335,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/sunday-thoughts.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Sunday thoughts"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/sunday-thoughts.html";
+							var permaLink = "https://wissel.net/blog/2006/03/sunday-thoughts.html";
 						</script>
 					</p>
 
@@ -357,7 +357,7 @@ categories:  <a href="/blog/categories/.html"></a>  <a href="/blog/categories/.h
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/who-had-that-ajax-address-dialogue.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Who had that Ajax address dialogue?"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/who-had-that-ajax-address-dialogue.html";
+							var permaLink = "https://wissel.net/blog/2006/03/who-had-that-ajax-address-dialogue.html";
 						</script>
 					</p>
 
@@ -379,7 +379,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/big-news-ahead.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Big news ahead"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/big-news-ahead.html";
+							var permaLink = "https://wissel.net/blog/2006/03/big-news-ahead.html";
 						</script>
 					</p>
 
@@ -390,12 +390,12 @@ categories:  <a href="/blog/categories/.html"></a>
 					</h1>
 					<hr />
 					<div>A short, sweet and controversial tip today: how to name your servers. When Notes entered the market, the predominant network protocols were NetBui/Netbios and IPX/SPX. Beside that Apple Talk, Banyan Vines and some inferior protocol called TCP/IP were supported. Naturally that Notes server discovery ran primarily via Netbios. Fast forward to today. Hands up: who has anything else than TCP/IP in production to link Notes clients to Domino servers? No one - good. 
-<br /> One of biggest support issues (by number of cases), especially when you have travelling folks, is to get the clients connected to the server. We all fiddle with pushing connection documents, keeping them updated etc. On the same time we already run a proper naming service for our servers: DNS. When a client tries to connect to a server it uses the server name and shouts into the network: &quot;Are you there?&quot;. The you in this case is the server's common name. In a properly configured Intranet DNS or Netbios will resolve &quot;myserver&quot; to 10.34.12.45 (or whatever your IP might be). In the &quot;wild&quot; that won't work, so you have to resort to connection documents. Unless of course you didn't name your server myserver/servers/myorg but 
+<br> One of biggest support issues (by number of cases), especially when you have travelling folks, is to get the clients connected to the server. We all fiddle with pushing connection documents, keeping them updated etc. On the same time we already run a proper naming service for our servers: DNS. When a client tries to connect to a server it uses the server name and shouts into the network: "Are you there?". The you in this case is the server's common name. In a properly configured Intranet DNS or Netbios will resolve "myserver" to 10.34.12.45 (or whatever your IP might be). In the "wild" that won't work, so you have to resort to connection documents. Unless of course you didn't name your server myserver/servers/myorg but 
 <b>myserver.mycorp.com</b>/servers/myorg. 
-<br /> We tried that in a number of cases: 
-<b>Naming your server after its full qualified DNS entry will prevent most &quot;server not found&quot; issues</b>. 
-<br /> Of course your mileage might vary: If your internal DNS is not well administrated or subject to constant change you will open just another can of worms. 
-<br /> So when you setup the next server(s) have a long chat with your DNS guys first.</div>
+<br> We tried that in a number of cases: 
+<b>Naming your server after its full qualified DNS entry will prevent most "server not found" issues</b>. 
+<br> Of course your mileage might vary: If your internal DNS is not well administrated or subject to constant change you will open just another can of worms. 
+<br> So when you setup the next server(s) have a long chat with your DNS guys first.</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -407,7 +407,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/what-is-in-a-server-name.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="What is in a server name?"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/what-is-in-a-server-name.html";
+							var permaLink = "https://wissel.net/blog/2006/03/what-is-in-a-server-name.html";
 						</script>
 					</p>
 
@@ -419,8 +419,8 @@ categories:  <a href="/blog/categories/.html"></a>
 					<hr />
 					<div>We have a new member in our IT Zoo. A nice Sony VGN-A17GP laptop. After reinstalling the OS from the rescue disk and one gazillion patches there was the question of Antivirus/Firewall. Since the desktop runs happily with 
 <a href="http://www.zonelabs.com/" target="_blank">Zonealam</a> pro with Antivirus I wanted to order a licence for the Laptop too. To confuse me product is now called ZoneAlarm Suite and ZoneAlarm Pro doesn't come with Anti-Virus. Before breakfast I only skimp pages and I promptly spend 50 bucks on the wrong product. 
-<br /> So I headed to the customer feedback page, actually not expecting much, but to my surprise after they had their breakfast I got a mail stating, that they refunded my purchase and I'm free to order what I originally intended to do. 
-<br /> 
+<br> So I headed to the customer feedback page, actually not expecting much, but to my surprise after they had their breakfast I got a mail stating, that they refunded my purchase and I'm free to order what I originally intended to do. 
+<br> 
 <b>Well done Zonelabs!</b></div>
 					<hr />
 					<p>
@@ -433,7 +433,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/when-you-buy-software-before-breakfast-zonelabs-is-a-good-shop.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="When you buy software before breakfast, Zonelabs is a good shop"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/when-you-buy-software-before-breakfast-zonelabs-is-a-good-shop.html";
+							var permaLink = "https://wissel.net/blog/2006/03/when-you-buy-software-before-breakfast-zonelabs-is-a-good-shop.html";
 						</script>
 					</p>
 
@@ -444,39 +444,39 @@ categories:  <a href="/blog/categories/.html"></a>
 					</h1>
 					<hr />
 					<div>I'm not and admin buff, so I try to keep time spending in administration short. Management of groups for security purposes can be a drag on your administrative time. Since Notes basically let you do whatever you want, I find a lot of organic grown group structures. These are hard to maintain and often confusing. So over the years we refined a group structure, that is easy to understand as well as processable through code. The groups consist of three semantic elements connected by a dot: 
-<br /> 
-<br />&amp;domainname dot metagroup dot purpose 
-<br /> 
-<br />Some examples: 
-<br /> 
-<br />&amp;mycorp.sys.accessserver 
-<br />&amp;mycorp.sys.server01.signagents 
-<br />&amp;mycorp.sys.denyaccess 
-<br /> 
-<br />&amp;yourcorp.apps.leave.administrator 
-<br />&amp;mycorp.apps.leave.support 
-<br />&amp;theircorp.apps.news.users 
-<br /> 
-<br /> 
+<br> 
+<br>&amp;domainname dot metagroup dot purpose 
+<br> 
+<br>Some examples: 
+<br> 
+<br>&amp;mycorp.sys.accessserver 
+<br>&amp;mycorp.sys.server01.signagents 
+<br>&amp;mycorp.sys.denyaccess 
+<br> 
+<br>&amp;yourcorp.apps.leave.administrator 
+<br>&amp;mycorp.apps.leave.support 
+<br>&amp;theircorp.apps.news.users 
+<br> 
+<br> 
 <b>&amp;domainname</b> stands for your domain name or a sensible abbreviation of it. 
-<br /> 
+<br> 
 <b>metagroup</b> can be either 
 <i>sys</i> for system group (e.g. server access) or 
 <i>apps</i> for applications 
-<br /> 
+<br> 
 <b>purpose </b>can be composed out of one or more sub-elements. In the system metagroup it would be either an access role 
 <i>.createdatabase </i>or a servername with an access role 
 <i>x34za.denyaccess</i>. In the application metagroup it always will be the name of the application and the application function. . 
 <i>leave.hr</i> 
 <i>.po.manager</i> etc. Depending on your organization's size you might want to tweak the structure rules for the best fit (&lt;advertisement&gt;if in doubt ask 
 <a href="http://www.taoconsulting.sg/" target="_blank">TAO</a> for consulting services&lt;/advertisement&gt;). Keep in mind to stick to the maximum length of 64 characters 
-<br /> 
-<br />The structure has a number of advantages: 
-<br /> 
+<br> 
+<br>The structure has a number of advantages: 
+<br> 
 <ol> 
  <li value="1">Using the # in front makes sure the groups are not mixed with user names or mail-group names in the address dialogue </li> 
  <li value="2">Having the domain (or a sensible abbreviation of it) in front eases the maintenance of ACL of databases and templates that get replicated across domains (e.g. from system integrator to customer) </li> 
- <li value="3">The structure allows for easy parsing. E.g. a server document must only contain groups that have .sys. in the second position. A ACL can only contain groups that carry the application name in third position. We typically use a registration database where all databases are configured with their &quot;application name&quot; to a acl scanner can find inconsistencies </li> 
+ <li value="3">The structure allows for easy parsing. E.g. a server document must only contain groups that have .sys. in the second position. A ACL can only contain groups that carry the application name in third position. We typically use a registration database where all databases are configured with their "application name" to a acl scanner can find inconsistencies </li> 
  <li value="4">We typically add a #mycorp.apps.NameOfTheApp.support group with designer rights to every database. The group is empty. When there is a need for troubleshooting a workflow process will add the developer to this group for a specified time frame. This way we avoid the two pitfalls in security: giving developers full admin rights or giving them permanent developer access to production databases </li> 
  <li value="5">Since group names for applications are well defined you can use the application registration database for some kind of self service, where the business owner of a database grants access to a user by filling in a form and a background agent is updating the Domino directory. You can have as much audit trail and workflow as your auditors need to see. </li> 
  <li value="6">ACL structures can be fine granular and well defined at the same time. E.g. you can enforce (and scan) rules like: If it is not a mail file, there must not be a person entry. Every database needs a support group with designer access (the structure would determine the exact name). etc.</li> 
@@ -494,7 +494,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/bring-order-to-your-group-names.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Bring order to your group names"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/bring-order-to-your-group-names.html";
+							var permaLink = "https://wissel.net/blog/2006/03/bring-order-to-your-group-names.html";
 						</script>
 					</p>
 
@@ -508,7 +508,7 @@ categories:  <a href="/blog/categories/.html"></a>
 <a href="http://www.itsc.org.sg/" target="_blank" title="Information Technologies Standards Committee Singapore">ITSC</a>. After introducing the XForms concepts I will show how the 
 <a href="http://www.orbeon.com/software/get-excited" target="_blank" title="More information about the Orbeon XForms implementation">Orbeon Presentation Server</a> allows for easy implementation of a server side forms processing application. Get the 
 <a href="http://www.itsc.org.sg/events/coming_talks_seminars_briefings.html" target="_blank">full details here</a>. 
-<br /> If you are free in the afternoon -- and free -- join me at Tower Three #14-00 Suntec City in the multipurpose hall of 
+<br> If you are free in the afternoon -- and free -- join me at Tower Three #14-00 Suntec City in the multipurpose hall of 
 <a href="http://www.ida.gov.sg/" target="_blank" title="The InfoCom Development Authority Singapore">IDA</a>.</div>
 					<hr />
 					<p>
@@ -521,7 +521,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/xforms-putting-your-form-processing-on-steroids.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="XForms - Putting your form processing on steroids"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/xforms-putting-your-form-processing-on-steroids.html";
+							var permaLink = "https://wissel.net/blog/2006/03/xforms-putting-your-form-processing-on-steroids.html";
 						</script>
 					</p>
 
@@ -533,9 +533,9 @@ categories:  <a href="/blog/categories/.html"></a>
 					<hr />
 					<div>Singapore's educational system is modelled after the British one. Actually is modelled 
 <i>by</i> &nbsp;the British. So we have primary schools, secondary schools, college and universities (and a few other things). Schools compete with each other and put a huge effort in branding themselves (mostly with bright students and good Alumni connections). Back in Germany the Primary Schools don't do that and you simply go to the nearest one. So I felt a little helpless when we had to select one for Anthony and Ernest. They will go to Primary one in 2007, so selection had to be done now to be able to take the needed action. 
-<br />We decided on the 
+<br>We decided on the 
 <a href="http://www.northlandpri.moe.edu.sg/" target="_blank">Northland Primary School</a>. It has a decent reputation and is not too far away from where we stay. Admission to the school is regulated by a (at least for me) confusing set of rules about school distance, siblings in school, Alumni connection and parent contribution. Since we just live outside the 1km circle of practically sure admission we had to opt for scheme 2b. That means voluntary work of the parents. This doesn't guarantee admission, but increases the chances. 
-<br />Until today all of the hours have been contributed by my wife. Today was my turn. The school was organizing a sports day with many station where the students had to exercise. My station was basketball. So 300 kids had 3 turns each to score. Balls were flying in all directions and I had fun doing 900 times catch the ball and throw it back. I definitely can skip my gym session tonight. There might be photos up on the 
+<br>Until today all of the hours have been contributed by my wife. Today was my turn. The school was organizing a sports day with many station where the students had to exercise. My station was basketball. So 300 kids had 3 turns each to score. Balls were flying in all directions and I had fun doing 900 times catch the ball and throw it back. I definitely can skip my gym session tonight. There might be photos up on the 
 <a href="http://www.nps-champs.org/" target="_blank">parent volunteers website</a>.</div>
 					<hr />
 					<p>
@@ -548,7 +548,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/volunteering-at-northland-primary-school.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Volunteering at Northland Primary School"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/volunteering-at-northland-primary-school.html";
+							var permaLink = "https://wissel.net/blog/2006/03/volunteering-at-northland-primary-school.html";
 						</script>
 					</p>
 
@@ -559,45 +559,45 @@ categories:  <a href="/blog/categories/.html"></a>
 					</h1>
 					<hr />
 					<div>After last weeks flight level 500 contribution I'd like to dive right into some code today. The task at hand: visualize a date range in a calendar like display with weekends and special days (e.g. Holidays) marked differently. A leave application or a travel approval system would be typical examples where that comes in handy. Do not use any Lotus Script or Java or JavaScript. OK and no C/C++ either. So the tools at hand are @Formula, HTML and CSS: 
-<br /> 
-<br /> Let us assume, that the two fields holding the start and the end date are: 
+<br> 
+<br> Let us assume, that the two fields holding the start and the end date are: 
 <code>LeaveStart</code> and 
 <code>LeaveEnd</code>. 
-<br /> Create one field, Type date, name Datelist, multivalue enabled, computed, Formula: 
-<code>@Explode(@TextToTime(@Text(@Date(LeaveStart))+&quot;-&quot;+@Text(@Date(LeaveEnd)</code>))) 
-<br /> Another field 
+<br> Create one field, Type date, name Datelist, multivalue enabled, computed, Formula: 
+<code>@Explode(@TextToTime(@Text(@Date(LeaveStart))+"-"+@Text(@Date(LeaveEnd)</code>))) 
+<br> Another field 
 <code>dHolidays</code> contains all the special days as Text list. 
-<br /> 
-<br /> The surrounding code for the display looks like this: 
-<br /> 
+<br> 
+<br> The surrounding code for the display looks like this: 
+<br> 
 <pre class="brush: xml"> 
  &lt;table width=100% border=0 cellpadding=2 cellspacing=2 bgcolor=#DDDDFF class=leavecal&gt;
     &lt;tr&gt;&lt;th colspan=7&gt;Overview days for this request&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;
     &lt;tr&gt;<b>[dLeaveCal]</b>&lt;/tr&gt;
 &lt;/table&gt;
  </pre> 
-<br /> The code in the computed for display text field [dLeaveCal] looks like this: 
-<br /> 
+<br> The code in the computed for display text field [dLeaveCal] looks like this: 
+<br> 
 <pre class="brush: text"> 
 REM {Hodidays in Red; Weekends in Green; Leave in Blue};
-tmpColWeekend := &quot;weekend&quot;;
+tmpColWeekend := "weekend";
 tmpNumHolidays := @If(@Elements(dHolidays)&lt;1;1;@Elements(dHolidays));
-tmpColHoliday := @Trim(@Explode(@Repeat(&quot;holiday!&quot;;tmpNumHolidays);&quot;!&quot;));
-tmpColLeave := &quot;leaveday&quot;;
+tmpColHoliday := @Trim(@Explode(@Repeat("holiday!";tmpNumHolidays);"!"));
+tmpColLeave := "leaveday";
 tmpdays := @TextToTime(datelist);
 tmpWeekdays := @Text(@Weekday(tmpdays));
 tmpFirstWeekday := @TextToNumber(@Subset(tmpWeekdays;1));
-leadString := @If(tmpFirstWeekday=2;&quot;&quot;;tmpFirstWeekday=1;&quot;&lt;td colspan=6&gt;&amp;nbsp;&lt;/td&gt;&quot;;&quot;&lt;td colspan=&quot;+@Text(tmpFirstWeekday-2)+&quot;&gt;&amp;nbsp;&lt;/td&gt;&quot;);
-tmpWdNames := @Replace(tmpWeekdays;&quot;1&quot;:&quot;2&quot;:&quot;3&quot;:&quot;4&quot;:&quot;5&quot;:&quot;6&quot;:&quot;7&quot;;&quot;Sun&quot;:&quot;Mon&quot;:&quot;Tue&quot;:&quot;Wed&quot;:&quot;Thu&quot;:&quot;Fri&quot;:&quot;Sat&quot;);
+leadString := @If(tmpFirstWeekday=2;"";tmpFirstWeekday=1;"&lt;td colspan=6&gt;&amp;nbsp;&lt;/td&gt;";"&lt;td colspan="+@Text(tmpFirstWeekday-2)+"&gt;&amp;nbsp;&lt;/td&gt;");
+tmpWdNames := @Replace(tmpWeekdays;"1":"2":"3":"4":"5":"6":"7";"Sun":"Mon":"Tue":"Wed":"Thu":"Fri":"Sat");
 tmpbgcolstep1 := @Replace(datelist;dHolidays;tmpColHoliday);
 tmpbgcolstep2 := @Replace(tmpbgcolstep1;datelist;tmpWeekdays);
-tmpbgcolstep3 :=@Replace(tmpbgcolstep2;&quot;1&quot;:&quot;2&quot;:&quot;3&quot;:&quot;4&quot;:&quot;5&quot;:&quot;6&quot;:&quot;7&quot;;tmpColWeekend:tmpColLeave:tmpColLeave:tmpColLeave:tmpColLeave:tmpColLeave:tmpColWeekend);
-tmplinkebreak :=@Replace(tmpWeekdays;&quot;1&quot;:&quot;2&quot;:&quot;3&quot;:&quot;4&quot;:&quot;5&quot;:&quot;6&quot;:&quot;7&quot;;&quot;&lt;/tr&gt;&lt;tr&gt;&quot;:&quot;&quot;);
-leadString+@Implode(&quot;&lt;td class=&quot;+tmpbgcolstep3+&quot;&gt;&quot;+tmpWdNames+&quot;&lt;br /&gt;&quot;+@Text(datelist)+&quot;&lt;/td&gt;&quot;+tmplinkebreak;&quot; &quot;)+
-&quot;&lt;/tr&gt;&lt;tr&gt;&lt;td &nbsp;colspan=3 class=&quot;+tmpColLeave+&quot;&gt;Leave days&lt;/td&gt;&lt;td &nbsp;colspan=2 class=&quot;+@Subset(tmpColHoliday;1)+&quot;&gt;Public Holiday (if any)&lt;/td&gt;&lt;td colspan=2 class=&quot;+tmpColWeekend+&quot;&gt;Weekend&lt;/td&gt;&quot;
+tmpbgcolstep3 :=@Replace(tmpbgcolstep2;"1":"2":"3":"4":"5":"6":"7";tmpColWeekend:tmpColLeave:tmpColLeave:tmpColLeave:tmpColLeave:tmpColLeave:tmpColWeekend);
+tmplinkebreak :=@Replace(tmpWeekdays;"1":"2":"3":"4":"5":"6":"7";"&lt;/tr&gt;&lt;tr&gt;":"");
+leadString+@Implode("&lt;td class="+tmpbgcolstep3+"&gt;"+tmpWdNames+"&lt;br /&gt;"+@Text(datelist)+"&lt;/td&gt;"+tmplinkebreak;" ")+
+"&lt;/tr&gt;&lt;tr&gt;&lt;td &nbsp;colspan=3 class="+tmpColLeave+"&gt;Leave days&lt;/td&gt;&lt;td &nbsp;colspan=2 class="+@Subset(tmpColHoliday;1)+"&gt;Public Holiday (if any)&lt;/td&gt;&lt;td colspan=2 class="+tmpColWeekend+"&gt;Weekend&lt;/td&gt;"
  </pre> 
-<br /> You need to figure out some CSS for the classes: 
-<br /> 
+<br> You need to figure out some CSS for the classes: 
+<br> 
 <pre class="brush: css">
 .holiday { font-size : xx-small;
                background-color: #FFCCCC;
@@ -612,9 +612,9 @@ leadString+@Implode(&quot;&lt;td class=&quot;+tmpbgcolstep3+&quot;&gt;&quot;+tmp
                    border : 1px solid #00FF00; 
 }
  </pre> 
-<br /> The result will look like this (look Ma, no JS): 
-<br /> 
-<img src="/blog/images/2014/weekcalendar.gif" border="0" width="607" height="114" alt="Display of a date range in HTML" /></div>
+<br> The result will look like this (look Ma, no JS): 
+<br> 
+<img src="/blog/images/2014/weekcalendar.gif" border="0" width="607" height="114" alt="Display of a date range in HTML"></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -626,7 +626,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/visualizing-a-date-range.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Visualizing a Date Range"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/visualizing-a-date-range.html";
+							var permaLink = "https://wissel.net/blog/2006/03/visualizing-a-date-range.html";
 						</script>
 					</p>
 
@@ -636,16 +636,16 @@ categories:  <a href="/blog/categories/.html"></a>
 						<small><a href="/blog/2006/03/i-could-use-a-little-help-from-an-nsis-expert.html">I could use a little help from an NSIS expert</a></small>
 					</h1>
 					<hr />
-					<div>DominoWebDAV 0.1 will be up soon. Part of the application is a little helper application, that knows how to deal with the webdav:// protocol. As &quot;good citizens&quot; we want to make the information available, that the helper is installed by amending the user_agent string in the browser. We add something, not alter, so the typical browser sniffing scripts won't break (Note to all who still use them: start sniffing the DOM). 
-<br /> In Internet Explorer the user_agent extension are defined by a registry entry (This is e.g. how IE/IIS &quot;knows&quot; that a .net runtime is installed): 
-<br /> 
-<code> HKLM &quot;Software\Microsoft\Windows\CurrentVersion\Internet Settings\5.0\User Agent\Post Platform&quot; &quot;Some funny string&quot; </code> All entries here end up in the user_agent. In Firefox it is a little trickier: the following steps are needed: 
+					<div>DominoWebDAV 0.1 will be up soon. Part of the application is a little helper application, that knows how to deal with the webdav:// protocol. As "good citizens" we want to make the information available, that the helper is installed by amending the user_agent string in the browser. We add something, not alter, so the typical browser sniffing scripts won't break (Note to all who still use them: start sniffing the DOM). 
+<br> In Internet Explorer the user_agent extension are defined by a registry entry (This is e.g. how IE/IIS "knows" that a .net runtime is installed): 
+<br> 
+<code> HKLM "Software\Microsoft\Windows\CurrentVersion\Internet Settings\5.0\User Agent\Post Platform" "Some funny string" </code> All entries here end up in the user_agent. In Firefox it is a little trickier: the following steps are needed: 
 <ol> 
  <li>Is Firefox installed?</li> 
  <li>Locate the profile directory (per user)</li> 
  <li>Read the profiles.ini and locate the current user profile</li> 
  <li>Look for the file user.js, create it if missing</li> 
- <li>Add the line <code> user_pref(&quot;general.useragent.extra.funnySoftware&quot;, &quot;Some funny string&quot;); </code> if missing</li> 
+ <li>Add the line <code> user_pref("general.useragent.extra.funnySoftware", "Some funny string"); </code> if missing</li> 
 </ol> I managed to get the part with the Registry going, but I could need some help on the Firefox part. Any takers?</div>
 					<hr />
 					<p>
@@ -658,7 +658,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/i-could-use-a-little-help-from-an-nsis-expert.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="I could use a little help from an NSIS expert"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/i-could-use-a-little-help-from-an-nsis-expert.html";
+							var permaLink = "https://wissel.net/blog/2006/03/i-could-use-a-little-help-from-an-nsis-expert.html";
 						</script>
 					</p>
 
@@ -680,7 +680,7 @@ categories:  <a href="/blog/categories/.html"></a>  <a href="/blog/categories/.h
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/lotus-notes-in-calgary/canada-anyone.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Lotus Notes in Calgary/Canada anyone?"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/lotus-notes-in-calgary/canada-anyone.html";
+							var permaLink = "https://wissel.net/blog/2006/03/lotus-notes-in-calgary/canada-anyone.html";
 						</script>
 					</p>
 
@@ -691,10 +691,10 @@ categories:  <a href="/blog/categories/.html"></a>  <a href="/blog/categories/.h
 					</h1>
 					<hr />
 					<div>I'm generally open to have guest entries here. However it would be a clever idea to ask me instead of trying to log in. The IPs are logged, so I can find out who you are. 
-<br />Special note to the Singaporean subset of you. Can you spell 
+<br>Special note to the Singaporean subset of you. Can you spell 
 <a href="http://agcvldb4.agc.gov.sg/" target="_blank" title="Singapore legislation">Computer Misuse Act</a>? 
-<br /> 
-<br /> I'm not amused.</div>
+<br> 
+<br> I'm not amused.</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -706,7 +706,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/to-the-gentlemen-who-use-storyopenform-on-my-blog.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="To the gentlemen (?) who use story?OpenForm on my blog"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/to-the-gentlemen-who-use-storyopenform-on-my-blog.html";
+							var permaLink = "https://wissel.net/blog/2006/03/to-the-gentlemen-who-use-storyopenform-on-my-blog.html";
 						</script>
 					</p>
 
@@ -717,25 +717,25 @@ categories:  <a href="/blog/categories/.html"></a>
 					</h1>
 					<hr />
 					<div>I was asked recently to sum up the strongest points about Lotus Domino. This is what I came up with: 
-<br /> 
-<br />Lotus Domino is an integrated communication platform, that features email, instant messaging, collaboration and an application development platform. Its strongest points are self-containment, robustness, scalability, freedom of platform choice, security, extensibility, low cost of ownership and IBM's commitment. 
-<br /> 
-<br /> 
+<br> 
+<br>Lotus Domino is an integrated communication platform, that features email, instant messaging, collaboration and an application development platform. Its strongest points are self-containment, robustness, scalability, freedom of platform choice, security, extensibility, low cost of ownership and IBM's commitment. 
+<br> 
+<br> 
 <b>Self-containment</b>: Domino is not dependent on external applications other than the operating system and the network. While MS Exchange depends on Active Directory and Novell Groupwise on Novell's eDirectory, Domino provides it's own directory that also can serve as an LDAP directory for other applications. Due to the lack of external dependencies Domino servers can be moved from one platform to another with ease and low effort. More important: Running Domino does not require a bundle of different products and product skills. When comparing Domino's capabilities with Microsoft's offerings, you would need multiple Microsoft products to cover all Domino functionality: MS Active Directory, MS Exchange, MS Sharepoint, MS Life Connection Server and MS SQL. 
-<br /> 
-<br /> 
-<b>Robustness</b>: Domino uses individual databases for every mail user. The databases can synchronized (&quot;replicated&quot; in Notes lingo) between multiple servers and clients. Therefore Domino is very resilient against failures on one server or in one database. Combined with the active clustering and the choice of platforms a Domino system can be build with practical no perceivable downtime. 
-<br /> 
-<br /> 
+<br> 
+<br> 
+<b>Robustness</b>: Domino uses individual databases for every mail user. The databases can synchronized ("replicated" in Notes lingo) between multiple servers and clients. Therefore Domino is very resilient against failures on one server or in one database. Combined with the active clustering and the choice of platforms a Domino system can be build with practical no perceivable downtime. 
+<br> 
+<br> 
 <b>Scalability and platform choice</b>: Domino is available on multiple platforms from Windows, Linux, Unix to z/OS. It provides cross-platform clustering and load balancing. An investment into a Domino cluster for high availability is paid back with better response times due to the load balancing functionality. IBM has provided benchmarks on notesbench.org where a single iSeries server supports 100,000 concurrent mail users. &nbsp;However the most interesting aspect of the multi-platform availability is the possibility running Domino servers on different operating systems than the clients, thus providing a natural infection barrier for viruses and maleware. The platform choice doesn't stop with the servers. eMail and data stored in Domino can be accessed by a wealth of clients and protocols, giving the customer the freedom to pick the desktop (email) application of their choice: Lotus Notes Clients, IBM Workplace, MS Outlook, POP3/IMAP4 clients like Mozilla Thunderbird or web mail via a browser. 
-<br /> 
-<br /> 
+<br> 
+<br> 
 <b>Security</b>: Domino's granular access control to email, calendar and Domino applications is unique in the industry. Furthermore Domino provides digital signatures and encryption both in Domino's propriety format as well as the industry standard X509. Domino serves as the corporate PKI infrastructure, eliminating the need to invest into and introduce another technology for that. But there is more: Domino enables by design the lock-down of sensitive information, so even the system administrators could not retrieve it, so the data owners can be assured of data confidentiality. 
-<br /> 
-<br /> 
+<br> 
+<br> 
 <b>Extensibility</b>: Domino's mail design is completely open and can be customized to specific corporate needs. The OpenNTF open source community provides an free alternative to IBM's own design with enhanced functions putting pressure on IBM to constantly innovate. Besides eMail Domino features a platform for collaborative applications like discussion boards, blogs, wikis, CMS, CRM and a huge selection of open source or commercial applications. The latest version of Domino makes all this available as web services, in fact turning Domino into a pilar of a SOA strategy. Since the application share the platform with messaging they integrate well with email and allow the creation of an corporate unified information backbone. 
-<br /> 
-<br /> 
+<br> 
+<br> 
 <b>Low cost of ownership and IBM's commitment</b>: a well configured Domino platform takes advantage of the policy based administration, that minimizes administrative efforts through a set of comprehensive rules. In the latest release IBM also added a comprehensive domain monitoring capability. All this frees up valuable time for administrators to manage their environment more proactive. IBM is the single vendor with the most detailed roadmap for it's messaging platform. The current version Domino 7 has been released a few month ago, nevertheless IBM has outlined plans for Domino version 8 and 9. This assures users of the Domino platform, that they are not in for any rip and replace upgrade any time soon.</div>
 					<hr />
 					<p>
@@ -748,7 +748,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2006/03/what-are-the-strongest-aspects-of-lotus-domino.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="What are the strongest aspects of Lotus Domino?"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2006/03/what-are-the-strongest-aspects-of-lotus-domino.html";
+							var permaLink = "https://wissel.net/blog/2006/03/what-are-the-strongest-aspects-of-lotus-domino.html";
 						</script>
 					</p>
 
@@ -797,75 +797,75 @@ categories:  <a href="/blog/categories/.html"></a>
 				<aside id="sidebar_categoriesArchive" class="well">
 					<ul class="nav nav-list">
 						<li class="nav-header">Categories</li>
-						<li ><a href="/blog/categories/After hours.html">after hours</a></li>
-						<li ><a href="/blog/categories/angular.js.html">angular.js</a></li>
-						<li ><a href="/blog/categories/Apache.html">apache</a></li>
-						<li ><a href="/blog/categories/Apex.html">apex</a></li>
-						<li ><a href="/blog/categories/Blog.html">blog</a></li>
-						<li ><a href="/blog/categories/Bluemix.html">bluemix</a></li>
-						<li ><a href="/blog/categories/Buddhakids.html">buddhakids</a></li>
-						<li ><a href="/blog/categories/Business.html">business</a></li>
-						<li ><a href="/blog/categories/Buying Broadband.html">buying broadband</a></li>
-						<li ><a href="/blog/categories/Cloud Computing.html">cloud computing</a></li>
-						<li ><a href="/blog/categories/Continuous integration.html">continuous integration</a></li>
-						<li ><a href="/blog/categories/CouchDB.html">couchdb</a></li>
-						<li ><a href="/blog/categories/Coursera.html">coursera</a></li>
-						<li ><a href="/blog/categories/Cycling.html">cycling</a></li>
-						<li ><a href="/blog/categories/DXLMagic.html">dxlmagic</a></li>
-						<li ><a href="/blog/categories/eLearning.html">elearning</a></li>
-						<li ><a href="/blog/categories/eMailComparison.html">emailcomparison</a></li>
-						<li ><a href="/blog/categories/Gone Phisching.html">gone phisching</a></li>
-						<li ><a href="/blog/categories/GTD.html">gtd</a></li>
-						<li ><a href="/blog/categories/IBM.html">ibm</a></li>
-						<li ><a href="/blog/categories/IBM - Lotus.html">ibm - lotus</a></li>
-						<li ><a href="/blog/categories/IBM Connections.html">ibm connections</a></li>
-						<li ><a href="/blog/categories/IBM Notes.html">ibm notes</a></li>
-						<li ><a href="/blog/categories/Intercultural.html">intercultural</a></li>
-						<li ><a href="/blog/categories/Java.html">java</a></li>
-						<li ><a href="/blog/categories/JavaScript.html">javascript</a></li>
-						<li ><a href="/blog/categories/Learning.html">learning</a></li>
-						<li ><a href="/blog/categories/Learningbox.html">learningbox</a></li>
-						<li ><a href="/blog/categories/Linux.html">linux</a></li>
-						<li ><a href="/blog/categories/Lotus.html">lotus</a></li>
-						<li ><a href="/blog/categories/Lotus Connections.html">lotus connections</a></li>
-						<li ><a href="/blog/categories/Lotus Notes.html">lotus notes</a></li>
-						<li ><a href="/blog/categories/Lotus Quickr.html">lotus quickr</a></li>
-						<li ><a href="/blog/categories/LotusLive.html">lotuslive</a></li>
-						<li ><a href="/blog/categories/Lotusphere2006.html">lotusphere2006</a></li>
-						<li ><a href="/blog/categories/Lotusphere2007.html">lotusphere2007</a></li>
-						<li ><a href="/blog/categories/Lotusphere2008.html">lotusphere2008</a></li>
-						<li ><a href="/blog/categories/Lotusphere2009.html">lotusphere2009</a></li>
-						<li ><a href="/blog/categories/Lotusphere2010.html">lotusphere2010</a></li>
-						<li ><a href="/blog/categories/Lotusphere2011.html">lotusphere2011</a></li>
-						<li ><a href="/blog/categories/Lotusphere2012.html">lotusphere2012</a></li>
-						<li ><a href="/blog/categories/Mac.html">mac</a></li>
-						<li ><a href="/blog/categories/Mobile.html">mobile</a></li>
+						<li ><a href="/blog/categories/afterhours.html">After hours</a></li>
+						<li ><a href="/blog/categories/angularjs.html">angular.js</a></li>
+						<li ><a href="/blog/categories/apache.html">Apache</a></li>
+						<li ><a href="/blog/categories/apex.html">Apex</a></li>
+						<li ><a href="/blog/categories/blog.html">Blog</a></li>
+						<li ><a href="/blog/categories/bluemix.html">Bluemix</a></li>
+						<li ><a href="/blog/categories/buddhakids.html">Buddhakids</a></li>
+						<li ><a href="/blog/categories/business.html">Business</a></li>
+						<li ><a href="/blog/categories/buyingbroadband.html">Buying Broadband</a></li>
+						<li ><a href="/blog/categories/cloudcomputing.html">Cloud Computing</a></li>
+						<li ><a href="/blog/categories/continuousintegration.html">Continuous integration</a></li>
+						<li ><a href="/blog/categories/couchdb.html">CouchDB</a></li>
+						<li ><a href="/blog/categories/coursera.html">Coursera</a></li>
+						<li ><a href="/blog/categories/cycling.html">Cycling</a></li>
+						<li ><a href="/blog/categories/dxlmagic.html">DXLMagic</a></li>
+						<li ><a href="/blog/categories/elearning.html">eLearning</a></li>
+						<li ><a href="/blog/categories/emailcomparison.html">eMailComparison</a></li>
+						<li ><a href="/blog/categories/gonephisching.html">Gone Phisching</a></li>
+						<li ><a href="/blog/categories/gtd.html">GTD</a></li>
+						<li ><a href="/blog/categories/ibm.html">IBM</a></li>
+						<li ><a href="/blog/categories/ibmconnections.html">IBM Connections</a></li>
+						<li ><a href="/blog/categories/ibmlotus.html">IBM - Lotus</a></li>
+						<li ><a href="/blog/categories/ibmnotes.html">IBM Notes</a></li>
+						<li ><a href="/blog/categories/intercultural.html">Intercultural</a></li>
+						<li ><a href="/blog/categories/java.html">Java</a></li>
+						<li ><a href="/blog/categories/javascript.html">JavaScript</a></li>
+						<li ><a href="/blog/categories/learning.html">Learning</a></li>
+						<li ><a href="/blog/categories/learningbox.html">Learningbox</a></li>
+						<li ><a href="/blog/categories/linux.html">Linux</a></li>
+						<li ><a href="/blog/categories/lotus.html">Lotus</a></li>
+						<li ><a href="/blog/categories/lotusconnections.html">Lotus Connections</a></li>
+						<li ><a href="/blog/categories/lotuslive.html">LotusLive</a></li>
+						<li ><a href="/blog/categories/lotusnotes.html">Lotus Notes</a></li>
+						<li ><a href="/blog/categories/lotusphere2006.html">Lotusphere2006</a></li>
+						<li ><a href="/blog/categories/lotusphere2007.html">Lotusphere2007</a></li>
+						<li ><a href="/blog/categories/lotusphere2008.html">Lotusphere2008</a></li>
+						<li ><a href="/blog/categories/lotusphere2009.html">Lotusphere2009</a></li>
+						<li ><a href="/blog/categories/lotusphere2010.html">Lotusphere2010</a></li>
+						<li ><a href="/blog/categories/lotusphere2011.html">Lotusphere2011</a></li>
+						<li ><a href="/blog/categories/lotusphere2012.html">Lotusphere2012</a></li>
+						<li ><a href="/blog/categories/lotusquickr.html">Lotus Quickr</a></li>
+						<li ><a href="/blog/categories/mac.html">Mac</a></li>
+						<li ><a href="/blog/categories/mobile.html">Mobile</a></li>
 						<li ><a href="/blog/categories/nginx.html">nginx</a></li>
-						<li ><a href="/blog/categories/NodeJS.html">nodejs</a></li>
-						<li ><a href="/blog/categories/NodeRED.html">nodered</a></li>
-						<li ><a href="/blog/categories/Nokia.html">nokia</a></li>
-						<li ><a href="/blog/categories/Omnisophie.html">omnisophie</a></li>
-						<li ><a href="/blog/categories/OpenSource.html">opensource</a></li>
-						<li ><a href="/blog/categories/Prototyping.html">prototyping</a></li>
-						<li ><a href="/blog/categories/Rotary.html">rotary</a></li>
-						<li ><a href="/blog/categories/Salesforce.html">salesforce</a></li>
-						<li ><a href="/blog/categories/Sametime.html">sametime</a></li>
-						<li ><a href="/blog/categories/Show-N-Tell Thursday.html">show-n-tell thursday</a></li>
-						<li ><a href="/blog/categories/Singapore.html">singapore</a></li>
-						<li ><a href="/blog/categories/SocialBusiness.html">socialbusiness</a></li>
-						<li ><a href="/blog/categories/Software.html">software</a></li>
-						<li ><a href="/blog/categories/SYWTBADD.html">sywtbadd</a></li>
-						<li ><a href="/blog/categories/Technology.html">technology</a></li>
-						<li ><a href="/blog/categories/Thoughts.html">thoughts</a></li>
-						<li ><a href="/blog/categories/Travel.html">travel</a></li>
-						<li ><a href="/blog/categories/Twins.html">twins</a></li>
-						<li ><a href="/blog/categories/UMsys.html">umsys</a></li>
-						<li ><a href="/blog/categories/vert.x.html">vert.x</a></li>
-						<li ><a href="/blog/categories/WebDevelopment.html">webdevelopment</a></li>
-						<li ><a href="/blog/categories/Workflow.html">workflow</a></li>
-						<li ><a href="/blog/categories/Writing Chinese.html">writing chinese</a></li>
-						<li ><a href="/blog/categories/XML.html">xml</a></li>
-						<li ><a href="/blog/categories/XPages.html">xpages</a></li>
+						<li ><a href="/blog/categories/nodejs.html">NodeJS</a></li>
+						<li ><a href="/blog/categories/nodered.html">NodeRED</a></li>
+						<li ><a href="/blog/categories/nokia.html">Nokia</a></li>
+						<li ><a href="/blog/categories/omnisophie.html">Omnisophie</a></li>
+						<li ><a href="/blog/categories/opensource.html">OpenSource</a></li>
+						<li ><a href="/blog/categories/prototyping.html">Prototyping</a></li>
+						<li ><a href="/blog/categories/rotary.html">Rotary</a></li>
+						<li ><a href="/blog/categories/salesforce.html">Salesforce</a></li>
+						<li ><a href="/blog/categories/sametime.html">Sametime</a></li>
+						<li ><a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a></li>
+						<li ><a href="/blog/categories/singapore.html">Singapore</a></li>
+						<li ><a href="/blog/categories/socialbusiness.html">SocialBusiness</a></li>
+						<li ><a href="/blog/categories/software.html">Software</a></li>
+						<li ><a href="/blog/categories/sywtbadd.html">SYWTBADD</a></li>
+						<li ><a href="/blog/categories/technology.html">Technology</a></li>
+						<li ><a href="/blog/categories/thoughts.html">Thoughts</a></li>
+						<li ><a href="/blog/categories/travel.html">Travel</a></li>
+						<li ><a href="/blog/categories/twins.html">Twins</a></li>
+						<li ><a href="/blog/categories/umsys.html">UMsys</a></li>
+						<li ><a href="/blog/categories/vertx.html">vert.x</a></li>
+						<li ><a href="/blog/categories/webdevelopment.html">WebDevelopment</a></li>
+						<li ><a href="/blog/categories/workflow.html">Workflow</a></li>
+						<li ><a href="/blog/categories/writingchinese.html">Writing Chinese</a></li>
+						<li ><a href="/blog/categories/xml.html">XML</a></li>
+						<li ><a href="/blog/categories/xpages.html">XPages</a></li>
 						<li class="nav-header">Archives</li>
 						<li ><a href="/blog/2003">2003</a></li>
 						<li ><a href="/blog/2004">2004</a></li>

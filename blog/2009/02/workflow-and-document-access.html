@@ -145,15 +145,15 @@ ga('send', 'pageview');
 					<h1><small>Workflow and Document Access</small></h1>
 					<hr />
 					<div>An interesting question arose in a discussion with a Korean customer this week. In that discussion I learned, that workflows are subject to a lot of cultural influences. Cultural influences come from the region as well as from the corporate culture. A typical requirement in workflow applications in AP: A user 
-<b>must not</b> see other workflow documents (vs. the more European: doesn't want to/doesn't need to). A &quot;must not&quot; requirement mandates the use of reader fields (with all its 
-<a href="/blog/d6plinks/SHWL-7KFP9S" title="Access protected Notes documents - RDBMS style">performance ramifications</a>) while a &quot;doesn't want to/doesn't need to&quot; requirement can be fulfilled with clever navigation (more on this in a later article). For good performance it is smart to use clever navigation in both cases. 
-<br /> When documents are protected by Reader Names, you typically find 3 types of entries in these reader fields: Full Names, Group Names and Roles. A Full Name (e.g. &quot;Roger Rabit/Toons/Warner Inc&quot; mostly stems from the users directly involved in the workflow like the requestor and the approvers, while groups and roles typically denote departments and/or business functions like warner.apps.controlling or [Audit] (I like 
+<b>must not</b> see other workflow documents (vs. the more European: doesn't want to/doesn't need to). A "must not" requirement mandates the use of reader fields (with all its 
+<a href="/blog/d6plinks/SHWL-7KFP9S" title="Access protected Notes documents - RDBMS style">performance ramifications</a>) while a "doesn't want to/doesn't need to" requirement can be fulfilled with clever navigation (more on this in a later article). For good performance it is smart to use clever navigation in both cases. 
+<br> When documents are protected by Reader Names, you typically find 3 types of entries in these reader fields: Full Names, Group Names and Roles. A Full Name (e.g. "Roger Rabit/Toons/Warner Inc" mostly stems from the users directly involved in the workflow like the requestor and the approvers, while groups and roles typically denote departments and/or business functions like warner.apps.controlling or [Audit] (I like 
 <a href="http://www.wissel.net/blog/d6plinks/SHWL-6MX9RW">structured group names</a>). When a user moves on to a new department or role (e.g. from engineering to 
 <a href="http://www.dilbert.com/strips/comic/2009-02-11/">collection</a>) (s)he would not be member of the respective groups and only will see workflow documents with direct involvement (The full name in a reader field). Depending on corporate culture that might or might not be acceptable. So what are the options to remove access for the user to these documents? What needs to be done is to make the entry in the reader field look different from the full name of that user. These options come to mind: 
 <ol> 
- <li>The organisation is using OU to specify the department of the users. The adminp/CA process is used to change the OU of the user moving to a new role. In this case the workflow database needs to be set not to touch names, reader or author fields. This is an advanced property in the ACL. The user name changes, the entry in the workflow database doesn't -&lt; read access is removed.<br /> <b>Caveat</b>: Of course NO name change would be reflected in the database thereafter, so after changing your family name in marriage your workflow documents would &quot;disappear&quot;</li> 
- <li>The organisation is not using OU or the adminp for other reasons *must* update the workflow database. In this case the content of the Reader field needs to be changed. Ideally the change of role would be governed by a <a href="http://www.hadsl.com/">capable tool</a>, so starting of the update agent can be automated. The agent would go through the workflow database and change the name of the user by prefix or appending an entry (like an OU): Roger Rabit/Toons/Warner Inc -&gt; Roger Rabit/RoleChange/Toons/Warner Inc.<br /> <b>Caveat</b>: You need to be very clear with the auditors about such an agent. Altering a workflow document might violate corporate governance standards. It is therefore a good idea to separate the fields storing the business logic from the &quot;access mechanic&quot;.... Which leads to the next option. </li> 
- <li>You need to change the application slightly. The field that computes the read access based on business logic would actually be a names field. You have another names field &quot;DocReadersRemoved&quot; that is computed when composed as &quot;&quot;. The DocReaders fields would be computed and have the formula @Trim(@Unique(@Replace(DocReadersCandidate;DocReadersRemoved;&quot;&quot;))). An update agent, similar to the previous case would only update the DocReadersRemoved field and refresh the DocReaders field. This way no business data needs to be manipulated. If that process is properly documented it can be considered &quot;Audit save&quot;. </li> 
+ <li>The organisation is using OU to specify the department of the users. The adminp/CA process is used to change the OU of the user moving to a new role. In this case the workflow database needs to be set not to touch names, reader or author fields. This is an advanced property in the ACL. The user name changes, the entry in the workflow database doesn't -&lt; read access is removed.<br> <b>Caveat</b>: Of course NO name change would be reflected in the database thereafter, so after changing your family name in marriage your workflow documents would "disappear"</li> 
+ <li>The organisation is not using OU or the adminp for other reasons *must* update the workflow database. In this case the content of the Reader field needs to be changed. Ideally the change of role would be governed by a <a href="http://www.hadsl.com/">capable tool</a>, so starting of the update agent can be automated. The agent would go through the workflow database and change the name of the user by prefix or appending an entry (like an OU): Roger Rabit/Toons/Warner Inc -&gt; Roger Rabit/RoleChange/Toons/Warner Inc.<br> <b>Caveat</b>: You need to be very clear with the auditors about such an agent. Altering a workflow document might violate corporate governance standards. It is therefore a good idea to separate the fields storing the business logic from the "access mechanic".... Which leads to the next option. </li> 
+ <li>You need to change the application slightly. The field that computes the read access based on business logic would actually be a names field. You have another names field "DocReadersRemoved" that is computed when composed as "". The DocReaders fields would be computed and have the formula @Trim(@Unique(@Replace(DocReadersCandidate;DocReadersRemoved;""))). An update agent, similar to the previous case would only update the DocReadersRemoved field and refresh the DocReaders field. This way no business data needs to be manipulated. If that process is properly documented it can be considered "Audit save". </li> 
 </ol> In any case I 
 <b>highly</b> recommend to limit the number of reader and author fields per document to exactly 
 <b>one</b> each: DocReaders, DocAuthors (you could use DXLMagic to do the changes). These fields most likely would be computed and pull in their values from Names fields that contain the business logic. One good tip: Always include a special role in the Author field (e.g. [Joshua] 
@@ -169,7 +169,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2009/02/workflow-and-document-access.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Workflow and Document Access"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2009/02/workflow-and-document-access.html";
+							var permaLink = "https://wissel.net/blog/2009/02/workflow-and-document-access.html";
 						</script>
 					</p>
 
@@ -185,10 +185,8 @@ categories:  <a href="/blog/categories/.html"></a>
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/618cf949bf8aa7b6807e548a50b79568.jpg?s=88" class="gravatarimg" />
-							posted by <b>Pierre Lalonde</b> on <i>Thursday 12 February 2009 AD - 11:39 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/618cf949bf8aa7b6807e548a50b79568.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Pierre Lalonde</b> on <i>Thursday 12 February 2009 AD - 11:39 Singapore Time</i>:<br /> 
   This is interesting. For our software solution (kiwi.hoop) we use a Lotus Notes Application to define Roles, Workgroup, Organizational structure and other object used as pointer in the process definitions. 
   <br /> 
   <br />This way we could manage all kind or resources movement within the organization and assure to secure and transfer everyone's requests depending on the scenario. 
@@ -196,24 +194,18 @@ categories:  <a href="/blog/categories/.html"></a>
   <br />Go take a look at our Website and try the kiwi.hoop demo (this part have just been added to the site). 
   <br /> 
   <br />Email me if you'd like to discuss about how we did it.
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/bae388754db81376d44b4efd70e4366d.jpg?s=88" class="gravatarimg" />
-							posted by <b>David Leedy</b> on <i>Thursday 12 February 2009 AD - 21:02 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/bae388754db81376d44b4efd70e4366d.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>David Leedy</b> on <i>Thursday 12 February 2009 AD - 21:02 Singapore Time</i>:<br /> 
   Why do you recomment limiting a document to only 1 readers and 1 authors field? I do a lot with readers fields in an application. 9-10 years ago I followed this (for the most part) and had multiple values in a single readers field. Then I moved to using more readers fields with single values. This was easier to work with and I never noticed any problems. 
   <br />My one database might now have 500,000 documents each with maybe 5 or 6 different readers fields on it. And actually I'm about to convert many of those fields to Author...
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Friday 13 February 2009 AD - 16:34 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Friday 13 February 2009 AD - 16:34 Singapore Time</i>:<br /> 
   @David: 
   <br />As you have experienced, there is no *technical* reason. Multiple Author and Reader fields work as well and dealing with one value at a time makes a lot of things easier. 
   <br />However there is a *maintenance* reason. In my application I deal also with multiple fields, but they are all of type Names. I then combine them into two name fields DocAuthorsCandidate and DocReadersCandidate. 
@@ -224,8 +216,7 @@ categories:  <a href="/blog/categories/.html"></a>
   <br />I guess I should publish a sample database to explain more of it. 
   <br /> 
   <img alt="Emoticon smile.gif" src="/blog/images/emoticons/smile.gif" border="0" /> stw
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 					</ol>
 				</div>

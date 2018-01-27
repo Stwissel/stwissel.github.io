@@ -149,40 +149,40 @@ ga('send', 'pageview');
 <i>Authors</i> items (we commonly refer to 
 <i>items</i> as 
 <i>fields</i>, but that's not exact. Fields are the placeholders in forms to enable users to enter items, either explicit by typing them in or implicit by executing their formulas. Items is what gets stored in documents). 
-<br /> There is one item and two item types that govern the visibility of a document for all users 
+<br> There is one item and two item types that govern the visibility of a document for all users 
 <b>and</b> servers. The item has already been introduced in 
 <a href="/blog/d6plinks/SHWL-89N7XR">Part 1</a>: 
 <code>$PublicAccess</code>. If this item exists 
-<b>and</b> is set to &quot;1&quot; (Text!!) a document is considered a public document. If the item is missing or &quot;0&quot; the document is considered a standard document. 
-<br /> The two item types are Authors and Readers items (mostly added by means of Readers and Authors fields). There can be more than one of each per document, but there is a limit per item type of 32k for all entries of all items of that type. The document properties (see below) also allow to specify readers, but that's just some UI. If anything else than &quot;Readers and above&quot; is specified there, an item with the name $Readers gets created and stored in the document. 
-<br /> 
+<b>and</b> is set to "1" (Text!!) a document is considered a public document. If the item is missing or "0" the document is considered a standard document. 
+<br> The two item types are Authors and Readers items (mostly added by means of Readers and Authors fields). There can be more than one of each per document, but there is a limit per item type of 32k for all entries of all items of that type. The document properties (see below) also allow to specify readers, but that's just some UI. If anything else than "Readers and above" is specified there, an item with the name $Readers gets created and stored in the document. 
+<br> 
 <i>Read protection</i> gets activated 
 <b>on a document by document basis</b> once one of the items of type Readers in the document has a non-empty value. The presence of Readers items alone doesn't activate read protection. Domino does 
 <i>inclusive</i> access rights. So once you activate 
-<i>Read protection</i> you have to list (explicit or implicit) all readers to a document. Domino doesn't have a concept of &quot;all except ...&quot; 
-<br /> 
-<img src="http://www.wissel.net/blog/Images/SHWL-89QAV2/$File/DocumentProperties.png" border="0" alt="Document properties showing read access" /> 
-<br /> A common fallacy is to add &quot; 
-<i>to ensure access</i>&quot; the server name or server group name to a document into a Reader item (with the help of a computed Readers field). This activates 
+<i>Read protection</i> you have to list (explicit or implicit) all readers to a document. Domino doesn't have a concept of "all except ..." 
+<br> 
+<img src="http://www.wissel.net/blog/Images/SHWL-89QAV2/$File/DocumentProperties.png" border="0" alt="Document properties showing read access"> 
+<br> A common fallacy is to add " 
+<i>to ensure access</i>" the server name or server group name to a document into a Reader item (with the help of a computed Readers field). This activates 
 <i>Read Protection</i> even if it might not be necessary (Read protection costs CPU power, so you don't want it when you don't need it). A better approach is to either add them to an Authors item or anyway have only one computed Readers field that has the server group or role in its formula and pulls in other names using Names items (from user entered Names fields). I often included a Authors item with the value 
 <code>[Joshua]</code> without actually having this role in the ACL (Anybody gets the reference?). Authors items do not activate 
 <i>Read Protection</i> but entitle a member of an Authors item to see a document (you only can edit what you see). So we end up with the following read access table: 
-<br /> 
-<img src="/blog/images/2010/DocumentAccessTable.gif" border="0" alt="Read access to documents with and without Reader items" /> 
-<br /> To determine membership in the permitted Authors or Readers Domino evaluates your name, your group memberships and your roles (for local replicas you need to switch on &quot;Enforce consistent ACL&quot; for that to work). 
-<br /><img src="/blog/images/2010/UserGroupRole.gif" border="0" alt="Username, Group or Role" /> 
-<br /> Keep in mind: you can only edit what you can see, but not all you can see you can edit. Here your access level determines what you can do: 
-<br /> 
-<img src="/blog/images/2010/DocumentWriteAccessTable.gif" border="0" alt="Write access to documents you can see" /> 
-<br /> While Author items have no effect on Editor or better access level when it comes to write access, they still are useful since they can ensure that you see a document once 
-<i>Read Protection</i> gets activated. Author access (the read box) is the &quot;Access Level sweet spot&quot; since here one effectively can govern write access to individual documents with Author fields. Below it is &quot;Read only&quot;, above &quot;Write anyway&quot;. A common mis-perception about Author access is that it allows you access to &quot;your documents&quot; (your as in: created by you). This stems from the discussion template where posts and responses have a computed-when-composed field of type Author with the value 
-<code>@Username</code>. In reality &quot;Author access&quot; means: &quot;Write any document that explicitly or implicitly includes one in at least one Author item&quot;. In the discussion template that is the document creator, but doesn't need to be that way. In workflow applications one can commonly find scenarios where the original creator doesn't have Author access to the documents she created anymore. 
-<br /> This flexible, document level, declarative access control comes at a price. Once you try to draw the rule 
+<br> 
+<img src="/blog/images/2010/DocumentAccessTable.gif" border="0" alt="Read access to documents with and without Reader items"> 
+<br> To determine membership in the permitted Authors or Readers Domino evaluates your name, your group memberships and your roles (for local replicas you need to switch on "Enforce consistent ACL" for that to work). 
+<br><img src="/blog/images/2010/UserGroupRole.gif" border="0" alt="Username, Group or Role"> 
+<br> Keep in mind: you can only edit what you can see, but not all you can see you can edit. Here your access level determines what you can do: 
+<br> 
+<img src="/blog/images/2010/DocumentWriteAccessTable.gif" border="0" alt="Write access to documents you can see"> 
+<br> While Author items have no effect on Editor or better access level when it comes to write access, they still are useful since they can ensure that you see a document once 
+<i>Read Protection</i> gets activated. Author access (the read box) is the "Access Level sweet spot" since here one effectively can govern write access to individual documents with Author fields. Below it is "Read only", above "Write anyway". A common mis-perception about Author access is that it allows you access to "your documents" (your as in: created by you). This stems from the discussion template where posts and responses have a computed-when-composed field of type Author with the value 
+<code>@Username</code>. In reality "Author access" means: "Write any document that explicitly or implicitly includes one in at least one Author item". In the discussion template that is the document creator, but doesn't need to be that way. In workflow applications one can commonly find scenarios where the original creator doesn't have Author access to the documents she created anymore. 
+<br> This flexible, document level, declarative access control comes at a price. Once you try to draw the rule 
 <a href="/blog/d6plinks/SHWL-7KFP9S">RDBMS style</a> the complexity becomes obvious. So when you start using 
 <i>Read Protection</i> you need to take care of 
 <a href="/blog/d6plinks/SHWL-7PNDF7">view performance</a>, consider if you need 
 <a href="/blog/d6plinks/SHWL-7R5DMZ">NoReader or NoAuthor fields</a> and take care of them once you route or copy such documents (Routing is just a fancy way of saying: copied from one database to another, eventually named 
-<i>mail.box</i>). The Readers and Authors items are evaluated in the context of the database where they are located. When your target database is missing a role or the role isn't assigned to the user/server/group the document just might &quot;disappear&quot; ([Joshua] to the rescue).</div>
+<i>mail.box</i>). The Readers and Authors items are evaluated in the context of the database where they are located. When your target database is missing a role or the role isn't assigned to the user/server/group the document just might "disappear" ([Joshua] to the rescue).</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -194,7 +194,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2010/09/access-control-in-domino-part-2-inside-your-nsf.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Access control in Domino - Part 2: Inside your NSF"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2010/09/access-control-in-domino-part-2-inside-your-nsf.html";
+							var permaLink = "https://wissel.net/blog/2010/09/access-control-in-domino-part-2-inside-your-nsf.html";
 						</script>
 					</p>
 
@@ -210,35 +210,26 @@ categories:  <a href="/blog/categories/.html"></a>
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-<img src="//www.gravatar.com/avatar/15012017dc65aad037479b17e267d6c7.jpg?s=88" class="gravatarimg" />
-							posted by <b>Patrick Kwinten</b> on <i>Tuesday 28 September 2010 AD - 18:29 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/15012017dc65aad037479b17e267d6c7.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Patrick Kwinten</b> on <i>Tuesday 28 September 2010 AD - 18:29 Singapore Time</i>:<br /> 
   most developers have wonders how they can apply (and maintain) encryption in their application. 
   <br /> 
   <br />since this is a vital security difference of Notes from other systems, maybe it would be great to clarify this?
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s=88" class="gravatarimg" />
-							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 28 September 2010 AD - 20:04 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/8b244c19421b34079796e5e64fc8ff75.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 28 September 2010 AD - 20:04 Singapore Time</i>:<br /> 
   There is room for a part 3. Sadly encryption doesn't apply to web applications (for now).
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 						<li>
-<img src="//www.gravatar.com/avatar/c3263dfcbfeabe52397e43f50348bf33.jpg?s=88" class="gravatarimg" />
-							posted by <b>Rob Brown</b> on <i>Thursday 14 October 2010 AD - 07:28 Singapore Time</i>:<br /> <html>
- <head></head>
- <body>
+<img src="//www.gravatar.com/avatar/c3263dfcbfeabe52397e43f50348bf33.jpg?s&#61;88" class="gravatarimg" />
+							posted by <b>Rob Brown</b> on <i>Thursday 14 October 2010 AD - 07:28 Singapore Time</i>:<br /> 
   [Joshua] 
   <br />Like to play a game? 
   <br />:)
- </body>
-</html>
+ 
 							<hr style="clear : both" />
 						</li> 					</ol>
 				</div>

@@ -154,101 +154,101 @@ ga('send', 'pageview');
  <li>Extra care is needed if you have views with duplicate names in your database </li> 
 </ul> I designed a solution that uses a control database with one form, one view and a bit of LotusScript. First create a form with the following fields: Server, Database, ViewName, SelectionFormula (all text, data input), lastRun (computedWhenComposed with formula 
 <code>lastRun</code> and finally CurrentSelectionFormula, Text, Computed. Use this formula: 
-<br /> 
-<code>ReplaceStringToday := &quot;@Date(&quot;+@Text(@Year(@Today))+&quot;;&quot;+@Text(@Month(@Today))+&quot;;&quot;+@Text(@Day(@Today))+&quot;)&quot;;<br /> ReplaceStringYesterday := &quot;@Date(&quot;+@Text(@Year(@Yesterday))+&quot;;&quot;+@Text(@Month(@Yesterday))+&quot;;&quot;+@Text(@Day(@Yesterday))+&quot;)&quot;;<br /> ReplaceStringTomorrow := &quot;@Date(&quot;+@Text(@Year(@Tomorrow))+&quot;;&quot;+@Text(@Month(@Tomorrow))+&quot;;&quot;+@Text(@Day(@Tomorrow))+&quot;)&quot;;<br /> @ReplaceSubstring(SelectionFormula; &quot;@Today&quot;:&quot;@Now&quot;:&quot;@Yesterday&quot;:&quot;@Tomorrow&quot;; ReplaceStringToday:ReplaceStringToday:ReplaceStringYesterday:ReplaceStringTomorrow)</code> 
-<br /> Everytime that document gets refreshed the field will reflect how the selection formula currently should look like. Then create a view with Server, Database, ViewName -&gt; all 3 columns sorted (ViewName sorting is optional). I called mine 
+<br> 
+<code>ReplaceStringToday := "@Date("+@Text(@Year(@Today))+";"+@Text(@Month(@Today))+";"+@Text(@Day(@Today))+")";<br> ReplaceStringYesterday := "@Date("+@Text(@Year(@Yesterday))+";"+@Text(@Month(@Yesterday))+";"+@Text(@Day(@Yesterday))+")";<br> ReplaceStringTomorrow := "@Date("+@Text(@Year(@Tomorrow))+";"+@Text(@Month(@Tomorrow))+";"+@Text(@Day(@Tomorrow))+")";<br> @ReplaceSubstring(SelectionFormula; "@Today":"@Now":"@Yesterday":"@Tomorrow"; ReplaceStringToday:ReplaceStringToday:ReplaceStringYesterday:ReplaceStringTomorrow)</code> 
+<br> Everytime that document gets refreshed the field will reflect how the selection formula currently should look like. Then create a view with Server, Database, ViewName -&gt; all 3 columns sorted (ViewName sorting is optional). I called mine 
 <code>ViewsToAdjust</code>. Next step is to populate the documents with views that actually have time related selection formulas. I use this agent for it: 
 <div class="lotusscript"> 
  <span class="kw1">Option</span> 
  <span class="kw1">Public</span> 
- <br /> 
+ <br> 
  <span class="kw1">Option</span> 
  <span class="kw1">Declare</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">Sub</span> Initialize 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> s 
  <span class="kw1">As</span> 
  <span class="kw1">New</span> 
  <span class="kw2">NotesSession</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> server 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> dbDir 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDbDirectory</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> reportDB 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDatabase</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> db 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDatabase</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Set</span> reportDB = s. 
  <span class="me1">Currentdatabase</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; server = reportDB. 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; server = reportDB. 
  <span class="me1">Server</span> 
- <br /> &nbsp; &nbsp; server = 
+ <br> &nbsp; &nbsp; server = 
  <span class="kw1">InputBox$</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;Select Server to scan&quot;</span>, 
- <span class="st0">&quot;Server selection&quot;</span>, server 
+ <span class="st0">"Select Server to scan"</span>, 
+ <span class="st0">"Server selection"</span>, server 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">If</span> 
  <span class="kw1">Trim</span> 
  <span class="br0">(</span>server 
  <span class="br0">)</span> = 
- <span class="st0">&quot;&quot;</span> 
+ <span class="st0">""</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Exit</span> 
  <span class="kw1">sub</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Set</span> dbDir = s. 
  <span class="me1">Getdbdirectory</span> 
  <span class="br0">(</span>Server 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Set</span> db = dbDir. 
  <span class="me1">Getfirstdatabase</span> 
  <span class="br0">(</span>TEMPLATE_CANDIDATE 
  <span class="br0">)</span> 
- <br /> 
- <br /> &nbsp; &nbsp; 
+ <br> 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Do</span> 
  <span class="kw1">Until</span> db 
  <span class="kw1">Is</span> 
  <span class="kw1">Nothing</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> ProcessDB 
  <span class="br0">(</span>reportDB, db 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> db = dbDir. 
  <span class="me1">Getnextdatabase</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Loop</span> 
- <br /> 
+ <br> 
  <span class="kw1">End</span> 
  <span class="kw1">Sub</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">Sub</span> ProcessDB 
  <span class="br0">(</span>reportDB 
  <span class="kw1">As</span> 
@@ -256,65 +256,65 @@ ga('send', 'pageview');
  <span class="kw1">As</span> 
  <span class="kw2">NotesDatabase</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">On</span> 
  <span class="kw1">Error</span> 
  <span class="kw1">GoTo</span> err_ProcessDB 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">If</span> 
  <span class="kw1">Not</span> db. 
  <span class="me1">Isopen</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> db. 
  <span class="kw1">Open</span> 
  <span class="br0">(</span> 
- <span class="st0">&quot;&quot;</span>, 
- <span class="st0">&quot;&quot;</span> 
+ <span class="st0">""</span>, 
+ <span class="st0">""</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">If</span> 
  <span class="kw1">Not</span> db. 
  <span class="me1">Isopen</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Print</span> 
- <span class="st0">&quot;Can't open &quot;</span> &amp; db. 
+ <span class="st0">"Can't open "</span> &amp; db. 
  <span class="me1">Title</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Exit</span> 
  <span class="kw1">sub</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span> 
- <br /> &nbsp; &nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Print</span> 
- <span class="st0">&quot;Processing &quot;</span> &amp; db. 
+ <span class="st0">"Processing "</span> &amp; db. 
  <span class="me1">Title</span>&nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Call</span> CreateViewAdjusterForms 
  <span class="br0">(</span>reportDB, db 
  <span class="br0">)</span> 
- <br /> exit_ProcessDB: 
- <br /> &nbsp; &nbsp; 
+ <br> exit_ProcessDB: 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Exit</span> 
  <span class="kw1">sub</span>&nbsp; &nbsp; 
- <br /> err_ProcessDB: 
- <br /> &nbsp; &nbsp; 
+ <br> err_ProcessDB: 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Print</span> 
  <span class="kw1">Error$</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Resume</span> exit_ProcessDB &nbsp; 
- <br /> 
+ <br> 
  <span class="kw1">End</span> 
  <span class="kw1">Sub</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">Sub</span> CreateViewAdjusterForms 
  <span class="br0">(</span>reportDB 
  <span class="kw1">As</span> 
@@ -322,75 +322,75 @@ ga('send', 'pageview');
  <span class="kw1">As</span> 
  <span class="kw2">NotesDatabase</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> doc 
  <span class="kw1">As</span> 
  <span class="kw2">NotesDocument</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> v 
  <span class="kw1">As</span> 
  <span class="kw2">NotesView</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> selectionFormula 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">ForAll</span> curView 
  <span class="kw1">In</span> db. 
  <span class="me1">Views</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> v = curView 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; SelectionFormula = v. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; SelectionFormula = v. 
  <span class="me1">SelectionFormula</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">If</span> isCriticalProblem 
  <span class="br0">(</span>Formula 
  <span class="br0">)</span> 
  <span class="kw1">Then</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Set</span> doc = reportDB. 
  <span class="me1">Createdocument</span> 
  <span class="br0">(</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
  <span class="me1">form</span> = 
- <span class="st0">&quot;ViewAdjuster&quot;</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
+ <span class="st0">"ViewAdjuster"</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
  <span class="me1">server</span> = db. 
  <span class="me1">Server</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
  <span class="me1">database</span> = db. 
  <span class="me1">Filepath</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
  <span class="me1">viewname</span> = v. 
  <span class="kw1">Name</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
  <span class="me1">SelectionFormula</span> = selectionFormula 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> doc. 
  <span class="me1">Computewithform</span> 
  <span class="br0">(</span> 
  <span class="kw1">true</span>, 
  <span class="kw1">false</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">Call</span> doc. 
  <span class="me1">Save</span> 
  <span class="br0">(</span> 
  <span class="kw1">true</span>, 
  <span class="kw1">True</span> 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">If</span>&nbsp; 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">End</span> 
  <span class="kw1">ForAll</span> 
- <br /> 
+ <br> 
  <span class="kw1">End</span> 
  <span class="kw1">Sub</span> 
- <br /> 
- <br /> 
+ <br> 
+ <br> 
  <span class="kw1">Function</span> isCriticalProblem 
  <span class="br0">(</span>Formula 
  <span class="kw1">As</span> 
@@ -398,42 +398,42 @@ ga('send', 'pageview');
  <span class="br0">)</span> 
  <span class="kw1">As</span> 
  <span class="kw1">Boolean</span> 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">Dim</span> work 
  <span class="kw1">As</span> 
  <span class="kw1">String</span> 
- <br /> &nbsp; &nbsp; work = 
+ <br> &nbsp; &nbsp; work = 
  <span class="kw1">LCase$</span> 
  <span class="br0">(</span>Formula 
  <span class="br0">)</span> 
- <br /> &nbsp; &nbsp; isCriticalProblem = 
+ <br> &nbsp; &nbsp; isCriticalProblem = 
  <span class="kw1">InStr</span> 
  <span class="br0">(</span>work, 
- <span class="st0">&quot;now&quot;</span> 
+ <span class="st0">"now"</span> 
  <span class="br0">)</span> &lt;&gt; 
  <span class="nu0">0</span> 
  <span class="kw1">Or</span> _ 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">InStr</span> 
  <span class="br0">(</span>work, 
- <span class="st0">&quot;today&quot;</span> 
+ <span class="st0">"today"</span> 
  <span class="br0">)</span> &lt;&gt; 
  <span class="nu0">0</span> 
  <span class="kw1">Or</span> _ 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">InStr</span> 
  <span class="br0">(</span>work, 
- <span class="st0">&quot;tomorrow&quot;</span> 
+ <span class="st0">"tomorrow"</span> 
  <span class="br0">)</span> &lt;&gt; 
  <span class="nu0">0</span> 
  <span class="kw1">Or</span> _ 
- <br /> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; 
  <span class="kw1">InStr</span> 
  <span class="br0">(</span>work, 
- <span class="st0">&quot;yesterday&quot;</span> 
+ <span class="st0">"yesterday"</span> 
  <span class="br0">)</span> &lt;&gt; 
  <span class="nu0">0</span> 
- <br /> 
+ <br> 
  <span class="kw1">End</span> 
  <span class="kw1">Function</span> 
 </div> Once you have the formulas you want to review them if the are really critical and that the revised formula actually will work. Then design a scheduled agent that checks those views. I run it hourly and on all servers (you could use the lastRun date to only check databases that haven't been processed today.</div>
@@ -449,7 +449,7 @@ categories:  <a href="/blog/categories/.html"></a>
 
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2012/11/managing-today-in-view-selection-formulas.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Managing @Today in view selection formulas"></div>
 						<script type="text/javascript">
-							var permaLink = "https://www.notessensei.com/blog/2012/11/managing-today-in-view-selection-formulas.html";
+							var permaLink = "https://wissel.net/blog/2012/11/managing-today-in-view-selection-formulas.html";
 						</script>
 					</p>
 
@@ -498,75 +498,75 @@ categories:  <a href="/blog/categories/.html"></a>
 				<aside id="sidebar_categoriesArchive" class="well">
 					<ul class="nav nav-list">
 						<li class="nav-header">Categories</li>
-						<li ><a href="/blog/categories/After hours.html">after hours</a></li>
-						<li ><a href="/blog/categories/angular.js.html">angular.js</a></li>
-						<li ><a href="/blog/categories/Apache.html">apache</a></li>
-						<li ><a href="/blog/categories/Apex.html">apex</a></li>
-						<li ><a href="/blog/categories/Blog.html">blog</a></li>
-						<li ><a href="/blog/categories/Bluemix.html">bluemix</a></li>
-						<li ><a href="/blog/categories/Buddhakids.html">buddhakids</a></li>
-						<li ><a href="/blog/categories/Business.html">business</a></li>
-						<li ><a href="/blog/categories/Buying Broadband.html">buying broadband</a></li>
-						<li ><a href="/blog/categories/Cloud Computing.html">cloud computing</a></li>
-						<li ><a href="/blog/categories/Continuous integration.html">continuous integration</a></li>
-						<li ><a href="/blog/categories/CouchDB.html">couchdb</a></li>
-						<li ><a href="/blog/categories/Coursera.html">coursera</a></li>
-						<li ><a href="/blog/categories/Cycling.html">cycling</a></li>
-						<li ><a href="/blog/categories/DXLMagic.html">dxlmagic</a></li>
-						<li ><a href="/blog/categories/eLearning.html">elearning</a></li>
-						<li ><a href="/blog/categories/eMailComparison.html">emailcomparison</a></li>
-						<li ><a href="/blog/categories/Gone Phisching.html">gone phisching</a></li>
-						<li ><a href="/blog/categories/GTD.html">gtd</a></li>
-						<li ><a href="/blog/categories/IBM.html">ibm</a></li>
-						<li ><a href="/blog/categories/IBM - Lotus.html">ibm - lotus</a></li>
-						<li ><a href="/blog/categories/IBM Connections.html">ibm connections</a></li>
-						<li ><a href="/blog/categories/IBM Notes.html">ibm notes</a></li>
-						<li ><a href="/blog/categories/Intercultural.html">intercultural</a></li>
-						<li ><a href="/blog/categories/Java.html">java</a></li>
-						<li ><a href="/blog/categories/JavaScript.html">javascript</a></li>
-						<li ><a href="/blog/categories/Learning.html">learning</a></li>
-						<li ><a href="/blog/categories/Learningbox.html">learningbox</a></li>
-						<li ><a href="/blog/categories/Linux.html">linux</a></li>
-						<li ><a href="/blog/categories/Lotus.html">lotus</a></li>
-						<li ><a href="/blog/categories/Lotus Connections.html">lotus connections</a></li>
-						<li ><a href="/blog/categories/Lotus Notes.html">lotus notes</a></li>
-						<li ><a href="/blog/categories/Lotus Quickr.html">lotus quickr</a></li>
-						<li ><a href="/blog/categories/LotusLive.html">lotuslive</a></li>
-						<li ><a href="/blog/categories/Lotusphere2006.html">lotusphere2006</a></li>
-						<li ><a href="/blog/categories/Lotusphere2007.html">lotusphere2007</a></li>
-						<li ><a href="/blog/categories/Lotusphere2008.html">lotusphere2008</a></li>
-						<li ><a href="/blog/categories/Lotusphere2009.html">lotusphere2009</a></li>
-						<li ><a href="/blog/categories/Lotusphere2010.html">lotusphere2010</a></li>
-						<li ><a href="/blog/categories/Lotusphere2011.html">lotusphere2011</a></li>
-						<li ><a href="/blog/categories/Lotusphere2012.html">lotusphere2012</a></li>
-						<li ><a href="/blog/categories/Mac.html">mac</a></li>
-						<li ><a href="/blog/categories/Mobile.html">mobile</a></li>
+						<li ><a href="/blog/categories/afterhours.html">After hours</a></li>
+						<li ><a href="/blog/categories/angularjs.html">angular.js</a></li>
+						<li ><a href="/blog/categories/apache.html">Apache</a></li>
+						<li ><a href="/blog/categories/apex.html">Apex</a></li>
+						<li ><a href="/blog/categories/blog.html">Blog</a></li>
+						<li ><a href="/blog/categories/bluemix.html">Bluemix</a></li>
+						<li ><a href="/blog/categories/buddhakids.html">Buddhakids</a></li>
+						<li ><a href="/blog/categories/business.html">Business</a></li>
+						<li ><a href="/blog/categories/buyingbroadband.html">Buying Broadband</a></li>
+						<li ><a href="/blog/categories/cloudcomputing.html">Cloud Computing</a></li>
+						<li ><a href="/blog/categories/continuousintegration.html">Continuous integration</a></li>
+						<li ><a href="/blog/categories/couchdb.html">CouchDB</a></li>
+						<li ><a href="/blog/categories/coursera.html">Coursera</a></li>
+						<li ><a href="/blog/categories/cycling.html">Cycling</a></li>
+						<li ><a href="/blog/categories/dxlmagic.html">DXLMagic</a></li>
+						<li ><a href="/blog/categories/elearning.html">eLearning</a></li>
+						<li ><a href="/blog/categories/emailcomparison.html">eMailComparison</a></li>
+						<li ><a href="/blog/categories/gonephisching.html">Gone Phisching</a></li>
+						<li ><a href="/blog/categories/gtd.html">GTD</a></li>
+						<li ><a href="/blog/categories/ibm.html">IBM</a></li>
+						<li ><a href="/blog/categories/ibmconnections.html">IBM Connections</a></li>
+						<li ><a href="/blog/categories/ibmlotus.html">IBM - Lotus</a></li>
+						<li ><a href="/blog/categories/ibmnotes.html">IBM Notes</a></li>
+						<li ><a href="/blog/categories/intercultural.html">Intercultural</a></li>
+						<li ><a href="/blog/categories/java.html">Java</a></li>
+						<li ><a href="/blog/categories/javascript.html">JavaScript</a></li>
+						<li ><a href="/blog/categories/learning.html">Learning</a></li>
+						<li ><a href="/blog/categories/learningbox.html">Learningbox</a></li>
+						<li ><a href="/blog/categories/linux.html">Linux</a></li>
+						<li ><a href="/blog/categories/lotus.html">Lotus</a></li>
+						<li ><a href="/blog/categories/lotusconnections.html">Lotus Connections</a></li>
+						<li ><a href="/blog/categories/lotuslive.html">LotusLive</a></li>
+						<li ><a href="/blog/categories/lotusnotes.html">Lotus Notes</a></li>
+						<li ><a href="/blog/categories/lotusphere2006.html">Lotusphere2006</a></li>
+						<li ><a href="/blog/categories/lotusphere2007.html">Lotusphere2007</a></li>
+						<li ><a href="/blog/categories/lotusphere2008.html">Lotusphere2008</a></li>
+						<li ><a href="/blog/categories/lotusphere2009.html">Lotusphere2009</a></li>
+						<li ><a href="/blog/categories/lotusphere2010.html">Lotusphere2010</a></li>
+						<li ><a href="/blog/categories/lotusphere2011.html">Lotusphere2011</a></li>
+						<li ><a href="/blog/categories/lotusphere2012.html">Lotusphere2012</a></li>
+						<li ><a href="/blog/categories/lotusquickr.html">Lotus Quickr</a></li>
+						<li ><a href="/blog/categories/mac.html">Mac</a></li>
+						<li ><a href="/blog/categories/mobile.html">Mobile</a></li>
 						<li ><a href="/blog/categories/nginx.html">nginx</a></li>
-						<li ><a href="/blog/categories/NodeJS.html">nodejs</a></li>
-						<li ><a href="/blog/categories/NodeRED.html">nodered</a></li>
-						<li ><a href="/blog/categories/Nokia.html">nokia</a></li>
-						<li ><a href="/blog/categories/Omnisophie.html">omnisophie</a></li>
-						<li ><a href="/blog/categories/OpenSource.html">opensource</a></li>
-						<li ><a href="/blog/categories/Prototyping.html">prototyping</a></li>
-						<li ><a href="/blog/categories/Rotary.html">rotary</a></li>
-						<li ><a href="/blog/categories/Salesforce.html">salesforce</a></li>
-						<li ><a href="/blog/categories/Sametime.html">sametime</a></li>
-						<li ><a href="/blog/categories/Show-N-Tell Thursday.html">show-n-tell thursday</a></li>
-						<li ><a href="/blog/categories/Singapore.html">singapore</a></li>
-						<li ><a href="/blog/categories/SocialBusiness.html">socialbusiness</a></li>
-						<li ><a href="/blog/categories/Software.html">software</a></li>
-						<li ><a href="/blog/categories/SYWTBADD.html">sywtbadd</a></li>
-						<li ><a href="/blog/categories/Technology.html">technology</a></li>
-						<li ><a href="/blog/categories/Thoughts.html">thoughts</a></li>
-						<li ><a href="/blog/categories/Travel.html">travel</a></li>
-						<li ><a href="/blog/categories/Twins.html">twins</a></li>
-						<li ><a href="/blog/categories/UMsys.html">umsys</a></li>
-						<li ><a href="/blog/categories/vert.x.html">vert.x</a></li>
-						<li ><a href="/blog/categories/WebDevelopment.html">webdevelopment</a></li>
-						<li ><a href="/blog/categories/Workflow.html">workflow</a></li>
-						<li ><a href="/blog/categories/Writing Chinese.html">writing chinese</a></li>
-						<li ><a href="/blog/categories/XML.html">xml</a></li>
-						<li ><a href="/blog/categories/XPages.html">xpages</a></li>
+						<li ><a href="/blog/categories/nodejs.html">NodeJS</a></li>
+						<li ><a href="/blog/categories/nodered.html">NodeRED</a></li>
+						<li ><a href="/blog/categories/nokia.html">Nokia</a></li>
+						<li ><a href="/blog/categories/omnisophie.html">Omnisophie</a></li>
+						<li ><a href="/blog/categories/opensource.html">OpenSource</a></li>
+						<li ><a href="/blog/categories/prototyping.html">Prototyping</a></li>
+						<li ><a href="/blog/categories/rotary.html">Rotary</a></li>
+						<li ><a href="/blog/categories/salesforce.html">Salesforce</a></li>
+						<li ><a href="/blog/categories/sametime.html">Sametime</a></li>
+						<li ><a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a></li>
+						<li ><a href="/blog/categories/singapore.html">Singapore</a></li>
+						<li ><a href="/blog/categories/socialbusiness.html">SocialBusiness</a></li>
+						<li ><a href="/blog/categories/software.html">Software</a></li>
+						<li ><a href="/blog/categories/sywtbadd.html">SYWTBADD</a></li>
+						<li ><a href="/blog/categories/technology.html">Technology</a></li>
+						<li ><a href="/blog/categories/thoughts.html">Thoughts</a></li>
+						<li ><a href="/blog/categories/travel.html">Travel</a></li>
+						<li ><a href="/blog/categories/twins.html">Twins</a></li>
+						<li ><a href="/blog/categories/umsys.html">UMsys</a></li>
+						<li ><a href="/blog/categories/vertx.html">vert.x</a></li>
+						<li ><a href="/blog/categories/webdevelopment.html">WebDevelopment</a></li>
+						<li ><a href="/blog/categories/workflow.html">Workflow</a></li>
+						<li ><a href="/blog/categories/writingchinese.html">Writing Chinese</a></li>
+						<li ><a href="/blog/categories/xml.html">XML</a></li>
+						<li ><a href="/blog/categories/xpages.html">XPages</a></li>
 						<li class="nav-header">Archives</li>
 						<li ><a href="/blog/2003">2003</a></li>
 						<li ><a href="/blog/2004">2004</a></li>
