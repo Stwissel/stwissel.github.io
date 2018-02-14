@@ -311,8 +311,10 @@ categories:  <a href="/blog/categories/.html"></a>
  <li>Seven thousand Macedonians in full battle array,</li> 
  <li>Eight brass monkeys from the ancient, sacred crypts of Egypt,</li> 
  <li>Nine apathetic, sympathetic, diabetic old men on roller skates with a marked propensity to procrastination and sloth,</li> 
- <li>Ten lyrical, spherical diabolical denizens of the deep who haul, crawl, around the corner of the quo of the q</li>
-</ul></div>
+ <li>Ten lyrical, spherical diabolical denizens of the deep who haul, crawl, around the corner of the quo of the queasy at the very same time.</li> 
+</ul> This is the " 
+<i>The Announcer?s Test</i>", seveloped by Radio Central in the 1940's to test a new announcer's reading ability, this is a fantastic exercise to warm up your speech muscles before that key event! 
+<br> Enjoy!</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -350,6 +352,123 @@ categories:  <a href="/blog/categories/.html"></a>
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2011/09/symphony-of-science-beautiful-science-entertainment.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Symphony of Science: Beautiful science entertainment"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2011/09/symphony-of-science-beautiful-science-entertainment.html";
+						</script>
+					</p>
+
+				</article>
+				<article class="well well-raised">
+					<h1>
+						<small><a href="/blog/2011/09/less-passwords-more-security-ssh-connections-with-certificates.html">Less passwords, more security. ssh connections with certificates</a></small>
+					</h1>
+					<hr />
+					<div>Succeful server administration depends on automation. Only when you can declare Runs-in-AutoPilot-mode? your servers will run cost efficient. While 
+<a href="http://www-10.lotus.com/ldd/dominowiki.nsf/dx/domino-domain-monitoring">DDM</a>, 
+<a href="http://www-10.lotus.com/ldd/dominowiki.nsf/dx/activity-logging-and-activity-trends">Activity Trends</a> or 
+<a href="http://www-10.lotus.com/ldd/dominowiki.nsf/dx/domino-policies-faq">Domino Policies</a> can do that for you on the Domino level (you might want to have a look at 
+<a href="http://www.hadsl.com/">more tools</a> and 
+<a href="/blog/d6plinks/SHWL-7PJKVA">utilities</a>), there are times where you need to automate OS level tasks (If you don't promise to 
+<b>never ever</b> use this to FTP a NSF, stop reading now and go away) like moving installer files or start and stop remote services. Once you start scripting them you will run into the issue of remote authentication. For SSH connections there is a very elegant way to have a secure connection using a public private key pair. Let's presume our remote host name is 
+<i>everest</i> at 
+<i>everest.company.com</i> and your user id there is 
+<i>joeadmin</i>. These are the steps: 
+<ol> 
+ <li>Create a directory to keep your keys:<br><code>mkdir ~/.sshkeys<br>chmod 700 ~/.sshkeys<br>cd ~/.sshkeys</code><br>(the chmod isn't strictly necessary, but we want to make sure that access to the key files is minimal)</li> 
+ <li>Generate a key pair:<br><code>ssh-keygen -t dsa -b 1024 -f ~/.sshkeys/<b>everest</b>-access-key </code><br>For automation without a password you need to press <i>Enter</i> twice. Be aware, that the security of access it as strong or as weak as the access protection of your workstation. So you should use strong <a href="https://wiki.ubuntu.com/EncryptedFilesystemHowto">disk encryption</a></li> 
+ <li>Protect the generated file: <code>chmod 600 everest-access-key</code></li> 
+ <li>Copy the public file to the remote server:<code>scp everest-access-key.<b>pub</b> joeadmin@everest.company.com:/home/joeadmin</code></li> 
+ <li>Login to the server: <code>ssh joeadmin@everest.company.com</code> (This will be the last time your need the password)</li> 
+ <li>Create the directory for your keys:<br><code>mkdir ~/.ssh<br>chmod 700 ~/.ssh<br>cd ~/.ssh</code></li> 
+ <li>Create your key file to recognize you:<br><code>touch authorized_keys<br>cat ~/everest-access-key.pub &gt;&gt; authorized_keys<br>rm ~/everest-access-key.pub<br> chmod 600 authorized_keys</code></li> 
+ <li>Now logout and you are ready to use the key driven access</li> 
+ <li>To login use: <code>ssh -i ~/.sshkeys/everest-access-key joeadmin@everest.company.com&nbsp;</code> (which of course you use in a script)</li> 
+</ol> Once all admins who need access to that server have their keys in place it is time to 
+<a href="http://fedorasolved.org/post-install-solutions/securing-ssh">lock ssh down</a>. Edit the file 
+<i>/etc/ssh/sshd_config</i> and make sure the following values are set: 
+<ol> 
+ <li><code>ListenAddress {your IP/IPv6}</code> to limit SSH to one IP address (remember your servers most likely will have more than one IP)</li> 
+ <li><code>LoginGraceTime 10</code> since all logins will directly use a key pair, 2 min grace period is way to long</li> 
+ <li><code>PubkeyAuthentication yes</code> so your keys will work</li> 
+ <li><code>PasswordAuthentication no</code> so nobody can try to hack in using a password attack</li> 
+ <li>Installing the denyhosts package (<code>sudo apt-get install denyhosts</code>) reduced the attack surface further. Go read the <a href="http://fedorasolved.org/post-install-solutions/securing-ssh">full explanations</a></li> 
+</ol> Also works great for zLinux or AIX. As usual YMMV</div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2011-09-13 11:35
+<span class="divider">|</span>
+<a href="/blog/2011/09/less-passwords-more-security-ssh-connections-with-certificates.html#comments">Comments (2)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/.html"></a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2011/09/less-passwords-more-security-ssh-connections-with-certificates.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Less passwords, more security. ssh connections with certificates"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2011/09/less-passwords-more-security-ssh-connections-with-certificates.html";
+						</script>
+					</p>
+
+				</article>
+				<article class="well well-raised">
+					<h1>
+						<small><a href="/blog/2011/09/designing-data-sources-square-pegs-into-round-holes.html">Designing data sources - square pegs into round holes</a></small>
+					</h1>
+					<hr />
+					<div>Stephen Mitchel translated the end of 
+<a href="http://ariyavansa.org/dao/ddc-21/">verse 21</a> of the Dao De Ching ( ????????????= wu he yi zhi zhong fu zhi zhuang zai? yi ci.) as " 
+<i>How do I know this is true? I look inside myself and see.</i>". 
+<a href="http://en.wikipedia.org/wiki/Laozi">Lao zhu</a> could have been a software platform or framework architect 
+<img src="http://www.wissel.net/blog/emoticons/DLYH-5MZVLY/$File/smile.gif">. Getting the gist of a platform often requires a zen like approach. Unfortunately in the heat of delivery pressures things get lost and we end up with "Frankenworks" instead of "Frameworks", where functionality works, but feels rather "bolted on". 
+<br> Currently there is 
+<a href="http://extlib.openntf.org/">work underway</a> to make XPages a first class RDBMS front-end. The data source looks very promising, nevertheless prompted me to reflect on the nature of data access, like I mused about 
+<a href="http://www.wissel.net/blog/d6plinks/SHWL-8ABKP5">structures</a> before. There are some structural differences between a document centric approach (Domino, XMLDB, XForms, ObjectDB, JsonDB etc) and a relational database. Doing justice to both sides poses a formidable challenge: 
+<ul> 
+ <li>The nature of a relational database is a flat set. A set of rows and columns that get created, read, updated and deleted. It is always about a set, that more than often can yield from more than one table. There is no such thing as a single record, it is just a set with one member. All <a href="http://en.wikipedia.org/wiki/Object-relational_mapping">OR-Mappers</a> struggle with this</li> 
+ <li>The nature of Domino the the document. Data is stored in documents. Collections (views/folders/search/all) are designed to get access to a document (set). The result of this nature is a dual access to data: there is the collection which is read only (and can be flat or hierarchical) and there is the document which is read/write where data changes happen.</li> 
+ <li>The document has a predefined set of meta data absent from a relational table: ID, access control, various dates, hierarchy (isResponse) etc. One could add those to an individual database schema, but they can't be taken for granted in RDBMS (a story for another time: designing a RDBMS schema to work well with XPages)</li> 
+ <li>The document sports structured data. In Domino that are multi-value fields, in other <a href="http://en.wikipedia.org/wiki/NoSQL">NoSQL</a> databases these structures can be more complex. In RDBMS these structures are splattered across multiple tables and pulled back together with JOIN statements. This makes it easy to run reports or do mass-updates, but makes transporting a logical entity from one database to another a pain</li> 
+ <li>The dominating clause in RDBMS is <code>WHERE</code> which is needed for all operations including updates, while Domino acts on the current document (doc.save)</li> 
+ <li>The document is closely connected to the Notes/Domino event model. Both XPages and the classic Notes client (and to a lesser extend classic Domino) offer rich data events:<code>queryNewDocument, queryOpenDocument, postOpenDocument, querySaveDocument, postSaveDocument</code> etc.</li> 
+ <li>SQL doesn't provide an event model, but the various RDBMS implementation provide triggers that serve a similar purpose that run <a href="http://en.wikipedia.org/wiki/Stored_procedures">stored procedures</a> (and are mostly written in incompatible flavors of SQL - check <a href="http://www.swissql.com/">SwissQL</a> for translating them). I'm sure about INSERT, UPDATE and DELETE triggers as equivalent to query/post save events. I haven't looked for a while, but last time I checked SELECT wouldn't trigger a stored procedure, but you could call one directly.</li> 
+ <li>The splattering of data across tables in RDBMS led naturally to another capability of relational databases, that comes in handy for large manipulations too: transactional integrity. If all you need is saving one document, there is no imminent need for a transaction mechanism, distributing data over multiple (parent, child) tables however mandates an integrity protection</li> 
+</ul> Interestingly a document oriented data model is closer to the real world's (read business users') perception of data: a contract is a document, as is a purchase order as is a bank note. Tables usually serve as (table of sic.) content listing for documents or detail listings inside documents. 
+<br>So what does that mean for the design of additional data sources in Domino? There are 
+<b>two possible approaches</b> which luckily 
+<b>can co-exist</b> since they are not mutually exclusive: follow the nature of Domino or follow the nature of the source (not the 
+<a href="http://en.wikipedia.org/wiki/Mitochondrion">nature of the force</a>, that's for 
+<a href="http://en.wikipedia.org/wiki/Jedi">others</a>). The current 
+<a href="http://extlib.openntf.org/">OpenNTF extlib</a> approach is the later: it is designed around the relational feature set. 
+<br> Going forward I would like to see data sources that build on the duality of the Domino data access: the read-only collection and the read/write document. 
+<br> 
+<img src="/blog/images/2011/datasources.jpg" border="0" alt="Datasources and the API"> 
+<ul> 
+ <li>Each data source will have 2 elements: a read-only collection and a read/write entry/record/document</li> 
+ <li>These sources have the same method signatures as DominoDocument and DominoView. So in a design a developer could swap them out for each other. <code>MyRDBMSSource.getItemValueString("Location")</code> would work the same way as <code>DominoDocument.getItemValueString("Location")</code>. For an RDBMS developer that might look a little strange, but only caries a one time learning affordance, greatly outweighted by the benefit of swappable sources. Of course the parameters would be rather different. In a RDBMS source there probably would be a parameter to define what getDocumentUniqueID would return.</li> 
+ <li>All the document events would fire with every data source</li> 
+ <li>Data sources can implement additional tags to offer access matching their nature</li> 
+</ul> What data sources can I imagine? This is not a revelation of IBM's plans, I rather expect some of them being provided by the community or as commercial business partner offering: 
+<ul> 
+ <li>enhanced JDBC source following the Domino pattern</li> 
+ <li>Domino data source encapsulating the <a href="/blog/d6plinks/SHWL-78E34M">inversion of logging</a> pattern</li> 
+ <li><a href="http://www-01.ibm.com/software/data/db2/xml/">DB/2 PureXML</a> data source. It would use the standard JDBC approach for the collections and <a href="http://en.wikipedia.org/wiki/PureXML">PureXML</a> to read/write document data. It would implement the spirit of NSFDB2 without the constraints of replicating all NSF features (data only)</li> 
+ <li>Sharepoint. One could build Sharepoint front-ends that survive a Sharepoint upgrade without the need to rewrite them</li> 
+ <li>IBM <a href="http://www-01.ibm.com/software/integration/wmq/">MQ</a></li> 
+ <li>Web services (take a <a href="http://en.wikipedia.org/wiki/Wsdl">WSDL</a> and make a form)</li> 
+ <li><a href="http://en.wikipedia.org/wiki/CouchDB">CouchDB</a></li> 
+ <li>3270 Terminal / IBM <a href="http://www-01.ibm.com/software/awdtools/hats/">HATS</a></li> 
+ <li><a href="http://dev.w3.org/html5/webstorage/">HTML5 storage</a> </li> 
+</ul> What's your imagination? (need 
+<a href="http://en.wikipedia.org/wiki/Barney_%26_Friends">help</a>?)</div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2011-09-13 11:00
+<span class="divider">|</span>
+<a href="/blog/2011/09/designing-data-sources-square-pegs-into-round-holes.html#comments">Comments (1)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/.html"></a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2011/09/designing-data-sources-square-pegs-into-round-holes.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Designing data sources - square pegs into round holes"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2011/09/designing-data-sources-square-pegs-into-round-holes.html";
 						</script>
 					</p>
 
@@ -452,6 +571,7 @@ categories:  <a href="/blog/categories/.html"></a>
 						<li ><a href="/blog/categories/emailcomparison.html">eMailComparison</a></li>
 						<li ><a href="/blog/categories/gonephisching.html">Gone Phisching</a></li>
 						<li ><a href="/blog/categories/gtd.html">GTD</a></li>
+						<li ><a href="/blog/categories/heroku.html">Heroku</a></li>
 						<li ><a href="/blog/categories/ibm.html">IBM</a></li>
 						<li ><a href="/blog/categories/ibmconnections.html">IBM Connections</a></li>
 						<li ><a href="/blog/categories/ibmlotus.html">IBM - Lotus</a></li>
@@ -518,6 +638,7 @@ categories:  <a href="/blog/categories/.html"></a>
 						<li ><a href="/blog/2015">2015</a></li>
 						<li ><a href="/blog/2016">2016</a></li>
 						<li ><a href="/blog/2017">2017</a></li>
+						<li ><a href="/blog/2018">2018</a></li>
 						<li ><a href="/blog/all.html" title="That's a long list!">Complete archive</a></li>
 					</ul>
 				</aside>
@@ -537,7 +658,7 @@ categories:  <a href="/blog/categories/.html"></a>
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
+						I'm a Cloud "Program Architect Director", working for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">

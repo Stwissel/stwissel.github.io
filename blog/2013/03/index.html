@@ -140,6 +140,68 @@ ga('send', 'pageview');
 				</div>
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2013/03/round-trip-editing-experience-in-web-browsers.html">Round-Trip editing experience in web browsers</a></small>
+					</h1>
+					<hr />
+					<div>Our applications are increasingly moving to http(s) based interfaces, that is 
+<a href="http://en.wikipedia.org/wiki/HTML5">HTML(5)</a> or 
+<a href="http://play.google.com/">apps</a>. Besides the irony, that we abandon client applications on desktops to reintroduce them on mobile devices (is ObjectiveC the VB of the 21st century?), 
+<i>that's a good thing</i>? 
+<br> However from time to time, unless you 
+<a href="https://www.ibm.com/cloud-computing/social/us/en/">live in the cloud</a>, we need to integrate into extisting standing desktop applications, mostly but not limited to Office applications. The emerging standard for this is clearly 
+<a href="http://en.wikipedia.org/wiki/CMIS">CMIS</a>. Most office packages do support CMIS in one way or the other today. However it does not integrate into file managers like Finder, Explorer or Nautilus (at least not to my best knowledge at time of writing). One could sidestep that shortcoming by using 
+<a href="http://cmissync.com/">CmisSync</a>, but that only works as long as you have enough local storage and corporate security lets you do so. 
+<br> Another challenge to sort out: once applications that "surround" Office documents are all HTML based, one should be able to commence editing directly from clicking something in the web based business application. So the criteria are: 
+<ol> 
+ <li>Ability to interact with documents using File-Open in applications (ironically the <a href="http://en.wikipedia.org/wiki/ODMA">ODMA</a> standard got that working more than 15 years ago, but died due to vendor negligence)</li> 
+ <li>Ability to interact with documents using the default file navigator (Finder, Nautilus, Explorer, mobile devices)</li> 
+ <li>Ability to have a full roundtrip editing experience in the browser. A user clicks on a button or link (or icon), the document opens, editing commences. When hitting the save button the original document is updated, so when someone else clicks on that link the latest updates can be seen there</li> 
+</ol> Once you want to support non-Windows platforms (and work in multiple browsers) ActiveX (the approach Microsoft choose) is ruled out. Enter 
+<a href="http://en.wikipedia.org/wiki/Webdav">webDAV</a>. It covers #1 and #2, with 
+<a href="/blog/d6plinks/SHWL-8J28ZR">some difficulties</a> to a point that the 
+<a href="http://www.lialis.com/">commercial package</a> for webDAV on IBM platforms (Connections, Domino, Quickr) doesn't support Explorer on Windows 7, a flaw it coincidentally shares with a much 
+<a href="http://sourceforge.net/projects/dominodav/">older package</a>, but not with 
+<a href="http://www.openntf.org/internal/home.nsf/project.xsp?action=openDocument&amp;name=WebDAV%20for%20IBM%20Domino">the current project</a>. 
+<br> The challenge for #3: Whenever a browser encounters an URL with http(s) it will try to handle that target. If the mime type is not directly handled by the browser it will trigger the download of the file and hand it over to the application (with or without a dialog, depending on your settings). When the user then interacts with that document, it is the downloaded version in a temp directory. Changes are 
+<b>not</b> send back! 
+<br> On the other hand: if a user opens a file directly in the office application by selecting a 
+<a href="http://answers.microsoft.com/en-us/windows/forum/windows_7-networking/how-to-open-web-folder-in-windows-7/0552a422-9e7d-41e6-8971-200d2bd14621">webfolder</a>, a mounted 
+<a href="http://manpages.ubuntu.com/manpages/dapper/man8/mount.davfs.8.html">file system</a> or directly specifying the URL, then roundtrip editing happens since the office applications check the URL for webDAV capabilities (I had some fun with 
+<a href="http://ws.apache.org/commons/tcpmon/">Apache's TCPMon</a> figuring that out). 
+<br> The solution for this puzzle is to use a different protocol. Protocols are simply indicators for the operating system what application is in charge. The commonly known are 
+<a href="http://en.wikipedia.org/wiki/Http">http(s)</a>, 
+<a href="http://en.wikipedia.org/wiki/Ftp">ftp</a>, 
+<a href="http://en.wikipedia.org/wiki/Secure_Shell">ssh</a>, 
+<a href="http://en.wikipedia.org/wiki/Mailto">mailto</a> (and 
+<a href="http://en.wikipedia.org/wiki/Gopher_%28protocol%29">gopher</a> for the old generation), but also 
+<a href="http://en.wikipedia.org/wiki/IBM_Lotus_Notes">notes</a> or 
+<a href="http://www.sap.com">sap</a> (and 
+<a href="http://en.wikipedia.org/wiki/Internet_protocol_suite">others</a>). 
+<br> For my approach I used webdav(s) as protocol name. On Windows protocols live in the registry, on other operating system in configuration files. 
+<br> Once configured correctly a little 
+<a href="https://github.com/OpenNTF/WebDAVForDomino/tree/master/com.ibm.xsp.webdav/webDAVHelper">helper application</a> would pick up the webdav(s) URL from the browser, check for the default application and launch it with the URL converted to http(s) on the command line - and voila roundtrip editing happens (check out the 
+<a href="https://github.com/OpenNTF/WebDAVForDomino">project</a>). 
+<br> Of course some stuff needs handling: the office application doesn't share credentials with the browser, so SSO or other means need to be in place to ensure smooth user experience. Also MS-Office not only probes for webDAV capability of that URL, but also if that server behaves like SharePoint by probing an extra URL (some enlightenment what it is looking for would be nice). 
+<br> On Linux (and probably OS/X) one doesn't need a C++ program to figure out the right application, a shell script does the trick.</div>
+					<hr />
+ <a href="/blog/2013/03/round-trip-editing-experience-in-web-browsers.html">Read more</a>
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2013-03-28 09:52
+<span class="divider">|</span>
+<a href="/blog/2013/03/round-trip-editing-experience-in-web-browsers.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/.html"></a>  <a href="/blog/categories/.html"></a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2013/03/round-trip-editing-experience-in-web-browsers.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Round-Trip editing experience in web browsers"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2013/03/round-trip-editing-experience-in-web-browsers.html";
+						</script>
+					</p>
+
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2013/03/system-administrators-mantra.html">System Administrator&apos;s Mantra</a></small>
 					</h1>
 					<hr />
@@ -348,6 +410,7 @@ categories:  <a href="/blog/categories/.html"></a>
 						<li ><a href="/blog/categories/emailcomparison.html">eMailComparison</a></li>
 						<li ><a href="/blog/categories/gonephisching.html">Gone Phisching</a></li>
 						<li ><a href="/blog/categories/gtd.html">GTD</a></li>
+						<li ><a href="/blog/categories/heroku.html">Heroku</a></li>
 						<li ><a href="/blog/categories/ibm.html">IBM</a></li>
 						<li ><a href="/blog/categories/ibmconnections.html">IBM Connections</a></li>
 						<li ><a href="/blog/categories/ibmlotus.html">IBM - Lotus</a></li>
@@ -414,6 +477,7 @@ categories:  <a href="/blog/categories/.html"></a>
 						<li ><a href="/blog/2015">2015</a></li>
 						<li ><a href="/blog/2016">2016</a></li>
 						<li ><a href="/blog/2017">2017</a></li>
+						<li ><a href="/blog/2018">2018</a></li>
 						<li ><a href="/blog/all.html" title="That's a long list!">Complete archive</a></li>
 					</ul>
 				</aside>
@@ -433,7 +497,7 @@ categories:  <a href="/blog/categories/.html"></a>
 				<div class="span2">
 					<h4>About Me</h4>
 					<p>
-						I'm working as Cloud "Program Architect Director" for Salesforce. I'm based in Singapore.
+						I'm a Cloud "Program Architect Director", working for Salesforce. I'm based in Singapore.
 						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
