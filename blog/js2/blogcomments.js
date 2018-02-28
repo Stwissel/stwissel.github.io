@@ -69,11 +69,13 @@ function renderComment(recaptchaid, parentId) {
 	var fid = "#commentform_" + parentId;
 	var form = getCommentForm(recaptchaid, parentId);
 	$(fid).empty().append(form);
+	$('#commentsubmit').hide();
 	if (grecaptcha) {
 		var theDiv = document.getElementById("captchadiv");
 		$(theDiv).empty();
 		grecaptcha.render(theDiv, {
 			sitekey : recaptchaid,
+			callback: goodCaptcha,
 			theme: "light"
 		});
 	}
@@ -82,6 +84,10 @@ function renderComment(recaptchaid, parentId) {
 	var converter1 = Markdown.getSanitizingConverter();
 	var editor1 = new Markdown.Editor(converter1);
 	editor1.run();
+}
+
+function goodCaptcha(token) {
+	$('#commentsubmit').show();
 }
 
 jQuery.extend({
