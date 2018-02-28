@@ -23,19 +23,24 @@ function addComment(form, recaptchaid, parentId) {
 	$("#alertContainer").html("One moment please, submitting comment...")
 			.show();
 
+    // Wait a moment before submission
+    window.setTimeout(function() {
 	var postData = {};
 	postData.Commentor = this.Commentor.value;
 	postData.eMail = this.Email.value;
 	postData.webSite = this.webSite.value;
 	postData.Body = this["wmd-input"].value;
-	postData.captcha = grecaptcha.getResponse();
 	postData.parentId = parentId;
+	try {
+		postData.captcha = grecaptcha.getResponse();
+	} catch (e) {
+		console.log(e);
+	}
 
 	$.postJSON({
 		url : destinationURL,
 		data : postData,
 		success : function(result) {
-			// TODO: Render result from JSON!
 			$("#alertContainer").html("<pre>"+result.message+"</pre>").addClass("alert-error").delay(
 					5000).hide(200, function() {
 				resetComment(recaptchaid, parentId, true);
@@ -50,8 +55,10 @@ function addComment(form, recaptchaid, parentId) {
 					});
 		}
 	});
+    }, 2000);
 	return false;
 }
+
 
 function resetComment(recaptchaid, parentId, hasSuccess) {
 	if (!hasSuccess) {
