@@ -125,6 +125,63 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2018/03/a-filtering-proxy-server-with-vertx.html">A filtering proxy server with vert.x</a></small></h1>
+					<hr />
+					<div><h2><a href="#a-filtering-proxy-server-with-vertx" id="a-filtering-proxy-server-with-vertx">A filtering proxy server with vert.x</a></h2> 
+<h3><a href="#scenario" id="scenario">Scenario</a></h3> 
+<p>You have this nice application running in your (cloud or on premises) environment and then <a href="http://ec.europa.eu/justice/smedataprotect/index_en.htm">a big scare</a> hits. Suddenly you need to remove or mask different streams of data depending on all sorts of conditions your legal department is 
+ <strike>
+  torturing
+ </strike> advising you.</p> 
+<p>Until your applications natively can do that, you might resort to a content filter that sits as a proxy between you and the application (technically it is a <a href="https://en.wikipedia.org/wiki/Reverse_proxy">reverse proxy</a>, but that's fine print).</p> 
+<p>To explore the feasibility of such an approach I created <a href="https://stwissel.github.io/SampleProxy/">SampleProxy</a> based on work of <a href="https://github.com/vietj/vertx-http-proxy">Julien Viet</a> using <a href="http://vertx.io">vert.x</a> as my runtime environment.</p> 
+<h3><a href="#requirements" id="requirements">Requirements</a></h3> 
+<ul> 
+ <li>Needs to be a <strong>content filter</strong>, not a URL blocker</li> 
+ <li>Need to provide functionality for practical use out-of-the-box, but needs to be extensible (configuration over code)</li> 
+ <li>Need to be able to filter HTML, JSON, XML and Text. No need to filter binary formats. Contemplating about JavaScript (you could use the text filter for that)</li> 
+ <li>Filter based on mime-type and URL as standard, but extensible to use <strong>anything</strong> in the request or reply to decide what to filter</li> 
+ <li>Configurable FilterChain: a filter decides what to filter (with the mime-type as minimum condition) and hands actual filter operation to a chain of subfilters that do the actual stream manipulation</li> 
+ <li>configurable subfilters. E.g. a filter that can remove JSON nodes from JSON data should read the qualifier from a configuration, so the same filter class can be reused for different filter purposes</li> 
+ <li>CSS isn't on the radar yet, but contributions would be happily accepted</li> 
+</ul> 
+<h3><a href="#the-flow" id="the-flow">The flow</a></h3> 
+<p><img src="/blog/images/2018/ProxyDataFlow.png" alt="Flow from browser to proxy to application and back"></p> 
+<h3><a href="#things-i-learned-along-the-way" id="things-i-learned-along-the-way">Things I learned along the way</a></h3> 
+<p>There are always a few lessons to be had, here are some from this project:</p> 
+<ul> 
+ <li>http is a chunked beast. When you send larger amount of content, probability approaches 1 that your server uses <a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding">chunked</a> - until HTTP/2 resolves us from it. A hard choice needs to be made to either use a stream based processing of a chunk (think <a href="https://en.wikipedia.org/wiki/Simple_API_for_XML">SAX</a>) or collecting the Junks to be able to process a <a href="https://en.wikipedia.org/wiki/Document_Object_Model">DOM</a>. To be fully flexible I opted for a DOM/Object based approach, but you are free to create whatever you deem necessary</li> 
+ <li><a href="https://jsoup.org/">Jsoup</a> is a reliable HTML parser. It supports <a href="https://www.w3.org/TR/selectors-3/">CSS selectors</a> that make addressing HTML elements a breeze. Solves one of the hardest problems: targeting</li> 
+ <li>Targeting JSON data is much harder that it needs to be, the very moment Arrays appear in your JSON structure. There is <a href="https://tools.ietf.org/html/rfc6901">RFC6901 JSON Pointer</a>, but it targets exactly one element, while a typical use case would be: ?from the list (array) of discussion posts, pick the list of comments and those who have an eMail, mask them?. So I implemented 2 variations: a simple path style address <code>/discussion/posts/comments/email</code> which automatically traverses arrays and an <a href="https://gist.github.com/Stwissel/900acc8ed6a46131530ab89bb70b9f9d">XPath based</a> approach where I convert JSON to a strict XML syntax and back. More <a href="/blog/2018/02/query-a-json-object-like-xpath.html">detail here</a>, examples in a future post</li> 
+</ul> 
+<h3><a href="#items-on-the-todo-list" id="items-on-the-todo-list">Items on the ToDo list</a></h3> 
+<ul> 
+ <li>Better documentation</li> 
+ <li>Code cleanup</li> 
+ <li>Tests</li> 
+ <li>Deploy to Heroku button</li> 
+ <li>More filters</li> 
+</ul> 
+<h3><a href="#your-turn" id="your-turn">Your turn</a></h3> 
+<p>Go <a href="https://stwissel.github.io/SampleProxy/">check it out</a> and let me know what you think! (Yeah - documentation needs some work).</p> 
+<p><strong>Caveat</strong> (a.k.a disclaimer): this is a prototype and work in progress, YMMV!</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2018-03-04 11:18
+<span class="divider">|</span>
+<a href="/blog/2018/03/a-filtering-proxy-server-with-vertx.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/Java.html">Java</a>  <a href="/blog/categories/Heroku.html">Heroku</a>  <a href="/blog/categories/vert.x.html">vert.x</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/03/a-filtering-proxy-server-with-vertx.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="A filtering proxy server with vert.x"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2018/03/a-filtering-proxy-server-with-vertx.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2018/02/query-a-json-object-like-xpath.html">Query a JSON object like XPath in Java</a></small></h1>
 					<hr />
 					<div><p>I'm fond of <a href="/blog/categories/xml.html">XML</a> especially <a href="https://www.w3.org/TR/xslt/">XSLT</a> and the related <a href="https://en.wikipedia.org/wiki/XPath">XPath</a> query possibilities.<br> Moving into the wonderworld of <a href="http://www.json.org/">JSON</a> I'm missing those platform independent query and rendering options.<br> For templating <a href="https://mustache.github.io/">Mustache</a> comes close, especially in regards of platform support, but XPath still has to find its match in the JSON world.</p> 
@@ -514,36 +571,6 @@ categories:  <a href="/blog/categories/Salesforce.html">Salesforce</a>
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2017/07/salesforce-community-license-overview.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Salesforce Community License Overview"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2017/07/salesforce-community-license-overview.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2017/07/sharing-is-caring-salesforce-edition.html">Sharing is caring - Salesforce edition</a></small></h1>
-					<hr />
-					<div><p>I like <a href="/blog/2014/02/domino-development-back-to-basics-part-6-better-safe-than-sorry-security.html">declarative security</a> to give access exactly to the extend a user requires. When learning Salesforce, I discovered to my delight the portfolio of possibilities to tailor access. With great powers, as we know, come great responsibilities. Learning the Salesforce lingo can be quite daunting. So here is my little overview:</p> 
-<a href="/blog/images/2017/SalesforceSharingTerminology.jpg"><img src="/blog/images/2017/SalesforceSharingTerminology640.jpg" border="0" alt="Salesforce Sharing Terminology, click for full size"></a> 
-<ul> 
- <li>Access to data in Salesforce is based on two principles: everything is <b>owner based</b> and a generally restricted access can be <b>extended</b> for given conditions, but not limited. This single vector of access makes systems cleaner that the ability to add and remove privileges based on conditions. It avoids the need to resolve conflicts where condition 1 gives access, while condition 2 would remove it. These conflict solution rules are a security flaw in waiting (prime vector for human error). Nevertheless access in Salesforce need to be well planned (How much does any role need to see: give to little and you invite data duplicates, give too much and you increase leakage risks) - How to plan is another story for another time</li> 
- <li>Access has 3 element: access to objects (that would be access to classes in OO), access to records (instances of a class) and fields (properties of a class instance) </li> 
- <li>Computation starts from the organization wide settings, which are the most restrictive settings for a given organisation and then gets extended with various means (see image above)</li> 
- <li>There's a general distinction between internal access and access via a community. This reflects the need to be able to interact with customers, suppliers and partners in a controlled fashion</li> 
- <li>Owner based: I've seen this quite often: data exists, gets used, but nobody wants to own it, the owner has left or data gets inaccessible when the owner gets deleted. All this issues don't happen in Salesforce since no object data can exist that doesn't have an owner and owner transfer capability is baked into the platform (even rule based, but that's another story for another time)</li> 
- <li>Hierarchical: access rules know the role and reporting hierarchy. So access can be granted to a user and her entire reporting hierarchy including subordinates etc. Quite extensive possibilities worth exploring</li> 
-</ul> 
-<p>As usual YMMV</p></div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2017-07-07 08:52
-<span class="divider">|</span>
-<a href="/blog/2017/07/sharing-is-caring-salesforce-edition.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/Salesforce.html">Salesforce</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2017/07/sharing-is-caring-salesforce-edition.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Sharing is caring - Salesforce edition"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2017/07/sharing-is-caring-salesforce-edition.html";
 						</script>
 					</p>
 </p>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Query a JSON object like XPath in Java - NotesSensei's Blog</title>
+<title>A filtering proxy server with vert.x - NotesSensei's Blog</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -14,7 +14,7 @@ ga('send', 'pageview');
 		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
 	<![endif]-->
 <meta name="ROBOTS" content="FOLLOW, NOIMAGEINDEX" />
-<meta name="DC.Title" content="NotesSensei's Weblog - Query a JSON object like XPath in Java" />
+<meta name="DC.Title" content="NotesSensei's Weblog - A filtering proxy server with vert.x" />
 <meta name="Author" content="Stephan H. Wissel" />
 <meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
 <meta name="description"
@@ -30,7 +30,7 @@ ga('send', 'pageview');
 <meta property="fb:admins" content="567103136" />
 <meta property="fb:app_id" content="219323514774289">
 <meta property="og:title"
-	content="wissel.net - Query a JSON object like XPath in Java" />
+	content="wissel.net - A filtering proxy server with vert.x" />
 <meta property="og:type" content="blog" />
 <meta property="og:url" content="https://wissel.net/blog" />
 <meta property="og:image"
@@ -123,7 +123,10 @@ ga('send', 'pageview');
     <ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2018/">2018</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2018/02/">February</a></li>
+  <li><a href="/blog/2018/03/">March</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
+  </li>
   <li class="pull-right">
     <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
@@ -136,55 +139,75 @@ ga('send', 'pageview');
 			<div class="span12">
 				
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2018/02/spring-boot-and-salesforce-canvas.html"><i class="icon-hand-left"></i>Spring Boot and Salesforce Canvas</a>
+					<li><a href="/blog/2018/02/query-a-json-object-like-xpath.html"><i class="icon-hand-left"></i>Query a JSON object like XPath in Java</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2018/03/a-filtering-proxy-server-with-vertx.html">A filtering proxy server with vert.x<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 				<article class="well well-raised">
-					<h1><small>Query a JSON object like XPath in Java</small></h1>
+					<h1><small>A filtering proxy server with vert.x</small></h1>
 					<hr />
-					<div><p>I'm fond of <a href="/blog/categories/xml.html">XML</a> especially <a href="https://www.w3.org/TR/xslt/">XSLT</a> and the related <a href="https://en.wikipedia.org/wiki/XPath">XPath</a> query possibilities.<br> Moving into the wonderworld of <a href="http://www.json.org/">JSON</a> I'm missing those platform independent query and rendering options.<br> For templating <a href="https://mustache.github.io/">Mustache</a> comes close, especially in regards of platform support, but XPath still has to find its match in the JSON world.</p> 
-<p>The closest equivalent is <a href="https://www.npmjs.com/package/jsonpath">JSONPath</a> (also available <a href="https://github.com/json-path/JsonPath">for Java</a> ) with a nice <a href="http://jsonpath.com/">interactive playground</a>.</p> 
-<p>I was looking at adopting it for one of <a href="https://github.com/Stwissel/SampleProxy">my projects</a> written in <a href="https://vertx.io">vert.x</a>.<br> JSON isn't native to Java and there are several competing implementations around JSON: <a href="https://github.com/google/gson">Google's GSON</a>, <a href="https://github.com/FasterXML/jackson-docs">Jackson</a><br> and <a href="http://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">vert.x core JsonObject</a> (there are probably more).</p> 
-<p>So I was wondering: What if I could use XPath and by extension XSLT directly on JSON? The first step there would be a save way to transform JSON to XML and back.<br> Using vert.x <a href="http://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">JsonObject</a> and <a href="http://vertx.io/docs/apidocs/io/vertx/core/json/JsonArray.html">JsonArray</a> as starting point,<br> I had the following considerations:</p> 
+					<div><h2><a href="#a-filtering-proxy-server-with-vertx" id="a-filtering-proxy-server-with-vertx">A filtering proxy server with vert.x</a></h2> 
+<h3><a href="#scenario" id="scenario">Scenario</a></h3> 
+<p>You have this nice application running in your (cloud or on premises) environment and then <a href="http://ec.europa.eu/justice/smedataprotect/index_en.htm">a big scare</a> hits. Suddenly you need to remove or mask different streams of data depending on all sorts of conditions your legal department is 
+ <strike>
+  torturing
+ </strike> advising you.</p> 
+<p>Until your applications natively can do that, you might resort to a content filter that sits as a proxy between you and the application (technically it is a <a href="https://en.wikipedia.org/wiki/Reverse_proxy">reverse proxy</a>, but that's fine print).</p> 
+<p>To explore the feasibility of such an approach I created <a href="https://stwissel.github.io/SampleProxy/">SampleProxy</a> based on work of <a href="https://github.com/vietj/vertx-http-proxy">Julien Viet</a> using <a href="http://vertx.io">vert.x</a> as my runtime environment.</p> 
+<h3><a href="#requirements" id="requirements">Requirements</a></h3> 
 <ul> 
- <li>I can't use XML tags to map to JSON labels, since labels can contain any character, XML tags are restricted</li> 
- <li>The resulting XML only needs 2 elements: Element and Array</li> 
- <li>An element can have a scalar value, my first test deals with strings only, or can contain another element or array</li> 
- <li>An array does not have a value. It can contain zero or more scalar values and/or zero or more arrays or elements</li> 
+ <li>Needs to be a <strong>content filter</strong>, not a URL blocker</li> 
+ <li>Need to provide functionality for practical use out-of-the-box, but needs to be extensible (configuration over code)</li> 
+ <li>Need to be able to filter HTML, JSON, XML and Text. No need to filter binary formats. Contemplating about JavaScript (you could use the text filter for that)</li> 
+ <li>Filter based on mime-type and URL as standard, but extensible to use <strong>anything</strong> in the request or reply to decide what to filter</li> 
+ <li>Configurable FilterChain: a filter decides what to filter (with the mime-type as minimum condition) and hands actual filter operation to a chain of subfilters that do the actual stream manipulation</li> 
+ <li>configurable subfilters. E.g. a filter that can remove JSON nodes from JSON data should read the qualifier from a configuration, so the same filter class can be reused for different filter purposes</li> 
+ <li>CSS isn't on the radar yet, but contributions would be happily accepted</li> 
 </ul> 
-<p>So I build a small prototype. A simple class that reads a json file from the command line, prints it to the console, transforms it to XML, prints it to the console, transforms it back and prints it again.<br> The prototype depends on vert.x core.</p> 
-<p>The result can be found <a href="https://gist.github.com/Stwissel/900acc8ed6a46131530ab89bb70b9f9d">in this gist</a>.</p> 
-<script src="https://gist.github.com/Stwissel/900acc8ed6a46131530ab89bb70b9f9d.js"></script> 
-<p>Give it a spin and let me know how it works for you. It's just the beginning.<br> Next stop: apply XPath operations on the resulting XML before transforming it back.</p> 
-<p>As usual: YMMV</p></div>
+<h3><a href="#the-flow" id="the-flow">The flow</a></h3> 
+<p><img src="/blog/images/2018/ProxyDataFlow.png" alt="Flow from browser to proxy to application and back"></p> 
+<h3><a href="#things-i-learned-along-the-way" id="things-i-learned-along-the-way">Things I learned along the way</a></h3> 
+<p>There are always a few lessons to be had, here are some from this project:</p> 
+<ul> 
+ <li>http is a chunked beast. When you send larger amount of content, probability approaches 1 that your server uses <a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding">chunked</a> - until HTTP/2 resolves us from it. A hard choice needs to be made to either use a stream based processing of a chunk (think <a href="https://en.wikipedia.org/wiki/Simple_API_for_XML">SAX</a>) or collecting the Junks to be able to process a <a href="https://en.wikipedia.org/wiki/Document_Object_Model">DOM</a>. To be fully flexible I opted for a DOM/Object based approach, but you are free to create whatever you deem necessary</li> 
+ <li><a href="https://jsoup.org/">Jsoup</a> is a reliable HTML parser. It supports <a href="https://www.w3.org/TR/selectors-3/">CSS selectors</a> that make addressing HTML elements a breeze. Solves one of the hardest problems: targeting</li> 
+ <li>Targeting JSON data is much harder that it needs to be, the very moment Arrays appear in your JSON structure. There is <a href="https://tools.ietf.org/html/rfc6901">RFC6901 JSON Pointer</a>, but it targets exactly one element, while a typical use case would be: ?from the list (array) of discussion posts, pick the list of comments and those who have an eMail, mask them?. So I implemented 2 variations: a simple path style address <code>/discussion/posts/comments/email</code> which automatically traverses arrays and an <a href="https://gist.github.com/Stwissel/900acc8ed6a46131530ab89bb70b9f9d">XPath based</a> approach where I convert JSON to a strict XML syntax and back. More <a href="/blog/2018/02/query-a-json-object-like-xpath.html">detail here</a>, examples in a future post</li> 
+</ul> 
+<h3><a href="#items-on-the-todo-list" id="items-on-the-todo-list">Items on the ToDo list</a></h3> 
+<ul> 
+ <li>Better documentation</li> 
+ <li>Code cleanup</li> 
+ <li>Tests</li> 
+ <li>Deploy to Heroku button</li> 
+ <li>More filters</li> 
+</ul> 
+<h3><a href="#your-turn" id="your-turn">Your turn</a></h3> 
+<p>Go <a href="https://stwissel.github.io/SampleProxy/">check it out</a> and let me know what you think! (Yeah - documentation needs some work).</p> 
+<p><strong>Caveat</strong> (a.k.a disclaimer): this is a prototype and work in progress, YMMV!</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2018-02-28 11:50
+Stephan H Wissel</a> on 2018-03-04 11:18
 <span class="divider">|</span>
-<a href="/blog/2018/02/query-a-json-object-like-xpath.html#comments">Comments (0)</a>
+<a href="/blog/2018/03/a-filtering-proxy-server-with-vertx.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/vert.x.html">vert.x</a>  <a href="/blog/categories/Java.html">Java</a> 
+categories:  <a href="/blog/categories/Java.html">Java</a>  <a href="/blog/categories/Heroku.html">Heroku</a>  <a href="/blog/categories/vert.x.html">vert.x</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/02/query-a-json-object-like-xpath.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Query a JSON object like XPath in Java"></div>
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/03/a-filtering-proxy-server-with-vertx.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="A filtering proxy server with vert.x"></div>
 						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2018/02/query-a-json-object-like-xpath.html";
+							var permaLink = "https://wissel.net/blog/2018/03/a-filtering-proxy-server-with-vertx.html";
 						</script>
 					</p>
 
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_26d44c30-1c32-11e8-975d-b5df85697815" type="button">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_17171be0-1879-11e8-8afb-4b4609893bc5" type="button">
 		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
 	            </button>
 	            </div>
-				<div id="commentform_26d44c30-1c32-11e8-975d-b5df85697815"  class="collapse"></div>
+				<div id="commentform_17171be0-1879-11e8-8afb-4b4609893bc5"  class="collapse"></div>
 				<div class="well well-raised">
 					<h4>Comments</h4>
 					<ol id="commentList">
@@ -194,12 +217,9 @@ categories:  <a href="/blog/categories/vert.x.html">vert.x</a>  <a href="/blog/c
 					</ol>
 				</div>
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2018/02/spring-boot-and-salesforce-canvas.html"><i class="icon-hand-left"></i>Spring Boot and Salesforce Canvas</a>
+					<li><a href="/blog/2018/02/query-a-json-object-like-xpath.html"><i class="icon-hand-left"></i>Query a JSON object like XPath in Java</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2018/03/a-filtering-proxy-server-with-vertx.html">A filtering proxy server with vert.x<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 			</div>
@@ -207,7 +227,10 @@ categories:  <a href="/blog/categories/vert.x.html">vert.x</a>  <a href="/blog/c
 		<ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2018/">2018</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2018/02/">February</a></li>
+  <li><a href="/blog/2018/03/">March</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/.html"></a>
+  </li>
   <li class="pull-right">
     <span class="divider">|</span><a href="/blog/categories/.html"></a>
   </li>
@@ -279,7 +302,7 @@ categories:  <a href="/blog/categories/vert.x.html">vert.x</a>  <a href="/blog/c
 	</footer>
 
 	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/2018/02/query-a-json-object-like-xpath.html";
+		var permaLink = "https://wissel.net/blog/2018/03/a-filtering-proxy-server-with-vertx.html";
 	</script>
 		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
 	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
@@ -314,7 +337,7 @@ categories:  <a href="/blog/categories/vert.x.html">vert.x</a>  <a href="/blog/c
 	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 	<script type="text/javascript">
 		var onloadCallback = function() {
-    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "26d44c30-1c32-11e8-975d-b5df85697815");
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "17171be0-1879-11e8-8afb-4b4609893bc5");
  		};
 	</script>
 
