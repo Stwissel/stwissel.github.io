@@ -6,7 +6,47 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Sun, 04 Mar 2018 03:35:38 +0000</pubdate>
+	<pubdate>Thu, 22 Mar 2018 07:04:58 +0000</pubdate>
+<item>
+	<title>Using LetsEncrypt certificates in your JKS</title>
+	<description>&lt;p&gt;Dealing with certificates in Java is always fun. The keystore Java uses is different from the certificate files you are used to in your web server or node.js.&lt;/p&gt; 
+&lt;p&gt;Salesforce is build on Java, so we have to make peace with the Keystore. This article outlines the steps to use a LetsEncrypt certificate in a keystore. You will need:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Internet connection&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://openssl.org"&gt;OpenSSL&lt;/a&gt; installed&lt;/li&gt; 
+ &lt;li&gt;Able to run the &lt;a href="https://letsencrypt.org/how-it-works/"&gt;LetsEncrypt challenge&lt;/a&gt;&lt;/li&gt; 
+ &lt;li&gt;Access to your DNS to add a record (for the challenge)&lt;/li&gt; 
+ &lt;li&gt;Java runtime installed&lt;/li&gt; 
+ &lt;li&gt;Public IP address&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;For this sample I will use the Domain ?demo.example.com?&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#obtaining-a-pem-certficate-from-letsencrypt" id="obtaining-a-pem-certficate-from-letsencrypt"&gt;Obtaining a PEM certficate from LetsEncrypt&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Easiest is to use the certbot utility on a Linux machine (e.g. spin up an instance on Heroku). DigitalOcean has &lt;a href="https://www.digitalocean.com/community/tutorials/how-to-use-certbot-standalone-mode-to-retrieve-let-s-encrypt-ssl-certificates"&gt;detailed instructions&lt;/a&gt;.&lt;br&gt; There used to be a tls-sni challenge which was marked insecure, so you want to the DNS challenge.&lt;/p&gt; 
+&lt;p&gt;&lt;code&gt;sudo certbot certonly --manual --preferred-challenges dns -d demo.example.com&lt;/code&gt;&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#convert-pem-to-pkcs12-format" id="convert-pem-to-pkcs12-format"&gt;Convert PEM to PKCS12 format&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;First concatenate all PEM files into one. Presuming you used the Letsencrypt mechanism:&lt;/p&gt; 
+&lt;p&gt;&lt;code&gt;sudo cat /etc/letsencrypt/life/demo.example.com/*.pem &amp;gt; fullcert.pem&lt;/code&gt;&lt;/p&gt; 
+&lt;p&gt;Then use OpenSSL to convert that into PKCS12 format. Note: if you do that on a Windows command prompt you must &lt;em&gt;run the command prompt as administrator&lt;/em&gt; otherwise you just get an error&lt;/p&gt; 
+&lt;p&gt;&lt;code&gt;openssl pkcs12 -export -out fullchain.pkcs12 -in fullchain.pem&lt;/code&gt;&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#prepare-a-java-jsk-keystore" id="prepare-a-java-jsk-keystore"&gt;Prepare a Java JSK keystore&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;You can't just create an empty keystore, so create a new temp key and specify a new keystore, then delete that key. That gives you the &lt;a href="https://docs.oracle.com/cd/E35976_01/server.740/es_admin/src/tadm_ssl_convert_pem_to_jks.html"&gt;empty keystore&lt;/a&gt;:&lt;/p&gt; 
+&lt;pre class="brush: bash"&gt;keytool -genkey -keyalg RSA -alias sfdcsec -keystore sfdcsec.ks
+keytool -delete -alias sfdcsec -keystore sfdcsec.ks
+&lt;/pre&gt; 
+&lt;h3&gt;&lt;a href="#import-pkcs12-into-jks" id="import-pkcs12-into-jks"&gt;Import pkcs12 into JKS&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Almost final steps. Don't forget your passwords&lt;/p&gt; 
+&lt;p&gt;&lt;code&gt;keytool -v -importkeystore -srckeystore fullchain.pkcs12 -destkeystore sfdcsec.ks -deststoretype JKS&lt;/code&gt;&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#adjust-alias-for-salesforce-import" id="adjust-alias-for-salesforce-import"&gt;Adjust alias for Salesforce import&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;The Salesforce import utility is picky about Alias names. The previous import created the entry&lt;br&gt; &lt;code&gt;Alias name: 1&lt;/code&gt; which needs to be updated:&lt;/p&gt; 
+&lt;p&gt;&lt;code&gt;keytool -keystore sfdcsec.ks -changealias -alias 1 -destalias demo_example_com&lt;/code&gt;&lt;/p&gt; 
+&lt;p&gt;And voilah, you have a properly signed certificate for your Salesforce instance. Downside: to be repeated every 90 days.&lt;/p&gt; 
+&lt;p&gt;As usual YMMV!&lt;/p&gt;</description>
+	<link>2018/03/letsencrypt-java-keystore.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>3f404a7d-3883-4a8a-a976-0e84417ff0d7</guid>
+	<pubDate>2018-03-22 11:18</pubDate>
+
+</item>
 <item>
 	<title>A filtering proxy server with vert.x</title>
 	<description>&lt;h3&gt;&lt;a href="#scenario" id="scenario"&gt;Scenario&lt;/a&gt;&lt;/h3&gt; 
@@ -326,18 +366,6 @@
 	<author>Stephan H Wissel</author>
 	<guid>97E8ED82940D30104825815F0045EF13</guid>
 	<pubDate>2017-07-14 08:43</pubDate>
-
-</item>
-<item>
-	<title>Salesforce Community License Overview</title>
-	<description>&lt;p&gt;To facilitate collaboration across corporate boundaries, Salesforce offers &lt;b&gt;Salesforce Communities&lt;/b&gt;. The licence for communities come in three flavours: customer community, customer community plus and partner community. There are similarities and differences between the entitlements.&lt;/p&gt; 
-&lt;p&gt;The biggest difference can be seen between customer community and customer community plus. There's a simple rationale behind it: a customer community account uses simplified sharing access, so the computational load to determine access of potentially millions of users stays reasonable and easy to grasp for administrators:&lt;/p&gt; 
-&lt;a href="/blog/images/2017/CommunityLicenses.jpg" alt="Click for a bigger version"&gt;&lt;img src="/blog/images/2017/CommunityLicenses640.jpg" border="0" alt="Community License Overview"&gt;&lt;/a&gt; 
-&lt;p&gt;All licences, full Salesforce or one of the community licence types, access the same data, in the confines of the entitlements. So it's NOT different products, just different permissions on the Salesforce platform.&lt;/p&gt;</description>
-	<link>2017/07/salesforce-community-license-overview.html</link>
-	<author>Stephan H Wissel</author>
-	<guid>9B77F8952FFBAA284825815F004B1D1E</guid>
-	<pubDate>2017-07-10 09:40</pubDate>
 
 </item>
 
