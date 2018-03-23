@@ -6,7 +6,63 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Thu, 22 Mar 2018 07:04:58 +0000</pubdate>
+	<pubdate>Fri, 23 Mar 2018 03:45:27 +0000</pubdate>
+<item>
+	<title>Authenticate from Salesforce to Heroku with JWT</title>
+	<description>&lt;p&gt;&lt;a href="https://heroku.com"&gt;Heroku&lt;/a&gt; PAAS is an easy and flexible way to extend Salesforce functionality.&lt;br&gt; Its easy to call out to a Heroku REST service build with a method of your choice: Java, JavaScript, Ruby etc.&lt;br&gt; The usual sticky point between two platforms is the &lt;strong&gt;identity of the caller&lt;/strong&gt;.&lt;/p&gt; 
+&lt;p&gt;In a lot of cases the only requirement is ?a valid Salesforce user?, eventually with some additional claims added.&lt;br&gt; For this scenario a &lt;a href="https://jwt.io/"&gt;JWT&lt;/a&gt; Bearer authentication (&lt;a href="https://tools.ietf.org/html/rfc7519"&gt;RFC 7519&lt;/a&gt;) is a good pick.&lt;/p&gt; 
+&lt;p&gt;When you look around, most examples revolve around a JWT token being issued after some means of authentication from the same system that was authenticated against.&lt;br&gt; This scenario is different: The Salesforce server issues the JWT token and code on Heroku validates the token as authorization.&lt;br&gt; The beauty of the approach: &lt;strong&gt;no extra calls&lt;/strong&gt; need to be made to get this working.&lt;/p&gt; 
+&lt;p&gt;What you will need:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;A valid certificate, in this case self signed is good enough (it won't be used by a browser)&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://openssl.org"&gt;OpenSSL&lt;/a&gt; installed on your computer&lt;/li&gt; 
+ &lt;li&gt;A Heroku account&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#preparing-the-certificate" id="preparing-the-certificate"&gt;Preparing the certificate&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;In Salesforce setup open ?&lt;a href="https://help.salesforce.com/articleView?id=security_keys_about.htm&amp;amp;type=5"&gt;Certificate and Key management&lt;/a&gt;?.&lt;br&gt; Create or pick a key. Note down the name. For this article I will use &lt;em&gt;YourCertNameHere&lt;/em&gt;. Open the key and click on ?&lt;em&gt;Download Certificate&lt;/em&gt;?.&lt;br&gt; The cert will be downloaded in crt format. We use this file to extract the &lt;strong&gt;public&lt;/strong&gt; key that Heroku will use to verify the signature. To get the key use:&lt;/p&gt; 
+&lt;pre class="brush: bash"&gt;openssl x509 -pubkey -noout -in YourCertNameHere.crt
+&lt;/pre&gt; 
+&lt;p&gt;The String we need is between the BEGIN and END lines, excluding the lines. You can store it into a file or create a Heroku environment variable.&lt;br&gt; Since it is a public key, you don't need to guard it as fiercly as your private keys.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#the-apex-code" id="the-apex-code"&gt;The APEX code&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Before making a call-out to Heroku, you need to componse the signed JWT token. That's done in just a few lines:&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;public static String getJWTBearer(String subject, String keyName) {
+    Auth.JWT jwt = new Auth.JWT();
+    jwt.setSub(subject);
+    Auth.JWS myJws = new Auth.JWS(jwt, keyName);
+    return myJws.getCompactSerialization();
+}
+&lt;/pre&gt; 
+&lt;p&gt;You might opt to add additional claims beside the subject, when your use case does require that.&lt;br&gt; The header value gets added to the &lt;code&gt;Authorization&lt;/code&gt; header as &lt;code&gt;Bearer&lt;/code&gt; authorization.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#java-code" id="java-code"&gt;Java code&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;I'm using the &lt;a href="https://github.com/jwtk/jjwt"&gt;jjwt&lt;/a&gt; library which is available on &lt;a href="https://search.maven.org/#artifactdetails%7Cio.jsonwebtoken%7Cjjwt%7C0.9.0%7Cjar"&gt;Maven Central&lt;/a&gt;.&lt;br&gt; It makes it simple to retrieve a claim. An expired claim or an invalid signature will throw an error, so wrap it into a try/catch.&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;import java.security.Key;
+import java.security.KeyFactory;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+
+public class JwtVerifier {
+	public static Claims getClaims(String key, String token) throws Exception {
+
+		byte[] byteKey = Base64.getMimeDecoder().decode(key);
+		X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(byteKey);
+		KeyFactory kf = KeyFactory.getInstance("RSA");
+		Key realKey = kf.generatePublic(X509publicKey);
+		return Jwts.parser().setSigningKey(realKey).parseClaimsJws(token).getBody();
+	}
+}
+&lt;/pre&gt; 
+&lt;p&gt;The only catch in the code was the need for &lt;code&gt;MimeDecoder&lt;/code&gt; instead of a standard &lt;code&gt;Decoder&lt;/code&gt; for Base64 decoding.&lt;br&gt; The subject, typically the user, can be retrieved using &lt;code&gt;claims.getSubject()&lt;/code&gt;&lt;/p&gt; 
+&lt;p&gt;Next stop, for another blog entry: the NodeJS equivalent.&lt;/p&gt; 
+&lt;p&gt;As usual YMMV!&lt;/p&gt;</description>
+	<link>2018/03/salesforce-heroku-jwt.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>cafb442a-6edb-4a5a-8414-1427353e25df</guid>
+	<pubDate>2018-03-23 12:40</pubDate>
+
+</item>
 <item>
 	<title>Using LetsEncrypt certificates in your JKS</title>
 	<description>&lt;p&gt;Dealing with certificates in Java is always fun. The keystore Java uses is different from the certificate files you are used to in your web server or node.js.&lt;/p&gt; 
@@ -342,30 +398,6 @@ keytool -delete -alias sfdcsec -keystore sfdcsec.ks
 	<author>Stephan H Wissel</author>
 	<guid>83FFC90480FAC1EB4825815F004C494B</guid>
 	<pubDate>2017-07-16 09:53</pubDate>
-
-</item>
-<item>
-	<title>Using FontAwesome in your VisualForce pages</title>
-	<description>&lt;p&gt;I'm a big fan of &lt;a href="http://fontawesome.io/"&gt;Font Awesome&lt;/a&gt; (including backing &lt;a href="https://fontawesome.com/"&gt;Version 5&lt;/a&gt;). It allows to add icons without the overhead of loading tons of small graphic files. In a recent internal project I had to integrate FontAwesome into a Salesforce VisualForce page&lt;/p&gt; 
-&lt;h2 id="installing-fontawesome"&gt;Installing FontAwesome&lt;/h2&gt; 
-&lt;p&gt;In theory you could load the font from a CDN. However based on security settings this might or might not work. So I decided to add FontAwesome as resource to my project:&lt;/p&gt; 
-&lt;ol&gt; 
- &lt;li&gt;&lt;a href="http://fontawesome.io/assets/font-awesome-4.7.0.zip"&gt;Download FontAwesome 4&lt;/a&gt;. Or support the team and use &lt;a href="https://fontawesome.com/"&gt;Version 5&lt;/a&gt;&lt;/li&gt; 
- &lt;li&gt;Add the zip file as static resource to your setup:&lt;br&gt; &lt;img src="/blog/images/2017/SFFAStatic.png" alt="Static Resource for FontAwesome"&gt;&lt;/li&gt; 
- &lt;li&gt;Make sure you have set the cache control to &lt;code&gt;public&lt;/code&gt;, so the font doesn't need download after first use.&lt;/li&gt; 
-&lt;/ol&gt; 
-&lt;h2 id="adding-to-the-visualforce-page"&gt;Adding to the VisualForce Page&lt;/h2&gt; 
-&lt;p&gt;The font gets added using a stylesheet that is included in the zip file added as a resource in the previous step. the &lt;code&gt;apex:stylesheet&lt;/code&gt; element takes care of that. The only catch: the zip file is internally "expanded" OS/X style with the file name (sans extension) as directory name. So the tag needs to look like this:&lt;/p&gt; 
-&lt;pre&gt;&lt;code&gt;  &amp;lt;apex:stylesheet value="{!URLFOR($Resource.fontawesome,'/font-awesome-4.7.0/css/font-awesome.css')}"/&amp;gt;&lt;/code&gt;&lt;/pre&gt; 
-&lt;h2 id="using-icons"&gt;Using Icons&lt;/h2&gt; 
-&lt;p&gt;This follows the standard approach: you create an empty &lt;code&gt;&amp;amp;lt;i&amp;amp;gt;&lt;/code&gt; element and use the class property to specify icon and options. Like this:&lt;/p&gt; 
-&lt;pre&gt;&lt;code&gt;  &amp;lt;i style="color: red" class="fa fa-user-circle fa-2x" aria-hidden="true"&amp;gt;&amp;lt;/i&amp;gt;&lt;/code&gt;&lt;/pre&gt; 
-&lt;p&gt;Make sure you have a look at the &lt;a href="http://fontawesome.io/icons/"&gt;full selection&lt;/a&gt; of icons available.&lt;/p&gt; 
-&lt;p&gt;As usual: YMMV&lt;/p&gt;</description>
-	<link>2017/07/using-fontawesome-in-your-visualforce-pages.html</link>
-	<author>Stephan H Wissel</author>
-	<guid>97E8ED82940D30104825815F0045EF13</guid>
-	<pubDate>2017-07-14 08:43</pubDate>
 
 </item>
 
