@@ -1,0 +1,157 @@
+%REM
+	Library CoreHandlerLibrary
+	Created Jan 6, 2010 by Stephan H Wissel/Singapore/IBM
+	Description: Comments for Library
+%END REM
+Option Public
+Option Declare
+
+
+
+%REM
+	Class DocumentHandler
+	Description: Comments for Class
+%END REM
+Public Class DocumentHandler
+	Private Doc As NotesDocument
+	Private hasCustomFields As Boolean
+	Private m_fieldPrefix As String
+	Private m_formName As String
+	Private FieldList List As String
+	
+	%REM
+		Sub New
+		Description: Comments for Sub
+	%END REM
+	Public Sub New (newDoc As NotesDocument)
+		Set me.doc = newDoc
+		me.hasCustomFields = False
+		me.m_fieldPrefix = "vsf_"
+		me.m_formName = "ViewSelectionFormulas"
+	End Sub
+	
+	%REM
+		Property Set fieldPrefix
+		Description: What prefix is ued for view selection formula fields
+	%END REM
+	Property Set fieldPrefix As String
+		me.m_fieldPrefix = fieldPrefix
+	End Property
+	
+	%REM
+		Property Get fieldPrefix
+		Description: What prefix is ued for view selection formula fields, default is "vsf_"
+	%END REM
+	Property Get fieldPrefix As String
+		fieldPrefix = me.m_fieldPrefix
+	End Property
+	
+	%REM
+		Property Set formName
+		Description: What form name to use to recompute the document for view selection changes
+	%END REM
+	Property Set formName As String
+		me.m_formName = formName
+	End Property
+	
+	%REM
+		Property Get formName
+		Description: What form name to use to recompute the document for view selection changes
+	%END REM
+	Property Get formName As String
+		formName = me.m_formName
+	End Property
+	
+	%REM
+		Function save
+		Description:Saves a document, performs standard audit and other functiond
+	%END REM
+	Function save
+		Call me.Doc.Save(true, True,true)
+	End Function
+
+	Function docHasChangedAfterUpdate As Boolean
+
+		docHasChangedAfterUpdate = False ' we don't need saving yet
+
+		Dim oldForm As String
+		Dim oldVal List As String
+		Dim item As NotesItem
+
+		'Save the old values
+		ForAll it In doc.Items
+			Set item = it
+			If  me.isFieldForViewSelection(item) Then
+				oldVal(item.Name) = item.Text
+			End If
+		End ForAll
+		
+		oldForm = doc.form
+		doc.form = me.m_formName
+		Call doc.Computewithform(True,False)
+		doc.form = oldForm
+
+		ForAll it In doc.Items
+			Set item = it
+			If  me.isFieldForViewSelection(item) Then
+				If  IsElement(oldVal(item.Name)) Then
+					If oldVal(item.Name) <> item.text Then
+						docHasChangedAfterUpdate = True
+						Exit ForAll
+					End If
+				Else
+					docHasChangedAfterUpdate = True
+					Exit ForAll
+				End If
+				
+			End If
+		End ForAll
+
+	End Function
+	
+	%REM
+		Function isFieldForViewSelection
+		Description: Checks if a field is inside the fields we watch for change 
+	%END REM
+	Private Function isFieldForViewSelection(curItem As NotesItem) As Boolean
+		dim itemName As String
+		itemName = curItem.Name
+		isFieldForViewSelection = false
+		If me.hasCustomFields Then
+			If IsElement(me.FieldList(itemName)) Then
+				isFieldForViewSelection = true
+			End If
+ 		Else
+			If Left$(itemName,Len(me.m_fieldPrefix)) = me.m_fieldPrefix Then
+				isFieldForViewSelection = true
+			End If
+		End If
+	End Function
+	
+	%REM
+		Sub useFieldsFromForm
+		Description: Uses all fields from a form instead of the prefixes for checking
+		for changes
+	%END REM
+	Public Sub useFieldsFromForm(curForm As NotesForm)
+		Dim allFields As Variant
+		Dim i As Integer
+		allFields = curForm.Fields
+		
+		For i = 0 To UBound(allFields) Step 1
+			me.FieldList(allFields(i)) = allFields(i)
+		Next 
+		me.hasCustomFields = true
+	End Sub
+	
+End Class
+%REM
+	Class DH_Factory
+	Description: Comments for Class
+%END REM
+Public Class DH_Factory
+	Public Function getDocumentHandler(doc As NotesDocument) As DocumentHandler
+		'TODO: implement this
+		Set getDocumentHandler = New DocumentHandler(doc)
+	End Function
+End Class

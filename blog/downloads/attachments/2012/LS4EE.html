@@ -1,0 +1,284 @@
+<html>
+<head>
+<title>LotusScript Class for embedded experiences</title>
+<style type="text/css">
+/**
+ * GeSHi (C) 2004 - 2007 Nigel McNie, 2007 - 2008 Benny Baumann
+ * (http://qbnz.com/highlighter/ and http://geshi.org/)
+ */
+.lotusscript .de1, .lotusscript .de2 {font: normal normal 1em/1.2em monospace; margin:0; padding:0; background:none; vertical-align:top;;white-space: nowrapcolor: #000020;}
+.lotusscript  {font-family:monospace;color: #006; border: 1px solid #d0d0d0; background-color: #f0f0f0;}
+.lotusscript a:link {color: #000060;}
+.lotusscript a:hover {background-color: #f0f000;}
+.lotusscript .imp {font-weight: bold; color: red;}
+.lotusscript li, .lotusscript .li1 {font-weight: normal; vertical-align:top;font: normal normal 130% 'Courier New', Courier, monospace; color: #003030;}
+.lotusscript .ln {width:1px;text-align:right;margin:0;padding:0 2px;vertical-align:top;}
+.lotusscript .li2 {font-weight: bold; vertical-align:top;font-weight: bold; color: #006060;}
+.lotusscript .kw1 {color: #0000FF;}
+.lotusscript .kw2 {color: #0000EE;}
+.lotusscript .co1 {color: #008000;}
+.lotusscript .es0 {color: #000099;}
+.lotusscript .br0 {color: #000000;}
+.lotusscript .sy0 {color: #006600;}
+.lotusscript .st0 {color: #000000;}
+.lotusscript .nu0 {color: #FF00FF;}
+.lotusscript .me1 {color: #0000AA;}
+.lotusscript span.xtra { display:block; }
+</style>
+</head>
+<body>
+<h1>Sample LS Class for sending EE mail</h1>
+<div class="lotusscript"><ol><li class="li1"><div class="de1"><span class="kw1">Public</span> <span class="kw1">Class</span> EEMail</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Private</span> JSONcontext <span class="kw1">List</span> <span class="kw1">As</span> <span class="kw1">String</span> <span class="co1">'The JSON Paramenterd</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Private</span> m_HTMLBody <span class="kw1">As</span> <span class="kw1">String</span> <span class="co1">'The HTML Part of the message</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="kw1">Private</span> m_gadgetURL <span class="kw1">As</span> <span class="kw1">String</span> <span class="co1">'The URL where the gadget.xml is at home (that needs to be authorized)</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Private</span> m_Subject <span class="kw1">As</span> <span class="kw1">String</span> <span class="co1">' The message subject</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Private</span> m_from <span class="kw1">As</span> <span class="kw1">String</span> <span class="co1">'The sender</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Private</span> m_session <span class="kw1">As</span> <span class="kw2">NotesSession</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Private</span> m_dynamicHTML <span class="kw1">As</span> <span class="kw1">Boolean</span> <span class="co1">'Generate from Parameters</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="kw1">Private</span> m_description <span class="kw1">As</span> <span class="kw1">String</span> <span class="co1">' The EE description</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="coMULTI">%REM</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Sub new</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Description: Create a new EEMail</span></div></li>
+<li class="li2"><div class="de2"><span class="coMULTI">&nbsp; &nbsp; %END REM</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Sub</span> <span class="kw1">New</span><span class="br0">&#40;</span><span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> m_session = <span class="kw1">New</span> <span class="kw2">NotesSession</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; m_from = m_session.<span class="me1">Username</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; m_dynamicHTML = <span class="kw1">true</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Sub</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="coMULTI">%REM</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Property Set isDynamic</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Description: true = content generated from parameters</span></div></li>
+<li class="li2"><div class="de2"><span class="coMULTI">&nbsp; &nbsp; %END REM</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Property</span> <span class="kw1">Set</span> isDynamic <span class="kw1">As</span> <span class="kw1">Boolean</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; m_dynamicHTML = isDynamic</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Property</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="coMULTI">%REM</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Property Set description</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; %END REM</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Property</span> <span class="kw1">Set</span> description <span class="kw1">As</span> <span class="kw1">String</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; m_description = description</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Property</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="coMULTI">%REM</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Property Set Body</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Description: THe HTML Message</span></div></li>
+<li class="li2"><div class="de2"><span class="coMULTI">&nbsp; &nbsp; %END REM</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Property</span> <span class="kw1">Set</span> Body <span class="kw1">As</span> <span class="kw1">String</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; m_HTMLBody = Body</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Property</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="coMULTI">%REM</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Property Set gadgetURL</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Description: where the gadget URL lives</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; %END REM</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Property</span> <span class="kw1">Set</span> gadgetURL <span class="kw1">As</span> <span class="kw1">String</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; m_gadgetURL = gadgetURL</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Property</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="coMULTI">%REM</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Property Set subject</span></div></li>
+<li class="li2"><div class="de2"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Description: Comments for Property Set</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; %END REM</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Property</span> <span class="kw1">Set</span> subject <span class="kw1">As</span> <span class="kw1">String</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; m_Subject = subject</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Property</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="coMULTI">%REM</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Sub addParameter</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Description: add a JSON Parameter to the context</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; %END REM</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Sub</span> addParameter<span class="br0">&#40;</span>pName <span class="kw1">As</span> <span class="kw1">String</span>, pValue <span class="kw1">As</span> <span class="kw1">Variant</span><span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> workString</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> first <span class="kw1">As</span> <span class="kw1">Boolean</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; first = <span class="kw1">true</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">IsArray</span><span class="br0">&#40;</span>pValue<span class="br0">&#41;</span><span class="kw1">Then</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; workString = <span class="st0">|{|</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">ForAll</span> ele <span class="kw1">In</span> pValue</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> first <span class="kw1">Then</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; workString = workString + <span class="st0">|, |</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; first = <span class="kw1">false</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; workString = workString + <span class="st0">|&quot;|</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; workString = workString + <span class="kw1">CStr</span><span class="br0">&#40;</span>ele<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; workString = workString + <span class="st0">|&quot;|</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">ForAll</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; workString = workString + <span class="st0">|}|</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; JSONcontext<span class="br0">&#40;</span>pName<span class="br0">&#41;</span> = <span class="st0">|&quot;|</span>+pName+<span class="st0">|&quot; : &quot;|</span> + workString +<span class="st0">|&quot;|</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Else</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; JSONcontext<span class="br0">&#40;</span>pName<span class="br0">&#41;</span> = <span class="st0">|&quot;|</span>+pName+<span class="st0">|&quot; : &quot;|</span>+<span class="kw1">CStr</span><span class="br0">&#40;</span>pValue<span class="br0">&#41;</span>+<span class="st0">|&quot;|</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">if</span>&nbsp; &nbsp; &nbsp; </div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Sub</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="coMULTI">%REM</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Sub sendMail</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Description: Send the message</span></div></li>
+<li class="li2"><div class="de2"><span class="coMULTI">&nbsp; &nbsp; %END REM</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Sub</span> sendMail<span class="br0">&#40;</span>SendTo <span class="kw1">As</span> <span class="kw1">Variant</span><span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> db <span class="kw1">As</span> <span class="kw2">NotesDatabase</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> mbox <span class="kw1">As</span> <span class="kw2">NotesDatabase</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> mail <span class="kw1">As</span> <span class="kw2">NotesDocument</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> mime <span class="kw1">As</span> <span class="kw2">NotesMIMEEntity</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">set</span> db = m_session.<span class="me1">Currentdatabase</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> mbox = <span class="kw1">New</span> <span class="kw2">NotesDatabase</span><span class="br0">&#40;</span>db.<span class="me1">Server</span>,<span class="st0">&quot;mail.box&quot;</span><span class="br0">&#41;</span> <span class="co1">'Breaks on multi-mailbox servers</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> mbox.<span class="me1">Isopen</span> <span class="kw1">Then</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> mbox.<span class="kw1">Open</span><span class="br0">&#40;</span><span class="st0">&quot;&quot;</span>, <span class="st0">&quot;&quot;</span><span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; m_session.<span class="me1">Convertmime</span> = <span class="kw1">False</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> mail = mbox.<span class="me1">Createdocument</span><span class="br0">&#40;</span><span class="br0">&#41;</span>&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Header values</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> mime = mail.<span class="me1">CreateMIMEEntity</span><span class="br0">&#40;</span><span class="st0">&quot;Body&quot;</span><span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> <span class="kw1">me</span>.<span class="me1">addHeader</span><span class="br0">&#40;</span>mime, <span class="st0">&quot;Content-Type&quot;</span>, <span class="st0">&quot;multipart/alternative&quot;</span><span class="br0">&#41;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> <span class="kw1">me</span>.<span class="me1">addHeader</span><span class="br0">&#40;</span>mime, <span class="st0">&quot;MIME-Version&quot;</span>, <span class="st0">&quot;1.0&quot;</span><span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> <span class="kw1">me</span>.<span class="me1">addHeader</span><span class="br0">&#40;</span>mime, <span class="st0">&quot;Content-transfer-encoding&quot;</span>, <span class="st0">&quot;7bit&quot;</span><span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> <span class="kw1">me</span>.<span class="me1">addHeader</span><span class="br0">&#40;</span>mime, <span class="st0">&quot;Subject&quot;</span>, m_subject<span class="br0">&#41;</span> &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> <span class="kw1">me</span>.<span class="me1">addHeader</span><span class="br0">&#40;</span>mime, <span class="st0">&quot;From&quot;</span>, m_from<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">ForAll</span> rcp <span class="kw1">In</span> SendTo</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> <span class="kw1">me</span>.<span class="me1">addHeader</span><span class="br0">&#40;</span>mime, <span class="st0">&quot;To&quot;</span>, <span class="kw1">CStr</span><span class="br0">&#40;</span>rcp<span class="br0">&#41;</span><span class="br0">&#41;</span>&nbsp; &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">ForAll</span></div></li>
+<li class="li1"><div class="de1">&nbsp;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Now text and embedded experience body</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Trim</span><span class="br0">&#40;</span><span class="kw1">me</span>.<span class="me1">m_HTMLBody</span><span class="br0">&#41;</span> = <span class="st0">&quot;&quot;</span> <span class="kw1">Then</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">me</span>.<span class="me1">m_dynamicHTML</span> = <span class="kw1">True</span> <span class="co1">'Without content we generate dynamically</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">me</span>.<span class="me1">m_dynamicHTML</span> <span class="kw1">Then</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> <span class="kw1">me</span>.<span class="me1">setDynamicHTMLBody</span><span class="br0">&#40;</span>mime<span class="br0">&#41;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Else</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> <span class="kw1">me</span>.<span class="me1">setHTMLBody</span><span class="br0">&#40;</span>mime<span class="br0">&#41;</span> &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> <span class="kw1">me</span>.<span class="me1">setEEBody</span><span class="br0">&#40;</span>mime<span class="br0">&#41;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> mail.<span class="me1">Closemimeentities</span><span class="br0">&#40;</span><span class="kw1">true</span><span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Normal Notes fields</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> mail.<span class="me1">ReplaceItemValue</span><span class="br0">&#40;</span><span class="st0">&quot;Form&quot;</span>,<span class="st0">&quot;Memo&quot;</span><span class="br0">&#41;</span> &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> mail.<span class="me1">replaceItemValue</span><span class="br0">&#40;</span><span class="st0">&quot;Recipients&quot;</span>, SendTo<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> mail.<span class="me1">replaceItemValue</span><span class="br0">&#40;</span> <span class="st0">&quot;From&quot;</span>, m_from <span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> mail.<span class="me1">Save</span><span class="br0">&#40;</span><span class="kw1">true</span>, <span class="kw1">False</span><span class="br0">&#41;</span> <span class="co1">'We deposit directly into the mail.box</span></div></li>
+<li class="li1"><div class="de1">&nbsp;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; m_session.<span class="me1">Convertmime</span> = <span class="kw1">True</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Sub</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Property</span> <span class="kw1">Set</span> Sender <span class="kw1">As</span> <span class="kw1">String</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; m_from = sender</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Property</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="coMULTI">%REM</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Function setHTMLBody</span></div></li>
+<li class="li2"><div class="de2"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Description: Get the human readable body of the eMail</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; %END REM</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Private</span> <span class="kw1">Sub</span> setHTMLBody<span class="br0">&#40;</span>mime <span class="kw1">As</span> <span class="kw2">NotesMIMEEntity</span><span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> out <span class="kw1">As</span> <span class="kw2">NotesStream</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> htmlbody <span class="kw1">As</span> <span class="kw2">NotesMIMEEntity</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> out = m_session.<span class="me1">Createstream</span><span class="br0">&#40;</span><span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; out.<span class="me1">WriteText</span><span class="br0">&#40;</span>m_HTMLBody<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; out.<span class="me1">position</span> = <span class="nu0">0</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> htmlbody = mime.<span class="me1">CreateChildEntity</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> htmlbody.<span class="me1">SetContentFromText</span><span class="br0">&#40;</span>out,<span class="st0">&quot;text/html; charset=UTF-8&quot;</span>, ENC_IDENTITY_7BIT<span class="br0">&#41;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Sub</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="coMULTI">%REM</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Function setDynamicHTMLBody</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Description: Create a human readable body of the eMail</span></div></li>
+<li class="li2"><div class="de2"><span class="coMULTI">&nbsp; &nbsp; %END REM</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Private</span> <span class="kw1">Sub</span> setDynamicHTMLBody<span class="br0">&#40;</span>mime <span class="kw1">As</span> <span class="kw2">NotesMIMEEntity</span><span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> out <span class="kw1">As</span> <span class="kw2">NotesStream</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> htmlbody <span class="kw1">As</span> <span class="kw2">NotesMIMEEntity</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> seperatorLcation <span class="kw1">As</span> <span class="kw1">integer</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> out = m_session.<span class="me1">Createstream</span><span class="br0">&#40;</span><span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|&lt;html&gt;|</span>,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|&lt;head&gt;&lt;title&gt;|</span>,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="kw1">me</span>.<span class="me1">m_Subject</span>,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|&lt;/title&gt;&lt;style type=&quot;text/css&quot;&gt;|</span>,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|html, body, th {font-family : Verdana, Arial, sans-serif; font-size : small;}|</span>,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|table {border : none; width : 60%}|</span>,EOL_PLATFORM<span class="br0">&#41;</span> &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|&lt;/style&gt;&lt;/head&gt;&lt;body&gt;|</span>,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|&lt;h3&gt;|</span>,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="kw1">me</span>.<span class="me1">m_Subject</span>,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|&lt;/h3&gt;&lt;p&gt;|</span>,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="kw1">me</span>.<span class="me1">m_description</span>,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|&lt;/p&gt;&lt;table width=&quot;60%&quot; border=&quot;0&quot; style=&quot;background-color : #FFFEFF&quot;&gt;&lt;tr&gt;&lt;th&gt;Parameter&lt;/th&gt;&lt;th&gt;Value&lt;/th&gt;&lt;/tr&gt;|</span>,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">ForAll</span> ctp <span class="kw1">In</span> JSONcontext</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; seperatorLcation = <span class="kw1">InStr</span><span class="br0">&#40;</span>ctp,<span class="st0">&quot;:&quot;</span><span class="br0">&#41;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|&lt;tr&gt;&lt;td&gt;|</span>,EOL_NONE<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="kw1">Left$</span><span class="br0">&#40;</span>ctp,seperatorLcation-<span class="nu0">1</span><span class="br0">&#41;</span> ,EOL_NONE<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|&lt;/td&gt;&lt;td&gt;|</span>,EOL_NONE<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="kw1">Mid$</span><span class="br0">&#40;</span>ctp,seperatorLcation+<span class="nu0">1</span><span class="br0">&#41;</span>,EOL_NONE<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|&lt;/td&gt;&lt;/tr&gt;|</span>,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">ForAll</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;|</span>,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; out.<span class="me1">position</span> = <span class="nu0">0</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> htmlbody = mime.<span class="me1">CreateChildEntity</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> htmlbody.<span class="me1">SetContentFromText</span><span class="br0">&#40;</span>out,<span class="st0">&quot;text/html; charset=UTF-8&quot;</span>, Enc_identity_7bit<span class="br0">&#41;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="kw1">Close</span><span class="br0">&#40;</span><span class="br0">&#41;</span>&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Sub</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="coMULTI">%REM</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Function setHTMLBody</span></div></li>
+<li class="li2"><div class="de2"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Description: Get the human readable body of the eMail</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; %END REM</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">Private</span> <span class="kw1">Sub</span> setEEBody<span class="br0">&#40;</span>mime <span class="kw1">As</span> <span class="kw2">NotesMIMEEntity</span><span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> out <span class="kw1">As</span> <span class="kw2">NotesStream</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> eebody <span class="kw1">As</span> <span class="kw2">NotesMIMEEntity</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> first <span class="kw1">As</span> <span class="kw1">Boolean</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> out = m_session.<span class="me1">Createstream</span><span class="br0">&#40;</span><span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Here the JSON gets written out</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|&quot;{ gadget&quot; : &quot;|</span>,EOL_NONE<span class="br0">&#41;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span>m_gadgetURL,EOL_NONE<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|&quot;,|</span>,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|&quot;context&quot; : {|</span>,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Looping through context parameter</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; first = <span class="kw1">true</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">ForAll</span> ctp <span class="kw1">In</span> JSONcontext</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> first <span class="kw1">Then</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|, |</span>,EOL_NONE<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; first = <span class="kw1">false</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span>ctp,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">ForAll</span>&nbsp; &nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="me1">WriteText</span><span class="br0">&#40;</span><span class="st0">|} } |</span>,EOL_PLATFORM<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; </div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; out.<span class="me1">position</span> = <span class="nu0">0</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> eebody = mime.<span class="me1">CreateChildEntity</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> eebody.<span class="me1">SetContentFromText</span><span class="br0">&#40;</span>out,<span class="st0">&quot;application/embed+json; charset=UTF-8&quot;</span>, Enc_identity_7bit<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out.<span class="kw1">Close</span><span class="br0">&#40;</span><span class="br0">&#41;</span>&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Sub</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="coMULTI">%REM</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Sub addHeader</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Description: Adds a header to a MIME Part</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; %END REM</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="kw1">Private</span> <span class="kw1">Sub</span> addHeader<span class="br0">&#40;</span>mime <span class="kw1">As</span> <span class="kw2">NotesMIMEEntity</span>, hName <span class="kw1">As</span> <span class="kw1">String</span>, value <span class="kw1">As</span> <span class="kw1">String</span><span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> header <span class="kw1">As</span> <span class="kw2">NotesMIMEHeader</span> </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> header = mime.<span class="me1">CreateHeader</span><span class="br0">&#40;</span>hName<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> header.<span class="me1">SetHeaderVal</span><span class="br0">&#40;</span>value<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Sub</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="coMULTI">%REM</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Sub addHeader</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; &nbsp; &nbsp; Description: Adds a header to a MIME Part</span></div></li>
+<li class="li1"><div class="de1"><span class="coMULTI">&nbsp; &nbsp; %END REM</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="kw1">Private</span> <span class="kw1">Sub</span> addHeaderParam<span class="br0">&#40;</span>mime <span class="kw1">As</span> <span class="kw2">NotesMIMEEntity</span>, hName <span class="kw1">As</span> <span class="kw1">String</span>, value <span class="kw1">As</span> <span class="kw1">String</span><span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> header <span class="kw1">As</span> <span class="kw2">NotesMIMEHeader</span> </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> header = mime.<span class="me1">CreateHeader</span><span class="br0">&#40;</span>hName<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> header.<span class="me1">Setheadervalandparams</span><span class="br0">&#40;</span>value<span class="br0">&#41;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Sub</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1"><span class="kw1">End</span> <span class="kw1">Class</span></div></li>
+</ol></div>
+</body>
+</html>
