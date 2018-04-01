@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Authenticate from Salesforce to Heroku with JWT - NotesSensei's Blog</title>
+<title>Boolean to get major overhaul - NotesSensei's Blog</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -12,14 +12,14 @@ ga('send', 'pageview');
 <meta http-equiv="X-UA-Compatible"  content="chrome=1" />
 <meta http-equiv="Content-Language" content="en" />
 <meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
-<meta property="og:title"     content="wissel.net - Authenticate from Salesforce to Heroku with JWT" />
+<meta property="og:title"     content="wissel.net - Boolean to get major overhaul" />
 <meta property="og:type"      content="blog" />
-<meta property="og:url"       content="https://wissel.net/blog/2018/03/salesforce-heroku-jwt.html" />
+<meta property="og:url"       content="https://wissel.net/blog/2018/04/boolean-to-get-major-overhaul.html" />
 <meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
 <meta property="og:site_name" content="wissel.net" />
 <meta name="viewport"         content="width=device-width, initial-scale=1.0" />
 <meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
-<meta name="DC.Title"         content="NotesSensei's Weblog - Authenticate from Salesforce to Heroku with JWT" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Boolean to get major overhaul" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
 <meta name="Copyright"        content="2018,2018 Stephan H. Wissel - Creative commons licence" />
@@ -108,15 +108,15 @@ catch(e){window.attachEvent("onload", $buo_f)}
     <ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2018/">2018</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2018/03/">March</a></li>
+  <li><a href="/blog/2018/04/">April</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/heroku.html">Heroku</a>
+    <span class="divider">|</span><a href="/blog/categories/afterhours.html">After hours</a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
+    <span class="divider">|</span><a href="/blog/categories/software.html">Software</a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/salesforce.html">Salesforce</a>
+    <span class="divider">|</span><a href="/blog/categories/technology.html">Technology</a>
   </li>
 </ul>
 
@@ -124,88 +124,47 @@ catch(e){window.attachEvent("onload", $buo_f)}
 			<div class="span12">
 				
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2018/03/letsencrypt-java-keystore.html"><i class="icon-hand-left"></i>Using LetsEncrypt certificates in your JKS</a>
+					<li><a href="/blog/2018/03/salesforce-heroku-jwt.html"><i class="icon-hand-left"></i>Authenticate from Salesforce to Heroku with JWT</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2018/04/boolean-to-get-major-overhaul.html">Boolean to get major overhaul<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 				<article class="well well-raised">
-					<h1><small>Authenticate from Salesforce to Heroku with JWT</small></h1>
+					<h1><small>Boolean to get major overhaul</small></h1>
 					<hr />
-					<div><p><a href="https://heroku.com">Heroku</a> PAAS is an easy and flexible way to extend Salesforce functionality.<br> Its easy to call out to a Heroku REST service build with a method of your choice: Java, JavaScript, Ruby etc.<br> The usual sticky point between two platforms is the <strong>identity of the caller</strong>.</p> 
-<p>In a lot of cases the only requirement is ?a valid Salesforce user?, eventually with some additional claims added.<br> For this scenario a <a href="https://jwt.io/">JWT</a> Bearer authentication (<a href="https://tools.ietf.org/html/rfc7519">RFC 7519</a>) is a good pick.</p> 
-<p>When you look around, most examples revolve around a JWT token being issued after some means of authentication from the same system that was authenticated against.<br> This scenario is different: The Salesforce server issues the JWT token and code on Heroku validates the token as authorization.<br> The beauty of the approach: <strong>no extra calls</strong> need to be made to get this working.</p> 
-<p>What you will need:</p> 
-<ul> 
- <li>A valid certificate, in this case self signed is good enough (it won't be used by a browser)</li> 
- <li><a href="https://openssl.org">OpenSSL</a> installed on your computer</li> 
- <li>A Heroku account</li> 
-</ul> 
-<h3><a href="#preparing-the-certificate" id="preparing-the-certificate">Preparing the certificate</a></h3> 
-<p>In Salesforce setup open <a href="https://help.salesforce.com/articleView?id=security_keys_about.htm&amp;type=5">Certificate and Key management</a>.<br> Create or pick a key. Note down the name. For this article I will use <em>YourCertNameHere</em>. Open the key and click on <em>Download Certificate</em>.<br> The cert will be downloaded in crt format. We use this file to extract the <strong>public</strong> key that Heroku will use to verify the signature. To get the key use:</p> 
-<pre class="brush: bash">openssl x509 -pubkey -noout -in YourCertNameHere.crt
-</pre> 
-<p>The String we need is between the BEGIN and END lines, excluding the lines. You can store it into a file or create a Heroku environment variable.<br> Since it is a public key, you don't need to guard it as fiercly as your private keys.</p> 
-<h3><a href="#the-apex-code" id="the-apex-code">The APEX code</a></h3> 
-<p>Before making a call-out to Heroku, you need to componse the signed JWT token. That's done in just a few lines:</p> 
-<pre class="brush: java">public static String getJWTBearer(String subject, String keyName) {
-    Auth.JWT jwt = new Auth.JWT();
-    jwt.setSub(subject);
-    Auth.JWS myJws = new Auth.JWS(jwt, keyName);
-    return myJws.getCompactSerialization();
-}
-</pre> 
-<p>You might opt to add additional claims beside the subject, when your use case does require that.<br> The header value gets added to the <code>Authorization</code> header as <code>Bearer</code> authorization.</p> 
-<h3><a href="#java-code" id="java-code">Java code</a></h3> 
-<p>I'm using the <a href="https://github.com/jwtk/jjwt">jjwt</a> library which is available on <a href="https://search.maven.org/#artifactdetails%7Cio.jsonwebtoken%7Cjjwt%7C0.9.0%7Cjar">Maven Central</a>.<br> It makes it simple to retrieve a claim. An expired claim or an invalid signature will throw an error, so wrap it into a try/catch.</p> 
-<pre class="brush: java">import java.security.Key;
-import java.security.KeyFactory;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Base64;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-
-public class JwtVerifier {
-	public static Claims getClaims(String key, String token) throws Exception {
-
-		byte[] byteKey = Base64.getMimeDecoder().decode(key);
-		X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(byteKey);
-		KeyFactory kf = KeyFactory.getInstance("RSA");
-		Key realKey = kf.generatePublic(X509publicKey);
-		return Jwts.parser().setSigningKey(realKey).parseClaimsJws(token).getBody();
-	}
-}
-</pre> 
-<p>The only catch in the code was the need for <code>MimeDecoder</code> instead of a standard <code>Decoder</code> for Base64 decoding.<br> The subject, typically the user, can be retrieved using <code>claims.getSubject()</code></p> 
-<p>Next stop, for another blog entry: the NodeJS equivalent.</p> 
-<p>As usual YMMV!</p></div>
+					<div><p><a href="https://en.wikipedia.org/wiki/George_Boole">George Boole</a> didn't seem to understand his five teenage daughters,<br> (he didn't have sons) otherwise his boolean logic would encompass not only <code>true</code> and <code>false</code>, but also <code>maybe</code> or <code>don't know</code>. Luckily that omission will be addressed now.</p> 
+<h3><a href="#boolean-to-merge-with-ternary" id="boolean-to-merge-with-ternary">Boolean to merge with Ternary</a></h3> 
+<p>Quick recap: a boolean value has the values <code>true</code> (usually 1), <code>false</code> (usually 0).<br> Ternary has 3 states, typically denoted -1, 0, 1. Not to confuse with QBits which are true and false at the same time.</p> 
+<p>To reflect the real world and cater you teenage level developers, the ternary and boolean data types will be merged into a new type: <strong>RealBoolean</strong>. Proposals are under way to incorporate the change into all major programming languages ASAP. RealBoolean will have the values <code>true</code>, <code>undecided</code> and <code>false</code>. While it is up to the programming languages how these values are represented, consensus is, that the most likely candidates are -1, 0 and 1.</p> 
+<h3><a href="#new-hardware" id="new-hardware">New hardware</a></h3> 
+<p>Like specialized mining hardware for Crypto, RealBoolean will benefit from purpose build ternary computers. <a href="https://en.wikipedia.org/wiki/Setun">Early models</a> had been running since 1958. Ternary computing also has arrived in <a href="https://hackaday.com/2016/12/16/building-the-first-ternary-microprocessor/">micro processor architectures</a>. Of course there are <a href="https://www.techopedia.com/why-not-ternary-computers/2/32427">doubters</a></p> 
+<h3><a href="#transition-period" id="transition-period">Transition period</a></h3> 
+<p>Having multiple data types to express the truth might fit the political desire for <em>alternate facts</em>, but is an unsustainable confusion in programming. Therefore the classic boolean values will become illegal April 01, 2042.<br> In the transition period classic booleans will be ducktyped into RealBoolean whenever the values <code>true</code>, <code>false</code> or <code>1</code> are used. For boolean <code>0</code> or <code>-1</code> (as some unfortunate languages use) compilers and runtimes are mandated to issue a <strong>warning</strong> for the first 5 years, thereafter a <strong>stern warning</strong> before they finally become illegal</p> 
+<h3><a href="#enforcement" id="enforcement">Enforcement</a></h3> 
+<p>All version control repositories will be scanned (the NSA does that anyway) and offending code flagged with new issues. Binary code, not compiled from a repository, will be treated as virus, blocked and deleted. After the deadline all remaining offending code will be transpiled into COBOL - good luck with finding developers to make sense of that code thereafter</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2018-03-23 04:40
+Stephan H Wissel</a> on 2018-04-01 12:50
 <span class="divider">|</span>
-<a href="/blog/2018/03/salesforce-heroku-jwt.html#comments">Comments (0)</a>
+<a href="/blog/2018/04/boolean-to-get-major-overhaul.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
+categories:  <a href="/blog/categories/afterhours.html">After hours</a>  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/technology.html">Technology</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/03/salesforce-heroku-jwt.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Authenticate from Salesforce to Heroku with JWT"></div>
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/04/boolean-to-get-major-overhaul.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Boolean to get major overhaul"></div>
 						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2018/03/salesforce-heroku-jwt.html";
+							var permaLink = "https://wissel.net/blog/2018/04/boolean-to-get-major-overhaul.html";
 						</script>
 					</p>
 
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_cafb442a-6edb-4a5a-8414-1427353e25df" type="button">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_2efe5190-3568-11e8-9f7b-dd4d46818a1f" type="button">
 		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
 	            </button>
 	            </div>
-				<div id="commentform_cafb442a-6edb-4a5a-8414-1427353e25df"  class="collapse"></div>
+				<div id="commentform_2efe5190-3568-11e8-9f7b-dd4d46818a1f"  class="collapse"></div>
 				<div class="well well-raised">
 					<h4>Comments</h4>
 					<ol id="commentList">
@@ -215,12 +174,9 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 					</ol>
 				</div>
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2018/03/letsencrypt-java-keystore.html"><i class="icon-hand-left"></i>Using LetsEncrypt certificates in your JKS</a>
+					<li><a href="/blog/2018/03/salesforce-heroku-jwt.html"><i class="icon-hand-left"></i>Authenticate from Salesforce to Heroku with JWT</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2018/04/boolean-to-get-major-overhaul.html">Boolean to get major overhaul<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 			</div>
@@ -228,15 +184,15 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 		<ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2018/">2018</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2018/03/">March</a></li>
+  <li><a href="/blog/2018/04/">April</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/heroku.html">Heroku</a>
+    <span class="divider">|</span><a href="/blog/categories/afterhours.html">After hours</a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
+    <span class="divider">|</span><a href="/blog/categories/software.html">Software</a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/salesforce.html">Salesforce</a>
+    <span class="divider">|</span><a href="/blog/categories/technology.html">Technology</a>
   </li>
 </ul>
 
@@ -303,7 +259,7 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 	</footer>
 
 	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/2018/03/salesforce-heroku-jwt.html";
+		var permaLink = "https://wissel.net/blog/2018/04/boolean-to-get-major-overhaul.html";
 	</script>
 		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
 	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
@@ -338,7 +294,7 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 	<script type="text/javascript">
 		var onloadCallback = function() {
-    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "cafb442a-6edb-4a5a-8414-1427353e25df");
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "2efe5190-3568-11e8-9f7b-dd4d46818a1f");
  		};
 	</script>
 
