@@ -125,6 +125,122 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				</div>
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2007/07/lists-in-formula-especially-member-and-isnotmember.html">Lists in @Formula, especially @Member and @IsNotMember</a></small>
+					</h1>
+					<hr />
+					<div><a href="http://blog.xceed.be">Theo Heselmans</a> has a 
+<a href="http://www.xceed.be/Blog.nsf/dx/IsMember">nice post</a> about how to figure out if a user has a specific role without using @IsMember or @IsNotMember. He doesn't like @IsMember and @IsNotMember. While that is a question of taste (or speed?) it is a good idea to fully understand how the various comparisions work. = or *= work differnt with lists than @is(Not)Member. One of the hallmarks of @Formula is the ability to deal with lists (multiple elements, similar to arrays) in the various formulas. In a lot of the @Functions you can use lists ("red":"blue":"green") to compute your results. If a Notes item (a field) contains multiple values they are treated as lists in formulas. The following table shows the effect of the various comparison results. I limit myself to matches, you can play with "greater" and "less" comparisons. 
+<br> Let us asume we have these lists: 
+<br> 
+<br> list1 := "red":"yellow":"green" 
+<br> list2 := "yellow":"red" 
+<br> list3 := "black":"blue" 
+<br> list4 := "red":"white" 
+<br> list5 := "yellow" 
+<br> 
+<br> 
+<style type="text/css">
+<!--
+table#atfunctions { border-right: 1px solid Silver; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif; font-size: smaller;}
+table#atfunctions td { border-bottom: 1px solid Silver; border-left: 1px solid Silver; padding: 5px; text-align: center; }
+table#atfunctions th { background-color: #C0C0C0; font-weight: bold; padding: 5px; }
+table#atfunctions td.effect, th.effect { text-align: left; }
+-->
+</style> 
+<table id="atfunctions" width="100%" cellspacing="0"> 
+ <tbody> 
+  <tr> 
+   <th>Comparison</th> 
+   <th class="effect">Effect</th> 
+   <th>Matches for @true</th> 
+   <th>Examples</th> 
+   <th>Result</th> 
+  </tr> 
+  <tr> 
+   <td> = </td> 
+   <td class="effect">Compares every single value with the same position in the other list. If one list has less elements than the other list, then the shorter list is <strong>padded with the last value</strong>. In a list of one, that one element is compared with all others. If there is ONE match true is returned.</td> 
+   <td> one match, same position </td> 
+   <td> list1 = list2<br> list2 = list5<br> list5 = list1 </td> 
+   <td> @false<br> @true<br> @true </td> 
+  </tr> 
+  <tr> 
+   <td> *= </td> 
+   <td class="effect">Compares every member of the first with every member of the second list. If there is a single match true is returned. In difference to = the position doesn't play a role and there is no padding (needed)</td> 
+   <td> one match, any position </td> 
+   <td> list1 *= list2<br> list2 *= list5 </td> 
+   <td> @true<br> @true </td> 
+  </tr> 
+  <tr> 
+   <td> ! [Expression] </td> 
+   <td class="effect">Turns the expression into the opposite. Very clean. Should be always in front. For readability you might want to use brackets</td> 
+   <td> depends on expression </td> 
+   <td> !list1 = list2<br> !(list1 = list2)<br> !(list2 *= list5) </td> 
+   <td> @true<br> @true<br> @false </td> 
+  </tr> 
+  <tr> 
+   <td> != </td> 
+   <td class="effect">not equal operator. Compares element by element, padds a shorter list with the last element (same as =). Returns true if one match pair is different. In other words: only returns false if both list have the same members in the same sequence.</td> 
+   <td> one mismatch, any position </td> 
+   <td> list1 != list2 </td> 
+   <td> @true </td> 
+  </tr> 
+  <tr> 
+   <td> *!= </td> 
+   <td class="effect">Compared every element from both lists and returns true if it finds one difference. It only will return false if both lists only contain one value (which can be there multiple times, that wouldn't matter)</td> 
+   <td> if one list has 2 different values </td> 
+   <td> "red":"red" *!= "red":"red":"red"<br> list1 *!= list2 </td> 
+   <td> @false<br> @true </td> 
+  </tr> 
+  <tr> 
+   <td> @IsMember </td> 
+   <td class="effect">Checks that all members of the first list are available in the second list. The sequence doesn't matter. If there is one element in the first list, that is not in the second list it returns false.</td> 
+   <td> all, any position </td> 
+   <td> @isMember(list2;list1)<br> @isMember(list4;list1)<br> @isMember(list5;list1) </td> 
+   <td> @true<br> @false<br> @true </td> 
+  </tr> 
+  <tr> 
+   <td> !@IsMember </td> 
+   <td class="effect">reversal of @isMember. If there is just one element in the first list that is not in the second list it returns true.</td> 
+   <td> one mismatch, any position </td> 
+   <td> !@isMember(list2;list1)<br> <strong>!@isMember(list4;list1)</strong> </td> 
+   <td> @false<br> <strong>@true</strong> </td> 
+  </tr> 
+  <tr> 
+   <td> @isNotMember </td> 
+   <td class="effect">Checks that none of the elements in the first list is in the second list. If just one element is there, but not others it already returns false. So you can't replace !@IsMember with @IsNotMember for lists arguments.</td> 
+   <td> all mismatches, any position </td> 
+   <td> @isNotMember(list2;list1)<br> <strong>@isNotMember(list4;list1)</strong> </td> 
+   <td> @false<br> <strong>@false</strong> </td> 
+  </tr> 
+  <tr> 
+   <td> !@isNotMember </td> 
+   <td class="effect">Double negation to make your head spin &lt;g&gt;. Needs only a single match to return true. Equivalent to *=</td> 
+   <td> one match, any position </td> 
+   <td> @isNotMember(list2;list1)<br> @isNotMember(list4;list1) </td> 
+   <td> @true<br> @true </td> 
+  </tr> 
+ </tbody> 
+</table> 
+<br> 
+<br> Does your head spin now?</div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2007-06-30 04:00
+<span class="divider">|</span>
+<a href="/blog/2007/07/lists-in-formula-especially-member-and-isnotmember.html#comments">Comments (4)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2007/07/lists-in-formula-especially-member-and-isnotmember.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Lists in @Formula, especially @Member and @IsNotMember"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2007/07/lists-in-formula-especially-member-and-isnotmember.html";
+						</script>
+					</p>
+
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2007/06/good-by-w2k-server.html">Good by W2K server!</a></small>
 					</h1>
 					<hr />
@@ -137,7 +253,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2007-06-27 12:20
+Stephan H Wissel</a> on 2007-06-27 03:20
 <span class="divider">|</span>
 <a href="/blog/2007/06/good-by-w2k-server.html#comments">Comments (1)</a>
 <span class="divider">|</span>
@@ -161,7 +277,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2007-06-27 12:09
+Stephan H Wissel</a> on 2007-06-27 03:09
 <span class="divider">|</span>
 <a href="/blog/2007/06/jumpstart-your-portal.html#comments">Comments (1)</a>
 <span class="divider">|</span>
@@ -190,7 +306,7 @@ categories:  <a href="/blog/categories/ibmlotus.html">IBM - Lotus</a>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2007-06-26 01:00
+Stephan H Wissel</a> on 2007-06-25 04:00
 <span class="divider">|</span>
 <a href="/blog/2007/06/hacking-the-lotus-notes-8-ui.html#comments">Comments (2)</a>
 <span class="divider">|</span>
@@ -217,7 +333,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
  <a href="/blog/2007/06/tony-buzan-power-learning-camp-in-singapore.html">Read more</a>
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2007-06-17 06:01
+Stephan H Wissel</a> on 2007-06-17 09:01
 <span class="divider">|</span>
 <a href="/blog/2007/06/tony-buzan-power-learning-camp-in-singapore.html#comments">Comments (1)</a>
 <span class="divider">|</span>
@@ -252,7 +368,7 @@ categories:  <a href="/blog/categories/singapore.html">Singapore</a>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2007-06-15 12:28
+Stephan H Wissel</a> on 2007-06-14 03:28
 <span class="divider">|</span>
 <a href="/blog/2007/06/view-hidden-fields-while-debugging.html#comments">Comments (5)</a>
 <span class="divider">|</span>
@@ -285,7 +401,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2007-06-07 12:01
+Stephan H Wissel</a> on 2007-06-07 03:01
 <span class="divider">|</span>
 <a href="/blog/2007/06/to-rest-or-to-soap-for-mobile-applications.html#comments">Comments (1)</a>
 <span class="divider">|</span>
@@ -413,6 +529,7 @@ categories:  <a href="/blog/categories/software.html">Software</a>
 						<li ><a href="/blog/categories/xml.html">XML</a></li>
 						<li ><a href="/blog/categories/xpages.html">XPages</a></li>
 						<li class="nav-header">Archives</li>
+						<li ><a href="/blog/2002">2002</a></li>
 						<li ><a href="/blog/2003">2003</a></li>
 						<li ><a href="/blog/2004">2004</a></li>
 						<li ><a href="/blog/2005">2005</a></li>
