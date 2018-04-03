@@ -6,7 +6,46 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Mon, 02 Apr 2018 17:12:12 +0000</pubdate>
+	<pubdate>Tue, 03 Apr 2018 06:05:15 +0000</pubdate>
+<item>
+	<title>Creative logging with $A.log()</title>
+	<description>&lt;p&gt;In Lightning applications there are two ways to log: &lt;code&gt;console.log(..)&lt;/code&gt; and &lt;code&gt;$A.log(...)&lt;/code&gt;. This has led to some confusion what to use.&lt;/p&gt; 
+&lt;p&gt;The official statement: &lt;code&gt;$A.log()&lt;/code&gt; will eventually go away, use &lt;code&gt;console.log()&lt;/code&gt;&lt;/p&gt; 
+&lt;p&gt;This is a real pity, since &lt;code&gt;$A.log()&lt;/code&gt; is quite powerful and closer to what a developer would expect from logging. One reason for its demise: in a production setting &lt;code&gt;$A.log()&lt;/code&gt; would output - nothing. There's no official documentation how to change that and the &lt;code&gt;$A.logger.subscribe(...)&lt;/code&gt; method is neither documented nor guaranteed, only &lt;a href="https://salesforce.stackexchange.com/questions/86322/how-to-use-aura-log-and-where-does-it-print-it-output"&gt;mentioned on Stack Exchange&lt;/a&gt;. So?&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#enjoy-it-while-it-lasts" id="enjoy-it-while-it-lasts"&gt;Enjoy it while it lasts&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;The simple case to activate console output in production is to add a helper function that can be triggered by a button or whatever you find necessary:&lt;/p&gt; 
+&lt;pre class="brush: javascript"&gt;$A.logger.subscribe( "INFO", function( level, message, error ) {
+                                console.log( message );
+                                console.log( error );
+                             });
+&lt;/pre&gt; 
+&lt;p&gt;Instead of sending output to the console, which could confuse users seeing all that ?tech' stuff, you could redirect it into a custom component (the following snippet fits into an onInit script):&lt;/p&gt; 
+&lt;pre class="brush: javascript"&gt;var target = component.find("loggerlist").getElement();
+$A.logger.subscribe( "INFO", function( level, message, error ) {
+                               target.innerHTML += "&amp;lt;li&amp;gt;"+message+"&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;"+error+"&amp;lt;/li&amp;gt;";
+                             });
+&lt;/pre&gt; 
+&lt;p&gt;The target element would be &lt;code&gt;&amp;lt;ol auraid="loggerlist"&amp;gt;&lt;/code&gt; so you get a running list.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#across-the-network" id="across-the-network"&gt;Across the network&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;One is not limited to staying on the same machine. With a few lines of code logging can happen on a remote location as well. The following shows logging using websockets. For a production run (e.g. permanent instrumentation) I would make it a little more robust, like keeping the connection open and check if it is still there or send JSON, but for the occasional support this is good enough:&lt;/p&gt; 
+&lt;pre class="brush: javascript"&gt;$A.logger.subscribe( "INFO", function( level, message, error ) {
+    var wsEndPoint = 'wss://somewebsocket.url/ws/log';
+    var connection = new WebSocket(wsEndPoint);
+     connection.onopen = function(event) {
+        connection.send(message);
+        connection.send(error);
+        connection.close();
+    };
+});
+
+&lt;/pre&gt; 
+&lt;p&gt;I'll show a potential receiving end implementation in a future post.&lt;br&gt; As I said: enjoy it while it lasts, it might go away soon. YMMV&lt;/p&gt;</description>
+	<link>2018/04/lightning-creative-logging.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>b1ad71c0-36fd-11e8-8924-2159462a0d7c</guid>
+	<pubDate>2018-04-03 02:50</pubDate>
+
+</item>
 <item>
 	<title>Salesforce one year on</title>
 	<description>&lt;p&gt;A year ago I said &lt;a href="2017/04/goodbye-ibm-hello-salesforce.html"&gt;Good by IBM, Hello Salesforce&lt;/a&gt;. A lot has happened in the last 12 month. Salesforce is only my second salaried job, I've been running my own companies and been freelance before.&lt;/p&gt; 
@@ -325,24 +364,6 @@ keytool -delete -alias sfdcsec -keystore sfdcsec.ks
 	<author>Stephan H Wissel</author>
 	<guid>8439A1CD09FAA0D2482581AD004F86B5</guid>
 	<pubDate>2017-10-02 02:28</pubDate>
-
-</item>
-<item>
-	<title>Static APEX code analysis with PMD</title>
-	<description>&lt;p&gt;Coding standard are only as good as they are followed. One venerable tool to check source code is &lt;a href="https://pmd.github.io/"&gt;PMD&lt;/a&gt;. When you, like I did, wonder what acronym PMD represents, you will &lt;a href="https://pmd.github.io/pmd-5.8.1/overview/meaning.html"&gt;be disappointed&lt;/a&gt;. PMD supports the usual suspects like C, C++, C#, Fortran, Java, JavaScript, Go, Groovy, XML... as well as &lt;a href="https://pmd.github.io/pmd-5.8.1/pmd-apex/index.html"&gt;Apex&lt;/a&gt; and &lt;a href="https://pmd.github.io/pmd-5.8.1/pmd-visualforce/index.html"&gt;Visualforce&lt;/a&gt;.&lt;/p&gt; 
-&lt;p&gt;The &lt;a href="http://pmd.sourceforge.net/snapshot/pmd-apex/rules/index.html"&gt;default ruleset for Apex&lt;/a&gt; contains 34 rules and are the ones also used by &lt;a href="https://codeclimate.com/"&gt;CodeClimate&lt;/a&gt;&lt;/p&gt; 
-&lt;p&gt;PMD is a Java application and you have a number options to run it:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;As a command line application&lt;/li&gt; 
- &lt;li&gt;Using ANT or Maven&lt;/li&gt; 
- &lt;li&gt;In your CI platform (using command line, ANT or Maven &lt;img src="/blog/images/emoticons/wink.gif"&gt; )&lt;/li&gt; 
- &lt;li&gt;Linking your Github (or Gitlab, Bitbucket) repository to a service like &lt;a href="https://codeclimate.com/"&gt;CodeClimate&lt;/a&gt;&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;PMD supports a series of output formats like plain, csv, html (different flavours) and XML. When you understand XSLT, the XML format allows you to render whatever report you deem fit&lt;/p&gt;</description>
-	<link>2017/07/static-apex-code-analysis-with-pmd.html</link>
-	<author>Stephan H Wissel</author>
-	<guid>6535CE6D841F1A0048258168005D0105</guid>
-	<pubDate>2017-07-25 04:55</pubDate>
 
 </item>
 
