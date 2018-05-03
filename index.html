@@ -110,6 +110,39 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2018/05/reuse-a-3rd-party-jwt.html">Reuse a 3rd Party Json Web Token (JWT) for Salesforce authentication</a></small></h1>
+					<hr />
+					<div><h3><a href="#the-scenario" id="the-scenario">The scenario</a></h3> 
+<p>You run an app, could be a mobile native, a <a href="https://en.wikipedia.org/wiki/Single-page_application">SPA</a>, a <a href="https://en.wikipedia.org/wiki/Progressive_Web_Apps">PWA</a> or just an application with JavaScript logic, in your domain that needs to incorporate data from your Salesforce instance or one of your Salesforce communities.</p> 
+<p>Users have authenticated with your website and the app is using a <a href="https://www.jsonwebtoken.io/">JWT</a> Bearer Token to establish identity. You don't want to bother users with an additional authentication.</p> 
+<h3><a href="#what-you-need" id="what-you-need">What you need</a></h3> 
+<p>Salesforce has <a href="https://help.salesforce.com/articleView?id=remoteaccess_oauth_jwt_flow.htm&amp;type=5">very specific</a> requirements how a JWT must be formed to qualify for authentication. For example the token can be valid only for 5 minutes. It is very unlikely that your token matches the requirements.</p> 
+<p>Therefore you will need to extract the user identity from existing token, while checking that it isn't spoofed and create a new token that you present to Salesforce to obtain the session token. So you need:</p> 
+<ol> 
+ <li>The key that can be used to verify the existing token. This could be a simple String, used for symmetrical signature or an X509 Public Key</li> 
+ <li>A private key for Salesforce to sign a new JWT (See below)</li> 
+ <li>A configured <a href="https://help.salesforce.com/articleView?id=connected_app_overview.htm&amp;type=5">Connected App</a> in Salesforce where you upload they full certificate and obtain the Consumer Key</li> 
+ <li>Some place to run the code, like <a href="https://wwww.heroku.com/">Heroku</a></li> 
+</ol> 
+<p><img src="/blog/images/2018/jwtFlow.png" alt="Authentication Flow for 3rd party JWT"></p></div>
+					<hr />
+ <a href="/blog/2018/05/reuse-a-3rd-party-jwt.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 2018-05-03 10:42
+<span class="divider">|</span>
+<a href="/blog/2018/05/reuse-a-3rd-party-jwt.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/05/reuse-a-3rd-party-jwt.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Reuse a 3rd Party Json Web Token (JWT) for Salesforce authentication"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2018/05/reuse-a-3rd-party-jwt.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2018/04/function-length-and-double-byte-languages.html">Function length and double byte languages</a></small></h1>
 					<hr />
 					<div><p>Complexity is a prime enemy of maintainability. <a href="https://softwareengineering.stackexchange.com/questions/133404/what-is-the-ideal-length-of-a-method-for-you">So the conventional wisdom</a> suggests methods should be around 20 lines, with some evidence suggesting up to 100+ lines.</p> 
@@ -493,62 +526,6 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/02/spring-boot-and-salesforce-canvas.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Spring Boot and Salesforce Canvas"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2018/02/spring-boot-and-salesforce-canvas.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2018/02/running-nodered-on-heroku-with-salesforce.html">Running NodeRED on Heroku with Salesforce</a></small></h1>
-					<hr />
-					<div><p>I am a big fan of <a href="http://nodered.org/">NodeRED</a>, so I was delighted to see <a href="https://www.npmjs.com/package/node-red-contrib-salesforce">nodes available</a> to connect to Salesforce.<br> Since the package was a little behind and support for platform events was still missing, I had a chat with <a href="https://www.npmjs.com/~jeffdonthemic">Jeff</a> and we agreed that I would maintain the package moving forward.</p> 
-<p>I updated the package dependencies to current version and made two main changes to the functionality:</p> 
-<ul> 
- <li>allow credentials to be read from environment variables. This allows for easy deployment to Heroku</li> 
- <li>Support for Salesforce platform events</li> 
-</ul> 
-<p>Deployment to <a href="https://www.heroku.com/apps">Heroku</a> is a breeze, but requires a few steps that I document here.<br> The instructions require a basic understanding how Heroku works, so you might want to check out a <a href="https://devcenter.heroku.com/start">tutorial</a> first. There are some challenges to overcome:</p> 
-<ul> 
- <li>I want to be able to test local and on the server</li> 
- <li>Storage on Heroku is ephemeral. Any changes written to the server's file system get reset on restart</li> 
- <li>Deployment should happen via version control</li> 
-</ul> 
-<h3><a href="#prerequisites" id="prerequisites">Prerequisites</a></h3> 
-<ul> 
- <li>Current version of <a href="https://nodejs.org/">NodeJS</a> installed (I usually stick to the LTS version)</li> 
- <li>GIT client installed (or GIT as part of your favorite IDE)</li> 
- <li><a href="https://devcenter.heroku.com/articles/heroku-cli">Heroku CLI</a> (a.k.a Toolbelt) installed. Install using <code>npm install -g heroku-cli</code></li> 
-</ul> 
-<h3><a href="#project-setup-command-line-work" id="project-setup-command-line-work">Project setup (Command line work)</a></h3> 
-<ul> 
- <li>Create a new directory <code>NodeRedDemo</code> and change into it</li> 
- <li>Initialize a new project <code>npm init</code> - fill in suitable defaults</li> 
- <li>Create a file <code>.gitignore</code> (content see below)</li> 
- <li>add NodeRED and the Salesfore nodes <code>npm install -s node-red node-red-contrib-salesforce</code></li> 
- <li>add a line into <code>package.json</code> (see sample below) in scripts: <code>"start": "node-red --settings ./.node-red/settings.js --userDir ./.node-red"</code></li> 
- <li>create the directories <code>scripts</code> and <code>.node-red</code></li> 
- <li>copy the <code>settings.js</code> file from <code>node_modules/node-red</code> to <code>.node-red</code> - We will edit that file later</li> 
- <li>initialize git: <code>git init</code></li> 
- <li>add initial files to git: <code>git add --all</code> and <code>git commit -m "initial creation"</code></li> 
- <li>login to heroku <code>heroku login</code></li> 
- <li>add Heroku: <code>heroku create</code></li> 
- <li>deploy: <code>git push heroku master</code></li> 
-</ul> 
-<p>Your application should be running on Heroku now. To learn how to use <a href="http://nodered.org/">NodeRED</a>, check out <a href="https://nodered.org/docs/getting-started/first-flow">a tutorial</a>. Besides running on Heroku you can start the application on local too. Just use <code>npm start</code> and load localhost:1880.</p> 
-<p>What is missing: protect your NodeRED editor, connect to Salesforce and of course: create your flows.</p> 
-<p><strong>Keep in mind</strong>: every time you redeploy or restart the app, anything stored, including your flow definitions, gets lost.<br> For permanent results I create my flows in the local instance of NodeRED and commit the flow file (in the .node-red directory) to git, so it becomes part of the deployment.</p></div>
-					<hr />
- <a href="/blog/2018/02/running-nodered-on-heroku-with-salesforce.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2018-02-14 03:42
-<span class="divider">|</span>
-<a href="/blog/2018/02/running-nodered-on-heroku-with-salesforce.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/categories/nodered.html">NodeRED</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/02/running-nodered-on-heroku-with-salesforce.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Running NodeRED on Heroku with Salesforce"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2018/02/running-nodered-on-heroku-with-salesforce.html";
 						</script>
 					</p>
 </p>

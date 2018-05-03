@@ -6,7 +6,28 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 11 Apr 2018 02:19:23 +0000</pubdate>
+	<pubdate>Thu, 03 May 2018 14:11:26 +0000</pubdate>
+<item>
+	<title>Reuse a 3rd Party Json Web Token (JWT) for Salesforce authentication</title>
+	<description>&lt;h3&gt;&lt;a href="#the-scenario" id="the-scenario"&gt;The scenario&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;You run an app, could be a mobile native, a &lt;a href="https://en.wikipedia.org/wiki/Single-page_application"&gt;SPA&lt;/a&gt;, a &lt;a href="https://en.wikipedia.org/wiki/Progressive_Web_Apps"&gt;PWA&lt;/a&gt; or just an application with JavaScript logic, in your domain that needs to incorporate data from your Salesforce instance or one of your Salesforce communities.&lt;/p&gt; 
+&lt;p&gt;Users have authenticated with your website and the app is using a &lt;a href="https://www.jsonwebtoken.io/"&gt;JWT&lt;/a&gt; Bearer Token to establish identity. You don't want to bother users with an additional authentication.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#what-you-need" id="what-you-need"&gt;What you need&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Salesforce has &lt;a href="https://help.salesforce.com/articleView?id=remoteaccess_oauth_jwt_flow.htm&amp;amp;type=5"&gt;very specific&lt;/a&gt; requirements how a JWT must be formed to qualify for authentication. For example the token can be valid only for 5 minutes. It is very unlikely that your token matches the requirements.&lt;/p&gt; 
+&lt;p&gt;Therefore you will need to extract the user identity from existing token, while checking that it isn't spoofed and create a new token that you present to Salesforce to obtain the session token. So you need:&lt;/p&gt; 
+&lt;ol&gt; 
+ &lt;li&gt;The key that can be used to verify the existing token. This could be a simple String, used for symmetrical signature or an X509 Public Key&lt;/li&gt; 
+ &lt;li&gt;A private key for Salesforce to sign a new JWT (See below)&lt;/li&gt; 
+ &lt;li&gt;A configured &lt;a href="https://help.salesforce.com/articleView?id=connected_app_overview.htm&amp;amp;type=5"&gt;Connected App&lt;/a&gt; in Salesforce where you upload they full certificate and obtain the Consumer Key&lt;/li&gt; 
+ &lt;li&gt;Some place to run the code, like &lt;a href="https://wwww.heroku.com/"&gt;Heroku&lt;/a&gt;&lt;/li&gt; 
+&lt;/ol&gt; 
+&lt;p&gt;&lt;img src="/blog/images/2018/jwtFlow.png" alt="Authentication Flow for 3rd party JWT"&gt;&lt;/p&gt;</description>
+	<link>2018/05/reuse-a-3rd-party-jwt.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>7c4b8140-4ecf-11e8-80e2-bfca30024cb4</guid>
+	<pubDate>2018-05-03 10:42</pubDate>
+
+</item>
 <item>
 	<title>Function length and double byte languages</title>
 	<description>&lt;p&gt;Complexity is a prime enemy of maintainability. &lt;a href="https://softwareengineering.stackexchange.com/questions/133404/what-is-the-ideal-length-of-a-method-for-you"&gt;So the conventional wisdom&lt;/a&gt; suggests methods should be around 20 lines, with some evidence suggesting up to 100+ lines.&lt;/p&gt; 
@@ -292,50 +313,6 @@ keytool -delete -alias sfdcsec -keystore sfdcsec.ks
 	<author>Stephan H. Wissel</author>
 	<guid>43366410-1621-11e8-8f58-bd9e0b89b056</guid>
 	<pubDate>2018-02-20 09:34</pubDate>
-
-</item>
-<item>
-	<title>Running NodeRED on Heroku with Salesforce</title>
-	<description>&lt;p&gt;I am a big fan of &lt;a href="http://nodered.org/"&gt;NodeRED&lt;/a&gt;, so I was delighted to see &lt;a href="https://www.npmjs.com/package/node-red-contrib-salesforce"&gt;nodes available&lt;/a&gt; to connect to Salesforce.&lt;br&gt; Since the package was a little behind and support for platform events was still missing, I had a chat with &lt;a href="https://www.npmjs.com/~jeffdonthemic"&gt;Jeff&lt;/a&gt; and we agreed that I would maintain the package moving forward.&lt;/p&gt; 
-&lt;p&gt;I updated the package dependencies to current version and made two main changes to the functionality:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;allow credentials to be read from environment variables. This allows for easy deployment to Heroku&lt;/li&gt; 
- &lt;li&gt;Support for Salesforce platform events&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;Deployment to &lt;a href="https://www.heroku.com/apps"&gt;Heroku&lt;/a&gt; is a breeze, but requires a few steps that I document here.&lt;br&gt; The instructions require a basic understanding how Heroku works, so you might want to check out a &lt;a href="https://devcenter.heroku.com/start"&gt;tutorial&lt;/a&gt; first. There are some challenges to overcome:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;I want to be able to test local and on the server&lt;/li&gt; 
- &lt;li&gt;Storage on Heroku is ephemeral. Any changes written to the server's file system get reset on restart&lt;/li&gt; 
- &lt;li&gt;Deployment should happen via version control&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#prerequisites" id="prerequisites"&gt;Prerequisites&lt;/a&gt;&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;Current version of &lt;a href="https://nodejs.org/"&gt;NodeJS&lt;/a&gt; installed (I usually stick to the LTS version)&lt;/li&gt; 
- &lt;li&gt;GIT client installed (or GIT as part of your favorite IDE)&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://devcenter.heroku.com/articles/heroku-cli"&gt;Heroku CLI&lt;/a&gt; (a.k.a Toolbelt) installed. Install using &lt;code&gt;npm install -g heroku-cli&lt;/code&gt;&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#project-setup-command-line-work" id="project-setup-command-line-work"&gt;Project setup (Command line work)&lt;/a&gt;&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;Create a new directory &lt;code&gt;NodeRedDemo&lt;/code&gt; and change into it&lt;/li&gt; 
- &lt;li&gt;Initialize a new project &lt;code&gt;npm init&lt;/code&gt; - fill in suitable defaults&lt;/li&gt; 
- &lt;li&gt;Create a file &lt;code&gt;.gitignore&lt;/code&gt; (content see below)&lt;/li&gt; 
- &lt;li&gt;add NodeRED and the Salesfore nodes &lt;code&gt;npm install -s node-red node-red-contrib-salesforce&lt;/code&gt;&lt;/li&gt; 
- &lt;li&gt;add a line into &lt;code&gt;package.json&lt;/code&gt; (see sample below) in scripts: &lt;code&gt;"start": "node-red --settings ./.node-red/settings.js --userDir ./.node-red"&lt;/code&gt;&lt;/li&gt; 
- &lt;li&gt;create the directories &lt;code&gt;scripts&lt;/code&gt; and &lt;code&gt;.node-red&lt;/code&gt;&lt;/li&gt; 
- &lt;li&gt;copy the &lt;code&gt;settings.js&lt;/code&gt; file from &lt;code&gt;node_modules/node-red&lt;/code&gt; to &lt;code&gt;.node-red&lt;/code&gt; - We will edit that file later&lt;/li&gt; 
- &lt;li&gt;initialize git: &lt;code&gt;git init&lt;/code&gt;&lt;/li&gt; 
- &lt;li&gt;add initial files to git: &lt;code&gt;git add --all&lt;/code&gt; and &lt;code&gt;git commit -m "initial creation"&lt;/code&gt;&lt;/li&gt; 
- &lt;li&gt;login to heroku &lt;code&gt;heroku login&lt;/code&gt;&lt;/li&gt; 
- &lt;li&gt;add Heroku: &lt;code&gt;heroku create&lt;/code&gt;&lt;/li&gt; 
- &lt;li&gt;deploy: &lt;code&gt;git push heroku master&lt;/code&gt;&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;Your application should be running on Heroku now. To learn how to use &lt;a href="http://nodered.org/"&gt;NodeRED&lt;/a&gt;, check out &lt;a href="https://nodered.org/docs/getting-started/first-flow"&gt;a tutorial&lt;/a&gt;. Besides running on Heroku you can start the application on local too. Just use &lt;code&gt;npm start&lt;/code&gt; and load localhost:1880.&lt;/p&gt; 
-&lt;p&gt;What is missing: protect your NodeRED editor, connect to Salesforce and of course: create your flows.&lt;/p&gt; 
-&lt;p&gt;&lt;strong&gt;Keep in mind&lt;/strong&gt;: every time you redeploy or restart the app, anything stored, including your flow definitions, gets lost.&lt;br&gt; For permanent results I create my flows in the local instance of NodeRED and commit the flow file (in the .node-red directory) to git, so it becomes part of the deployment.&lt;/p&gt;</description>
-	<link>2018/02/running-nodered-on-heroku-with-salesforce.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>d8031330-1131-11e8-a86d-4f29536bf933</guid>
-	<pubDate>2018-02-14 03:42</pubDate>
 
 </item>
 
