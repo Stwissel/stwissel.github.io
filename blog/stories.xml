@@ -6,11 +6,56 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-<<<<<<< HEAD
-	<pubdate>Mon, 02 Apr 2018 16:37:43 +0000</pubdate>
-=======
-	<pubdate>Tue, 03 Apr 2018 02:06:34 +0900</pubdate>
->>>>>>> Fixed comment count
+	<pubdate>Wed, 11 Apr 2018 02:19:23 +0000</pubdate>
+<item>
+	<title>Function length and double byte languages</title>
+	<description>&lt;p&gt;Complexity is a prime enemy of maintainability. &lt;a href="https://softwareengineering.stackexchange.com/questions/133404/what-is-the-ideal-length-of-a-method-for-you"&gt;So the conventional wisdom&lt;/a&gt; suggests methods should be around 20 lines, with some evidence suggesting up to 100+ lines.&lt;/p&gt; 
+&lt;p&gt;When I review code written by non-native English speakers, especially when their primary language is double byte based, I find methods in the 500-1000 lines range, with some special champions up to 5000 lines. So I wondered what might contribute to these function/method worms.&lt;/p&gt;</description>
+	<link>2018/04/function-length-and-double-byte-languages.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>5c6fd510-3b9c-11e8-90bb-13b34de998f8</guid>
+	<pubDate>2018-04-09 10:18</pubDate>
+
+</item>
+<item>
+	<title>Creative logging with $A.log()</title>
+	<description>&lt;p&gt;In Lightning applications there are two ways to log: &lt;code&gt;console.log(..)&lt;/code&gt; and &lt;code&gt;$A.log(...)&lt;/code&gt;. This has led to some confusion what to use.&lt;/p&gt; 
+&lt;p&gt;The official statement: &lt;code&gt;$A.log()&lt;/code&gt; will eventually go away, use &lt;code&gt;console.log()&lt;/code&gt;&lt;/p&gt; 
+&lt;p&gt;This is a real pity, since &lt;code&gt;$A.log()&lt;/code&gt; is quite powerful and closer to what a developer would expect from logging. One reason for its demise: in a production setting &lt;code&gt;$A.log()&lt;/code&gt; would output - nothing. There's no official documentation how to change that and the &lt;code&gt;$A.logger.subscribe(...)&lt;/code&gt; method is neither documented nor guaranteed, only &lt;a href="https://salesforce.stackexchange.com/questions/86322/how-to-use-aura-log-and-where-does-it-print-it-output"&gt;mentioned on Stack Exchange&lt;/a&gt;. So?&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#enjoy-it-while-it-lasts" id="enjoy-it-while-it-lasts"&gt;Enjoy it while it lasts&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;The simple case to activate console output in production is to add a helper function that can be triggered by a button or whatever you find necessary:&lt;/p&gt; 
+&lt;pre class="brush: javascript"&gt;$A.logger.subscribe( "INFO", function( level, message, error ) {
+                                console.log( message );
+                                console.log( error );
+                             });
+&lt;/pre&gt; 
+&lt;p&gt;Instead of sending output to the console, which could confuse users seeing all that ?tech' stuff, you could redirect it into a custom component (the following snippet fits into an onInit script):&lt;/p&gt; 
+&lt;pre class="brush: javascript"&gt;var target = component.find("loggerlist").getElement();
+$A.logger.subscribe( "INFO", function( level, message, error ) {
+                               target.innerHTML += "&amp;lt;li&amp;gt;"+message+"&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;"+error+"&amp;lt;/li&amp;gt;";
+                             });
+&lt;/pre&gt; 
+&lt;p&gt;The target element would be &lt;code&gt;&amp;lt;ol auraid="loggerlist"&amp;gt;&lt;/code&gt; so you get a running list.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#across-the-network" id="across-the-network"&gt;Across the network&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;One is not limited to staying on the same machine. With a few lines of code logging can happen on a remote location as well. The following shows logging using websockets. For a production run (e.g. permanent instrumentation) I would make it a little more robust, like keeping the connection open and check if it is still there or send JSON, but for the occasional support this is good enough:&lt;/p&gt; 
+&lt;pre class="brush: javascript"&gt;$A.logger.subscribe( "INFO", function( level, message, error ) {
+    var wsEndPoint = 'wss://somewebsocket.url/ws/log';
+    var connection = new WebSocket(wsEndPoint);
+     connection.onopen = function(event) {
+        connection.send(message);
+        connection.send(error);
+        connection.close();
+    };
+});
+
+&lt;/pre&gt; 
+&lt;p&gt;I'll show a potential receiving end implementation in a future post.&lt;br&gt; As I said: enjoy it while it lasts, it might go away soon. YMMV&lt;/p&gt;</description>
+	<link>2018/04/lightning-creative-logging.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>b1ad71c0-36fd-11e8-8924-2159462a0d7c</guid>
+	<pubDate>2018-04-03 02:50</pubDate>
+
+</item>
 <item>
 	<title>Salesforce one year on</title>
 	<description>&lt;p&gt;A year ago I said &lt;a href="2017/04/goodbye-ibm-hello-salesforce.html"&gt;Good by IBM, Hello Salesforce&lt;/a&gt;. A lot has happened in the last 12 month. Salesforce is only my second salaried job, I've been running my own companies and been freelance before.&lt;/p&gt; 
@@ -291,62 +336,6 @@ keytool -delete -alias sfdcsec -keystore sfdcsec.ks
 	<author>Stephan H. Wissel</author>
 	<guid>d8031330-1131-11e8-a86d-4f29536bf933</guid>
 	<pubDate>2018-02-14 03:42</pubDate>
-
-</item>
-<item>
-	<title>Excel in Continuous Integration</title>
-	<description>&lt;p&gt;Business Users like Excel. Besides its original use case of calculating, lists are a favourite use case. They also serve as poor man's requirement and bug tracker, so they siep into software development too.&lt;/p&gt; 
-&lt;p&gt;While Excel sheets are great for interaction, they are a beast for anything automation. The irony of it: Modern Excel files (the xslx flavour) are nothing less than &lt;a href="https://en.wikipedia.org/wiki/Office_Open_XML"&gt;zip files with XML content&lt;/a&gt;. However that format is, let's say, [insert expletives here].&lt;/p&gt; 
-&lt;p&gt;From an XML representation I would expect something like &lt;code&gt;&amp;lt;cell row="23" col="44"&amp;gt;Some value&amp;lt;/cell&amp;gt;&lt;/code&gt;. However that's not what Excel does. Rename an xlsx to zip and see for yourself. Also (which makes sense for Excel itself) empty cells are not represented in XML.&lt;/p&gt; 
-&lt;p&gt;Cutting a long story short, an Excel file or its XML representation poses some challenges:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;XML format is not very suitable for automation, like generating reports using XSLT&lt;/li&gt; 
- &lt;li&gt;Excel automation only runs on Windows (and when you run headless, you trade the head for a headache). That makes it a no-go for most automation server environments&lt;/li&gt; 
- &lt;li&gt;Empty cells are absent from the XML (a variation of "not suitable")&lt;/li&gt; 
- &lt;li&gt;Cross reports with other files (e.g. logs in XML format) is hard&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;To overcome these limitations I wrote &lt;a href="https://github.com/Stwissel/Excel2XML"&gt;Excel2XML&lt;/a&gt;. It is a little Java command line utility that converts Excel into a more digestible XML format. I used Microsoft's contribution to the &lt;a href="https://poi.apache.org/"&gt;Apache POI&lt;/a&gt; project to read the file. It has the following functions:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;Extract workbooks in one or separate files per worksheet&lt;/li&gt; 
- &lt;li&gt;Ignore all formatting&lt;/li&gt; 
- &lt;li&gt;Computed cells return their last result values, unless it is a formula error, then the formula is returned&lt;/li&gt; 
- &lt;li&gt;The first line of each sheet is treated as column headers, which are extracted as columns/column elements&lt;/li&gt; 
- &lt;li&gt;Each cell has a &lt;code&gt;column&lt;/code&gt;, a &lt;code&gt;row&lt;/code&gt; and a &lt;code&gt;title&lt;/code&gt; attribute. The title reflects the value from the first row. This allows in XSLT to query the title instead of relying on the column number. Reordering, adding or removing columns won't kill your XSLT stylesheet that way&lt;/li&gt; 
- &lt;li&gt;Optional empty cells can be generated with an attribute of &lt;code&gt;empty="true"&lt;/code&gt;&lt;/li&gt; 
- &lt;li&gt;Runs on Java8 completely from command line&lt;/li&gt; 
- &lt;li&gt;Calling it without parameters outputs the exact syntax of options&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;The full syntax: &lt;code&gt;java -jar excel2xml.jar -i somefile.xslt [-o somefile.xml [ ]-e] [-s] [-w3,4]&lt;/code&gt;&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;-i the input file in xslx format&lt;/li&gt; 
- &lt;li&gt;-o the output file. If missing same name as input, but extension xml&lt;/li&gt; 
- &lt;li&gt;-e generate empty cells. If missing: cells without data are skipped&lt;/li&gt; 
- &lt;li&gt;-s generate a single file for the whole workbook. If missing: creates one file per sheet&lt;/li&gt; 
- &lt;li&gt;-w comma separated list of sheets to export. Starts at 0. If missing: exports all sheets&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;Head over to the git repository and grab &lt;a href="https://github.com/Stwissel/Excel2XML/releases"&gt;a release&lt;/a&gt;. Let me know what use you found. As usual YMMV&lt;/p&gt;</description>
-	<link>2017/10/excel-in-ci.html</link>
-	<author>Stephan H Wissel</author>
-	<guid>8439A1CD09FAA0D2482581AD004F86B5</guid>
-	<pubDate>2017-10-02 02:28</pubDate>
-
-</item>
-<item>
-	<title>Static APEX code analysis with PMD</title>
-	<description>&lt;p&gt;Coding standard are only as good as they are followed. One venerable tool to check source code is &lt;a href="https://pmd.github.io/"&gt;PMD&lt;/a&gt;. When you, like I did, wonder what acronym PMD represents, you will &lt;a href="https://pmd.github.io/pmd-5.8.1/overview/meaning.html"&gt;be disappointed&lt;/a&gt;. PMD supports the usual suspects like C, C++, C#, Fortran, Java, JavaScript, Go, Groovy, XML... as well as &lt;a href="https://pmd.github.io/pmd-5.8.1/pmd-apex/index.html"&gt;Apex&lt;/a&gt; and &lt;a href="https://pmd.github.io/pmd-5.8.1/pmd-visualforce/index.html"&gt;Visualforce&lt;/a&gt;.&lt;/p&gt; 
-&lt;p&gt;The &lt;a href="http://pmd.sourceforge.net/snapshot/pmd-apex/rules/index.html"&gt;default ruleset for Apex&lt;/a&gt; contains 34 rules and are the ones also used by &lt;a href="https://codeclimate.com/"&gt;CodeClimate&lt;/a&gt;&lt;/p&gt; 
-&lt;p&gt;PMD is a Java application and you have a number options to run it:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;As a command line application&lt;/li&gt; 
- &lt;li&gt;Using ANT or Maven&lt;/li&gt; 
- &lt;li&gt;In your CI platform (using command line, ANT or Maven &lt;img src="/blog/images/emoticons/wink.gif"&gt; )&lt;/li&gt; 
- &lt;li&gt;Linking your Github (or Gitlab, Bitbucket) repository to a service like &lt;a href="https://codeclimate.com/"&gt;CodeClimate&lt;/a&gt;&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;PMD supports a series of output formats like plain, csv, html (different flavours) and XML. When you understand XSLT, the XML format allows you to render whatever report you deem fit&lt;/p&gt;</description>
-	<link>2017/07/static-apex-code-analysis-with-pmd.html</link>
-	<author>Stephan H Wissel</author>
-	<guid>6535CE6D841F1A0048258168005D0105</guid>
-	<pubDate>2017-07-25 04:55</pubDate>
 
 </item>
 
