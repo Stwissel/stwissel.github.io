@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<title>NotesSensei's Blog - by year: Year 2018</title>
+<title>NotesSensei's Blog by month: By Date: June 2018</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -110,196 +109,85 @@ try {document.addEventListener("DOMContentLoaded", $buo_f,false)}
 catch(e){window.attachEvent("onload", $buo_f)}
 </script>
 
-
 		<div class="row-fluid">
 			<div class="span9">
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2017/10/index.html"><i class="icon-hand-left"></i>By Date: October 2017</a>
+					<li><a href="/blog/2018/05/index.html"><i class="icon-hand-left"></i>By Date: May 2018</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
 					<span class="divider">|</span>
-					<li><a href="/blog/2018/02/index.html">By Date: February 2018<i class="icon-hand-right"></i></a>
+					<li><a href="/blog/categories/afterhours.html">After hours<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 
 				<div class="well well-raised">
-					<h1>Year 2018</h1>
-				</div>
-				<div class="well">
-					<h1>
-						<a href="06">June</a>
-					</h1>
+					<h1>By Date: June 2018</h1>
 				</div>
 				<article class="well well-raised">
 					<h1>
 						<small><a href="/blog/2018/06/what-really-happens-in-oauth.html">What really happens in OAuth</a></small>
 					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+					<hr />
+					<div><p>OAuth in its various versions is the gold standard for Authorization (and using<a href="http://openid.net/connect/">OpenID Connect</a> for Authentication as well). There are <a href="https://www.digitalocean.com/community/tutorials/an-introduction-to-oauth-2">plenty</a> <a href="http://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html">of</a> <a href="https://medium.com/@technospace/an-introduction-to-oauth-2-0-4c71b5fb19ff">introductions</a> <a href="https://www.slideshare.net/aaronpk/an-introduction-to-oauth2">around</a> <a href="https://www.slideshare.net/aaronpk/an-introduction-to-oauth2">explaining</a> <a href="https://aaronparecki.com/oauth-2-simplified/">OAuth</a>. My favorite HTTP tool <a href="https://www.getpostman.com/">Postman</a> makes it really simple to obtain access via OAuth.</p> 
+<p>Nevertheless all those explanations are quite high level, so I wondered what happens on the wire for the getToken part so I started digging. This is what I found. <em>Nota bene</em>: There is no inherit security in OAuth if you don't use <strong>https</strong>.</p> 
+<h3><a href="#the-components" id="the-components">The components</a></h3> 
+<ul> 
+ <li>Authorization server: server to interact with to get an authorization</li> 
+ <li>Client identifier (ClientID): ?userid? of the application</li> 
+ <li>Client Secret: ?password? of the application</li> 
+ <li>A user</li> 
+</ul> 
+<p>I'm not looking at the Resource Server here - it only comes into play before or after the actual token process.</p> 
+<h3><a href="#the-form-post-flow" id="the-form-post-flow">The Form-Post Flow</a></h3> 
+<p>There are <a href="https://auth0.com/docs/api-auth/which-oauth-flow-to-use">several flows</a> available to pick from. I'm looking at the Form-Post flow where user credentials are passed to the authentication server to obtain access and refresh tokens.</p> 
+<p>For this flow we need to post a HTTP form to the authorization server. The post has 2 parts: Header and body. A request looks like this:</p> 
+<pre><code>POST /yourOAuthEndPoint HTTP/1.1
+Host: authserver.acme.com
+Accept-Encoding: gzip, deflate
+Accept: *.*
+Authorization: Basic Y2xpZW50aWQ6Y2xpZW50c2VjcmV0
+Content-Type: application/x-www-form-urlencoded
+Cache-Control: no-cache
+
+grant_type=password
+  &amp;username=user%40email.com
+  &amp;password=password
+  &amp;scope=openid+email+profile
+  &amp;client_id=clientid
+</code></pre> 
+<p>Some remarks:<br> - The <code>Authorization</code> header is just as <a href="https://www.base64encode.org/">Base64</a>version of <code>clientid:clientsecret</code> - you have t replace it with your actual info<br> - Content-Type must be <code>application/x-www-form-urlencoded</code><br> - The body is just one line with no spaces, I split it only for readability<br> - scope is a encoded list the + signs are actually spaces. Keeping that in mind you want to keep the server side scope names simple<br> - You need to repeat the clientid as header value</p> 
+<p>As a result you get back a JSON structure with authorization information. It can look like this:</p> 
+<pre><code>{
+    "access_token": "wildStringForAccess",
+    "refresh_token": "wildStringForRefreshingAccess",
+    "token_type": "Bearer",
+    "expires_in": 300
+}
+</code></pre> 
+<p>The result is easy to understand:<br> - <code>expires_in</code>: Duration for the access token in seconds<br> - <code>token_type</code>: <code>Bearer</code> denotes that you call your resource server with a header value of <code>Authorization: Bearer wildStringForAccess</code></p> 
+<p>As usual YMMV</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 2018-06-04 03:16
 <span class="divider">|</span>
 <a href="/blog/2018/06/what-really-happens-in-oauth.html#comments">Comments (0)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
-				</article>
- 				<div class="well">
-					<h1>
-						<a href="05">May</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/05/reuse-a-3rd-party-jwt.html">Reuse a 3rd Party Json Web Token (JWT) for Salesforce authentication</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2018-05-03 10:42
-<span class="divider">|</span>
-<a href="/blog/2018/05/reuse-a-3rd-party-jwt.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/06/what-really-happens-in-oauth.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="What really happens in OAuth"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2018/06/what-really-happens-in-oauth.html";
+						</script>
+					</p>
 
 				</article>
- 				<div class="well">
-					<h1>
-						<a href="04">April</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/04/function-length-and-double-byte-languages.html">Function length and double byte languages</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2018-04-09 10:18
-<span class="divider">|</span>
-<a href="/blog/2018/04/function-length-and-double-byte-languages.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/nodejs.html">NodeJS</a>  <a href="/blog/categories/software.html">Software</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/04/lightning-creative-logging.html">Creative logging with $A.log()</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2018-04-03 02:50
-<span class="divider">|</span>
-<a href="/blog/2018/04/lightning-creative-logging.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/salesforce.html">Salesforce</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/04/salesforce-one-year-on.html">Salesforce one year on</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2018-04-01 12:50
-<span class="divider">|</span>
-<a href="/blog/2018/04/salesforce-one-year-on.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/salesforce.html">Salesforce</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/04/boolean-to-get-major-overhaul.html">Boolean to get major overhaul</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2018-04-01 12:50
-<span class="divider">|</span>
-<a href="/blog/2018/04/boolean-to-get-major-overhaul.html#comments">Comments (4)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a>  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/technology.html">Technology</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						<a href="03">March</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/03/salesforce-heroku-jwt.html">Authenticate from Salesforce to Heroku with JWT</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2018-03-23 04:40
-<span class="divider">|</span>
-<a href="/blog/2018/03/salesforce-heroku-jwt.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/03/letsencrypt-java-keystore.html">Using LetsEncrypt certificates in your JKS</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2018-03-22 03:18
-<span class="divider">|</span>
-<a href="/blog/2018/03/letsencrypt-java-keystore.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/03/a-filtering-proxy-server-with-vertx.html">A filtering proxy server with vert.x</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2018-03-04 03:18
-<span class="divider">|</span>
-<a href="/blog/2018/03/a-filtering-proxy-server-with-vertx.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						<a href="02">February</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/02/query-a-json-object-like-xpath.html">Query a JSON object like XPath in Java</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2018-02-28 03:50
-<span class="divider">|</span>
-<a href="/blog/2018/02/query-a-json-object-like-xpath.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/02/spring-boot-and-salesforce-canvas.html">Spring Boot and Salesforce Canvas</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2018-02-20 09:34
-<span class="divider">|</span>
-<a href="/blog/2018/02/spring-boot-and-salesforce-canvas.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/02/running-nodered-on-heroku-with-salesforce.html">Running NodeRED on Heroku with Salesforce</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2018-02-14 03:42
-<span class="divider">|</span>
-<a href="/blog/2018/02/running-nodered-on-heroku-with-salesforce.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/categories/nodered.html">NodeRED</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
-
-				</article>
- 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2017/10/index.html"><i class="icon-hand-left"></i>By Date: October 2017</a>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2018/05/index.html"><i class="icon-hand-left"></i>By Date: May 2018</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
 					<span class="divider">|</span>
-					<li><a href="/blog/2018/02/index.html">By Date: February 2018<i class="icon-hand-right"></i></a>
+					<li><a href="/blog/categories/afterhours.html">After hours<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 
@@ -425,7 +313,7 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 						<li ><a href="/blog/2015">2015</a></li>
 						<li ><a href="/blog/2016">2016</a></li>
 						<li ><a href="/blog/2017">2017</a></li>
-						<li  class="active"><a href="/blog/2018">2018</a></li>
+						<li ><a href="/blog/2018">2018</a></li>
 						<li ><a href="/blog/all.html" title="That's a long list!">Complete archive</a></li>
 					</ul>
 				</aside>
@@ -438,8 +326,8 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 			</div>
 		</div>
 	</div>
-	<!-- Footer ================================================== -->
-			<footer>
+	<!-- Footer	================================================== -->
+		<footer>
 		<div class="container">
 			<div class="row">
 				<div class="span2">
@@ -500,9 +388,6 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 		</div>
 	</footer>
 
-	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/";
-	</script>
 		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
 	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>

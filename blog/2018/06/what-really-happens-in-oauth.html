@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Reuse a 3rd Party Json Web Token (JWT) for Salesforce authentication - NotesSensei's Blog</title>
+<title>What really happens in OAuth - NotesSensei's Blog</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -12,14 +12,14 @@ ga('send', 'pageview');
 <meta http-equiv="X-UA-Compatible"  content="chrome=1" />
 <meta http-equiv="Content-Language" content="en" />
 <meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
-<meta property="og:title"     content="wissel.net - Reuse a 3rd Party Json Web Token (JWT) for Salesforce authentication" />
+<meta property="og:title"     content="wissel.net - What really happens in OAuth" />
 <meta property="og:type"      content="blog" />
-<meta property="og:url"       content="https://wissel.net/blog/2018/05/reuse-a-3rd-party-jwt.html" />
+<meta property="og:url"       content="https://wissel.net/blog/2018/06/what-really-happens-in-oauth.html" />
 <meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
 <meta property="og:site_name" content="wissel.net" />
 <meta name="viewport"         content="width=device-width, initial-scale=1.0" />
 <meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
-<meta name="DC.Title"         content="NotesSensei's Weblog - Reuse a 3rd Party Json Web Token (JWT) for Salesforce authentication" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - What really happens in OAuth" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
 <meta name="Copyright"        content="2018,2018 Stephan H. Wissel - Creative commons licence" />
@@ -108,12 +108,12 @@ catch(e){window.attachEvent("onload", $buo_f)}
     <ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2018/">2018</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2018/05/">May</a></li>
+  <li><a href="/blog/2018/06/">June</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/heroku.html">Heroku</a>
+    <span class="divider">|</span><a href="/blog/categories/software.html">Software</a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/salesforce.html">Salesforce</a>
+    <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
   </li>
 </ul>
 
@@ -121,155 +121,75 @@ catch(e){window.attachEvent("onload", $buo_f)}
 			<div class="span12">
 				
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2018/04/function-length-and-double-byte-languages.html"><i class="icon-hand-left"></i>Function length and double byte languages</a>
+					<li><a href="/blog/2018/05/reuse-a-3rd-party-jwt.html"><i class="icon-hand-left"></i>Reuse a 3rd Party Json Web Token (JWT) for Salesforce authentication</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2018/06/what-really-happens-in-oauth.html">What really happens in OAuth<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 				<article class="well well-raised">
-					<h1><small>Reuse a 3rd Party Json Web Token (JWT) for Salesforce authentication</small></h1>
+					<h1><small>What really happens in OAuth</small></h1>
 					<hr />
-					<div><h3><a href="#the-scenario" id="the-scenario">The scenario</a></h3> 
-<p>You run an app, could be a mobile native, a <a href="https://en.wikipedia.org/wiki/Single-page_application">SPA</a>, a <a href="https://en.wikipedia.org/wiki/Progressive_Web_Apps">PWA</a> or just an application with JavaScript logic, in your domain that needs to incorporate data from your Salesforce instance or one of your Salesforce communities.</p> 
-<p>Users have authenticated with your website and the app is using a <a href="https://www.jsonwebtoken.io/">JWT</a> Bearer Token to establish identity. You don't want to bother users with an additional authentication.</p> 
-<h3><a href="#what-you-need" id="what-you-need">What you need</a></h3> 
-<p>Salesforce has <a href="https://help.salesforce.com/articleView?id=remoteaccess_oauth_jwt_flow.htm&amp;type=5">very specific</a> requirements how a JWT must be formed to qualify for authentication. For example the token can be valid only for 5 minutes. It is very unlikely that your token matches the requirements.</p> 
-<p>Therefore you will need to extract the user identity from existing token, while checking that it isn't spoofed and create a new token that you present to Salesforce to obtain the session token. So you need:</p> 
-<ol> 
- <li>The key that can be used to verify the existing token. This could be a simple String, used for symmetrical signature or an X509 Public Key</li> 
- <li>A private key for Salesforce to sign a new JWT (See below)</li> 
- <li>A configured <a href="https://help.salesforce.com/articleView?id=connected_app_overview.htm&amp;type=5">Connected App</a> in Salesforce where you upload they full certificate and obtain the Consumer Key</li> 
- <li>Some place to run the code, like <a href="https://wwww.heroku.com/">Heroku</a></li> 
-</ol> 
-<p><img src="/blog/images/2018/jwtFlow.png" alt="Authentication Flow for 3rd party JWT"></p><h3><a href="#create-your-certificate-for-salesforce" id="create-your-certificate-for-salesforce">Create your certificate for Salesforce</a></h3> 
-<p>Salesforce uses a X509 certificate to validate the signatures. The various formats can be a little pain, since <a href="">PKCS</a> has many flavors. To save yourself some pain, here is the script to generate what you need. Please note the script prompts for input:</p> 
-<pre class="brush: bash">openssl genrsa -des3 -passout pass:somepass -out server.pass.key 2048
-openssl rsa -passin pass:somepass -in server.pass.key -out temp.key
-rm server.pass.key
-openssl req -new -key temp.key -out server.csr
-openssl x509 -req -sha256 -days 365 -in server.csr -signkey temp.key -out server.crt
-openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in temp.key -out server.key
-rm temp.key
-</pre> 
-<h3><a href="#configure-salesforce" id="configure-salesforce">Configure Salesforce</a></h3> 
-<p>In Salesforce you use the <em>App Manager</em> to create a new <em>Connected App</em>:</p> 
+					<div><p>OAuth in its various versions is the gold standard for Authorization (and using<a href="http://openid.net/connect/">OpenID Connect</a> for Authentication as well). There are <a href="https://www.digitalocean.com/community/tutorials/an-introduction-to-oauth-2">plenty</a> <a href="http://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html">of</a> <a href="https://medium.com/@technospace/an-introduction-to-oauth-2-0-4c71b5fb19ff">introductions</a> <a href="https://www.slideshare.net/aaronpk/an-introduction-to-oauth2">around</a> <a href="https://www.slideshare.net/aaronpk/an-introduction-to-oauth2">explaining</a> <a href="https://aaronparecki.com/oauth-2-simplified/">OAuth</a>. My favorite HTTP tool <a href="https://www.getpostman.com/">Postman</a> makes it really simple to obtain access via OAuth.</p> 
+<p>Nevertheless all those explanations are quite high level, so I wondered what happens on the wire for the getToken part so I started digging. This is what I found. <em>Nota bene</em>: There is no inherit security in OAuth if you don't use <strong>https</strong>.</p> 
+<h3><a href="#the-components" id="the-components">The components</a></h3> 
 <ul> 
- <li>Fill in Connected App Name, API Name and Contact eMail</li> 
- <li>Check ?Enable OAuth Settings?</li> 
- <li>Fill in a value for Callback URL, <a href="http://localhost/callback">http://localhost/callback</a> will do. We won't use that value</li> 
- <li>Check ?Use digital signatures?. Upload the certificate server.crt you created in the step before</li> 
- <li>for the ?Selected OAuth Scopes? you probably need <strong>api id web</strong> and others, depending on your use case. What you <strong>must</strong> have is <strong>refresh_token offline_access</strong>, otherwise authentication will fail</li> 
- <li>Check ?Require secret for Web Server Flow? (default setting anyway)</li> 
- <li>Save the entry. Note down the consumer key, you will need it in the code</li> 
+ <li>Authorization server: server to interact with to get an authorization</li> 
+ <li>Client identifier (ClientID): ?userid? of the application</li> 
+ <li>Client Secret: ?password? of the application</li> 
+ <li>A user</li> 
 </ul> 
-<h3><a href="#the-code-java-edition" id="the-code-java-edition">The code (Java Edition)</a></h3> 
-<p>I will show you the essential functions, storing and retrieving variables securely and wrapping a web API around is left to the reader. I wrote the sample using <a href="http://vertx.io">Eclipse vert.x</a> in case you wonder where the <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">JsonObject</a> comes from.</p> 
-<h4><a href="#extracting-the-user-from-the-3rd-party-jwt" id="extracting-the-user-from-the-3rd-party-jwt">Extracting the user from the 3rd party JWT</a></h4> 
-<p>Typically the user is stored in the <code>subject</code> property of the JWT Claim. Depending on the signature (symmetric encryption or public key), you need a different function to obtain the key, the extraction works the same:</p> 
-<pre class="brush: java">public String extractSubjectFromJWT(final String incomingJWT) throws SignatureException {
-        // Depending on production or demo mode we work with different keys
-        if (this.isX509Key()) {
-            Key key;
-            try {
-                key = this.getX509Key();
-            } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-                this.logger.fatal(e.getMessage(), e);
-                return null;
-            }
-            return Jwts.parser().setSigningKey(key).parseClaimsJws(incomingJWT).getBody().getSubject();
-        } else {
-            final byte[] key = this.getPlainKey();
-            return Jwts.parser().setSigningKey(key).parseClaimsJws(incomingJWT).getBody().getSubject();
-        }
-    }
-</pre> 
-<h4><a href="#generate-the-salesforce-compliant-jwt-key" id="generate-the-salesforce-compliant-jwt-key">Generate the Salesforce compliant JWT key</a></h4> 
-<p>The key requires the user as <code>subject</code>, the login URL as <code>audience</code> and the Consumer Key as <code>issuer</code>. The key must be the X509 private key. The validity needs to be 5 min into the future.</p> 
-<pre class="brush: java">public String createJwt(final String subject) throws Exception {
+<p>I'm not looking at the Resource Server here - it only comes into play before or after the actual token process.</p> 
+<h3><a href="#the-form-post-flow" id="the-form-post-flow">The Form-Post Flow</a></h3> 
+<p>There are <a href="https://auth0.com/docs/api-auth/which-oauth-flow-to-use">several flows</a> available to pick from. I'm looking at the Form-Post flow where user credentials are passed to the authentication server to obtain access and refresh tokens.</p> 
+<p>For this flow we need to post a HTTP form to the authorization server. The post has 2 parts: Header and body. A request looks like this:</p> 
+<pre><code>POST /yourOAuthEndPoint HTTP/1.1
+Host: authserver.acme.com
+Accept-Encoding: gzip, deflate
+Accept: *.*
+Authorization: Basic Y2xpZW50aWQ6Y2xpZW50c2VjcmV0
+Content-Type: application/x-www-form-urlencoded
+Cache-Control: no-cache
 
-        final String keyString = System.getenv("SFDC_KEY");
-        final KeyFactory kf = KeyFactory.getInstance("RSA");
-        final byte[] encoded = Base64.getDecoder().decode(keyString);
-        final PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(encoded);
-        final Key key = kf.generatePrivate(spec);
-
-        final Claims claims = Jwts.claims();
-        claims.setIssuer("Salesforce Connected APP ID");
-        claims.setAudience("https://login.salesforce.com");
-        claims.setSubject(subject);
-        claims.setExpiration(new Date(System.currentTimeMillis() + 300000));
-
-        final String compactJws = Jwts.builder()
-                .setHeaderParam("alg", "RS256")
-                .addClaims(claims)
-                .signWith(SignatureAlgorithm.RS256, key)
-                .compact();
-
-        return compactJws;
-    }
-</pre> 
-<h4><a href="#exchange-the-jwt-for-a-oauth-session-token" id="exchange-the-jwt-for-a-oauth-session-token">Exchange the JWT for a OAuth session token</a></h4> 
-<p>Salesforce requires to POST a http form (yep, form not JSON) to the authentication endpoint <code>/services/oauth2/token</code> and returns JSON if when it is successful or fails:</p> 
-<pre class="brush: java">private void handleAuth(final Message&lt;JsonObject&gt; incoming) {
-
-        // Create a web client to post to Salesforce
-        final WebClientOptions wco = new WebClientOptions();
-        wco.setUserAgent("SDFC VertX Authenticator");
-        wco.setTryUseCompression(true);
-        final JsonObject incomingJson = incoming.body();
-        final String jwt = incomingJson.getString("jwt");
-
-        final WebClient sfdcClient = WebClient.create(this.vertx, wco);
-        final MultiMap form = MultiMap.caseInsensitiveMultiMap();
-        form.set("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
-        form.set("assertion", jwt);
-
-        final int port = 443;
-        // use login.salesforce.com for production
-        final String host = "test.salesforce.com"; 
-        final String path = "/services/oauth2/token";
-
-        sfdcClient.post(port, host, path)
-                .putHeader("Content-Type", "application/x-www-form-urlencoded").ssl(true)
-                .sendForm(form, postReturn -&gt; {
-                    this.processOAuthResult(incoming, postReturn);
-                });
-    }
-
-    private void processOAuthResult(final Message&lt;JsonObject&gt; incoming,
-            final AsyncResult&lt;HttpResponse&lt;Buffer&gt;&gt; postReturn) {
-        final JsonObject result = postReturn.result().bodyAsJsonObject();
-        incoming.reply(result);
-
-    }
-</pre> 
-<p>As usual: YMMV</p></div>
+grant_type=password
+  &amp;username=user%40email.com
+  &amp;password=password
+  &amp;scope=openid+email+profile
+  &amp;client_id=clientid
+</code></pre> 
+<p>Some remarks:<br> - The <code>Authorization</code> header is just as <a href="https://www.base64encode.org/">Base64</a>version of <code>clientid:clientsecret</code> - you have t replace it with your actual info<br> - Content-Type must be <code>application/x-www-form-urlencoded</code><br> - The body is just one line with no spaces, I split it only for readability<br> - scope is a encoded list the + signs are actually spaces. Keeping that in mind you want to keep the server side scope names simple<br> - You need to repeat the clientid as header value</p> 
+<p>As a result you get back a JSON structure with authorization information. It can look like this:</p> 
+<pre><code>{
+    "access_token": "wildStringForAccess",
+    "refresh_token": "wildStringForRefreshingAccess",
+    "token_type": "Bearer",
+    "expires_in": 300
+}
+</code></pre> 
+<p>The result is easy to understand:<br> - <code>expires_in</code>: Duration for the access token in seconds<br> - <code>token_type</code>: <code>Bearer</code> denotes that you call your resource server with a header value of <code>Authorization: Bearer wildStringForAccess</code></p> 
+<p>As usual YMMV</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2018-05-03 10:42
+Stephan H Wissel</a> on 2018-06-04 03:16
 <span class="divider">|</span>
-<a href="/blog/2018/05/reuse-a-3rd-party-jwt.html#comments">Comments (0)</a>
+<a href="/blog/2018/06/what-really-happens-in-oauth.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
+categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/05/reuse-a-3rd-party-jwt.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Reuse a 3rd Party Json Web Token (JWT) for Salesforce authentication"></div>
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/06/what-really-happens-in-oauth.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="What really happens in OAuth"></div>
 						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2018/05/reuse-a-3rd-party-jwt.html";
+							var permaLink = "https://wissel.net/blog/2018/06/what-really-happens-in-oauth.html";
 						</script>
 					</p>
 
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_7c4b8140-4ecf-11e8-80e2-bfca30024cb4" type="button">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_78e56b10-67b6-11e8-9406-054f86671783" type="button">
 		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
 	            </button>
 	            </div>
-				<div id="commentform_7c4b8140-4ecf-11e8-80e2-bfca30024cb4"  class="collapse"></div>
+				<div id="commentform_78e56b10-67b6-11e8-9406-054f86671783"  class="collapse"></div>
 				<div class="well well-raised">
 					<h4>Comments</h4>
 					<ol id="commentList">
@@ -279,12 +199,9 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 					</ol>
 				</div>
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2018/04/function-length-and-double-byte-languages.html"><i class="icon-hand-left"></i>Function length and double byte languages</a>
+					<li><a href="/blog/2018/05/reuse-a-3rd-party-jwt.html"><i class="icon-hand-left"></i>Reuse a 3rd Party Json Web Token (JWT) for Salesforce authentication</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2018/06/what-really-happens-in-oauth.html">What really happens in OAuth<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 			</div>
@@ -292,12 +209,12 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 		<ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2018/">2018</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2018/05/">May</a></li>
+  <li><a href="/blog/2018/06/">June</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/heroku.html">Heroku</a>
+    <span class="divider">|</span><a href="/blog/categories/software.html">Software</a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/salesforce.html">Salesforce</a>
+    <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
   </li>
 </ul>
 
@@ -364,7 +281,7 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 	</footer>
 
 	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/2018/05/reuse-a-3rd-party-jwt.html";
+		var permaLink = "https://wissel.net/blog/2018/06/what-really-happens-in-oauth.html";
 	</script>
 		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
 	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
@@ -399,7 +316,7 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 	<script type="text/javascript">
 		var onloadCallback = function() {
-    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "7c4b8140-4ecf-11e8-80e2-bfca30024cb4");
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "78e56b10-67b6-11e8-9406-054f86671783");
  		};
 	</script>
 

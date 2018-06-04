@@ -6,7 +6,53 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Thu, 03 May 2018 14:19:21 +0000</pubdate>
+	<pubdate>Mon, 04 Jun 2018 06:28:27 +0000</pubdate>
+<item>
+	<title>What really happens in OAuth</title>
+	<description>&lt;p&gt;OAuth in its various versions is the gold standard for Authorization (and using&lt;a href="http://openid.net/connect/"&gt;OpenID Connect&lt;/a&gt; for Authentication as well). There are &lt;a href="https://www.digitalocean.com/community/tutorials/an-introduction-to-oauth-2"&gt;plenty&lt;/a&gt; &lt;a href="http://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html"&gt;of&lt;/a&gt; &lt;a href="https://medium.com/@technospace/an-introduction-to-oauth-2-0-4c71b5fb19ff"&gt;introductions&lt;/a&gt; &lt;a href="https://www.slideshare.net/aaronpk/an-introduction-to-oauth2"&gt;around&lt;/a&gt; &lt;a href="https://www.slideshare.net/aaronpk/an-introduction-to-oauth2"&gt;explaining&lt;/a&gt; &lt;a href="https://aaronparecki.com/oauth-2-simplified/"&gt;OAuth&lt;/a&gt;. My favorite HTTP tool &lt;a href="https://www.getpostman.com/"&gt;Postman&lt;/a&gt; makes it really simple to obtain access via OAuth.&lt;/p&gt; 
+&lt;p&gt;Nevertheless all those explanations are quite high level, so I wondered what happens on the wire for the getToken part so I started digging. This is what I found. &lt;em&gt;Nota bene&lt;/em&gt;: There is no inherit security in OAuth if you don't use &lt;strong&gt;https&lt;/strong&gt;.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#the-components" id="the-components"&gt;The components&lt;/a&gt;&lt;/h3&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Authorization server: server to interact with to get an authorization&lt;/li&gt; 
+ &lt;li&gt;Client identifier (ClientID): ?userid? of the application&lt;/li&gt; 
+ &lt;li&gt;Client Secret: ?password? of the application&lt;/li&gt; 
+ &lt;li&gt;A user&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;I'm not looking at the Resource Server here - it only comes into play before or after the actual token process.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#the-form-post-flow" id="the-form-post-flow"&gt;The Form-Post Flow&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;There are &lt;a href="https://auth0.com/docs/api-auth/which-oauth-flow-to-use"&gt;several flows&lt;/a&gt; available to pick from. I'm looking at the Form-Post flow where user credentials are passed to the authentication server to obtain access and refresh tokens.&lt;/p&gt; 
+&lt;p&gt;For this flow we need to post a HTTP form to the authorization server. The post has 2 parts: Header and body. A request looks like this:&lt;/p&gt; 
+&lt;pre&gt;&lt;code&gt;POST /yourOAuthEndPoint HTTP/1.1
+Host: authserver.acme.com
+Accept-Encoding: gzip, deflate
+Accept: *.*
+Authorization: Basic Y2xpZW50aWQ6Y2xpZW50c2VjcmV0
+Content-Type: application/x-www-form-urlencoded
+Cache-Control: no-cache
+
+grant_type=password
+  &amp;amp;username=user%40email.com
+  &amp;amp;password=password
+  &amp;amp;scope=openid+email+profile
+  &amp;amp;client_id=clientid
+&lt;/code&gt;&lt;/pre&gt; 
+&lt;p&gt;Some remarks:&lt;br&gt; - The &lt;code&gt;Authorization&lt;/code&gt; header is just as &lt;a href="https://www.base64encode.org/"&gt;Base64&lt;/a&gt;version of &lt;code&gt;clientid:clientsecret&lt;/code&gt; - you have t replace it with your actual info&lt;br&gt; - Content-Type must be &lt;code&gt;application/x-www-form-urlencoded&lt;/code&gt;&lt;br&gt; - The body is just one line with no spaces, I split it only for readability&lt;br&gt; - scope is a encoded list the + signs are actually spaces. Keeping that in mind you want to keep the server side scope names simple&lt;br&gt; - You need to repeat the clientid as header value&lt;/p&gt; 
+&lt;p&gt;As a result you get back a JSON structure with authorization information. It can look like this:&lt;/p&gt; 
+&lt;pre&gt;&lt;code&gt;{
+    "access_token": "wildStringForAccess",
+    "refresh_token": "wildStringForRefreshingAccess",
+    "token_type": "Bearer",
+    "expires_in": 300
+}
+&lt;/code&gt;&lt;/pre&gt; 
+&lt;p&gt;The result is easy to understand:&lt;br&gt; - &lt;code&gt;expires_in&lt;/code&gt;: Duration for the access token in seconds&lt;br&gt; - &lt;code&gt;token_type&lt;/code&gt;: &lt;code&gt;Bearer&lt;/code&gt; denotes that you call your resource server with a header value of &lt;code&gt;Authorization: Bearer wildStringForAccess&lt;/code&gt;&lt;/p&gt; 
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2018/06/what-really-happens-in-oauth.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>78e56b10-67b6-11e8-9406-054f86671783</guid>
+	<pubDate>2018-06-04 03:16</pubDate>
+
+</item>
 <item>
 	<title>Reuse a 3rd Party Json Web Token (JWT) for Salesforce authentication</title>
 	<description>&lt;h3&gt;&lt;a href="#the-scenario" id="the-scenario"&gt;The scenario&lt;/a&gt;&lt;/h3&gt; 
@@ -283,36 +329,6 @@ keytool -delete -alias sfdcsec -keystore sfdcsec.ks
 	<author>Stephan H. Wissel</author>
 	<guid>26d44c30-1c32-11e8-975d-b5df85697815</guid>
 	<pubDate>2018-02-28 03:50</pubDate>
-
-</item>
-<item>
-	<title>Spring Boot and Salesforce Canvas</title>
-	<description>&lt;h3&gt;&lt;a href="#the-challenge" id="the-challenge"&gt;The challenge&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Salesforce canvas offers a capable integration point between Salesforce and external applications to surface them inside the Salesforce UI. One of the aspects is establishing identity. There are two options: OAuth and a signed request. I???m looking at the later. A signed request posts (as in HTTP POST) a digitally signed JSON request to the external application.&lt;/p&gt; 
-&lt;p&gt;When all you need is a single page, validating the request and returning the result is all that needs to be done. It becomes trickier when you want to navigate in the application and when that application runs in the cloud with multiple load balanced instances, so you might end up on a different instance mid-flight.&lt;/p&gt; 
-&lt;p&gt;Most of the sample code available uses the sophisticated &lt;a href="https://github.com/forcedotcom/SalesforceCanvasJavascriptSDK"&gt;Canvas JavaScript SDK&lt;/a&gt;, so I decided to focus on backend code here.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#the-project" id="the-project"&gt;The project&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;All the code can be found &lt;a href="https://stwissel.github.io/SpringCanvasSample/"&gt;on Github&lt;/a&gt; including &lt;a href="https://github.com/Stwissel/SpringCanvasSample"&gt;sources&lt;/a&gt;. Feel free to &lt;a href="https://github.com/Stwissel/SpringCanvasSample/issues"&gt;open issues&lt;/a&gt;. To try it out you can deploy it to Heroku (button in the Readme on Github) and &lt;a href="https://developer.salesforce.com/docs/atlas.en-us.platform_connect.meta/platform_connect/quick_start_create_canvas_app.htm"&gt;configure a Canvas app&lt;/a&gt; in Salesforce. Use &lt;code&gt;https://yourappname.herokuapp.com/sfdcauth/hw&lt;/code&gt; as Canvas URL&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#the-approach" id="the-approach"&gt;The approach&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Build a &lt;a href="https://projects.spring.io/spring-boot/"&gt;Spring Boot&lt;/a&gt; application that provides an authentication endpoint suitable for a Canvas POST and other endpoints that only allow authenticated access. The security will be provided by &lt;a href="https://jwt.io/"&gt;Json Web Tokens&lt;/a&gt; a.k.a JWT or &lt;a href="https://tools.ietf.org/html/rfc7519"&gt;RFC 7519&lt;/a&gt;.&lt;/p&gt; 
-&lt;p&gt;As added challenge: The application will require standard link and form based navigation, so we can't rely on AJAX to provide additional ?stuff? into the requests from/to the server. And yes - needs to be able to run on &lt;a href="https://www.heroku.com/"&gt;Heroku&lt;/a&gt; on multiple instances (Dynos in Heroku language) without the sticky session feature switched on.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#lessons-learned" id="lessons-learned"&gt;Lessons learned&lt;/a&gt;&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;&lt;a href="https://projects.spring.io/spring-boot/"&gt;Spring Boot&lt;/a&gt; performs magic. Sometimes a little too much magic&lt;/li&gt; 
- &lt;li&gt;Base64 isn't Base64. The Java8 decoder works different from the Apache Commons, so the signed checksums don't tally. Pain in the ?proverbial? to get the validation code from the SDK running&lt;/li&gt; 
- &lt;li&gt;Spring security is well thought through. I like the approach: the very moment you add it to a project, all is closed until you specifically open it&lt;/li&gt; 
- &lt;li&gt;You can't stuff the entire JSON coming from Salesforce back into a cookie&lt;/li&gt; 
- &lt;li&gt;JSON in Java is still a pain (Bearable with &lt;a href="https://fasterxml.github.io/jackson-databind/javadoc/2.2.0/com/fasterxml/jackson/databind/JsonNode.html"&gt;JsonNode&lt;/a&gt;)&lt;/li&gt; 
- &lt;li&gt;The information around custom error pages in Spring is confusing. It seems to have evolved over time and conflicting information is presented&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://jwt.io/"&gt;Json Web Tokens&lt;/a&gt; (JWT) rock&lt;/li&gt; 
- &lt;li&gt;Cookies behave different in Salesforce canvas than in regular iFrames. In an iFrame http cookies are considered ?native? to their environment, in canvas they seem to run as third-party cookies (unless I miss something). Stole a few hours tracking the issue down&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://www.avonnicreator.com/"&gt;Avonni Creator&lt;/a&gt; is a nice tool to play with &lt;a href="https://www.lightningdesignsystem.com/"&gt;Lightning Design System&lt;/a&gt; layouts&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
-	<link>2018/02/spring-boot-and-salesforce-canvas.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>43366410-1621-11e8-8f58-bd9e0b89b056</guid>
-	<pubDate>2018-02-20 09:34</pubDate>
 
 </item>
 
