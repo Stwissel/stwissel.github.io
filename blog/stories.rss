@@ -6,7 +6,31 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Thu, 05 Jul 2018 16:43:09 +0000</pubdate>
+	<pubdate>Fri, 06 Jul 2018 09:53:51 +0000</pubdate>
+<item>
+	<title>Postman and the Salesforce REST API</title>
+	<description>&lt;p&gt;The Salesforce API is a great way to access Salesforce data and can be used with tools like &lt;a href="http://www.pocketsoap.com/osx/soqlx/"&gt;SoqlXplore&lt;/a&gt; or the &lt;a href="https://workbench.developerforce.com/"&gt;Salesforce Workbench&lt;/a&gt;. The API uses OAuth and a Bearer Authentication, so some steps are required to make that work in Postman&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#prepare-salesforce" id="prepare-salesforce"&gt;Prepare Salesforce&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;You will need a &lt;a href="https://help.salesforce.com/articleView?id=connected_app_overview.htm&amp;amp;type=5"&gt;connected APP&lt;/a&gt;. I usually create one that is pre-approved for my user profile(s), so I don't need to bother with the approval steps in Postman. However you could opt for self-approval and access the app once to approve its use, before you continue with the command line. Note down the &lt;code&gt;ClientId&lt;/code&gt; and &lt;code&gt;ClientSecret&lt;/code&gt; values.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#prepare-postman" id="prepare-postman"&gt;Prepare Postman&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Postman has great build in support for &lt;a href="https://www.getpostman.com/docs/v6/postman/sending_api_requests/authorization"&gt;all sorts of authorization&lt;/a&gt; interactively. However my goal here is to fully automate it, so you can run a &lt;a href="http://blog.getpostman.com/2014/03/07/writing-automated-tests-for-apis-using-postman/"&gt;test suite&lt;/a&gt; without manual intervention. First stop is the creation of one environment. You can have multiple environments to cater to different Salesforce instances.&lt;/p&gt; 
+&lt;p&gt;&lt;strong&gt;Important&lt;/strong&gt; Never ever ever store the environment into version control. It would contain credentials -&amp;gt; &lt;strong&gt;bad bad&lt;/strong&gt; idea!&lt;/p&gt; 
+&lt;p&gt;My environment variables look like this:&lt;/p&gt; 
+&lt;pre class="brush: javascript"&gt;{
+	"CLIENT_ID" : "the ClientId from Salesforce",
+	"CLIENT_SECRET" : "The ClientSecret from Salesforce",
+    "USER_ID" : "some@email.com",
+    "PASSWORD" : "DontTell",
+    "LOGIN_URL" : "https://login.salesforce.com/"
+}
+&lt;/pre&gt; 
+&lt;p&gt;Providing the Login URL allows to reuse postman collections between Sandboxes, Developer Orgs or Production Orgs without the need to actually edit the postman entries. Next on the menu: getting a token&lt;/p&gt;</description>
+	<link>2018/07/postman-and-the-salesforce-rest-api.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>c92b6b70-8038-11e8-a388-63a342b09cf1</guid>
+	<pubDate>2018-07-06 05:50</pubDate>
+
+</item>
 <item>
 	<title>Mime is where Legacy Systems go to die</title>
 	<description>&lt;p&gt;Your new system went live. Migration of current, active data went well. A decision was made not to move historic data and keep the old system around in ?read-only? mode, just in case some information needs to be looked up. Over time your zoo of legacy systems grows. I'll outline a way to put them to rest.&lt;/p&gt; 
@@ -300,46 +324,6 @@ public class JwtVerifier {
 	<author>Stephan H. Wissel</author>
 	<guid>cafb442a-6edb-4a5a-8414-1427353e25df</guid>
 	<pubDate>2018-03-23 04:40</pubDate>
-
-</item>
-<item>
-	<title>Using LetsEncrypt certificates in your JKS</title>
-	<description>&lt;p&gt;Dealing with certificates in Java is always fun. The keystore Java uses is different from the certificate files you are used to in your web server or node.js.&lt;/p&gt; 
-&lt;p&gt;Salesforce is build on Java, so we have to make peace with the Keystore. This article outlines the steps to use a LetsEncrypt certificate in a keystore. You will need:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;Internet connection&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://openssl.org"&gt;OpenSSL&lt;/a&gt; installed&lt;/li&gt; 
- &lt;li&gt;Able to run the &lt;a href="https://letsencrypt.org/how-it-works/"&gt;LetsEncrypt challenge&lt;/a&gt;&lt;/li&gt; 
- &lt;li&gt;Access to your DNS to add a record (for the challenge)&lt;/li&gt; 
- &lt;li&gt;Java runtime installed&lt;/li&gt; 
- &lt;li&gt;Public IP address&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;For this sample I will use the Domain ???demo.example.com???&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#obtaining-a-pem-certficate-from-letsencrypt" id="obtaining-a-pem-certficate-from-letsencrypt"&gt;Obtaining a PEM certficate from LetsEncrypt&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Easiest is to use the certbot utility on a Linux machine (e.g. spin up an instance on Heroku). DigitalOcean has &lt;a href="https://www.digitalocean.com/community/tutorials/how-to-use-certbot-standalone-mode-to-retrieve-let-s-encrypt-ssl-certificates"&gt;detailed instructions&lt;/a&gt;.&lt;br&gt; There used to be a tls-sni challenge which was marked insecure, so you want to the DNS challenge.&lt;/p&gt; 
-&lt;p&gt;&lt;code&gt;sudo certbot certonly --manual --preferred-challenges dns -d demo.example.com&lt;/code&gt;&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#convert-pem-to-pkcs12-format" id="convert-pem-to-pkcs12-format"&gt;Convert PEM to PKCS12 format&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;First concatenate all PEM files into one. Presuming you used the Letsencrypt mechanism:&lt;/p&gt; 
-&lt;p&gt;&lt;code&gt;sudo cat /etc/letsencrypt/life/demo.example.com/*.pem &amp;gt; fullcert.pem&lt;/code&gt;&lt;/p&gt; 
-&lt;p&gt;Then use OpenSSL to convert that into PKCS12 format. Note: if you do that on a Windows command prompt you must &lt;em&gt;run the command prompt as administrator&lt;/em&gt; otherwise you just get an error&lt;/p&gt; 
-&lt;p&gt;&lt;code&gt;openssl pkcs12 -export -out fullchain.pkcs12 -in fullchain.pem&lt;/code&gt;&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#prepare-a-java-jsk-keystore" id="prepare-a-java-jsk-keystore"&gt;Prepare a Java JSK keystore&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;You can't just create an empty keystore, so create a new temp key and specify a new keystore, then delete that key. That gives you the &lt;a href="https://docs.oracle.com/cd/E35976_01/server.740/es_admin/src/tadm_ssl_convert_pem_to_jks.html"&gt;empty keystore&lt;/a&gt;:&lt;/p&gt; 
-&lt;pre class="brush: bash"&gt;keytool -genkey -keyalg RSA -alias sfdcsec -keystore sfdcsec.ks
-keytool -delete -alias sfdcsec -keystore sfdcsec.ks
-&lt;/pre&gt; 
-&lt;h3&gt;&lt;a href="#import-pkcs12-into-jks" id="import-pkcs12-into-jks"&gt;Import pkcs12 into JKS&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Almost final steps. Don't forget your passwords&lt;/p&gt; 
-&lt;p&gt;&lt;code&gt;keytool -v -importkeystore -srckeystore fullchain.pkcs12 -destkeystore sfdcsec.ks -deststoretype JKS&lt;/code&gt;&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#adjust-alias-for-salesforce-import" id="adjust-alias-for-salesforce-import"&gt;Adjust alias for Salesforce import&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;The Salesforce import utility is picky about Alias names. The previous import created the entry&lt;br&gt; &lt;code&gt;Alias name: 1&lt;/code&gt; which needs to be updated:&lt;/p&gt; 
-&lt;p&gt;&lt;code&gt;keytool -keystore sfdcsec.ks -changealias -alias 1 -destalias demo_example_com&lt;/code&gt;&lt;/p&gt; 
-&lt;p&gt;And voilah, you have a properly signed certificate for your Salesforce instance. Downside: to be repeated every 90 days.&lt;/p&gt; 
-&lt;p&gt;As usual YMMV!&lt;/p&gt;</description>
-	<link>2018/03/letsencrypt-java-keystore.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>3f404a7d-3883-4a8a-a976-0e84417ff0d7</guid>
-	<pubDate>2018-03-22 03:18</pubDate>
 
 </item>
 

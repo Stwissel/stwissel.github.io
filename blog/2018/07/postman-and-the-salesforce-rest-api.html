@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Mime is where Legacy Systems go to die - NotesSensei's Blog</title>
+<title>Postman and the Salesforce REST API - NotesSensei's Blog</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -12,14 +12,14 @@ ga('send', 'pageview');
 <meta http-equiv="X-UA-Compatible"  content="chrome=1" />
 <meta http-equiv="Content-Language" content="en" />
 <meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
-<meta property="og:title"     content="wissel.net - Mime is where Legacy Systems go to die" />
+<meta property="og:title"     content="wissel.net - Postman and the Salesforce REST API" />
 <meta property="og:type"      content="blog" />
-<meta property="og:url"       content="https://wissel.net/blog/2018/06/mime-is-where-legacy-systems-go-to-die.html" />
+<meta property="og:url"       content="https://wissel.net/blog/2018/07/postman-and-the-salesforce-rest-api.html" />
 <meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
 <meta property="og:site_name" content="wissel.net" />
 <meta name="viewport"         content="width=device-width, initial-scale=1.0" />
 <meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
-<meta name="DC.Title"         content="NotesSensei's Weblog - Mime is where Legacy Systems go to die" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Postman and the Salesforce REST API" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
 <meta name="Copyright"        content="2018,2018 Stephan H. Wissel - Creative commons licence" />
@@ -108,12 +108,15 @@ catch(e){window.attachEvent("onload", $buo_f)}
     <ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2018/">2018</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2018/06/">June</a></li>
+  <li><a href="/blog/2018/07/">July</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/salesforce.html">Salesforce</a>
+  </li>
   <li class="pull-right">
     <span class="divider">|</span><a href="/blog/categories/software.html">Software</a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/technology.html">Technology</a>
+    <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
   </li>
 </ul>
 
@@ -121,86 +124,114 @@ catch(e){window.attachEvent("onload", $buo_f)}
 			<div class="span12">
 				
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2018/06/adventures-in-tdd.html"><i class="icon-hand-left"></i>Adventures in TDD</a>
+					<li><a href="/blog/2018/06/mime-is-where-legacy-systems-go-to-die.html"><i class="icon-hand-left"></i>Mime is where Legacy Systems go to die</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2018/07/postman-and-the-salesforce-rest-api.html">Postman and the Salesforce REST API<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 				<article class="well well-raised">
-					<h1><small>Mime is where Legacy Systems go to die</small></h1>
+					<h1><small>Postman and the Salesforce REST API</small></h1>
 					<hr />
-					<div><p>Your new system went live. Migration of current, active data went well. A decision was made not to move historic data and keep the old system around in ?read-only? mode, just in case some information needs to be looked up. Over time your zoo of legacy systems grows. I'll outline a way to put them to rest.</p> 
-<h3><a href="#the-challenges" id="the-challenges">The challenges</a></h3> 
-<p>All recent systems (that's younger than 30 years) data is stored more or less normalized. A business document, like a contract, is split over multiple tables like customer, address, header, line items, item details, product etc.</p> 
-<p>Dumping this data as is (<a href="https://en.wikipedia.org/wiki/Comma-separated_values">csv</a> rules supreme here) only creates a <a href="https://www.geotab.com/blog/big-data-graveyard/">data graveyard</a> instead of the much coveted <a href="https://en.wikipedia.org/wiki/Data_lake">data lake</a> or <a href="https://en.wikipedia.org/wiki/Data_warehouse">data warehouse</a>.</p> 
-<p>The issue gets aggravated by the prevalence of <a href="https://en.wikipedia.org/wiki/Magic_number_(programming)">magic numbers</a> and abbreviations that are only resolved inside the legacy system. So looking at one piece of data tells you squid. Only an <a href="https://en.wikipedia.org/wiki/Old_Hands">old hand</a> would be able to make sense of <code>Status 82</code> or <code>Flags x7D3z</code></p> 
-<p>Access to meaningful information is confined to the user interface of the legacy application. It provides search and assembly of business relevant context</p> 
-<h3><a href="#the-solution-approach" id="the-solution-approach">The solution approach</a></h3> 
-<p>Solving this puzzle requires a three step approach:</p> 
-<ul> 
- <li>denormalize</li> 
- <li>transform</li> 
- <li>make accessible</li> 
-</ul><h4><a href="#denormalize" id="denormalize">Denormalize</a></h4> 
-<p>The persistence format needs to be something that is closer to a document structure. The formats suitable would be XML, JSON or YAML. Probably owing to my age I would make a case for XML. I would argue that <code>&lt;Status id="42"&gt;Universe questions answered&lt;/Status&gt;</code> is way more readable than JSON when you try to link the magic number <code>42</code> to its business meaning <code>Universe questions answered</code>.</p> 
-<p>To be very clear: You will massively duplicate data and if any of the relations would change, you would face a data nightmare. But our use case: archive, read only doesn't face any penalties, other than storage, for this duplication.</p> 
-<h4><a href="#transform" id="transform">Transform</a></h4> 
-<p>While your <a href="https://en.wikipedia.org/wiki/Friendly_Neighborhood_Spider-Man">friendly neighborhood geek</a> would be perfectly fine staring at XML, <a href="https://lerms.deviantart.com/art/Do-You-Believe-in-the-Users-189078499">normal mortal users</a> will prefer something that's not only human readable, but easy to comprehend.</p> 
-<p>The reflective approach for an IT department tasked with this would be the creation of another future legacy system to visualize the data.</p> 
-<p>A better solution I'd like to propose is an <a href="https://en.wikipedia.org/wiki/XSLT">XSLT</a> (for XML) or <a href="http://mustache.github.io/">Mustache</a> (for JSON) transformation into HTML. Adventures souls could aim towards <a href="https://en.wikipedia.org/wiki/XSL_Formatting_Objects">XSL:FO</a> and a <a href="https://en.wikipedia.org/wiki/PDF/A">PDF-A</a> result.</p> 
-<p>Now you have at least 2 files: the denormalized XML and the HTML (or PDF). Eventually you have binary data like image files or office attachments that belong to that business record.</p> 
-<p>Enter <a href="https://en.wikipedia.org/wiki/MIME">MIME</a>. MIME is a container format, typically found in eMail systems. Nothing stops us reusing its capabilities. The MIME file consists of a MIME Header and one or more MIME parts, that qualify their content by a type.</p> 
-<p>A MIME part can contain a mime header and one or more mime parts - at nauseam or stack overflow.</p> 
-<p>Using MIME we can compose a single file. In the header would be meta information: what legacy system it came from, when it was exported, where the documentation could be found etc. Thereafter would be MIME parts with HTML, XML, PDF and binary files.</p> 
-<h4><a href="#make-accessible" id="make-accessible">Make accessible</a></h4> 
-<p>Just double clicking on that file would open it in the standard mail viewer. With clever set header fields (e.g. From as name of the legacy system) it will render the HTML part into something directly read- and understandable. Thus the file is useful in itself. If automated further processing is required, the XML or binary parts can be harvested.</p> 
-<p>Now take that file and store in an an append only object store (S3 anyone). The final piece is: how to make the information findable?</p> 
-<p>Users might search for a part, a customer, a time frame, a combination of all sorts of criteria. This type of requirements can be covered by <a href="https://lucene.apache.org/">a fulltext index</a> and a <a href="https://lucene.apache.org/solr/">search engine</a>. Lucene is content format aware, so queries can be very specific or very simple. The beauty of the approach: Other than a database, the MIME documents don't need to have a shared structure to be able to be searched by Lucene. Still the indexing process can do some level of standardization like merging <code>Id, ID, id, recordid, account_id</code> to be searchable as <code>ID=</code></p> 
-<p>Of course implementation needs to be planned carefully. Nevertheless this can be used as a blueprint for the one archive system <a href="https://en.wikipedia.org/wiki/One_Ring">to rule them all</a>.</p> 
+					<div><p>The Salesforce API is a great way to access Salesforce data and can be used with tools like <a href="http://www.pocketsoap.com/osx/soqlx/">SoqlXplore</a> or the <a href="https://workbench.developerforce.com/">Salesforce Workbench</a>. The API uses OAuth and a Bearer Authentication, so some steps are required to make that work in Postman</p> 
+<h3><a href="#prepare-salesforce" id="prepare-salesforce">Prepare Salesforce</a></h3> 
+<p>You will need a <a href="https://help.salesforce.com/articleView?id=connected_app_overview.htm&amp;type=5">connected APP</a>. I usually create one that is pre-approved for my user profile(s), so I don't need to bother with the approval steps in Postman. However you could opt for self-approval and access the app once to approve its use, before you continue with the command line. Note down the <code>ClientId</code> and <code>ClientSecret</code> values.</p> 
+<h3><a href="#prepare-postman" id="prepare-postman">Prepare Postman</a></h3> 
+<p>Postman has great build in support for <a href="https://www.getpostman.com/docs/v6/postman/sending_api_requests/authorization">all sorts of authorization</a> interactively. However my goal here is to fully automate it, so you can run a <a href="http://blog.getpostman.com/2014/03/07/writing-automated-tests-for-apis-using-postman/">test suite</a> without manual intervention. First stop is the creation of one environment. You can have multiple environments to cater to different Salesforce instances.</p> 
+<p><strong>Important</strong> Never ever ever store the environment into version control. It would contain credentials -&gt; <strong>bad bad</strong> idea!</p> 
+<p>My environment variables look like this:</p> 
+<pre class="brush: javascript">{
+	"CLIENT_ID" : "the ClientId from Salesforce",
+	"CLIENT_SECRET" : "The ClientSecret from Salesforce",
+    "USER_ID" : "some@email.com",
+    "PASSWORD" : "DontTell",
+    "LOGIN_URL" : "https://login.salesforce.com/"
+}
+</pre> 
+<p>Providing the Login URL allows to reuse postman collections between Sandboxes, Developer Orgs or Production Orgs without the need to actually edit the postman entries. Next on the menu: getting a token</p><h3><a href="#getting-a-token" id="getting-a-token">Getting a token</a></h3> 
+<p>Your Postman URL will look like this: <code>{{LOGIN_URL}}/services/oauth2/token</code>. Depending on the environment you will use production or Sandbox. The request ist an unauthenticated <code>POST</code> with a single header of <code>Content-Type:application/x-www-form-urlencoded</code> The body you post looks like this:</p> 
+<pre class="brush: bash">grant_type:password
+client_id:{{CLIENT_ID}}
+client_secret:{{CLIENT_SECRET}}
+password:{{PASSWORD}}
+username:{{USER_ID}}
+</pre> 
+<p>PostMan replaces anything inside <code>{{ .... }}</code> with values from your environment. This approach allows you to share your Postman collections without disclosing what should be private. A successful response will look like this:</p> 
+<pre class="brush: javascript">{
+    "access_token": "some long string that you need in your authorization header",
+    "instance_url": "https://yourdomain.my.salesforce.com",
+    "id": "https://login.salesforce.com/id/somestring/anotherstring",
+    "token_type": "Bearer",
+    "issued_at": "1530761889707",
+    "signature": "theThirdStringCheckSum"
+}
+</pre> 
+<p>All future call need go to the instance URL with the access token as bearer authorization. To make that easy we use PostMan's test script to capture that values into the environment:</p> 
+<pre class="brush: javascript">pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+var jsonData = pm.response.json();
+
+pm.test("Has a bearer token", function () {
+    pm.expect(jsonData.token_type).to.eql("Bearer");
+});
+
+// Save the bearer
+pm.environment.set("Bearer", jsonData.access_token);
+pm.environment.set("Instance", jsonData.instance_url);
+</pre> 
+<h3><a href="#getting-the-api-version" id="getting-the-api-version">Getting the API version</a></h3> 
+<p>Our next stop is figuring out the current API version (<code>43.0</code> at the point of writing). To do this we send a <code>GET</code> request to<br> <code>{{Instance}}/services/data</code> with a header of <code>Authorization:Bearer {{Bearer}}</code>. This call will return an JSON array with available API versions from 20.0 - 43.0 (at time of writing). Again we use the testing capability to capture the latest version:</p> 
+<pre class="brush: javascript">pm.test("Response time is less than 200ms", function () {
+    pm.expect(pm.response.responseTime).to.be.below(200);
+});
+
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+var jsonData = pm.response.json();
+var maxElements = jsonData.length - 1;
+pm.environment.set("service_url", jsonData[maxElements].url);
+</pre> 
+<p>Now we are ready to call more of the rest API. For example to get the list of all API endpoints you would send a <code>GET</code> request to <code>{{Instance}}{{service_url}}</code> with the familiar header of <code>Authorization:Bearer {{Bearer}}</code>.</p> 
+<p>Now you have all components in place to create more API calls and tests</p> 
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 2018-06-22 01:40
+Stephan H Wissel</a> on 2018-07-06 05:50
 <span class="divider">|</span>
-<a href="/blog/2018/06/mime-is-where-legacy-systems-go-to-die.html#comments">Comments (1)</a>
+<a href="/blog/2018/07/postman-and-the-salesforce-rest-api.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/technology.html">Technology</a> 
+categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/06/mime-is-where-legacy-systems-go-to-die.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Mime is where Legacy Systems go to die"></div>
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/07/postman-and-the-salesforce-rest-api.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Postman and the Salesforce REST API"></div>
 						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2018/06/mime-is-where-legacy-systems-go-to-die.html";
+							var permaLink = "https://wissel.net/blog/2018/07/postman-and-the-salesforce-rest-api.html";
 						</script>
 					</p>
 
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_3c2f6850-7383-11e8-b9df-3334377ac3ef" type="button">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_c92b6b70-8038-11e8-a388-63a342b09cf1" type="button">
 		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
 	            </button>
 	            </div>
-				<div id="commentform_3c2f6850-7383-11e8-b9df-3334377ac3ef"  class="collapse"></div>
+				<div id="commentform_c92b6b70-8038-11e8-a388-63a342b09cf1"  class="collapse"></div>
 				<div class="well well-raised">
 					<h4>Comments</h4>
 					<ol id="commentList">
-						<li>
-							posted by <b>Roland Turner</b> on <i>Thursday 05 July 2018 AD - 12:20 Coordinated Universal Time</i>:<br /> <p>Same thing we do every night Pinky, try to take over the world!</p>
-<p>(Granted, this plan might actually work.)</p>
-
-							<hr style="clear : both" />
-						</li> 					</ol>
+						<li id="nocomments">
+							<h5>No comments yet, be the first to comment</h5>
+						</li>
+					</ol>
 				</div>
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2018/06/adventures-in-tdd.html"><i class="icon-hand-left"></i>Adventures in TDD</a>
+					<li><a href="/blog/2018/06/mime-is-where-legacy-systems-go-to-die.html"><i class="icon-hand-left"></i>Mime is where Legacy Systems go to die</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2018/07/postman-and-the-salesforce-rest-api.html">Postman and the Salesforce REST API<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 			</div>
@@ -208,12 +239,15 @@ categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/bl
 		<ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2018/">2018</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2018/06/">June</a></li>
+  <li><a href="/blog/2018/07/">July</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/salesforce.html">Salesforce</a>
+  </li>
   <li class="pull-right">
     <span class="divider">|</span><a href="/blog/categories/software.html">Software</a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/technology.html">Technology</a>
+    <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
   </li>
 </ul>
 
@@ -280,7 +314,7 @@ categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/bl
 	</footer>
 
 	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/2018/06/mime-is-where-legacy-systems-go-to-die.html";
+		var permaLink = "https://wissel.net/blog/2018/07/postman-and-the-salesforce-rest-api.html";
 	</script>
 		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
 	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
@@ -315,7 +349,7 @@ categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/bl
 	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 	<script type="text/javascript">
 		var onloadCallback = function() {
-    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "3c2f6850-7383-11e8-b9df-3334377ac3ef");
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "c92b6b70-8038-11e8-a388-63a342b09cf1");
  		};
 	</script>
 
