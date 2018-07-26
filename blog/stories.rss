@@ -6,7 +6,96 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Fri, 13 Jul 2018 04:29:48 +0000</pubdate>
+	<pubdate>Thu, 26 Jul 2018 11:48:12 +0000</pubdate>
+<item>
+	<title>Designing Lightning Components for Reuse</title>
+	<description>&lt;p&gt;This is a living document about a common sense approach to developing reusable Lightning components. It might change over time.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#salesforce-documentation" id="salesforce-documentation"&gt;Salesforce documentation&lt;/a&gt;&lt;/h3&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;&lt;a href="https://developer.salesforce.com/docs/atlas.en-us.lightning.meta/lightning/intro_framework.htm"&gt;Lightning Developer Guide&lt;/a&gt;&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://developer.salesforce.com/docs/component-library/overview/components"&gt;Lightning Component Library&lt;/a&gt;&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;As well as the instance specific component library&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#principles" id="principles"&gt;Principles&lt;/a&gt;&lt;/h3&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Components shall serve a single purpose, designed for reusability&lt;/li&gt; 
+ &lt;li&gt;Components shall use the most feasible least code approach&lt;/li&gt; 
+ &lt;li&gt;Components shall not contain country specific logic in the front-end&lt;/li&gt; 
+ &lt;li&gt;Components shall be documented and tested&lt;/li&gt; 
+ &lt;li&gt;Components shall use composition over inheritance. Inheritance is NOT forbidden, use it wisely&lt;/li&gt; 
+ &lt;li&gt;Components shall observe case sensitivity even for non case sensitive item (e.g. field names)&lt;/li&gt; 
+ &lt;li&gt;Components shall prefer component markup over html markup (e.g. &lt;code&gt;lightning:card&lt;/code&gt; over &lt;code&gt;div class="slds-..."&lt;/code&gt;)&lt;/li&gt; 
+ &lt;li&gt;Components shall use component navigation (if navigation is needed)&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#naming" id="naming"&gt;Naming&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Related files and components need to be named so they appear close to each other. E.g. a component ?VehicleInfoList? that depends on inner components. Those would also start with ?VehicleInfo? e.g. ?VehicleInfoCard? ?VehicleInfoLineItem?, ?VehicleInfoInterested? etc.&lt;br&gt; Files should be named like this:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;"SalesProcess.cmp???&lt;/li&gt; 
+ &lt;li&gt;???SalesProcessController.js???&lt;/li&gt; 
+ &lt;li&gt;???SalesProcessHelper.js???&lt;/li&gt; 
+ &lt;li&gt;???SalesProcess[WhatEvent].evt???&lt;/li&gt; 
+ &lt;li&gt;???SalesProcess.SVG???&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#interfaces" id="interfaces"&gt;Interfaces&lt;/a&gt;&lt;/h3&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;A component shall only implement the interfaces that it actually uses.&lt;/li&gt; 
+ &lt;li&gt;A component that relies on a current record, shall not use ?availableForAllPageTypes? and must implement ?hasRecordId? and the attribute ?recordId?.&lt;/li&gt; 
+ &lt;li&gt;Components that are not used on a page layout, but rather inside other components shall not implement interfaces (?availableFor??) that make them appear in the page editor&lt;/li&gt; 
+ &lt;li&gt;Components shall only implement the interfaces they actually use. Avoid interfaces the component ?might use in future?&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#data-access" id="data-access"&gt;Data access&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Components shall use the ?least code? principles for data access. To be checked in this sequence:&lt;/p&gt; 
+&lt;ol&gt; 
+ &lt;li&gt;Does the component need data access or can the attributes of it provide all the input it requires?&lt;/li&gt; 
+ &lt;li&gt;Can lightning:recordForm be used?&lt;/li&gt; 
+ &lt;li&gt;Can lightning:recordEditForm and lightning:recordReadForm be used?&lt;/li&gt; 
+ &lt;li&gt;Can force:recordData be used?&lt;/li&gt; 
+ &lt;li&gt;Is a custom @AuraEnabled method in the controller needed for data provision?&lt;/li&gt; 
+&lt;/ol&gt; 
+&lt;p&gt;This doesn't preclude fetching Meta data or configuration. Ensure to use storable actions where feasible. More principles:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Use data change handlers where appropriate&lt;/li&gt; 
+ &lt;li&gt;Use component events&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#code-principles" id="code-principles"&gt;Code principles&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;This section probably will expand over time&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Code needs to be readable&lt;/li&gt; 
+ &lt;li&gt;The controllers (both client and server side) shall be light modules that marshall actual work to helper classes and helper functions&lt;/li&gt; 
+ &lt;li&gt;In Apex helper classes shall be instantiated using factory classes - this allows intoducing country specific behavior&lt;/li&gt; 
+ &lt;li&gt;All Apex helper classes shall be based on Interfaces&lt;/li&gt; 
+ &lt;li&gt;Methods and functions shall be single purpose and not exceed a page size. Break them down (makes them more testable anyway) if to big&lt;/li&gt; 
+ &lt;li&gt;Don't copy/paste&lt;/li&gt; 
+ &lt;li&gt;Run PMD (free download) on all Apex (eventually on JavaScript too)&lt;/li&gt; 
+ &lt;li&gt;Operations that can fail need to be handled with try/catch or its equivalent&lt;/li&gt; 
+ &lt;li&gt;Use @ApexDoc and @JSDoc style comments&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#testing" id="testing"&gt;Testing&lt;/a&gt;&lt;/h3&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;All components need test code: both for Apex (natural) and the client side component.&lt;/li&gt; 
+ &lt;li&gt;A component is incomplete without a ?Lightning testing service? test.&lt;/li&gt; 
+ &lt;li&gt;Use assertions generously!&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#documentation" id="documentation"&gt;Documentation&lt;/a&gt;&lt;/h3&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Lightning components have a description&lt;/li&gt; 
+ &lt;li&gt;Each lightning component comes with a documentation section - don't waste time documenting them outside Salesforce.&lt;/li&gt; 
+ &lt;li&gt;Use the documentation to briefly explain what it does (no Pulitzer price for this writing!).&lt;/li&gt; 
+ &lt;li&gt;Include at least one example in the documentation&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#parameter" id="parameter"&gt;Parameter&lt;/a&gt;&lt;/h3&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Components that can be dragged onto a page can benefit from having parameters the page maintainer can use to configure the component, thus increasing reusability and limit the number of components that need to show up in the palette.&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://developer.salesforce.com/docs/atlas.en-us.lightning.meta/lightning/components_config_for_app_builder_design_files.htm"&gt;Parameter documentation&lt;/a&gt; - Check the documentation for details.&lt;/li&gt; 
+ &lt;li&gt;If a component is usable only for a specific object page, add that to the Design Resource.&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2018/07/designing-lightning-components-for-reuse.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>f8870080-9084-11e8-9829-0f2fefca6bce</guid>
+	<pubDate>2018-07-26 11:35</pubDate>
+
+</item>
 <item>
 	<title>Postman and the Salesforce REST API</title>
 	<description>&lt;p&gt;The Salesforce API is a great way to access Salesforce data and can be used with tools like &lt;a href="http://www.pocketsoap.com/osx/soqlx/"&gt;SoqlXplore&lt;/a&gt; or the &lt;a href="https://workbench.developerforce.com/"&gt;Salesforce Workbench&lt;/a&gt;. The API uses OAuth and a Bearer Authentication, so some steps are required to make that work in Postman&lt;/p&gt; 
@@ -268,62 +357,6 @@ $A.logger.subscribe( "INFO", function( level, message, error ) {
 	<author>Stephan H. Wissel</author>
 	<guid>2efe5190-3568-11e8-9f7b-dd4d46818a1f</guid>
 	<pubDate>2018-04-01 12:50</pubDate>
-
-</item>
-<item>
-	<title>Authenticate from Salesforce to Heroku with JWT</title>
-	<description>&lt;p&gt;&lt;a href="https://heroku.com"&gt;Heroku&lt;/a&gt; PAAS is an easy and flexible way to extend Salesforce functionality.&lt;br&gt; Its easy to call out to a Heroku REST service build with a method of your choice: Java, JavaScript, Ruby etc.&lt;br&gt; The usual sticky point between two platforms is the &lt;strong&gt;identity of the caller&lt;/strong&gt;.&lt;/p&gt; 
-&lt;p&gt;In a lot of cases the only requirement is ?a valid Salesforce user?, eventually with some additional claims added.&lt;br&gt; For this scenario a &lt;a href="https://jwt.io/"&gt;JWT&lt;/a&gt; Bearer authentication (&lt;a href="https://tools.ietf.org/html/rfc7519"&gt;RFC 7519&lt;/a&gt;) is a good pick.&lt;/p&gt; 
-&lt;p&gt;When you look around, most examples revolve around a JWT token being issued after some means of authentication from the same system that was authenticated against.&lt;br&gt; This scenario is different: The Salesforce server issues the JWT token and code on Heroku validates the token as authorization.&lt;br&gt; The beauty of the approach: &lt;strong&gt;no extra calls&lt;/strong&gt; need to be made to get this working.&lt;/p&gt; 
-&lt;p&gt;What you will need:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;A valid certificate, in this case self signed is good enough (it won't be used by a browser)&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://openssl.org"&gt;OpenSSL&lt;/a&gt; installed on your computer&lt;/li&gt; 
- &lt;li&gt;A Heroku account&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#preparing-the-certificate" id="preparing-the-certificate"&gt;Preparing the certificate&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;In Salesforce setup open &lt;a href="https://help.salesforce.com/articleView?id=security_keys_about.htm&amp;amp;type=5"&gt;Certificate and Key management&lt;/a&gt;.&lt;br&gt; Create or pick a key. Note down the name. For this article I will use &lt;em&gt;YourCertNameHere&lt;/em&gt;. Open the key and click on &lt;em&gt;Download Certificate&lt;/em&gt;.&lt;br&gt; The cert will be downloaded in crt format. We use this file to extract the &lt;strong&gt;public&lt;/strong&gt; key that Heroku will use to verify the signature. To get the key use:&lt;/p&gt; 
-&lt;pre class="brush: bash"&gt;openssl x509 -pubkey -noout -in YourCertNameHere.crt
-&lt;/pre&gt; 
-&lt;p&gt;The String we need is between the BEGIN and END lines, excluding the lines. You can store it into a file or create a Heroku environment variable.&lt;br&gt; Since it is a public key, you don't need to guard it as fiercly as your private keys.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#the-apex-code" id="the-apex-code"&gt;The APEX code&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Before making a call-out to Heroku, you need to componse the signed JWT token. That's done in just a few lines:&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;public static String getJWTBearer(String subject, String keyName) {
-    Auth.JWT jwt = new Auth.JWT();
-    jwt.setSub(subject);
-    Auth.JWS myJws = new Auth.JWS(jwt, keyName);
-    return myJws.getCompactSerialization();
-}
-&lt;/pre&gt; 
-&lt;p&gt;You might opt to add additional claims beside the subject, when your use case does require that.&lt;br&gt; The header value gets added to the &lt;code&gt;Authorization&lt;/code&gt; header as &lt;code&gt;Bearer&lt;/code&gt; authorization.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#java-code" id="java-code"&gt;Java code&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;I'm using the &lt;a href="https://github.com/jwtk/jjwt"&gt;jjwt&lt;/a&gt; library which is available on &lt;a href="https://search.maven.org/#artifactdetails%7Cio.jsonwebtoken%7Cjjwt%7C0.9.0%7Cjar"&gt;Maven Central&lt;/a&gt;.&lt;br&gt; It makes it simple to retrieve a claim. An expired claim or an invalid signature will throw an error, so wrap it into a try/catch.&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;import java.security.Key;
-import java.security.KeyFactory;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Base64;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-
-public class JwtVerifier {
-	public static Claims getClaims(String key, String token) throws Exception {
-
-		byte[] byteKey = Base64.getMimeDecoder().decode(key);
-		X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(byteKey);
-		KeyFactory kf = KeyFactory.getInstance("RSA");
-		Key realKey = kf.generatePublic(X509publicKey);
-		return Jwts.parser().setSigningKey(realKey).parseClaimsJws(token).getBody();
-	}
-}
-&lt;/pre&gt; 
-&lt;p&gt;The only catch in the code was the need for &lt;code&gt;MimeDecoder&lt;/code&gt; instead of a standard &lt;code&gt;Decoder&lt;/code&gt; for Base64 decoding.&lt;br&gt; The subject, typically the user, can be retrieved using &lt;code&gt;claims.getSubject()&lt;/code&gt;&lt;/p&gt; 
-&lt;p&gt;Next stop, for another blog entry: the NodeJS equivalent.&lt;/p&gt; 
-&lt;p&gt;As usual YMMV!&lt;/p&gt;</description>
-	<link>2018/03/salesforce-heroku-jwt.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>cafb442a-6edb-4a5a-8414-1427353e25df</guid>
-	<pubDate>2018-03-23 04:40</pubDate>
 
 </item>
 
