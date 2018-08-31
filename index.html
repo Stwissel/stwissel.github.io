@@ -110,6 +110,100 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2018/08/adding-labels-to-lightning-datatable.html">Adding Labels to Lightning Datatable</a></small></h1>
+					<hr />
+					<div><p>In <a href="/blog/2018/08/lightning-datatables-and-relationship-queries.html">Part 1</a> I described a way to make any SOQL result fit for use in a Datatable. The next step is to provide column labels. While it would be easy to just hardcode them, <a href="https://www.linkedin.com/in/abhishek-mohanty-56904914b/">Abhishek</a> suggested to use the original field names. The beauty of that approach: The admin can adjust and/or translate field labels without touching the code.</p> 
+<h3><a href="#going-meta" id="going-meta">Going Meta</a></h3> 
+<p>APEX has a rich API that allow querying an object's properties in the <a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_namespace_Schema.htm">Schema</a> name space. Getting the information for a collection of objects can be done using <code>Schema.describeSObjects(sObjectTypes)</code> or <code>Schema.getGlobalDescribe()</code> (see <a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_methods_system_schema.htm">details here</a>).</p> 
+<p>The interesting challenge is to find the object names of the relationships, the default field list will only tell you the name you gave it, but not the object you relate to. So some more code is required (see below).</p> 
+<p>Relationship fields can be identified by the part before the <code>.</code> either ending in <code>__r</code> or <code>id</code>. So we break a query apart and extract a <code>List&lt;String&gt;</code> for the field name and a <code>String</code> for the start object name. Our scenario doesn't cater to subqueries. These two parameters get fed into a utility function.</p> 
+<pre class="brush: java">public without sharing class AuraLabelHelper {
+    
+    private static Map&lt;String, Schema.SObjectType&gt; globalDescribe = Schema.getGlobalDescribe();
+    
+    public static Map&lt;String, String&gt; retrieveFieldLablesFromFieldList(List&lt;String&gt; fieldList, String objName) {
+        Map&lt;String, String&gt; result = new Map&lt;String, String&gt; ();
+        Map&lt;String, Schema.SObjectField&gt; fieldDefinitions = internalFieldLablesFromFieldList(fieldList, objName, '');
+        for (String key : fieldDefinitions.keySet()) {
+            DescribeFieldResult dfr = fieldDefinitions.get(key).getDescribe();
+            result.put(key, dfr.getLabel());
+        }
+        return result;
+    }
+    
+    
+    private static Map&lt;String, Schema.SObjectField&gt; internalFieldLablesFromFieldList(List&lt;String&gt; fieldList, String objName, String prefix) {
+        Map&lt;String, Schema.SObjectField&gt; result = new Map&lt;String, Schema.SObjectField&gt; ();
+        Schema.SObjectType objectType = AuraLabelHelper.globalDescribe.get(objName);
+        Schema.DescribeSObjectResult describeResult = objectType.getDescribe();
+        // Labels for the top level object - needs to be lowercased  
+        Map&lt;String, Schema.SObjectField&gt; fieldMap = describeResult.fields.getMap();
+        Map&lt;String, Schema.SObjectField&gt; fieldMapLower = new Map&lt;String, Schema.SObjectField&gt; ();
+        
+        for (String key : fieldMap.keySet()) {
+            fieldMapLower.put(key.toLowerCase(), fieldMap.get(key));
+        }
+        
+        for (String fieldName : fieldList) {
+            String fieldNameLower = fieldName.toLowerCase();
+            if (fieldMapLower.containsKey(fieldNameLower)) {
+                result.put(prefix + fieldNameLower, fieldMapLower.get(fieldNameLower));
+            } else if (fieldNameLower.contains('__r.')) {
+                // We have a potential relationship field at hand
+                String relationFieldName = fieldNameLower.left(fieldNameLower.indexOf('__r.')) + '__c';
+                Schema.DescribeFieldResult relationDescribe = fieldMapLower.get(relationFieldName).getDescribe();
+                Schema.SObjectType reference = relationDescribe.getReferenceTo().get(0);
+                String objApiName = reference.getDescribe().getName();
+                List&lt;String&gt; subFieldList = new List&lt;String&gt; ();
+                String newPrefix = prefix + fieldNameLower.left(fieldNameLower.indexOf('.'))+'_';
+                subFieldList.add(fieldNameLower.substring(fieldNameLower.indexOf('__r.') + 4));
+                result.putAll(internalFieldLablesFromFieldList(subFieldList, objApiName, newPrefix));
+            }
+        }
+        
+        return result;
+    }
+}
+</pre> 
+<p>Good boys and girls create a test class:</p> 
+<pre class="brush: java">@IsTest
+public class AuraLabelHelperTest {
+
+    @IsTest
+    public static void simpleAccountTest() {
+        List&lt;String&gt; fieldNames = new List&lt;String&gt; ();
+        fieldNames.add('Id');
+        fieldNames.add('Name');
+        fieldNames.add('Customer__c');
+        fieldNames.add('Customer__r.Name');
+
+        Map&lt;String, String&gt; result = AuraLabelHelper.retrieveFieldLablesFromFieldList(fieldNames, 'Address__c');
+        System.debug(result);
+        System.assert(result.containsKey('id'));
+        System.assert(result.containsKey('customer__r_name'));
+
+    }
+
+}
+</pre> 
+<p>Next stop is putting it all together. As usual YMMV.</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 31 August 2018
+<span class="divider">|</span>
+<a href="/blog/2018/08/adding-labels-to-lightning-datatable.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/08/adding-labels-to-lightning-datatable.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Adding Labels to Lightning Datatable"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2018/08/adding-labels-to-lightning-datatable.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2018/08/lightning-datatables-and-relationship-queries.html">Lightning Datatable and Relationship Queries</a></small></h1>
 					<hr />
 					<div><p>The <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:datatable/example">Lightning Datatable</a> is a flexible component to show data in a sortable, actionable table. Formatting is automatic provided by the <a href="https://www.lightningdesignsystem.com/">Lightning Design System</a>. Data gets provided as <a href="http://json.org/">JSON array</a>.</p> 
@@ -542,45 +636,6 @@ categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/04/lightning-creative-logging.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Creative logging with $A.log()"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2018/04/lightning-creative-logging.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2018/04/salesforce-one-year-on.html">Salesforce one year on</a></small></h1>
-					<hr />
-					<div><p>A year ago I said <a href="2017/04/goodbye-ibm-hello-salesforce.html">Good by IBM, Hello Salesforce</a>. A lot has happened in the last 12 month. Salesforce is only my second salaried job, I've been running my own companies and been freelance before.</p> 
-<p>Coming from IBM, where <em>Resource Actions</em> had efficiently killed employee engagement, Salesforce's Ohana culture was a refreshing different. It makes such a difference to work with people who are genuinely interested in your success, without exception. In summary:</p> 
-<ul> 
- <li>I became a <a href="https://trailhead.salesforce.com/en/me/stwissel">Trailblazer Ranger</a>, completing 30 trails, 206 badges and collecting 169625 points</li> 
- <li>Passed five Salesforce certifications</li> 
- <li>Contributed to customer success in Singapore, Australia and Korea</li> 
- <li>Wrote 25 blog entries (Way to little, more are coming)</li> 
- <li>Moved my blog from Domino to git (more on that below)</li> 
- <li>Contributed to OpenSource on github: 
-  <ul> 
-   <li>Maintainer for <a href="https://github.com/Stwissel/node-red-contrib-salesforce">node-red-contrib-salesforce</a>. The nodes that connect <a href="https://nodered.org">NodeRED</a> to Salesforce, including the support for platform events</li> 
-   <li><a href="https://github.com/Stwissel/Excel2XML">Excel2XML</a>: Tool that converts XLSX tables into XML, so data can be extracted in command line applications. Main purpose is to make Excel data accessible in build pipelines (e.g. sample values for tests)</li> 
-   <li><a href="https://github.com/Stwissel/SpringCanvasSample">Spring Boot and Salesforce Canvas</a>: Sample application that turns a Canvas POST into a JWT authentication, so classic multi pages applications can be integrated into Salesforce Canvas</li> 
-   <li><a href="https://github.com/Stwissel/SampleProxy">Vert.x proxy</a> Filtering proxy implemented in <a href="https://vertx.io">Apache vert.x</a>. It allows to front a web application and filter HTML, JSON etc. based on content and URL</li> 
-   <li><a href="https://github.com/Stwissel/vertx-sfdc-platformevents">SFDC Platform Events</a>: Modules for <a href="https://vertx.io">Apache vert.x</a> to connect to Salesforce. It includes authentication and processing of platform events. This allows for high performance multi-threaded interaction with Salesforce APIs, not limited to platform events</li> 
-   <li><a href="https://github.com/Stwissel/blog-comments-public">Blog Comments</a> Tool that accepts a JSON formated comment structure and creates a Bitbucket file, a commit and a pull request. Allows for a database free comment engine</li> 
-   <li><a href="https://github.com/Stwissel/blogengine">BlogEngine</a>: The application that powers this blog. It generates static files when commits/merges happen to my master branch on Bitbucket</li> 
-  </ul> </li> 
-</ul> 
-<p>What a ride, onto year two!</p></div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 01 April 2018
-<span class="divider">|</span>
-<a href="/blog/2018/04/salesforce-one-year-on.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/salesforce.html">Salesforce</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/04/salesforce-one-year-on.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Salesforce one year on"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2018/04/salesforce-one-year-on.html";
 						</script>
 					</p>
 </p>

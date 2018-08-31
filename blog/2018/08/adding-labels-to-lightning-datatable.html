@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Lightning Datatable and Relationship Queries - NotesSensei's Blog</title>
+<title>Adding Labels to Lightning Datatable - NotesSensei's Blog</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -12,14 +12,14 @@ ga('send', 'pageview');
 <meta http-equiv="X-UA-Compatible"  content="chrome=1" />
 <meta http-equiv="Content-Language" content="en" />
 <meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
-<meta property="og:title"     content="wissel.net - Lightning Datatable and Relationship Queries" />
+<meta property="og:title"     content="wissel.net - Adding Labels to Lightning Datatable" />
 <meta property="og:type"      content="blog" />
-<meta property="og:url"       content="https://wissel.net/blog/2018/08/lightning-datatables-and-relationship-queries.html" />
+<meta property="og:url"       content="https://wissel.net/blog/2018/08/adding-labels-to-lightning-datatable.html" />
 <meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
 <meta property="og:site_name" content="wissel.net" />
 <meta name="viewport"         content="width=device-width, initial-scale=1.0" />
 <meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
-<meta name="DC.Title"         content="NotesSensei's Weblog - Lightning Datatable and Relationship Queries" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Adding Labels to Lightning Datatable" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
 <meta name="Copyright"        content="2018,2018 Stephan H. Wissel - Creative commons licence" />
@@ -124,109 +124,112 @@ catch(e){window.attachEvent("onload", $buo_f)}
 			<div class="span12">
 				
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2018/07/designing-lightning-components-for-reuse.html"><i class="icon-hand-left"></i>Designing Lightning Components for Reuse</a>
+					<li><a href="/blog/2018/08/lightning-datatables-and-relationship-queries.html"><i class="icon-hand-left"></i>Lightning Datatable and Relationship Queries</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2018/08/adding-labels-to-lightning-datatable.html">Adding Labels to Lightning Datatable<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 				<article class="well well-raised">
-					<h1><small>Lightning Datatable and Relationship Queries</small></h1>
+					<h1><small>Adding Labels to Lightning Datatable</small></h1>
 					<hr />
-					<div><p>The <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:datatable/example">Lightning Datatable</a> is a flexible component to show data in a sortable, actionable table. Formatting is automatic provided by the <a href="https://www.lightningdesignsystem.com/">Lightning Design System</a>. Data gets provided as <a href="http://json.org/">JSON array</a>.</p> 
-<h3><a href="#the-challenge" id="the-challenge">The challenge</a></h3> 
-<p>A prime use case for a data table is to show results returned via <code>@AuraEnabled</code> from a <a href="https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/">SOQL</a> query. Ideally relationship identity fields should turn into links and data from relationship queries (something like <code>MyCustomObj__r.Color</code>) should be usable in the table as well.</p> 
-<p>The tricky part: Relationship fields are returned (IMHO properly) as JSON objects. Datatable can't deal with object values for their columns. A returned value might look like this (deliberately using a generic example):</p> 
-<pre class="brush: javascript">[{
-  Id: 'payloadid',
-  Color__: 'Blue',
-  Stuff__r: {
-    Id: 'ToyId',
-    Name: 'Teddy',
-    Price__c: 34.5,
-    Shape__r: {
-      Size__c: 'XL',
-      Geometry__c: 'round'
+					<div><p>In <a href="/blog/2018/08/lightning-datatables-and-relationship-queries.html">Part 1</a> I described a way to make any SOQL result fit for use in a Datatable. The next step is to provide column labels. While it would be easy to just hardcode them, <a href="https://www.linkedin.com/in/abhishek-mohanty-56904914b/">Abhishek</a> suggested to use the original field names. The beauty of that approach: The admin can adjust and/or translate field labels without touching the code.</p> 
+<h3><a href="#going-meta" id="going-meta">Going Meta</a></h3> 
+<p>APEX has a rich API that allow querying an object's properties in the <a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_namespace_Schema.htm">Schema</a> name space. Getting the information for a collection of objects can be done using <code>Schema.describeSObjects(sObjectTypes)</code> or <code>Schema.getGlobalDescribe()</code> (see <a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_methods_system_schema.htm">details here</a>).</p> 
+<p>The interesting challenge is to find the object names of the relationships, the default field list will only tell you the name you gave it, but not the object you relate to. So some more code is required (see below).</p> 
+<p>Relationship fields can be identified by the part before the <code>.</code> either ending in <code>__r</code> or <code>id</code>. So we break a query apart and extract a <code>List&lt;String&gt;</code> for the field name and a <code>String</code> for the start object name. Our scenario doesn't cater to subqueries. These two parameters get fed into a utility function.</p> 
+<pre class="brush: java">public without sharing class AuraLabelHelper {
+    
+    private static Map&lt;String, Schema.SObjectType&gt; globalDescribe = Schema.getGlobalDescribe();
+    
+    public static Map&lt;String, String&gt; retrieveFieldLablesFromFieldList(List&lt;String&gt; fieldList, String objName) {
+        Map&lt;String, String&gt; result = new Map&lt;String, String&gt; ();
+        Map&lt;String, Schema.SObjectField&gt; fieldDefinitions = internalFieldLablesFromFieldList(fieldList, objName, '');
+        for (String key : fieldDefinitions.keySet()) {
+            DescribeFieldResult dfr = fieldDefinitions.get(key).getDescribe();
+            result.put(key, dfr.getLabel());
+        }
+        return result;
     }
-  },
-  Dance__c: 'Tango'
-}];
-</pre><h3><a href="#solution-part-1" id="solution-part-1">Solution Part 1</a></h3> 
-<p><a href="https://www.linkedin.com/in/abhishek-mohanty-56904914b/">Abhishek</a> had an idea (see also <a href="/blog/2018/08/adding-labels-to-lightning-datatable.html">Part 2</a>) and we put our heads together. To be able to use such a structure in a data table, we need to flatten it out, so instead of having <code>Stuff__r.Shape__r.Size__c</code> we want a flat value <code>Stuff__r_Shape__r_Size__c</code> with simples values (String, Number, Date, boolean). This can be achieved entertaining a few lines of JavaScript running against the JSON returned from your backend query:</p> 
-<pre class="brush: javascript">const theResponse = response.getReturnValue();
-theResponse.forEach(row =&gt; {
-  for (const col in row) {
-    const curCol = row[col];
-    if (typeof curCol === 'object') {
-      const newVal = curCol.Id ? ('/' + curCol.Id) : null;
-      flattenStructure(row, col + '_', curCol);
-      if (newVal === null) {
-        delete row[col];
-      } else {
-        row[col] = newVal;
-      }
+    
+    
+    private static Map&lt;String, Schema.SObjectField&gt; internalFieldLablesFromFieldList(List&lt;String&gt; fieldList, String objName, String prefix) {
+        Map&lt;String, Schema.SObjectField&gt; result = new Map&lt;String, Schema.SObjectField&gt; ();
+        Schema.SObjectType objectType = AuraLabelHelper.globalDescribe.get(objName);
+        Schema.DescribeSObjectResult describeResult = objectType.getDescribe();
+        // Labels for the top level object - needs to be lowercased  
+        Map&lt;String, Schema.SObjectField&gt; fieldMap = describeResult.fields.getMap();
+        Map&lt;String, Schema.SObjectField&gt; fieldMapLower = new Map&lt;String, Schema.SObjectField&gt; ();
+        
+        for (String key : fieldMap.keySet()) {
+            fieldMapLower.put(key.toLowerCase(), fieldMap.get(key));
+        }
+        
+        for (String fieldName : fieldList) {
+            String fieldNameLower = fieldName.toLowerCase();
+            if (fieldMapLower.containsKey(fieldNameLower)) {
+                result.put(prefix + fieldNameLower, fieldMapLower.get(fieldNameLower));
+            } else if (fieldNameLower.contains('__r.')) {
+                // We have a potential relationship field at hand
+                String relationFieldName = fieldNameLower.left(fieldNameLower.indexOf('__r.')) + '__c';
+                Schema.DescribeFieldResult relationDescribe = fieldMapLower.get(relationFieldName).getDescribe();
+                Schema.SObjectType reference = relationDescribe.getReferenceTo().get(0);
+                String objApiName = reference.getDescribe().getName();
+                List&lt;String&gt; subFieldList = new List&lt;String&gt; ();
+                String newPrefix = prefix + fieldNameLower.left(fieldNameLower.indexOf('.'))+'_';
+                subFieldList.add(fieldNameLower.substring(fieldNameLower.indexOf('__r.') + 4));
+                result.putAll(internalFieldLablesFromFieldList(subFieldList, objApiName, newPrefix));
+            }
+        }
+        
+        return result;
     }
-  }
-});
+}
+</pre> 
+<p>Good boys and girls create a test class:</p> 
+<pre class="brush: java">@IsTest
+public class AuraLabelHelperTest {
 
-function flattenStructure(topObject, prefix, toBeFlattened) {
-  for (const prop in toBeFlattened) {
-    const curVal = toBeFlattened[prop];
-    if (typeof curVal === 'object') {
-      flattenStructure(topObject, prefix + prop + '_', curVal);
-    } else {
-      topObject[prefix + prop] = curVal;
+    @IsTest
+    public static void simpleAccountTest() {
+        List&lt;String&gt; fieldNames = new List&lt;String&gt; ();
+        fieldNames.add('Id');
+        fieldNames.add('Name');
+        fieldNames.add('Customer__c');
+        fieldNames.add('Customer__r.Name');
+
+        Map&lt;String, String&gt; result = AuraLabelHelper.retrieveFieldLablesFromFieldList(fieldNames, 'Address__c');
+        System.debug(result);
+        System.assert(result.containsKey('id'));
+        System.assert(result.containsKey('customer__r_name'));
+
     }
-  }
+
 }
 </pre> 
-<p>With this script as part of your callback function you now have access to a flattened array with all the field values. You might want to modify the code to get rid of the <code>__c</code> and <code>__r</code> parts, so it is easier on the eye.</p> 
-<h3><a href="#solution-part-2" id="solution-part-2">Solution Part 2</a></h3> 
-<p>To show the relationship columns as links there are two simple steps:</p> 
-<ul> 
- <li>Define the data type as URL in the columns array <code>type = 'url'</code></li> 
- <li>Specify the <code>typeAttributes</code> to point to the field containing the label</li> 
-</ul> 
-<p>A sample column definition (opening the link in a new tab/window) looks like this:</p> 
-<pre class="brush: javascript">{
-	label: 'Your Stuff',
-	fieldName: 'Stuff__r',
-	type: 'url',
-	typeAttributes: {
-	 	label: {
-	 		 fieldName: 'Stuff__r_Name'
-	 	},
-	 	target: '_blank'
-	 }
-}
-</pre> 
-<p>You could provide functionality to automatically generate the field definition array based on the SOQL query you execute, but that's another, Apex style, story for another time.</p> 
-<p>As usual: YMMV</p></div>
+<p>Next stop is putting it all together. As usual YMMV.</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 29 August 2018
+Stephan H Wissel</a> on 31 August 2018
 <span class="divider">|</span>
-<a href="/blog/2018/08/lightning-datatables-and-relationship-queries.html#comments">Comments (0)</a>
+<a href="/blog/2018/08/adding-labels-to-lightning-datatable.html#comments">Comments (0)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/08/lightning-datatables-and-relationship-queries.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Lightning Datatable and Relationship Queries"></div>
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/08/adding-labels-to-lightning-datatable.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Adding Labels to Lightning Datatable"></div>
 						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2018/08/lightning-datatables-and-relationship-queries.html";
+							var permaLink = "https://wissel.net/blog/2018/08/adding-labels-to-lightning-datatable.html";
 						</script>
 					</p>
 
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_3ae1b010-ab51-11e8-aadd-ef9c25093d46" type="button">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_2e2c0090-ac10-11e8-8c5f-317c3a183f75" type="button">
 		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
 	            </button>
 	            </div>
-				<div id="commentform_3ae1b010-ab51-11e8-aadd-ef9c25093d46"  class="collapse"></div>
+				<div id="commentform_2e2c0090-ac10-11e8-8c5f-317c3a183f75"  class="collapse"></div>
 				<div class="well well-raised">
 					<h4>Comments</h4>
 					<ol id="commentList">
@@ -236,12 +239,9 @@ categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href=
 					</ol>
 				</div>
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2018/07/designing-lightning-components-for-reuse.html"><i class="icon-hand-left"></i>Designing Lightning Components for Reuse</a>
+					<li><a href="/blog/2018/08/lightning-datatables-and-relationship-queries.html"><i class="icon-hand-left"></i>Lightning Datatable and Relationship Queries</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2018/08/adding-labels-to-lightning-datatable.html">Adding Labels to Lightning Datatable<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 			</div>
@@ -324,7 +324,7 @@ categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href=
 	</footer>
 
 	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/2018/08/lightning-datatables-and-relationship-queries.html";
+		var permaLink = "https://wissel.net/blog/2018/08/adding-labels-to-lightning-datatable.html";
 	</script>
 		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
 	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
@@ -359,7 +359,7 @@ categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href=
 	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 	<script type="text/javascript">
 		var onloadCallback = function() {
-    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "3ae1b010-ab51-11e8-aadd-ef9c25093d46");
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "2e2c0090-ac10-11e8-8c5f-317c3a183f75");
  		};
 	</script>
 
