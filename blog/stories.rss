@@ -6,7 +6,60 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Thu, 04 Oct 2018 12:41:44 +0000</pubdate>
+	<pubdate>Sat, 20 Oct 2018 07:07:08 +0000</pubdate>
+<item>
+	<title>Creating a Lightning Service</title>
+	<description>&lt;p&gt;When you develop in &lt;a href="https://developer.salesforce.com/docs/component-library/overview/components"&gt;Lightning&lt;/a&gt; your client side architecture can benefit as much as the server from a &lt;a href="https://trailhead.salesforce.com/en/content/learn/modules/apex_patterns_sl/apex_patterns_sl_soc"&gt;separation of concerns&lt;/a&gt;. The component library is testimony to that.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#out-of-the-box-services" id="out-of-the-box-services"&gt;Out of the box services&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;The &lt;a href="https://trailhead.salesforce.com/en/content/learn/modules/apex_patterns_sl/apex_patterns_sl_soc"&gt;Component Library&lt;/a&gt; features a growing number of services:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;&lt;a href="https://developer.salesforce.com/docs/atlas.en-us.lightning.meta/lightning/data_service.htm"&gt;Lightning Data Service&lt;/a&gt;, the workhorse of creating, loading and saving Salesforce records. One specialty: it doesn't have its own component, but surfaces through &lt;a href="https://developer.salesforce.com/docs/component-library/bundle/force:recordData/documentation"&gt;force:RecordData&lt;/a&gt;, &lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:recordEditForm/example"&gt;lightning:recordEditForm&lt;/a&gt;, &lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:recordViewForm/documentation"&gt;lightning:recordViewForm&lt;/a&gt; and &lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:recordForm"&gt;lightning:recordForm&lt;/a&gt;&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:overlayLibrary/documentation"&gt;Overlay Library&lt;/a&gt; to show modals and popovers&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:notificationsLibrary/specification"&gt;Notification Library&lt;/a&gt; to show notices and toasts&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:omniToolkitAPI/documentation"&gt;Omni Toolkit API&lt;/a&gt; for accessing OmniChannel capabilities&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:navigationItemAPI"&gt;Navigation Item API&lt;/a&gt; to move around in lightning&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:conversationToolkitAPI/documentation"&gt;Conversation Toolkit API&lt;/a&gt; to interact with chat&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:quickActionAPI"&gt;Quick Action API&lt;/a&gt; accessing quick actions&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:workspaceAPI/documentation"&gt;Workspace API&lt;/a&gt; to access console app tabs and subtabs&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:utilityBarAPI/documentation"&gt;Utility Bar API&lt;/a&gt; to access the utility bar&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:empApi/documentation"&gt;Emp API&lt;/a&gt; to subscribe to streaming events&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#building-your-own" id="building-your-own"&gt;Building your own&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;There is more than one way to skin you cat. You can do:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;&lt;strong&gt;Lightning Style&lt;/strong&gt;&lt;br&gt;&lt;a href="https://developer.salesforce.com/blogs/author/pozil"&gt;Philippe Ozil&lt;/a&gt; described &lt;a href="https://developer.salesforce.com/blogs/2018/08/implement-and-use-lightning-service-components.html"&gt;in detail&lt;/a&gt; how to use and create your own services ?lightning style'. You should check out his &lt;a href="https://github.com/pozil/server-action-service"&gt;Server Side Actions Service&lt;/a&gt; that allows you cut down on boiler plate code substantially&lt;/li&gt; 
+ &lt;li&gt;&lt;strong&gt;JavaScript Style&lt;/strong&gt;&lt;br&gt;Establish a global service extending the Window object&lt;/li&gt; 
+ &lt;li&gt;&lt;strong&gt;ES6 Style&lt;/strong&gt;&lt;br&gt;Import a JavaScript module - once Lightning Webcomponents hit GA (add safe harbor here)&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#extending-the-window-object" id="extending-the-window-object"&gt;Extending the window object&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;When you extend the window object, which is the browser's top level object, the service becomes available ?standalone?, like &lt;code&gt;alert()&lt;/code&gt; (which is actually &lt;code&gt;window.alert()&lt;/code&gt;). A service could look like this:&lt;/p&gt; 
+&lt;pre&gt;&lt;code&gt;window.demoLib = ( function() {
+	let someMethod = () =&amp;gt; {
+		return 'Something'
+	}
+
+	let helloMethod = (paul) =&amp;gt; {
+		return `Hello ${paul}`;
+	}
+
+	return {someMethod, helloMethod};
+}());
+&lt;/code&gt;&lt;/pre&gt; 
+&lt;p&gt;This will now provide you with &lt;code&gt;demoLib.someMethod()&lt;/code&gt; returning &lt;em&gt;Something&lt;/em&gt; and &lt;code&gt;demoLib.helloMethod('World')&lt;/code&gt; returning &lt;em&gt;Hello World&lt;/em&gt;. The final step to enable such a library is to add &lt;a href="https://developer.salesforce.com/docs/component-library/bundle/ltng:require"&gt;ltng:require&lt;/a&gt; to your components: &lt;code&gt;&amp;lt;ltng:require scripts="{!Resource.demoLib} afterScriptLoaded="someMethodIfRequired" /&amp;gt;&lt;/code&gt; presuming you stored your JS in resources as &lt;code&gt;demoLib.js&lt;/code&gt;. The Aura framework will make sure that the library is loaded once only, regardless how many components define it as dependency.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#what-can-go-wrong" id="what-can-go-wrong"&gt;What can go wrong?&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;There are a few caveats:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;For hard core Apex developers: JavaScript is case sensitive&lt;/li&gt; 
+ &lt;li&gt;You need to be clearly communicating service names to other developers in your org. If someone has the idea to name a library the same as yours, things will break. Good practice is to check if your library and function is available: &lt;code&gt;if (window.demoLib &amp;amp;&amp;amp; window.demoLib.someMethod) {...}&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;Fat arrow functions &lt;code&gt;() =&amp;gt; {...}&lt;/code&gt; are not supported in &lt;a href="https://www.forbes.com/sites/markgibbs/2011/12/16/internet-explorer-must-die/#3e6184391727"&gt;legacy browsers&lt;/a&gt;, so you need the slightly more verbose &lt;code&gt;function(){...}&lt;/code&gt; (beware the &lt;code&gt;this&lt;/code&gt; keyword behaves different then).&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2018/10/creating-a-lightning-service.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>cb5a98f0-d365-11e8-842d-7def18d9bfb5</guid>
+	<pubDate>19 October 2018</pubDate>
+
+</item>
 <item>
 	<title>Structuring a Proof of Concept</title>
 	<description>&lt;p&gt;A common practise in IT, as run up to a sale or a project is to proof that the intention of the undertaking can be fulfilled.&lt;/p&gt; 
@@ -402,16 +455,6 @@ grant_type=password
 	<author>Stephan H. Wissel</author>
 	<guid>7c4b8140-4ecf-11e8-80e2-bfca30024cb4</guid>
 	<pubDate>03 May 2018</pubDate>
-
-</item>
-<item>
-	<title>Function length and double byte languages</title>
-	<description>&lt;p&gt;Complexity is a prime enemy of maintainability. &lt;a href="https://softwareengineering.stackexchange.com/questions/133404/what-is-the-ideal-length-of-a-method-for-you"&gt;So the conventional wisdom&lt;/a&gt; suggests methods should be around 20 lines, with some evidence suggesting up to 100+ lines.&lt;/p&gt; 
-&lt;p&gt;When I review code written by non-native English speakers, especially when their primary language is double byte based, I find methods in the 500-1000 lines range, with some special champions up to 5000 lines. So I wondered what might contribute to these function/method worms.&lt;/p&gt;</description>
-	<link>2018/04/function-length-and-double-byte-languages.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>5c6fd510-3b9c-11e8-90bb-13b34de998f8</guid>
-	<pubDate>09 April 2018</pubDate>
 
 </item>
 
