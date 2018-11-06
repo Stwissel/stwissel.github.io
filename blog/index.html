@@ -110,6 +110,43 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2018/11/lightning-mini-forms.html">Lightning Mini Forms</a></small></h1>
+					<hr />
+					<div><p>One of my favorite lightning features is the <a href="https://trailhead.salesforce.com/en/content/learn/modules/lightning_app_builder">Lightning App Builder</a>. It allows to tailor Salesforce for a given set of users, to show what they need, how they need it.</p> 
+<p>In the page editor the endless scrolling page, record details followed by related lists, we got to love, can be broken down into multiple tabs. For related lists, the OOTB controls already allow to just pick one. Placed multiple times on a page, the layout can fit a specific audience's precise need, avoiding information overload.</p> 
+<p>However there's no control to break down the record details. The OOTB record details control will faithfully reproduce the assigned page layout with all sections. Custom controls to the rescue!</p> 
+<h3><a href="#design-options" id="design-options">Design options</a></h3> 
+<p>There are two options to consider: where to pull design information from and how to render it. For the later you can consider <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:recordEditForm/example">lightning:recordEdit|ViewForm</a> or <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:recordForm">lightning:recordForm</a>. Both can be argued for.</p> 
+<p>The <code>lightning:recordForm</code> only needs the fields / layout options supplied and will take care of all rendering. However you are limited to one or two columns - just like page layouts.</p> 
+<p>The <code>lightning:record[Edit|View]Form</code> requires coding the fields, probably using an <a href="https://developer.salesforce.com/docs/component-library/bundle/aura:iteration/example">aura:iteration</a>, but leaves you with the freedom of layout. Typically you would use a <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:layoutItem/specification">lightning:layoutItem</a> and its <code>size</code> property to determine the number of columns (with 12 / size = number of columns).</p> 
+<p>To keep it simple I'll stick to the <code>lightning:recordForm</code> for now.</p> 
+<p>Next question: where to provision the list of fields from? When you want an universally usable mini form, you can't hardcode them, but provide them using a design property, so they can be provided in the page editor after you dragged the component onto the page.</p> 
+<p>Still you need to decide what attributes you provide:</p> 
+<ul> 
+ <li>List of field names</li> 
+ <li>Name of a field set</li> 
+ <li>Name of a section in a page layout</li> 
+</ul> 
+<p>I'll start with the first one and relegate the other two approaches to future posts.</p> 
+<p>To make this work you will need a custom lightning component. Let's call it <code>MiniForm</code>. We will only need <code>MiniForm.cmp</code>, <code>MiniFormController.js</code> and <code>MiniForm.design</code>. No helper or Apex will be harmed.</p></div>
+					<hr />
+ <a href="/blog/2018/11/lightning-mini-forms.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 06 November 2018
+<span class="divider">|</span>
+<a href="/blog/2018/11/lightning-mini-forms.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/11/lightning-mini-forms.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Lightning Mini Forms"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2018/11/lightning-mini-forms.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2018/10/my-software-stack.html">My software stack</a></small></h1>
 					<hr />
 					<div><p>From time to time the question pops up: <a href="/blog/imprint.html">what's your software stack</a>? I use cloud based tools like <a href="https://www.lucidchart.com">LucidChart</a>, <a href="https://github.com/stwissel">GitHub</a>, <a href="https://bitbucket.org">Bitbucket</a> and various other SDLC related tools (subject to a future post), but still quite a number of locally installed tools.</p> 
@@ -580,73 +617,6 @@ categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/bl
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/06/mime-is-where-legacy-systems-go-to-die.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Mime is where Legacy Systems go to die"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2018/06/mime-is-where-legacy-systems-go-to-die.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2018/06/adventures-in-tdd.html">Adventures in TDD</a></small></h1>
-					<hr />
-					<div><p>There are two challenges getting into <a href="https://en.wikipedia.org/wiki/Test-driven_development">TDD</a>:</p> 
-<ul> 
- <li>Why should I test upfront when I know it fails (there's this <strong>massive</strong> aversion of failure in my part of the world)?</li> 
- <li>Setting up the whole thing.</li> 
-</ul> 
-<p>I made peace with the first requirement using a very large monitor and a split screen, writing code and test on parallel, deviating from the ?pure teachings' for the comfort of my workflow.</p> 
-<p>The second part is trickier, There are so many moving parts. This post documents some of the insights.</p> 
-<h3><a href="#testing-in-the-ide" id="testing-in-the-ide">Testing in the IDE</a></h3> 
-<p><a href="http://agiledata.org/essays/tdd.html">TDD</a> has the idea that you create your test first and only write code until your test passes. Then you write another failing test and start over writing code.</p> 
-<p>As a consequence you need to test in your <a href="https://en.wikipedia.org/wiki/Integrated_development_environment">IDE</a>. For JavaScript or Java that's easy (the languages I use most):</p> 
-<ul> 
- <li>In JavaScript you define a script <code>test</code> in your <a href="https://docs.npmjs.com/misc/scripts">package.json</a> you can run any time. For a <a href="https://dictionary.cambridge.org/dictionary/english/connoisseur">connoisseur</a> there are tools like <a href="https://wallabyjs.com/">WallabyJS</a> or <a href="https://marketplace.visualstudio.com/items?itemName=maty.vscode-mocha-sidebar">VSCode Mocha Sidebar</a> that run your tests as you type and/or save. The tricky part is: what testing libraries (more on that below) to use?</li> 
- <li>In Java <a href="https://maven.apache.org/">Maven</a> has a default goal <code>validate</code> and <a href="https://junit.org/">junit</a> is the gold standard for tests. For automated continuous IDE testing there is <a href="http://infinitest.github.io/">Infinitest</a></li> 
- <li>For Salesforce you have a combination of JavaScript and Apex (and clicks-not-code), testing is a little trickier. The commercials IDE <a href="https://welkinsuite.com/">TheWelkingSuite</a> and <a href="https://plugins.jetbrains.com/plugin/7831-illuminated-cloud">Illuminated Cloud</a> make that a lot easier. How easy is in they eye of the beholder. (Honorable mention: <a href="https://jetforcer.com/">JetForcer</a> - I simply haven't tested that one yet)</li> 
-</ul> 
-<h3><a href="#testing-in-your-continuous-integration" id="testing-in-your-continuous-integration">Testing in your Continuous Integration</a></h3> 
-<p>Automated testing, after a commit to <a href="https://github.com">Github</a>, <a href="https://gitlab.com">GitLab</a> or <a href="https://bitbucket.org">BitBucket</a> happens once you configure a pipeline as a hook into the repository and have tests specified the pipeline can pick up. Luckily your maven and npm scripts will most likely work as a starting point.</p> 
-<p>The bigger challenge is the orchestration of various services like static testing, dependency management and reporting (and good luck if your infra guys claim, they could setup and run everything inhouse).</p> 
-<p>Some of the selections available:</p> 
-<ul> 
- <li>Repository 
-  <ul> 
-   <li><a href="https://github.com">Github</a></li> 
-   <li><a href="https://gitlab.com">GitLab</a></li> 
-   <li><a href="https://bitbucket.org">BitBucket</a></li> 
-  </ul> </li> 
- <li>Pipelines 
-  <ul> 
-   <li><a href="https://www.heroku.com/flow">Heroku Flow</a></li> 
-   <li><a href="https://bitbucket.org">BitBucket</a></li> 
-   <li><a href="https://travis-ci.org/">Travis</a></li> 
-   <li><a href="https://www.cloudbees.com/">Jenkins</a></li> 
-   <li><a href="https://www.codeship.io/">CodeShip</a></li> 
-   <li><a href="https://circleci.com/">CircleCI</a></li> 
-   <li>and <a href="https://github.com/ligurio/awesome-ci">more of them</a></li> 
-  </ul> </li> 
- <li>Testing and Reporting service 
-  <ul> 
-   <li><a href="https://codeclimate.com/">CodeClimate</a></li> 
-   <li><a href="https://saucelabs.com/">SauceLab</a></li> 
-   <li><a href="https://codacy.com/">Codacy</a></li> 
-   <li><a href="https://coveralls.io/">Coveralls</a></li> 
-   <li><a href="https://snyk.io">Snyk</a> (for vulnerabilities)</li> 
-   <li><a href="https://greenkeeper.io">GreenKeeper</a> (for dependency management)</li> 
-   <li>and <a href="https://google.com/search?q=cloud+based+testing+service">many more</a><br> some run extra tests, some report on tests that ran in your pipeline</li> 
-  </ul> </li> 
-</ul></div>
-					<hr />
- <a href="/blog/2018/06/adventures-in-tdd.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 10 June 2018
-<span class="divider">|</span>
-<a href="/blog/2018/06/adventures-in-tdd.html#comments">Comments (4)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/tdd.html">TDD</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/06/adventures-in-tdd.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Adventures in TDD"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2018/06/adventures-in-tdd.html";
 						</script>
 					</p>
 </p>
