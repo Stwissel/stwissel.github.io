@@ -6,7 +6,32 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Thu, 08 Nov 2018 10:09:33 +0000</pubdate>
+	<pubdate>Fri, 23 Nov 2018 03:03:38 +0000</pubdate>
+<item>
+	<title>Cleaning up an APEX codebase with PMD</title>
+	<description>&lt;p&gt;You inherit a large code base, it is perfect, a work of beauty. Then you wake up to the ping of your &lt;a href="https://pmd.github.io"&gt;PMD&lt;/a&gt; run completion and find multiple thousands of rule violation (and you haven't even started to assert test assertions). Here is how to fix that.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#divide-and-conquer" id="divide-and-conquer"&gt;Divide and conquer&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;&lt;a href="https://www.investopedia.com/terms/b/boil-the-ocean.asp"&gt;Boiling the ocean&lt;/a&gt; and fix all issues in one go is hardly an option. So you need to strategize. PMD gives you a hint: every rule has a &lt;a href="https://pmd.github.io/pmd-6.9.0/pmd_userdocs_configuring_rules.html#message-and-priority-overriding"&gt;priority&lt;/a&gt; property, where you can specify how important this rule is. The higher the number, the less important the rule. You can run PMD using the &lt;code&gt;min -[somenumber]&lt;/code&gt; parameter which will ignore rules with a higher value.&lt;/p&gt; 
+&lt;p&gt;Next step is to decide what rules constitute your priority 1 and 2 buckets. I strongly recommend to make them mandatory fixes before the next deployment, so pick the rules carefully. The candidates I suggest are around performance and security:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Priority 1&lt;/li&gt; 
+ &lt;li&gt;ApexXSSFromURLParam&lt;/li&gt; 
+ &lt;li&gt;ApexSOQLInjection&lt;/li&gt; 
+ &lt;li&gt;ApexOpenRedirect&lt;/li&gt; 
+ &lt;li&gt;ApexInsecureEndpoint&lt;/li&gt; 
+ &lt;li&gt;AvoidDmlStatementsInLoops&lt;/li&gt; 
+ &lt;li&gt;AvoidSoqlInLoops&lt;/li&gt; 
+ &lt;li&gt;Priority 2&lt;/li&gt; 
+ &lt;li&gt;ApexCRUDViolation&lt;/li&gt; 
+ &lt;li&gt;ApexSharingViolations&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;Thereafter you decide on priority 3 onwards. Strong candidates for level 3 are all the rules that ensure code is maintainable and avoid errors, like deep nesting or cyclomatic complexity (a fancy word for "messy code")&lt;/p&gt;</description>
+	<link>2018/11/cleaning-up-an-apex-codebase-with-pmd.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>a199cf60-eec5-11e8-91af-4f1de64b82e9</guid>
+	<pubDate>23 November 2018</pubDate>
+
+</item>
 <item>
 	<title>Backing up Salesforce Meta data</title>
 	<description>&lt;p&gt;&lt;strong&gt;Clicks not code&lt;/strong&gt; makes the Salesforce Admin a &lt;a href="https://www.salesforce.com/video/193372/"&gt;super hero&lt;/a&gt;, but might send jitters through the compliance and change management team's combined spines. How can you track all of these changes?&lt;/p&gt; 
@@ -392,27 +417,6 @@ public class AuraLabelHelperTest {
 	<author>Stephan H. Wissel</author>
 	<guid>c92b6b70-8038-11e8-a388-63a342b09cf1</guid>
 	<pubDate>06 July 2018</pubDate>
-
-</item>
-<item>
-	<title>Mime is where Legacy Systems go to die</title>
-	<description>&lt;p&gt;Your new system went live. Migration of current, active data went well. A decision was made not to move historic data and keep the old system around in "read-only" mode, just in case some information needs to be looked up. Over time your zoo of legacy systems grows. I'll outline a way to put them to rest.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#the-challenges" id="the-challenges"&gt;The challenges&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;All recent systems (that's younger than 30 years) data is stored more or less normalized. A business document, like a contract, is split over multiple tables like customer, address, header, line items, item details, product etc.&lt;/p&gt; 
-&lt;p&gt;Dumping this data as is (&lt;a href="https://en.wikipedia.org/wiki/Comma-separated_values"&gt;csv&lt;/a&gt; rules supreme here) only creates a &lt;a href="https://www.geotab.com/blog/big-data-graveyard/"&gt;data graveyard&lt;/a&gt; instead of the much coveted &lt;a href="https://en.wikipedia.org/wiki/Data_lake"&gt;data lake&lt;/a&gt; or &lt;a href="https://en.wikipedia.org/wiki/Data_warehouse"&gt;data warehouse&lt;/a&gt;.&lt;/p&gt; 
-&lt;p&gt;The issue gets aggravated by the prevalence of &lt;a href="https://en.wikipedia.org/wiki/Magic_number_(programming)"&gt;magic numbers&lt;/a&gt; and abbreviations that are only resolved inside the legacy system. So looking at one piece of data tells you squid. Only an &lt;a href="https://en.wikipedia.org/wiki/Old_Hands"&gt;old hand&lt;/a&gt; would be able to make sense of &lt;code&gt;Status 82&lt;/code&gt; or &lt;code&gt;Flags x7D3z&lt;/code&gt;&lt;/p&gt; 
-&lt;p&gt;Access to meaningful information is confined to the user interface of the legacy application. It provides search and assembly of business relevant context&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#the-solution-approach" id="the-solution-approach"&gt;The solution approach&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Solving this puzzle requires a three step approach:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;denormalize&lt;/li&gt; 
- &lt;li&gt;transform&lt;/li&gt; 
- &lt;li&gt;make accessible&lt;/li&gt; 
-&lt;/ul&gt;</description>
-	<link>2018/06/mime-is-where-legacy-systems-go-to-die.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>3c2f6850-7383-11e8-b9df-3334377ac3ef</guid>
-	<pubDate>22 June 2018</pubDate>
 
 </item>
 
