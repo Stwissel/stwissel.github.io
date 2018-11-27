@@ -6,7 +6,42 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Tue, 27 Nov 2018 05:41:42 +0000</pubdate>
+	<pubdate>Tue, 27 Nov 2018 06:34:19 +0000</pubdate>
+<item>
+	<title>Supercharge SFDX with Ui-licious</title>
+	<description>&lt;p&gt;You &lt;a href="https://developer.salesforce.com/tools/sfdxcli"&gt;drank the Coolaid&lt;/a&gt; and you are all in and really love your &lt;a href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_scratch_orgs.htm"&gt;Scratch Orgs&lt;/a&gt;. Just a few things drive you crazy.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#when-the-api-doesnt-expose-a-setting" id="when-the-api-doesnt-expose-a-setting"&gt;When the API doesn't expose a setting&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Your application is querying the OutOfOffice objects. Unfortunately they only exist when the Chatter settings have enabled them. To my best knowledge there is no API or config setting to achieve that from the command line. So automated testing in a scratch org won't work.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#ui-licious-to-the-rescue" id="ui-licious-to-the-rescue"&gt;Ui-licious to the rescue&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;&lt;a href="https://uilicious.com/"&gt;Ui-licious&lt;/a&gt; is a UI testing service that uses JavaScript as its scripting language. This makes an easy read and edit. A script that can set the missing OOO setting is short and simple (if you agree &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe"&gt;iFrames&lt;/a&gt; are easy to handle). You can (almost) read it out aloud:&lt;/p&gt; 
+&lt;pre class="brush: javascript"&gt;// URL Provided by data object from the command line
+I.goTo(DATA.result.url);
+I.must.see("Chatter Settings");
+// To ensure we work on the iFrame we get the id
+let iframeId = UI.execute("return document.getElementsByTagName('iframe')[0].getAttribute('id')");
+// The iFrame loads slowly
+I.wait(10);
+UI.context("#" + iframeId, () =&amp;gt; {
+	I.see("Chatter is a corporate network that lets your users work together, talk to each other, and share information, all in real time.");
+    I.click("Edit");
+    I.must.see("Save");
+    I.select("Users can set Out of Office messages");
+    I.click("Save");
+    I.must.see("Edit");
+})
+&lt;/pre&gt; 
+&lt;p&gt;The interesting piece in the above is &lt;code&gt;DATA.result.url&lt;/code&gt; which is an JSON object that needs to be handed over to the Ui-licious. A small command script in tandem with SFDX does the trick:&lt;/p&gt; 
+&lt;pre class="brush: bash"&gt;sfdx force:org:open -r -p lightning/setup/CollaborationSettings/home --json &amp;gt; local.json
+uilicious-cli  run "ProjectName" "ScriptName" --dataFile local.json -u uiliciousUser -p uiliciousPassword
+&lt;/pre&gt; 
+&lt;p&gt;It probably would be part of a larger CI script, but you get the idea!&lt;/p&gt; 
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2018/11/supercharge-sfdx-with-ui-licious.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>83ed9070-f206-11e8-a016-49d6fa66cb22</guid>
+	<pubDate>27 November 2018</pubDate>
+
+</item>
 <item>
 	<title>Cleaning up an APEX codebase with PMD</title>
 	<description>&lt;p&gt;You inherit a large code base, it is perfect, a work of beauty. Then you wake up to the ping of your &lt;a href="https://pmd.github.io"&gt;PMD&lt;/a&gt; run completion and find multiple thousands of rule violation (and you haven't even started to assert test assertions). Here is how to fix that.&lt;/p&gt; 
@@ -395,30 +430,6 @@ public class AuraLabelHelperTest {
 	<author>Stephan H. Wissel</author>
 	<guid>f8870080-9084-11e8-9829-0f2fefca6bce</guid>
 	<pubDate>26 July 2018</pubDate>
-
-</item>
-<item>
-	<title>Postman and the Salesforce REST API</title>
-	<description>&lt;p&gt;The Salesforce API is a great way to access Salesforce data and can be used with tools like &lt;a href="http://www.pocketsoap.com/osx/soqlx/"&gt;SoqlXplore&lt;/a&gt; or the &lt;a href="https://workbench.developerforce.com/"&gt;Salesforce Workbench&lt;/a&gt;. The API uses OAuth and a Bearer Authentication, so some steps are required to make that work in Postman&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#prepare-salesforce" id="prepare-salesforce"&gt;Prepare Salesforce&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;You will need a &lt;a href="https://help.salesforce.com/articleView?id=connected_app_overview.htm&amp;amp;type=5"&gt;connected APP&lt;/a&gt;. I usually create one that is pre-approved for my user profile(s), so I don't need to bother with the approval steps in Postman. However you could opt for self-approval and access the app once to approve its use, before you continue with the command line. Note down the &lt;code&gt;ClientId&lt;/code&gt; and &lt;code&gt;ClientSecret&lt;/code&gt; values.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#prepare-postman" id="prepare-postman"&gt;Prepare Postman&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Postman has great build in support for &lt;a href="https://www.getpostman.com/docs/v6/postman/sending_api_requests/authorization"&gt;all sorts of authorization&lt;/a&gt; interactively. However my goal here is to fully automate it, so you can run a &lt;a href="http://blog.getpostman.com/2014/03/07/writing-automated-tests-for-apis-using-postman/"&gt;test suite&lt;/a&gt; without manual intervention. First stop is the creation of one environment. You can have multiple environments to cater to different Salesforce instances.&lt;/p&gt; 
-&lt;p&gt;&lt;strong&gt;Important&lt;/strong&gt; Never ever ever store the environment into version control. It would contain credentials -&amp;gt; &lt;strong&gt;bad bad&lt;/strong&gt; idea!&lt;/p&gt; 
-&lt;p&gt;My environment variables look like this:&lt;/p&gt; 
-&lt;pre class="brush: javascript"&gt;{
-	"CLIENT_ID" : "the ClientId from Salesforce",
-	"CLIENT_SECRET" : "The ClientSecret from Salesforce",
-    "USER_ID" : "some@email.com",
-    "PASSWORD" : "DontTell",
-    "LOGIN_URL" : "https://login.salesforce.com/"
-}
-&lt;/pre&gt; 
-&lt;p&gt;Providing the Login URL allows to reuse postman collections between Sandboxes, Developer Orgs or Production Orgs without the need to actually edit the postman entries. Next on the menu: getting a token&lt;/p&gt;</description>
-	<link>2018/07/postman-and-the-salesforce-rest-api.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>c92b6b70-8038-11e8-a388-63a342b09cf1</guid>
-	<pubDate>06 July 2018</pubDate>
 
 </item>
 
