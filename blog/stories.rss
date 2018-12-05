@@ -6,7 +6,22 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Mon, 03 Dec 2018 09:17:30 +0000</pubdate>
+	<pubdate>Wed, 05 Dec 2018 05:06:20 +0000</pubdate>
+<item>
+	<title>Salesforce login statistics aggregation</title>
+	<description>&lt;p&gt;A recent requirement from a customer was "I'd like to analyze logins by users in Excel", despite a &lt;a href="https://success.salesforce.com/answers?id=90630000000gsJjAAI"&gt;dashboard&lt;/a&gt; approach would be sufficient. With a few million records aggregating in Excel wasn't particularly appealing&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#download-the-log" id="download-the-log"&gt;Download the log&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Salesforce setup allows to download the log as &lt;code&gt;csv&lt;/code&gt; or &lt;code&gt;csv.gz&lt;/code&gt; file. In any case you should use the later. I learned the hard way: the &lt;a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding"&gt;chunked transfer encoding&lt;/a&gt; might leave you with less data be processed than you expect.&lt;/p&gt; 
+&lt;p&gt;The &lt;a href="https://docs.oracle.com/javase/7/docs/api/java/util/Scanner.html"&gt;Scanner&lt;/a&gt; simply stopped after a few thousand entries, while the &lt;a href="https://commons.apache.org/proper/commons-csv/"&gt;csv parser&lt;/a&gt; barfed with an error.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#processing" id="processing"&gt;Processing&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;After downloading and extracting the csv I used a small Java routine (yep, I'm that old) to aggregate logins per user, capturing the count and the first/last login date as well as the country of login (with the disclaimer caveats) and the eventual community.&lt;/p&gt; 
+&lt;p&gt;For reliably and robustly reading csv in Java, usually I would use a &lt;a href="https://commons.apache.org/proper/commons-csv/"&gt;robust library&lt;/a&gt;, however in this case having no dependencies and using the scanner did just nicely.&lt;/p&gt;</description>
+	<link>2018/12/salesforce-login-statistics-aggregation.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>3ef8b2e0-f848-11e8-a160-81c62127bae4</guid>
+	<pubDate>05 December 2018</pubDate>
+
+</item>
 <item>
 	<title>Supercharge SFDX with Ui-licious</title>
 	<description>&lt;p&gt;You &lt;a href="https://developer.salesforce.com/tools/sfdxcli"&gt;drank the Coolaid&lt;/a&gt; and you are all in and really love your &lt;a href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_scratch_orgs.htm"&gt;Scratch Orgs&lt;/a&gt;. Just a few things drive you crazy.&lt;/p&gt; 
@@ -27,14 +42,13 @@ UI.context("#" + iframeId, () =&amp;gt; {
     I.must.see("Save");
     I.select("Users can set Out of Office messages");
     I.click("Save");
-    I.must.see("Edit");
 })
 &lt;/pre&gt; 
-&lt;p&gt;The interesting piece in the above is &lt;code&gt;DATA.result.url&lt;/code&gt; which is an JSON object that needs to be handed over to the Ui-licious. A small command script in tandem with SFDX does the trick:&lt;/p&gt; 
+&lt;p&gt;The interesting piece in the above is &lt;code&gt;DATA.result.url&lt;/code&gt; which is an JSON object that needs to be handed over to the Ui-licious. A small command script in tandem with SFDX does the trick. The beauty here: we directly can reuse the output of an sfdx command as input for the &lt;code&gt;uilicious-cli&lt;/code&gt;.&lt;/p&gt; 
 &lt;pre class="brush: bash"&gt;sfdx force:org:open -r -p lightning/setup/CollaborationSettings/home --json &amp;gt; local.json
 uilicious-cli  run "ProjectName" "ScriptName" --dataFile local.json -u uiliciousUser -p uiliciousPassword
 &lt;/pre&gt; 
-&lt;p&gt;It probably would be part of a larger CI script, but you get the idea!&lt;/p&gt; 
+&lt;p&gt;It probably would be part of a larger CI script, but you get the idea! You might not store the output in a file, but use bash to capture it in memory and use &lt;code&gt;--dataObject&lt;/code&gt; instead. Full details are in &lt;a href="https://docs.uilicious.com/cli/test_data.html"&gt;the documentation&lt;/a&gt;.&lt;/p&gt; 
 &lt;p&gt;As usual YMMV&lt;/p&gt;</description>
 	<link>2018/11/supercharge-sfdx-with-ui-licious.html</link>
 	<author>Stephan H. Wissel</author>
@@ -341,95 +355,6 @@ public class AuraLabelHelperTest {
 	<author>Stephan H. Wissel</author>
 	<guid>3ae1b010-ab51-11e8-aadd-ef9c25093d46</guid>
 	<pubDate>29 August 2018</pubDate>
-
-</item>
-<item>
-	<title>Designing Lightning Components for Reuse</title>
-	<description>&lt;p&gt;This is a living document about a common sense approach to developing reusable Lightning components. It might change over time.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#salesforce-documentation" id="salesforce-documentation"&gt;Salesforce documentation&lt;/a&gt;&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;&lt;a href="https://developer.salesforce.com/docs/atlas.en-us.lightning.meta/lightning/intro_framework.htm"&gt;Lightning Developer Guide&lt;/a&gt;&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://developer.salesforce.com/docs/component-library/overview/components"&gt;Lightning Component Library&lt;/a&gt;&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;As well as the instance specific component library&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#principles" id="principles"&gt;Principles&lt;/a&gt;&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;Components shall serve a single purpose, designed for reusability&lt;/li&gt; 
- &lt;li&gt;Components shall use the most feasible least code approach&lt;/li&gt; 
- &lt;li&gt;Components shall not contain country specific logic in the front-end&lt;/li&gt; 
- &lt;li&gt;Components shall be documented and tested&lt;/li&gt; 
- &lt;li&gt;Components shall use composition over inheritance. Inheritance is NOT forbidden, use it wisely&lt;/li&gt; 
- &lt;li&gt;Components shall observe case sensitivity even for non case sensitive item (e.g. field names)&lt;/li&gt; 
- &lt;li&gt;Components shall prefer component markup over html markup (e.g. &lt;code&gt;lightning:card&lt;/code&gt; over &lt;code&gt;div class="slds-..."&lt;/code&gt;)&lt;/li&gt; 
- &lt;li&gt;Components shall use component navigation (if navigation is needed)&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#naming" id="naming"&gt;Naming&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Related files and components need to be named so they appear close to each other. E.g. a component "VehicleInfoList" that depends on inner components. Those would also start with "VehicleInfo" e.g. "VehicleInfoCard" "VehicleInfoLineItem", "VehicleInfoInterested" etc.&lt;br&gt; Files should be named like this:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;SalesProcess.cmp&lt;/li&gt; 
- &lt;li&gt;SalesProcessController.js&lt;/li&gt; 
- &lt;li&gt;SalesProcessHelper.js&lt;/li&gt; 
- &lt;li&gt;SalesProcess[WhatEvent].evt&lt;/li&gt; 
- &lt;li&gt;SalesProcess.SVG&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#interfaces" id="interfaces"&gt;Interfaces&lt;/a&gt;&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;A component shall only implement the interfaces that it actually uses.&lt;/li&gt; 
- &lt;li&gt;A component that relies on a current record, shall not use "availableForAllPageTypes" and must implement "hasRecordId" and the attribute "recordId".&lt;/li&gt; 
- &lt;li&gt;Components that are not used on a page layout, but rather inside other components shall not implement interfaces ("availableFor?") that make them appear in the page editor&lt;/li&gt; 
- &lt;li&gt;Components shall only implement the interfaces they actually use. Avoid interfaces the component "might use in future"&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#data-access" id="data-access"&gt;Data access&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Components shall use the "least code" principles for data access. To be checked in this sequence:&lt;/p&gt; 
-&lt;ol&gt; 
- &lt;li&gt;Does the component need data access or can the attributes of it provide all the input it requires?&lt;/li&gt; 
- &lt;li&gt;Can lightning:recordForm be used?&lt;/li&gt; 
- &lt;li&gt;Can lightning:recordEditForm and lightning:recordReadForm be used?&lt;/li&gt; 
- &lt;li&gt;Can force:recordData be used?&lt;/li&gt; 
- &lt;li&gt;Is a custom @AuraEnabled method in the controller needed for data provision?&lt;/li&gt; 
-&lt;/ol&gt; 
-&lt;p&gt;This doesn't preclude fetching Meta data or configuration. Ensure to use storable actions where feasible. More principles:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;Use data change handlers where appropriate&lt;/li&gt; 
- &lt;li&gt;Use component events&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#code-principles" id="code-principles"&gt;Code principles&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;This section probably will expand over time&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;Code needs to be readable&lt;/li&gt; 
- &lt;li&gt;The controllers (both client and server side) shall be light modules that marshall actual work to helper classes and helper functions&lt;/li&gt; 
- &lt;li&gt;In Apex helper classes shall be instantiated using factory classes - this allows intoducing country specific behavior&lt;/li&gt; 
- &lt;li&gt;All Apex helper classes shall be based on Interfaces&lt;/li&gt; 
- &lt;li&gt;Methods and functions shall be single purpose and not exceed a page size. Break them down (makes them more testable anyway) if to big&lt;/li&gt; 
- &lt;li&gt;Don't copy/paste&lt;/li&gt; 
- &lt;li&gt;Run PMD (free download) on all Apex (eventually on JavaScript too)&lt;/li&gt; 
- &lt;li&gt;Operations that can fail need to be handled with try/catch or its equivalent&lt;/li&gt; 
- &lt;li&gt;Use @ApexDoc and @JSDoc style comments&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#testing" id="testing"&gt;Testing&lt;/a&gt;&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;All components need test code: both for Apex (natural) and the client side component.&lt;/li&gt; 
- &lt;li&gt;A component is incomplete without a "Lightning testing service" test.&lt;/li&gt; 
- &lt;li&gt;Use assertions generously!&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#documentation" id="documentation"&gt;Documentation&lt;/a&gt;&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;Lightning components have a description&lt;/li&gt; 
- &lt;li&gt;Each lightning component comes with a documentation section - don't waste time documenting them outside Salesforce.&lt;/li&gt; 
- &lt;li&gt;Use the documentation to briefly explain what it does (no Pulitzer price for this writing!).&lt;/li&gt; 
- &lt;li&gt;Include at least one example in the documentation&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#parameter" id="parameter"&gt;Parameter&lt;/a&gt;&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;Components that can be dragged onto a page can benefit from having parameters the page maintainer can use to configure the component, thus increasing reusability and limit the number of components that need to show up in the palette.&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://developer.salesforce.com/docs/atlas.en-us.lightning.meta/lightning/components_config_for_app_builder_design_files.htm"&gt;Parameter documentation&lt;/a&gt; - Check the documentation for details.&lt;/li&gt; 
- &lt;li&gt;If a component is usable only for a specific object page, add that to the Design Resource.&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
-	<link>2018/07/designing-lightning-components-for-reuse.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>f8870080-9084-11e8-9829-0f2fefca6bce</guid>
-	<pubDate>26 July 2018</pubDate>
 
 </item>
 
