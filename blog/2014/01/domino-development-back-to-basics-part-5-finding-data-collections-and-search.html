@@ -64,7 +64,7 @@ ga('send', 'pageview');
 			<div class="nav-collapse">
 				<ul class="nav">
 					<li><a href="/index.html">Home</a></li>
-					<li class="active"><a href="/blog">Blog</a></li>
+					<li class="active"><a href="/blog/">Blog</a></li>
 					<li><a href="/blog/series.html">Series</a></li>
 					<li><a href="/blog/downloads/">Downloads</a></li>
 					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
@@ -147,7 +147,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 					<h1><small>Domino Development - Back to Basics - Part 5: Finding data - Collections and Search</small></h1>
 					<hr />
 					<div>Continuing from 
-<a href="/blog/d6plinks/SHWL-9EQ4TN">Part 4</a>, this installment will clarify finding data. It, again, is different from other database concepts. Read on: 
+<a href="/blog/2013/12/domino-development-back-to-basics-part-4-domino-views-are-different.html">Part 4</a>, this installment will clarify finding data. It, again, is different from other database concepts. Read on: 
 <br> In a RDBMS your data retrieval queries are formulated in 
 <a href="http://en.wikipedia.org/wiki/SQL">SQL</a>, while XML, RDF or 
 <a href="http://en.wikipedia.org/wiki/Graph_database">Graph databases</a> might use 
@@ -162,7 +162,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <a href="http://dev.saxonica.com/blog/mike/">the inventor</a> himself). 
 <br> On a first look a Query Language seems absent from IBM Notes. On a second look, there are two. 
 <h3>The IBM Notes Query Languages</h3> Access to Notes data mostly happens 
-<a href="/blog/d6plinks/SHWL-9EQ4TN">using a view</a>, so the pre-selection happens using the 
+<a href="/blog/2013/12/domino-development-back-to-basics-part-4-domino-views-are-different.html">using a view</a>, so the pre-selection happens using the 
 <code>SELECT</code> statement and the 
 <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/index.jsp?topic=%2Fcom.ibm.designer.domino.main.doc%2FH_NOTES_FORMULA_LANGUAGE.html"><code>@Formula</code></a> language. We will see how to narrow results down, just below. But you are not limited to creating a view first, a database can be queried directly using 
 <code>@Formula</code> when executing 
@@ -176,7 +176,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li><b>Direct access</b><br> Notes documents can be addressed using a <a href="http://www.ibm.com/developerworks/lotus/library/ls-Domino_URL_cheat_sheet/">notes://</a> address. The session class has a <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_RESOLVE_METHOD_JAVA.html">resolve(notesurl)</a> method (not the fastest) and the database class has <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_GETDOCUMENTBYUNID_METHOD_JAVA.html"><code>Database.getDocumentByUNID(id)</code></a>. Don't confuse it with <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_GETDOCUMENTBYURL_METHOD_JAVA.html"><code>Database.getDocumentByURL(...)</code></a> which created a document based on HTML content at the specified URL. Internally the byUNID is used whenever you click on a Notes document link. It is one of the fastest access methods. There is also byID, which you should avoid, since it isn't save across replicas or copy style compaction </li> 
  <li><b>View/Folder access</b><br> The view selection formula (for folders: action taked by users or code) defines a set of documents shown in a view. Using one of the collections (see below) you can process all those using <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_ALLENTRIES_PROPERTY_JAVA.html"><code>View.getAllEntries</code></a>, <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_CREATEVIEWNAV_METHOD_JAVA.html"><code>View.createViewNav()</code></a> or by directly starting to loop through the documents using <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_GETFIRSTDOCUMENT_METHOD_VIEW_JAVA.html"><code>View.getFirstDocument()</code></a> (or <code>getFirstEntry()</code>). When looping through them, any saving back of a document might remove it from the view index, so you need to fetch the next document/entry before that </li> 
  <li><b>Subsets of View/Folder</b><br> This is the most typical query access to Notes data. To make this work the view needs to be sorted or categorized (depending on the method). A typical example in a workflow application would be a view with the selection formula <code>SELECT Status="Pending Approval"</code> and the first column categorized with <code>CurrentApprover</code>. You would retrieve documents using <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_GETALLDOCUMENTSBYKEY_METHOD_JAVA.html">View.getAllDocumentsByKey(...)</a>. This method works already with sorted columns (don't need to be categorized) and can take a Vector as search term. It would then match the Vector elements to the sorted columns for search.<br> However using categorization has the advantage, that you can directly address that view in an URL using <code>?OpenView&amp;RestrictToCategory=search term</code> and the view control has a matching property as well. An alternate approach is to use <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_GETDOCUMENTBYKEY_METHOD_JAVA.html"><code>View.getDocumentByKey(...)</code></a> to jump to the first Document/Entry and then loop until the desired end. This approach is useful when you might not process all entries or process beyond the current key (e.g. process all requests from R-Z) </li> 
- <li><a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_FTSEARCH_METHOD_DB_JAVA.html">FullText search</a><br> Make sure you actually have a FTIndex on the database, otherwise that will be slow. The syntax takes a while to get used to. There is one FTIndex per database, even while you can limit the <a href="/blog/d6plinks/SHWL-7TZ8N9">search to one view</a></li> 
+ <li><a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_FTSEARCH_METHOD_DB_JAVA.html">FullText search</a><br> Make sure you actually have a FTIndex on the database, otherwise that will be slow. The syntax takes a while to get used to. There is one FTIndex per database, even while you can limit the <a href="/blog/2009/07/notesdatabaseftsearch-vs-notesviewftsearch.html">search to one view</a></li> 
  <li><code>Database.Search(...)</code><br> The most flexible search, with the price of speed and sort order: slow and you have to sort it yourself. Don't use unless unavoidable </li> 
 </ol> Depending on your needs pick one or the other 
 <h3>Collections</h3> Depending on your access route choosen above, you might get one of the 4 result collections. Those are no proper 
@@ -191,7 +191,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li><a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_NOTESVIEWNAVIGATOR_CLASS_JAVA.html">ViewNavigator</a><br> Technically it isn't a collection, but the ability to point around in the view index. So you won't get any set operation to refine the result, but you get <b>speed</b>. You can jump from category to category (great for reading the <code>reduce()</code> values) and run through an entire view very very quickly. The ViewNavigator is a main reason to plan your views well </li> 
 </ul> 
 <br> Next up: 
-<az href="/blog/d6plinks/SHWL-9EQEPZ">
+<az href="/blog/2014/02/domino-development-back-to-basics-part-6-better-safe-than-sorry-security.html">
   Better save than sorry - Security 
 </az></div>
 					<hr />
@@ -256,7 +256,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 					<h4>About Me</h4>
 					<p>
 						I'm a Cloud "Program Architect Director", working for Salesforce. I'm based in Singapore.
-						<g:plusone size="small" href="https://wissel.net/blog"></g:plusone>
+						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
 					</p>
 					<a href="//stackoverflow.com/users/131021/stwissel">
 					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmers" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmers">
@@ -266,9 +266,6 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 					<h4>Contact</h4>
 					<ul>
 						<li><a href="https://www.twitter.com/notessensei">Twitter</a></li>
-						<li><a href="https://plus.google.com/+StephanWissel/about" rel="author" style="text-decoration: none;">
-						    <img src="https://ssl.gstatic.com/images/icons/gplus-16.png" alt="" style="border: 0; width: 16px; height: 16px;" /> Google+</a></li>
-						<li><a href="skype://notessensei?chat">Skype</a></li>
 						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
 						<li><a href="https://www.xing.com/profile/StephanH_Wissel">XING</a></li>
 						<li><a href="https://astore.amazon.com/wissenetblog-20">Amazon Store</a></li>
@@ -290,7 +287,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 						listed here: <a rel="license"
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
 							alt="Creative Commons License" style="border-width: 0"
-							src="//i.creativecommons.org/l/by-nc-sa/3.0/88x31.png" /></a>
+							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
 						Unless otherwise labeled by its originating author, the content
 						found on this site is made available under the terms of an <a
 							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
