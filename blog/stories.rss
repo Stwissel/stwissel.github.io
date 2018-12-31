@@ -6,7 +6,28 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Fri, 14 Dec 2018 03:01:10 +0000</pubdate>
+	<pubdate>Sat, 29 Dec 2018 02:38:05 +0000</pubdate>
+<item>
+	<title>Pattern in your Apex Controller</title>
+	<description>&lt;p&gt;A (software) &lt;a href="https://en.wikipedia.org/wiki/Software_design_pattern"&gt;design pattern&lt;/a&gt; is a general, reusable solution to a commonly occurring problem withing a given context. &lt;a href="https://en.wikipedia.org/wiki/Christopher_Alexander"&gt;Christoper Alexander&lt;/a&gt; inspired the &lt;a href="https://en.wikipedia.org/wiki/Design_Patterns"&gt;Gang of four&lt;/a&gt; to apply pattern to software and enumerate 23 classic software pattern.&lt;/p&gt; 
+&lt;p&gt;This article discusses how to use some of them in the context of &lt;a href="https://en.wikipedia.org/wiki/Salesforce.com#Apex"&gt;Apex&lt;/a&gt; controllers.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#the-context-same-same-but-different" id="the-context-same-same-but-different"&gt;The context: Same same, but different&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;You are creating an application to support construction on force.com that will serve multiple countries. Part of the requirements is to compute a risk score for any given project. While &lt;a href="https://www.iso.org/news/2012/12/Ref1685.html"&gt;ISO standards&lt;/a&gt; form the foundation of the assessment, each jurisdiction has some specialties that alter the logic eventually.&lt;/p&gt; 
+&lt;p&gt;This is just one of the requirements, you have many more that follow the &lt;code&gt;pattern&lt;/code&gt; &lt;a href="https://www.samesamebutdifferent.site/2017/08/same-same-but-different-origin/"&gt;Same Same - But different&lt;/a&gt;.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#patterns-used" id="patterns-used"&gt;Patterns used&lt;/a&gt;&lt;/h3&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/Interface-based_programming"&gt;Interface based programming&lt;/a&gt;&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://msdn.microsoft.com/en-us/library/aa480019.aspx"&gt;Metadata driven application design&lt;/a&gt;&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/Facade_pattern"&gt;Facade pattern&lt;/a&gt;&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/Factory_method_pattern"&gt;Factory pattern&lt;/a&gt;&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;Besides those, you want to know &lt;a href="https://trailhead.salesforce.com/en/search?keywords=%22Apex%20Enterprise%20Patterns%22"&gt;Apex Enterprise Patterns&lt;/a&gt;. Go Trailhead and learn.&lt;/p&gt;</description>
+	<link>2018/12/pattern-in-your-apex-controller.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>01f2e0e0-0b04-11e9-8f1f-178be3bffe51</guid>
+	<pubDate>29 December 2018</pubDate>
+
+</item>
 <item>
 	<title>Lightning Web Components (LWC) quick overview</title>
 	<description>&lt;p&gt;On December 13 Salesforce announced &lt;a href="https://www.salesforce.com/blog/2018/12/introducing-lightning-web-components-with-javascript"&gt;Lightning Web Components&lt;/a&gt; (LWC) a new way to build components on the Salesforce platform. Here is my take.&lt;/p&gt; 
@@ -273,89 +294,6 @@ uilicious-cli  run "ProjectName" "ScriptName" --dataFile local.json -u uilicious
 	<author>Stephan H. Wissel</author>
 	<guid>97766ef889461d533745cd7d2838c5d1</guid>
 	<pubDate>04 October 2018</pubDate>
-
-</item>
-<item>
-	<title>Adding Labels to Lightning Datatable</title>
-	<description>&lt;p&gt;In &lt;a href="/blog/2018/08/lightning-datatables-and-relationship-queries.html"&gt;Part 1&lt;/a&gt; I described a way to make any SOQL result fit for use in a Datatable. The next step is to provide column labels. While it would be easy to just hardcode them, &lt;a href="https://www.linkedin.com/in/abhishek-mohanty-56904914b/"&gt;Abhishek&lt;/a&gt; suggested to use the original field names. The beauty of that approach: The admin can adjust and/or translate field labels without touching the code.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#going-meta" id="going-meta"&gt;Going Meta&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;APEX has a rich API that allow querying an object's properties in the &lt;a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_namespace_Schema.htm"&gt;Schema&lt;/a&gt; name space. Getting the information for a collection of objects can be done using &lt;code&gt;Schema.describeSObjects(sObjectTypes)&lt;/code&gt; or &lt;code&gt;Schema.getGlobalDescribe()&lt;/code&gt; (see &lt;a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_methods_system_schema.htm"&gt;details here&lt;/a&gt;).&lt;/p&gt; 
-&lt;p&gt;The interesting challenge is to find the object names of the relationships, the default field list will only tell you the name you gave it, but not the object you relate to. So some more code is required (see below).&lt;/p&gt; 
-&lt;p&gt;Relationship fields can be identified by the part before the &lt;code&gt;.&lt;/code&gt; either ending in &lt;code&gt;__r&lt;/code&gt; or &lt;code&gt;id&lt;/code&gt;. So we break a query apart and extract a &lt;code&gt;List&amp;lt;String&amp;gt;&lt;/code&gt; for the field name and a &lt;code&gt;String&lt;/code&gt; for the start object name. Our scenario doesn't cater to subqueries. These two parameters get fed into a utility function.&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;public without sharing class AuraLabelHelper {
-    
-    private static Map&amp;lt;String, Schema.SObjectType&amp;gt; globalDescribe = Schema.getGlobalDescribe();
-    
-    public static Map&amp;lt;String, String&amp;gt; retrieveFieldLablesFromFieldList(List&amp;lt;String&amp;gt; fieldList, String objName) {
-        Map&amp;lt;String, String&amp;gt; result = new Map&amp;lt;String, String&amp;gt; ();
-        Map&amp;lt;String, Schema.SObjectField&amp;gt; fieldDefinitions = internalFieldLablesFromFieldList(fieldList, objName, '');
-        for (String key : fieldDefinitions.keySet()) {
-            DescribeFieldResult dfr = fieldDefinitions.get(key).getDescribe();
-            result.put(key, dfr.getLabel());
-        }
-        return result;
-    }
-    
-    
-    private static Map&amp;lt;String, Schema.SObjectField&amp;gt; internalFieldLablesFromFieldList(List&amp;lt;String&amp;gt; fieldList, String objName, String prefix) {
-        Map&amp;lt;String, Schema.SObjectField&amp;gt; result = new Map&amp;lt;String, Schema.SObjectField&amp;gt; ();
-        Schema.SObjectType objectType = AuraLabelHelper.globalDescribe.get(objName);
-        Schema.DescribeSObjectResult describeResult = objectType.getDescribe();
-        // Labels for the top level object - needs to be lowercased  
-        Map&amp;lt;String, Schema.SObjectField&amp;gt; fieldMap = describeResult.fields.getMap();
-        Map&amp;lt;String, Schema.SObjectField&amp;gt; fieldMapLower = new Map&amp;lt;String, Schema.SObjectField&amp;gt; ();
-        
-        for (String key : fieldMap.keySet()) {
-            fieldMapLower.put(key.toLowerCase(), fieldMap.get(key));
-        }
-        
-        for (String fieldName : fieldList) {
-            String fieldNameLower = fieldName.toLowerCase();
-            if (fieldMapLower.containsKey(fieldNameLower)) {
-                result.put(prefix + fieldNameLower, fieldMapLower.get(fieldNameLower));
-            } else if (fieldNameLower.contains('__r.')) {
-                // We have a potential relationship field at hand
-                String relationFieldName = fieldNameLower.left(fieldNameLower.indexOf('__r.')) + '__c';
-                Schema.DescribeFieldResult relationDescribe = fieldMapLower.get(relationFieldName).getDescribe();
-                Schema.SObjectType reference = relationDescribe.getReferenceTo().get(0);
-                String objApiName = reference.getDescribe().getName();
-                List&amp;lt;String&amp;gt; subFieldList = new List&amp;lt;String&amp;gt; ();
-                String newPrefix = prefix + fieldNameLower.left(fieldNameLower.indexOf('.'))+'_';
-                subFieldList.add(fieldNameLower.substring(fieldNameLower.indexOf('__r.') + 4));
-                result.putAll(internalFieldLablesFromFieldList(subFieldList, objApiName, newPrefix));
-            }
-        }
-        
-        return result;
-    }
-}
-&lt;/pre&gt; 
-&lt;p&gt;Good boys and girls create a test class:&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;@IsTest
-public class AuraLabelHelperTest {
-
-    @IsTest
-    public static void simpleAccountTest() {
-        List&amp;lt;String&amp;gt; fieldNames = new List&amp;lt;String&amp;gt; ();
-        fieldNames.add('Id');
-        fieldNames.add('Name');
-        fieldNames.add('Customer__c');
-        fieldNames.add('Customer__r.Name');
-
-        Map&amp;lt;String, String&amp;gt; result = AuraLabelHelper.retrieveFieldLablesFromFieldList(fieldNames, 'Address__c');
-        System.debug(result);
-        System.assert(result.containsKey('id'));
-        System.assert(result.containsKey('customer__r_name'));
-
-    }
-
-}
-&lt;/pre&gt; 
-&lt;p&gt;Next stop is putting it all together. As usual YMMV.&lt;/p&gt;</description>
-	<link>2018/08/adding-labels-to-lightning-datatable.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>2e2c0090-ac10-11e8-8c5f-317c3a183f75</guid>
-	<pubDate>31 August 2018</pubDate>
 
 </item>
 
