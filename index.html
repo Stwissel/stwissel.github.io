@@ -110,12 +110,50 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2019/02/reporting-your-validation-formulas.html">Reporting your validation formulas</a></small></h1>
+					<hr />
+					<div><p>Validation formula are a convenient way to ensure your data integrity. With great powers? comes the risk of alienating users by preventing them entering data.</p> 
+<h3><a href="#why-look-at-them" id="why-look-at-them">Why look at them?</a></h3> 
+<p>You can easily look at all formula in the Object Manager, but it is tedious to look at every formula one by one. You might ask yourself:</p> 
+<ul> 
+ <li>Do all my formula exclude the integration profile?</li> 
+ <li>Are context (e.g. the country) specific formulas set correctly?</li> 
+ <li>Do validation rules follow the naming conventions?</li> 
+ <li>Are messages helpful or intimidating?</li> 
+</ul> 
+<h3><a href="#extract-and-report" id="extract-and-report">Extract and report</a></h3> 
+<p>You already use <a href="https://github.com/kgalant/PackageBuilder">PackageBuilder</a> to extract objects (and other stuff) as <a href="http://www.xml.org/">XML</a>, so it is just a small step: slap all <code>*.object</code> files into one big file and run an <a href="https://en.wikipedia.org/wiki/XSLT">XSLT</a> report over it.</p> 
+<p>Not so fast! If you concatenate XML files using OS copy you end up with three problems:</p> 
+<ul> 
+ <li>You don't have an XML root element. Like the <a href="https://en.wikipedia.org/wiki/Highlander_(film)">Highlander</a> - there can be only one. You could sandwich the files in opening and closing tags, but then you have the next problem</li> 
+ <li>XML files start <code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;</code> and copying that file will sprinkle that statement multiple times into your result. The XSLT processor will barf</li> 
+ <li>The result will get very big and any report will take a long time or even run out of memory</li> 
+</ul> 
+<h3><a href="#a-bit-of-tooling" id="a-bit-of-tooling">A bit of tooling</a></h3> 
+<p>I solved, for my needs, using a small <a href="https://gist.github.com/Stwissel/aeff1c523983ad7a89b33a7d2d67de43">Java class</a> and <a href="https://gist.github.com/Stwissel/cc2289fc319f468deacee7ba7649a4e6">one XSLT stylesheet</a>. Java because: I'm familiar with it and NodeJS still sucks with XML. XSLT, because: I'm familiar with it (heard that before?) and the styling of the output is independent from the processing step. I presume you know how to initiate an <a href="https://sourceforge.net/projects/saxon/files/Saxon-HE/9.9/">XSLT 2.0 transformation</a>.</p></div>
+					<hr />
+ <a href="/blog/2019/02/reporting-your-validation-formulas.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 07 February 2019
+<span class="divider">|</span>
+<a href="/blog/2019/02/reporting-your-validation-formulas.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/salesforce.html">Salesforce</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/02/reporting-your-validation-formulas.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Reporting your validation formulas"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/02/reporting-your-validation-formulas.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2019/01/avoid-the-clean-code-shock-with-pmd.html">Avoid the "Clean Code Shock" with PMD</a></small></h1>
 					<hr />
 					<div><p>Your new year resolution includes "<em>Write clean Apex code</em>". So you run <a href="https://pmd.github.io/">PMD</a> with a full ruleset and <a href="/blog/2018/11/cleaning-up-an-apex-codebase-with-pmd.html">get shocked</a> by the number of violations. You drop the resolution in a blink.</p> 
 <h3><a href="#dont-boil-the-ocean" id="dont-boil-the-ocean">Don't boil the Ocean</a></h3> 
-<p>Even a journey of a thousand miles <a href="https://despair.com/collections/demotivators/products/ambition?variant=2457295747">starts with a single step</a>, so let's break down the task into manageable chunks to <a href="https://en.wikipedia.org/wiki/Divide_and_rule">divide and rule</a>.</p> 
-<p>There are 2 dimensions you can use: Type of code and priority levels. Using them you can turn your <a href="https://amzn.to/2RmMXvp">Clean Code</a> journey into manageable stages.</p> 
+<p>Even a journey of a thousand miles <a href="https://despair.com/collections/demotivators/products/ambition?variant=2457295747">starts with a single step</a>, so let's break down the task into manageable chunks to <a href="https://en.wikipedia.org/wiki/Divide_and_rule">divide and rule</a>.<br> There are 2 dimensions you can use: <strong>Type of code</strong> and <strong>priority levels</strong>. Using them you can turn your <a href="https://amzn.to/2RmMXvp">Clean Code</a> journey into manageable stages.</p> 
 <h3><a href="#code-types" id="code-types">Code Types</a></h3> 
 <ul> 
  <li>Legacy code: all code that doesn't fall in any of the two other categories</li> 
@@ -129,12 +167,13 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>3 &amp; 4 = hard to maintain code, will generate warning</li> 
  <li>5 = ugly code, will generate hint</li> 
 </ul> 
-<p>PMD rules for code types have different priorities. A different number of tests will fail a build:</p> 
+<p>PMD rules for code types should have different priorities. A different number of tests will fail a build:</p> 
 <ul> 
  <li>11 for legacy code (all around performance and security)</li> 
  <li>33 for changed code</li> 
  <li>44 for new code</li> 
-</ul></div>
+</ul> 
+<p>This will require to run PMD with different rulesets on <a href="/blog/2018/11/cleaning-up-an-apex-codebase-with-pmd.html">subsets of your code base</a></p></div>
 					<hr />
  <a href="/blog/2019/01/avoid-the-clean-code-shock-with-pmd.html">Read more</a>
 					<p><p>
@@ -448,70 +487,6 @@ categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/bl
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/10/my-software-stack.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="My software stack"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2018/10/my-software-stack.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2018/10/creating-a-lightning-service.html">Creating a Lightning Service</a></small></h1>
-					<hr />
-					<div><p>When you develop in <a href="https://developer.salesforce.com/docs/component-library/overview/components">Lightning</a> your client side architecture can benefit as much as the server from a <a href="https://trailhead.salesforce.com/en/content/learn/modules/apex_patterns_sl/apex_patterns_sl_soc">separation of concerns</a>. The component library is testimony to that.</p> 
-<h3><a href="#out-of-the-box-services" id="out-of-the-box-services">Out of the box services</a></h3> 
-<p>The <a href="https://trailhead.salesforce.com/en/content/learn/modules/apex_patterns_sl/apex_patterns_sl_soc">Component Library</a> features a growing number of services:</p> 
-<ul> 
- <li><a href="https://developer.salesforce.com/docs/atlas.en-us.lightning.meta/lightning/data_service.htm">Lightning Data Service</a>, the workhorse of creating, loading and saving Salesforce records. One specialty: it doesn't have its own component, but surfaces through <a href="https://developer.salesforce.com/docs/component-library/bundle/force:recordData/documentation">force:RecordData</a>, <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:recordEditForm/example">lightning:recordEditForm</a>, <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:recordViewForm/documentation">lightning:recordViewForm</a> and <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:recordForm">lightning:recordForm</a></li> 
- <li><a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:overlayLibrary/documentation">Overlay Library</a> to show modals and popovers</li> 
- <li><a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:notificationsLibrary/specification">Notification Library</a> to show notices and toasts</li> 
- <li><a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:omniToolkitAPI/documentation">Omni Toolkit API</a> for accessing OmniChannel capabilities</li> 
- <li><a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:navigationItemAPI">Navigation Item API</a> to move around in lightning</li> 
- <li><a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:conversationToolkitAPI/documentation">Conversation Toolkit API</a> to interact with chat</li> 
- <li><a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:quickActionAPI">Quick Action API</a> accessing quick actions</li> 
- <li><a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:workspaceAPI/documentation">Workspace API</a> to access console app tabs and subtabs</li> 
- <li><a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:utilityBarAPI/documentation">Utility Bar API</a> to access the utility bar</li> 
- <li><a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:empApi/documentation">Emp API</a> to subscribe to streaming events</li> 
-</ul> 
-<h3><a href="#building-your-own" id="building-your-own">Building your own</a></h3> 
-<p>There is more than one way to skin you cat. You can do:</p> 
-<ul> 
- <li><strong>Lightning Style</strong><br><a href="https://developer.salesforce.com/blogs/author/pozil">Philippe Ozil</a> described <a href="https://developer.salesforce.com/blogs/2018/08/implement-and-use-lightning-service-components.html">in detail</a> how to use and create your own services ?lightning style'. You should check out his <a href="https://github.com/pozil/server-action-service">Server Side Actions Service</a> that allows you cut down on boiler plate code substantially</li> 
- <li><strong>JavaScript Style</strong><br>Establish a global service extending the Window object</li> 
- <li><strong>ES6 Style</strong><br>Import a JavaScript module. This would need to setup Babel - not too practical for now</li> 
-</ul> 
-<h3><a href="#extending-the-window-object" id="extending-the-window-object">Extending the window object</a></h3> 
-<p>When you extend the window object, which is the browser's top level object, the service becomes available "standalone", like <code>alert()</code> (which is actually <code>window.alert()</code>). A service could look like this:</p> 
-<pre class="brush: javascript">window.demoLib = ( function() {
-	let someMethod = () =&gt; {
-		return 'Something'
-	}
-
-	let helloMethod = (paul) =&gt; {
-		return `Hello ${paul}`;
-	}
-
-	return {someMethod, helloMethod};
-}());
-</pre> 
-<p>This will now provide you with <code>demoLib.someMethod()</code> returning <em>Something</em> and <code>demoLib.helloMethod('World')</code> returning "<em>Hello World</em>". The final step to enable such a library is to add <a href="https://developer.salesforce.com/docs/component-library/bundle/ltng:require">ltng:require</a> to your components: <code>&lt;ltng:require scripts="{!Resource.demoLib} afterScriptLoaded="someMethodIfRequired" /&gt;</code> presuming you stored your JS in resources as <code>demoLib.js</code>. The Aura framework will make sure that the library is loaded once only, regardless how many components define it as dependency.</p> 
-<h3><a href="#what-can-go-wrong" id="what-can-go-wrong">What can go wrong?</a></h3> 
-<p>There are a few caveats:</p> 
-<ul> 
- <li>For hard core Apex developers: JavaScript is case sensitive</li> 
- <li>You need to be clearly communicating service names to other developers in your org. If someone has the idea to name a library the same as yours, things will break. Good practice is to check if your library and function is available: <code>if (window.demoLib &amp;&amp; window.demoLib.someMethod) {...}</code></li> 
- <li>Fat arrow functions <code>() =&gt; {...}</code> are not supported in <a href="https://www.forbes.com/sites/markgibbs/2011/12/16/internet-explorer-must-die/#3e6184391727">legacy browsers</a>, so you need the slightly more verbose <code>function(){...}</code> (beware the <code>this</code> keyword behaves different then).</li> 
-</ul> 
-<p>As usual YMMV</p></div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 19 October 2018
-<span class="divider">|</span>
-<a href="/blog/2018/10/creating-a-lightning-service.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/10/creating-a-lightning-service.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Creating a Lightning Service"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2018/10/creating-a-lightning-service.html";
 						</script>
 					</p>
 </p>
