@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Draining the happy soup - Part 1 - NotesSensei's Blog</title>
+<title>Draining the happy soup - Part 2 - NotesSensei's Blog</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -12,14 +12,14 @@ ga('send', 'pageview');
 <meta http-equiv="X-UA-Compatible"  content="chrome=1" />
 <meta http-equiv="Content-Language" content="en" />
 <meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
-<meta property="og:title"     content="wissel.net - Draining the happy soup - Part 1" />
+<meta property="og:title"     content="wissel.net - Draining the happy soup - Part 2" />
 <meta property="og:type"      content="blog" />
-<meta property="og:url"       content="https://wissel.net/blog/2019/02/draining-the-happy-soup-part-1.html" />
+<meta property="og:url"       content="https://wissel.net/blog/2019/02/draining-the-happy-soup-part-2.html" />
 <meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
 <meta property="og:site_name" content="wissel.net" />
 <meta name="viewport"         content="width=device-width, initial-scale=1.0" />
 <meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
-<meta name="DC.Title"         content="NotesSensei's Weblog - Draining the happy soup - Part 1" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Draining the happy soup - Part 2" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
 <meta name="Copyright"        content="2019,2018 Stephan H. Wissel - Creative commons licence" />
@@ -123,109 +123,60 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<p>This article is part of a mini series. Read them all (latest on top):</p>
 				<h3>Happy Soup</h3>
 				<ol reversed class="nav nav-list">
-					<li  class="active"><a href="/blog/2019/02/draining-the-happy-soup-part-1.html">Draining the happy soup - Part 1</a></li>
-					<li ><a href="/blog/2019/02/draining-the-happy-soup-part-2.html">Draining the happy soup - Part 2</a></li>
+					<li ><a href="/blog/2019/02/draining-the-happy-soup-part-1.html">Draining the happy soup - Part 1</a></li>
+					<li  class="active"><a href="/blog/2019/02/draining-the-happy-soup-part-2.html">Draining the happy soup - Part 2</a></li>
 				</ol>
 			</div>	
 
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2019/02/reporting-your-validation-formulas.html"><i class="icon-hand-left"></i>Reporting your validation formulas</a>
+					<li><a href="/blog/2019/02/the-efficiency-paradox.html"><i class="icon-hand-left"></i>The Efficiency Paradox</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2019/02/the-efficiency-paradox.html">The Efficiency Paradox<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 				<article class="well well-raised">
-					<h1><small>Draining the happy soup - Part 1</small></h1>
+					<h1><small>Draining the happy soup - Part 2</small></h1>
 					<hr />
-					<div><p>Unleashing <a href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_dev2gp.htm">unlocked packages</a> promises to reduce risk, improve agility and drive home the full benefits of <a href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_intro.htm">SFDX</a></p> 
-<h3><a href="#some-planning-required" id="some-planning-required">Some planning required</a></h3> 
-<p>I'm following the approach "Throw and see what sticks to the wall". The rough idea: retrieve all meta data, convert it into SFDX format, distribute it over a number of packages and put it back together.</p> 
-<p>To make it more fun I picked an heavily <del>abused</del> customized and used org with more than 20,000 meta data artifacts (and a few surprises). Follow along.</p> 
-<h3><a href="#learning" id="learning">Learning</a></h3> 
-<p>Trailhead has <a href="https://trailhead.salesforce.com/en/content/learn/modules/unlocked-packages-for-customers">a module</a> on unlocked packages on its trail <a href="https://trailhead.salesforce.com/content/learn/trails/sfdx_get_startedhttps://trailhead.salesforce.com/content/learn/trails/sfdx_get_started">Get Started with Salesforce DX</a>.</p> 
-<p>While you are there, check out the (at time of writing the 15) modules on <a href="https://trailhead.salesforce.com/modules#tag=tag-alm">Application Lifecycle Management</a>.</p> 
-<h3><a href="#downloading" id="downloading">Downloading</a></h3> 
-<p>The <a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_metadata.htm">limits</a> for retrieving packages (10,000 elements, 39MB zip or about 400 MB raw) posed an issue for my XL org. So I used, growing fond of it, <a href="https://github.com/kgalant/PackageBuilder">PackageBuilder</a> to download all sources. It automatically creates multiple package.xml files when you exceed the limits.</p><p>Of course, no action without headache. I ran out of memory on my first attempts, so I had to tweak the jvm parameters with <code>-Xms512M -Xmx1G</code>. Furthermore I limited the number of items to retrieve to 4000 per package and excluded the meta data type <code>Document</code>. Documents, not visible in Lightning are user creatable, why they are meta data is beyond me. For reference my <code>build.properties</code> file:</p> 
-<pre class="brush: bash"># Package builder
-sf.apiversion=45.0
-sf.username=user@salesforce.io
-sf.password=Sup3rS3cr3t
-sf.serverurl=https://test.salesforce.com
-sf.maxPoll=200
-includechangedata=false
-metadatatargetdir=src
-destination=packages
-download=true
-unpack=false
-gitcommit=false
-skipItems=Document:*
-maxitems=4000
-</pre> 
-<p>You might need to play with your own parameters. A little experimenting goes a long way.</p> 
-<h3><a href="#conversion" id="conversion">Conversion</a></h3> 
-<p>You create a SFDX project <code>sfdx force:project:create</code> and you have moved the zip files to the root of the project. Now unzip one archive to <code>mdapisrc</code> and execute<br> <code>sfdx force:mdapi:convert -r mdapisrc -d force-app</code>. Rinse and repeat.</p> 
-<p>So far so good. Most likely, until I get it right, I have to repeat these steps more than once, so I created a small shell script (time to get a <a href="https://amzn.to/2GJp4IM">Mac</a> or the <a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10">Windows Subsystem for Linux</a>) to repeat the whole exercise:</p> 
-<pre class="brush: bash">#!/bin/bash
-TITLE="Happy Soup to SFDX retrieval"
-SECONDS=0
-
-process_package() {
-	rm -rf mdapisrc/*
-	unzip -d mdapisrc $1.zip
-	sfdx force:mdapi:convert -r mdapisrc -d force-app
-}
-
-#Create packages
-java -Xms512M -Xmx1G -jar ~/bin/PackageBuilder.jar -o build.properties -download
-
-# Retrive the packages and convert
-# First the one without a number
-process_package package
-
-# Then the numbered ones
-for fname in packages/package.*.xml; do 
-	fn="${fname%.xml}"
-	f=${fn##*/}
-	process_package $f
-done
-
-#Time information
-LAPSED="$(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
-MESSAGE="SFDX Operations completed in: $LAPSED"
-
-#Let the Mac know
-osascript -e "display notification \"${MESSAGE}\" with title \"${TITLE}\""
-echo "Done with $TITLE $MESSAGE"
-</pre> 
-<p>On Linux you want to replace the <code>osascript</code> call with <code>growl</code> or <code>notify-send</code> or skip it completely.</p> 
-<p>Now we got local files to play with, they need to be distributed to their new projects and kept current. But that's the story for <a href="/blog/2019/02/draining-the-happy-soup-part-2.html">next time</a>.</p> 
-<p>As usual YMMV</p></div>
+					<div><p>We stormed ahead in <a href="/blog/2019/02/draining-the-happy-soup-part-1.html">Part 1</a> and downloaded all the meta data in SFDX format. Now it's time to stop for a moment and ask: what's the plan?</p> 
+<h3><a href="#you-need-a-plan" id="you-need-a-plan">You need a plan</a></h3> 
+<p>When embarking on the SFDX package journey, the start is Phase 0. You have an org that contains all your meta data and zero or more (managed) packages from <a href="https://appexchange.salesforce.com/">AppExchange</a>. That's the <a href="https://vignette.wikia.nocookie.net/shrek/images/5/58/Fc19d7db9cbcb7659aae3dce7bf6b3c1.jpg/revision/latest?cb=20170129025042">swamp</a> you want to drain.</p> 
+<p><img src="/blog/images/2019/Phase0.jpg" alt="Phase 0 - happy soup"></p> 
+<p>Before you move to phase 1, you need to be clear how you want to structure your packages. High level could look like this:</p> 
+<p><img src="/blog/images/2019/Structure.jpg" alt="Structure - happy soup"></p> 
+<ol> 
+ <li>You have an unpackaged base, that over time will shrink. The interesting challenge is to deal with dependencies there</li> 
+ <li>Some of the components will be used across all system - most likely extensions to standard objects or triggers and utility classes. Core LWC components are good candidates for base packages too. There can be more than one base package</li> 
+ <li>Your business components. Slice them by business function, country specifics or business unit. Most likely will resemble some of your organization structure</li> 
+ <li>A package from AppExchange or a legacy package will not depend on anything. In my current project we moved all VisualForce stuff (pages and controllers) there, since these won't be needed after the lightning migration is concluded and then can be uninstalled easily.</li> 
+</ol> 
+<p>Now you envision how the draining will commence:</p> 
+<p><img src="/blog/images/2019/Phase1.jpg" alt="Phase 1 - happy soup"></p> 
+<p><img src="/blog/images/2019/Phase2.jpg" alt="Phase 2 - happy soup"></p> 
+<p><img src="/blog/images/2019/Phase3.jpg" alt="Phase 3 - happy soup"><br> ??????<br> Now we have an idea how the project can progress, we are getting closer to "<a href="https://en.wikipedia.org/wiki/Divide-and-conquer_algorithm">divide and conquer</a>" of our artifacts.</p> 
+<p>But that's another story for the next time!</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 14 February 2019
+Stephan H Wissel</a> on 18 February 2019
 <span class="divider">|</span>
-<a href="/blog/2019/02/draining-the-happy-soup-part-1.html#comments">Comments (0)</a>
+<a href="/blog/2019/02/draining-the-happy-soup-part-2.html#comments">Comments (0)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/sfdx.html">SFDX</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/02/draining-the-happy-soup-part-1.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Draining the happy soup - Part 1"></div>
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/02/draining-the-happy-soup-part-2.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Draining the happy soup - Part 2"></div>
 						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2019/02/draining-the-happy-soup-part-1.html";
+							var permaLink = "https://wissel.net/blog/2019/02/draining-the-happy-soup-part-2.html";
 						</script>
 					</p>
 
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_c6b680f0-305a-11e9-bc80-c5b58f9cd89a" type="button">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_37ce0350-334c-11e9-8f2c-e9611f89e0a8" type="button">
 		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
 	            </button>
 	            </div>
-				<div id="commentform_c6b680f0-305a-11e9-bc80-c5b58f9cd89a"  class="collapse"></div>
+				<div id="commentform_37ce0350-334c-11e9-8f2c-e9611f89e0a8"  class="collapse"></div>
 				<div class="well well-raised">
 					<h4>Comments</h4>
 					<ol id="commentList">
@@ -235,12 +186,9 @@ categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href=
 					</ol>
 				</div>
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2019/02/reporting-your-validation-formulas.html"><i class="icon-hand-left"></i>Reporting your validation formulas</a>
+					<li><a href="/blog/2019/02/the-efficiency-paradox.html"><i class="icon-hand-left"></i>The Efficiency Paradox</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2019/02/the-efficiency-paradox.html">The Efficiency Paradox<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 			</div>
@@ -317,7 +265,7 @@ categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href=
 	</footer>
 
 	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/2019/02/draining-the-happy-soup-part-1.html";
+		var permaLink = "https://wissel.net/blog/2019/02/draining-the-happy-soup-part-2.html";
 	</script>
 		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
 	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
@@ -352,7 +300,7 @@ categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href=
 	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 	<script type="text/javascript">
 		var onloadCallback = function() {
-    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "c6b680f0-305a-11e9-bc80-c5b58f9cd89a");
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "37ce0350-334c-11e9-8f2c-e9611f89e0a8");
  		};
 	</script>
 
