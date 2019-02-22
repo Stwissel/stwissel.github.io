@@ -6,7 +6,47 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Mon, 18 Feb 2019 08:22:02 +0000</pubdate>
+	<pubdate>Fri, 22 Feb 2019 02:11:24 +0000</pubdate>
+<item>
+	<title>Draining the happy soup - Part 3</title>
+	<description>&lt;p&gt;In &lt;a href="/blog/2019/02/draining-the-happy-soup-part-2.html"&gt;Part 2&lt;/a&gt; we had a look at the plan. Now it is time to put it into motion. Let's setup our project structure&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#put-some-order-in-your-files" id="put-some-order-in-your-files"&gt;Put some order in your files&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Our goal is to distribute happy soup artifacts into packages. In this installment we setup the directory structure for that. Sticking to a clear structure makes it easier to get a step closer to package Nirvana step by step.&lt;/p&gt; 
+&lt;p&gt;&lt;img src="/blog/images/2019/SFDXDirectoryStructure.jpg" alt="Proposed directory structure"&gt;&lt;/p&gt; 
+&lt;p&gt;Let me run through some of the considerations:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;I'll keep all packages inside a single directory structure. Name the root after your org. What might pose a challenge is to name it &lt;code&gt;sfdx&lt;/code&gt; - too close to that hidden directory &lt;code&gt;.sfdx&lt;/code&gt; that does exist in your home directory and might exist in the project directories&lt;/li&gt; 
+ &lt;li&gt;You could keep the whole tree in a single repository or subject each package directory to its own repository. I'd prefer the later, since it allows a developer to pull only the relevant directories from source control (That's Option B)&lt;/li&gt; 
+ &lt;li&gt;The base directory, containing the artifacts that won't be packaged shall be named &lt;code&gt;HappySoup&lt;/code&gt;. While it is a rather colloquial term, it is well established&lt;/li&gt; 
+ &lt;li&gt;I'm a little old fashioned when it comes to directory names: no spaces, double byte characters (that includes ?) or special characters&lt;/li&gt; 
+ &lt;li&gt;You need to pay attention to &lt;code&gt;sfdx-project.json&lt;/code&gt; and &lt;code&gt;.sfdx&lt;/code&gt; as well as &lt;code&gt;.gitignore&lt;/code&gt;. More and that below&lt;/li&gt; 
+ &lt;li&gt;When you have mixed OS developer communities using Windows, MAC or Linux, directory delimiters could become a headache. My tongue-in-cheek recommendation for Windows would be to use &lt;a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10"&gt;WSL&lt;/a&gt;&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#key-files-and-directories" id="key-files-and-directories"&gt;Key files and directories&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Initially you want to divide, but not yet package. So your projects need to know about each other. Higher level packages, that in future will depend on base packages need to know about them and each package needs to know about the &lt;code&gt;HappySoup&lt;/code&gt;. To get there I adjust my &lt;code&gt;sfdx-project.json&lt;/code&gt;:&lt;/p&gt; 
+&lt;pre class="brush: js"&gt;{
+"packageDirectories" : [
+    { "path": "force-app", "default": true},
+    { "path" : "../ObjectBase/force-app" },
+    { "path" : "../HappySoup/force-app" }
+  ],
+"namespace": "",
+"sfdcLoginUrl" : "https://login.salesforce.com",
+"sourceApiVersion": "45.0"
+}
+&lt;/pre&gt; 
+&lt;p&gt;The key here are the relative path entries like &lt;code&gt;../HappySoup/force-app&lt;/code&gt;. When you use &lt;code&gt;sfdx force:source:push&lt;/code&gt; the content gets pushed to your scratch org, so it is complete. When you use &lt;code&gt;sfdx force:source:pull&lt;/code&gt; changes you made are copied down to the default path, so the adjacent projects remain as is.&lt;/p&gt; 
+&lt;p&gt;When using &lt;code&gt;pull&lt;/code&gt; and &lt;code&gt;push&lt;/code&gt; from &lt;a href="https://developer.salesforce.com/tools/extension_vscode"&gt;VSCode&lt;/a&gt; it will use the default user name configured for SFDX. To ensure that you don't push to or pull from the wrong place, you need to create one scratch org each using &lt;code&gt;sfdx force:org:create --f config/project-scratch-def.json -a [ScratchOrgAlias]&lt;/code&gt; and then execute &lt;code&gt;sfdx force:config:set defaultusername=[ScratchOrgAlias]&lt;/code&gt;.&lt;/p&gt; 
+&lt;p&gt;The command will create a &lt;code&gt;.sfdx&lt;/code&gt; directory and config files inside in your project. Unless all developers checking out that repository use the same aliases (unlikely), you want to add &lt;code&gt;.sfdx&lt;/code&gt; to your &lt;a href="https://github.com/forcedotcom/sfdx-simple/blob/master/.gitignore"&gt;.gitignore&lt;/a&gt; file.&lt;/p&gt; 
+&lt;p&gt;Now you are all set to move files from the happy soup to future package directories. With the relative path in your &lt;code&gt;sfdx-project.json&lt;/code&gt; no packaging is required now and you still can get a fully functioning scratch org.&lt;/p&gt; 
+&lt;p&gt;One pro tip: instead of relying on individual scratch definition files, you might opt to use the one in the happy soup, so all your scratches have the same shape.&lt;/p&gt; 
+&lt;p&gt;Next stop: building the solution before you package. As usual YMMV.&lt;/p&gt;</description>
+	<link>2019/02/draining-the-happy-soup-part-3.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>fa70b9a0-363c-11e9-bcba-578350efc416</guid>
+	<pubDate>22 February 2019</pubDate>
+
+</item>
 <item>
 	<title>Draining the happy soup - Part 2</title>
 	<description>&lt;p&gt;We stormed ahead in &lt;a href="/blog/2019/02/draining-the-happy-soup-part-1.html"&gt;Part 1&lt;/a&gt; and downloaded all the meta data in SFDX format. Now it's time to stop for a moment and ask: what's the plan?&lt;/p&gt; 
@@ -223,33 +263,6 @@ uilicious-cli  run "ProjectName" "ScriptName" --dataFile local.json -u uilicious
 	<author>Stephan H. Wissel</author>
 	<guid>83ed9070-f206-11e8-a016-49d6fa66cb22</guid>
 	<pubDate>27 November 2018</pubDate>
-
-</item>
-<item>
-	<title>Cleaning up an APEX codebase with PMD</title>
-	<description>&lt;p&gt;You inherit a large code base, it is perfect, a work of beauty. Then you wake up to the ping of your &lt;a href="https://pmd.github.io"&gt;PMD&lt;/a&gt; run completion and find multiple thousands of rule violation (and you haven't even started to assert test assertions). Here is how to fix that.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#divide-and-conquer" id="divide-and-conquer"&gt;Divide and conquer&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;&lt;a href="https://www.investopedia.com/terms/b/boil-the-ocean.asp"&gt;Boiling the ocean&lt;/a&gt; and fix all issues in one go is hardly an option. So you need to strategize. PMD gives you a hint: every rule has a &lt;a href="https://pmd.github.io/pmd-6.9.0/pmd_userdocs_configuring_rules.html#message-and-priority-overriding"&gt;priority&lt;/a&gt; property, where you can specify how important this rule is. The higher the number, the less important the rule. You can run PMD using the &lt;code&gt;min -[somenumber]&lt;/code&gt; parameter which will ignore rules with a higher value.&lt;/p&gt; 
-&lt;p&gt;Next step is to decide what rules constitute your priority 1 and 2 buckets. I strongly recommend to make them mandatory fixes before the next deployment, so pick the rules carefully. The candidates I suggest are around performance and security:&lt;/p&gt; 
-&lt;h4&gt;&lt;a href="#priority-1" id="priority-1"&gt;Priority 1&lt;/a&gt;&lt;/h4&gt; 
-&lt;ul&gt; 
- &lt;li&gt;ApexXSSFromURLParam&lt;/li&gt; 
- &lt;li&gt;ApexSOQLInjection&lt;/li&gt; 
- &lt;li&gt;ApexOpenRedirect&lt;/li&gt; 
- &lt;li&gt;ApexInsecureEndpoint&lt;/li&gt; 
- &lt;li&gt;AvoidDmlStatementsInLoops&lt;/li&gt; 
- &lt;li&gt;AvoidSoqlInLoops&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h4&gt;&lt;a href="#priority-2" id="priority-2"&gt;Priority 2&lt;/a&gt;&lt;/h4&gt; 
-&lt;ul&gt; 
- &lt;li&gt;ApexCRUDViolation&lt;/li&gt; 
- &lt;li&gt;ApexSharingViolations&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;Thereafter you decide on priority 3 onwards. Strong candidates for level 3 are all the rules that ensure code is maintainable and avoid errors, like deep nesting or cyclomatic complexity (a fancy word for "messy code")&lt;/p&gt;</description>
-	<link>2018/11/cleaning-up-an-apex-codebase-with-pmd.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>a199cf60-eec5-11e8-91af-4f1de64b82e9</guid>
-	<pubDate>23 November 2018</pubDate>
 
 </item>
 
