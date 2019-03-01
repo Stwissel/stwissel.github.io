@@ -6,7 +6,29 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Sat, 23 Feb 2019 07:54:28 +0000</pubdate>
+	<pubdate>Fri, 01 Mar 2019 03:19:46 +0000</pubdate>
+<item>
+	<title>Global value providers in LWC</title>
+	<description>&lt;p&gt;Drinking the &lt;a href="https://www.webcomponents.org/specs"&gt;new CoolAid&lt;/a&gt; one has to come to terms with the old ways. We had a &lt;a href="/blog/2018/12/lwc-quick-overview.html"&gt;first glimpse&lt;/a&gt; before.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#same-but-different-reloaded" id="same-but-different-reloaded"&gt;Same but different, reloaded&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;When developing lightning components using the &lt;a href="https://github.com/forcedotcom/aura"&gt;Aura Framework&lt;/a&gt; you could use a series of global value providers that give you access to various data sets: &lt;code&gt;$ContentAsset&lt;/code&gt;, &lt;code&gt;$Labels&lt;/code&gt;, &lt;code&gt;$Locale&lt;/code&gt;, and &lt;code&gt;$Resource&lt;/code&gt;.&lt;/p&gt; 
+&lt;p&gt;While this convenient, it pollutes the global name space and it a very proprietary (albeit popular at its time) way to provide information. &lt;a href="https://developer.salesforce.com/docs/component-library/documentation/lwc"&gt;LWC&lt;/a&gt; fixes this in a very standard compliant way. This became possible thanks to the new capabilities in the JavaScript &lt;a href="http://www.ecma-international.org/ecma-262/6.0/"&gt;ES6&lt;/a&gt; standard.&lt;/p&gt; 
+&lt;p&gt;In LWC all information provided by Salesforce gets added using ES6 &lt;a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import"&gt;import&lt;/a&gt; statements from the &lt;code&gt;@salesforce&lt;/code&gt; name space. While that syntax is new to Salesforce developers, it is old news for the rest of JavaScript land. So here you go:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;&lt;code&gt;$ContentAsset&lt;/code&gt; -&amp;gt; &lt;code&gt;import assetName from @salesforce/contentAssetUrl/[AssetName]&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;$Labels&lt;/code&gt; -&amp;gt; &lt;code&gt;import labelName from @salesforce/label/[LabelName]&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;$Locale&lt;/code&gt; -&amp;gt; &lt;code&gt;import i18nproperty from @salesforce/i18n/[internationalizationProperty]&lt;/code&gt; (with various values)&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;$Resource&lt;/code&gt; -&amp;gt; &lt;code&gt;import resourceName from @salesforce/resourceUrl/[resourceName]&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;current User Id -&amp;gt; &lt;code&gt;import userId from @salesforce/User/Id&lt;/code&gt;&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;The &lt;code&gt;@salesforce&lt;/code&gt; name space provides access &lt;a href="http://component-library-dev.herokuapp.com/docs/component-library/documentation/lwc/lwc.reference_salesforce_modules"&gt;to additional data&lt;/a&gt;, like &lt;code&gt;apex&lt;/code&gt; and &lt;code&gt;schema&lt;/code&gt;.&lt;/p&gt; 
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2019/03/global-value-providers-in-lwc.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>d8655430-3bcb-11e9-b5fe-4b73381df565</guid>
+	<pubDate>01 March 2019</pubDate>
+
+</item>
 <item>
 	<title>From Excel to package.xml</title>
 	<description>&lt;p&gt;Cleaning up an org that has gone through several generations of ownership and objectives is fun. Some tooling helps&lt;/p&gt; 
@@ -239,21 +261,6 @@
 	<author>Stephan H. Wissel</author>
 	<guid>e5f504f0-ff40-11e8-8efb-9b9b4e567902</guid>
 	<pubDate>14 December 2018</pubDate>
-
-</item>
-<item>
-	<title>Salesforce login statistics aggregation</title>
-	<description>&lt;p&gt;A recent requirement from a customer was "I'd like to analyze logins by users in Excel", despite a &lt;a href="https://success.salesforce.com/answers?id=90630000000gsJjAAI"&gt;dashboard&lt;/a&gt; approach would be sufficient. With a few million records aggregating in Excel wasn't particularly appealing&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#download-the-log" id="download-the-log"&gt;Download the log&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Salesforce setup allows to download the log as &lt;code&gt;csv&lt;/code&gt; or &lt;code&gt;csv.gz&lt;/code&gt; file. In any case you should use the later. I learned the hard way: the &lt;a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding"&gt;chunked transfer encoding&lt;/a&gt; might leave you with less data be processed than you expect.&lt;/p&gt; 
-&lt;p&gt;The &lt;a href="https://docs.oracle.com/javase/7/docs/api/java/util/Scanner.html"&gt;Scanner&lt;/a&gt; simply stopped after a few thousand entries, while the &lt;a href="https://commons.apache.org/proper/commons-csv/"&gt;csv parser&lt;/a&gt; barfed with an error.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#processing" id="processing"&gt;Processing&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;After downloading and extracting the csv I used a small Java routine (yep, I'm that old) to aggregate logins per user, capturing the count and the first/last login date as well as the country of login (with the disclaimer caveats) and the eventual community.&lt;/p&gt; 
-&lt;p&gt;For reliably and robustly reading csv in Java, usually I would use a &lt;a href="https://commons.apache.org/proper/commons-csv/"&gt;robust library&lt;/a&gt;, however in this case having no dependencies and using the scanner did just nicely.&lt;/p&gt;</description>
-	<link>2018/12/salesforce-login-statistics-aggregation.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>3ef8b2e0-f848-11e8-a160-81c62127bae4</guid>
-	<pubDate>05 December 2018</pubDate>
 
 </item>
 
