@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Using render() in LWC - NotesSensei's Blog</title>
+<title>Navigation in Lightning communities - NotesSensei's Blog</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -12,14 +12,14 @@ ga('send', 'pageview');
 <meta http-equiv="X-UA-Compatible"  content="chrome=1" />
 <meta http-equiv="Content-Language" content="en" />
 <meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
-<meta property="og:title"     content="wissel.net - Using render() in LWC" />
+<meta property="og:title"     content="wissel.net - Navigation in Lightning communities" />
 <meta property="og:type"      content="blog" />
-<meta property="og:url"       content="https://wissel.net/blog/2019/03/using-render-in-lwc.html" />
+<meta property="og:url"       content="https://wissel.net/blog/2019/03/navigation-in-lightning-communities.html" />
 <meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
 <meta property="og:site_name" content="wissel.net" />
 <meta name="viewport"         content="width=device-width, initial-scale=1.0" />
 <meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
-<meta name="DC.Title"         content="NotesSensei's Weblog - Using render() in LWC" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Navigation in Lightning communities" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
 <meta name="Copyright"        content="2019,2018 Stephan H. Wissel - Creative commons licence" />
@@ -115,121 +115,84 @@ catch(e){window.attachEvent("onload", $buo_f)}
   <li class="pull-right">
     <span class="divider">|</span><a href="/blog/categories/salesforce.html">Salesforce</a>
   </li>
-  <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/webcomponents.html">WebComponents</a>
-  </li>
 </ul>
 
 		<div class="row-fluid">
 			<div class="span12">
 				
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2019/03/global-value-providers-in-lwc.html"><i class="icon-hand-left"></i>Global value providers in LWC</a>
+					<li><a href="/blog/2019/03/using-render-in-lwc.html"><i class="icon-hand-left"></i>Using render() in LWC</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2019/03/navigation-in-lightning-communities.html">Navigation in Lightning communities<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 				<article class="well well-raised">
-					<h1><small>Using render() in LWC</small></h1>
+					<h1><small>Navigation in Lightning communities</small></h1>
 					<hr />
-					<div><p>Whatever template system you use, you will end up with show/hide logic based on your data's values. In Aura components you have an expression language (reminded me of JSF), in LWC external (in your JavaScript class) boolean values or functions.</p> 
-<h3><a href="#keep-it-tidy" id="keep-it-tidy">Keep it tidy</a></h3> 
-<p>A common interaction pattern, similar to the Salesforce default behavior when you have more than one record type available, is to show a pre-selection (which record type), a main selection (required data) and (eventually) a post-selection (what's next?).</p> 
-<p>In a lightning web component you can handle that easily using <a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/create_conditional"><code>if:true|false</code></a> inside your html template.</p> 
-<p>But what if the sections are quite lengthy? Maintaining the HTML template can get messy. Enter the <code>render()</code> method. In LWC this method doesn't to the actual rendering, but determines what template to use to render the component.</p> 
-<p>There are a few simple rules:</p> 
+					<div><p>In a recent project we had to design navigation in a Lightning community. This is what we learned along the way.</p> 
+<h3><a href="#beyond-the-menu" id="beyond-the-menu">Beyond the menu</a></h3> 
+<p>When you pick a <a href="https://www.salesforce.com/products/community-cloud/features/templates/">Lightning Template</a> you will have a build in menu navigation. This works well if all menu items are meant for all users (no assignment of audience), but breaks down for more sophisticated or programmatic navigation.</p> 
+<p>On first view the <a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/lwc.use_navigate">Lightning navigation service</a> (available in Aura or LWC) seems like the answer. However on inspection of <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-navigation/documentation">lightning-navigation</a> you find as supported experiences only Lightning Experience and Salesforce mobile app, Communities are missing.</p> 
+<p>Digging a little deeper and checking the <a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/lwc.reference_page_reference_type">Page Reference Types</a>, you will find "limited support for Communities". I tested it out, here are my findings:</p> 
 <ul> 
- <li>You need to import your template into your JavaScript file</li> 
- <li>The call to <code>render()</code> must return the imported variable (see example below)</li> 
- <li>You can make the computation dependent on anything inside the class</li> 
- <li>You can't assemble the template in memory as a String, it will throw you an error</li> 
-</ul><h3><a href="#the-class-file" id="the-class-file">The class file</a></h3> 
-<pre class="brush: js">import { LightningElement, api } from 'lwc';
-import option1 from './someHTML.html';
-import option2 from './anotherHTML.html';
-
-export default class TestRender extends LightningElement {
-  @api whichone = 'first';
-
-  swapTemplate() {
-    this.whichone = this.whichone === 'first' ? 'second' : 'first';
-  }
-
-  render() {
-    return this.whichone === 'first' ? option1 : option2;
-  }
+ <li>The documentation is accurate. What is stated as working works, what is stated as not supported in communities does not work.</li> 
+ <li>The painfully missing piece is <code>standard__component</code> which would allow to navigate to a custom lightning component. It is the only component that supports <code>state</code> (more on that later)</li> 
+ <li>Navigate to <code>standard__objectPage</code> opens the list/page layout based on the user's profile. When you specify. <code>actionName="new"</code>, the standard object detail page will open. It will not use an eventual define new button overwrite</li> 
+ <li>Works as specified: <code>standard__recordPage</code>, <code>standard__webPage</code>, <code>standard__knowledgeArticlePage</code></li> 
+ <li>None of the navigation working in communities supports the <code>state</code> properties</li> 
+ <li>The most interesting navigation in communities is <code>standard__namedPage</code>. Beside the predefined default pages "Home","Account management", "Contact Support", "Error", "Top Articles" and "Topic Catalog", it supports "Custom Pages". In other words: any of the pages you have created in your community. So the missing <code>standard_component</code> can be mitigated by embedding it into a custom page. Keep in mind: the <code>pageName</code> property is the URL, not the name.</li> 
+</ul> 
+<h3><a href="#transferring-state" id="transferring-state">Transferring state</a></h3> 
+<p>As mentioned above, the <code>state</code> property gets ignored, dropped without an error when used with any of the working navigation items. The remedy for that is to use the session store. An Aura code snippet would looks like this:</p> 
+<pre class="brush: js">function(component, event, helper) {
+    event.preventDefault();
+    var navService = component.find("navService");
+    var pageReference = {
+        type: "standard__namedPage",
+        attributes: {
+            pageName: "some-page-name"
+        },
+        state: {
+            bingo: true,
+            answer: 42,
+            tango: "double"
+        }
+    };
+    sessionStorage.setItem('localTransfer', JSON.stringify(pageReference.state));
+    navService.navigate(pageReference);
 }
-
 </pre> 
-<h3><a href="#the-templates" id="the-templates">The templates</a></h3> 
-<p>someHTML.html</p> 
-<pre class="brush: xml">&lt;template&gt;
-  &lt;h1&gt;Hello World !&lt;/h1&gt;
-  &lt;lightning-button
-    accesskey="k"
-    onclick={swapTemplate}
-    variant="brand"
-    label="Click me!"
-    title="Template magic with John Doe"
-  &gt;&lt;/lightning-button&gt;
-&lt;/template&gt;
+<p>I left the state in the <code>pageReference</code> JSON object to show that it doesn't harm. The <code>navService</code> component is defined as <code>&lt;lightning:navigation aura:id="navService"/&gt;</code> in Aura. On the receiving end you use:</p> 
+<pre class="brush: js">var localStuff = sessionStorage.getItem('localTransfer');
+if (localStuff) {
+	var state = JSON.parse(localStuff);
+	// Do the needed stuff here
+}
 </pre> 
-<p>anotherHTML.html</p> 
-<pre class="brush: xml">&lt;template&gt;
-  &lt;h1&gt;The second wizzard&lt;/h1&gt;
-  &lt;lightning-button
-    accesskey="k"
-    onclick={swapTemplate}
-    variant="success"
-    label="Back"
-    title="Template template on the wall"
-  &gt;&lt;/lightning-button&gt;
-&lt;/template&gt;
-</pre> 
-<h3><a href="#js-metaxml" id="js-metaxml">js-meta.xml</a></h3> 
-<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata" fqn="TestRender"&gt;
-    &lt;apiVersion&gt;45.0&lt;/apiVersion&gt;
-    &lt;isExposed&gt;true&lt;/isExposed&gt;
-    &lt;masterLabel&gt;A test of render templates&lt;/masterLabel&gt;
-    &lt;description&gt;Sample of the Lightning power&lt;/description&gt;
-    &lt;targets&gt;
-        &lt;target&gt;lightning__RecordPage&lt;/target&gt;
-    &lt;/targets&gt;
-    &lt;targetConfigs&gt;
-        &lt;targetConfig targets="lightning__RecordPage"&gt;
-            &lt;property name="whichone" datasource="first,second" type="String" default="first" /&gt;
-        &lt;/targetConfig&gt;
-    &lt;/targetConfigs&gt;
-&lt;/LightningComponentBundle&gt;
-</pre> 
-<p>A simple way to keep your templates tidy.<br> I haven't done any speed tests, so YMMV</p></div>
+<p>As usual YMMV</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 04 March 2019
+Stephan H Wissel</a> on 12 March 2019
 <span class="divider">|</span>
-<a href="/blog/2019/03/using-render-in-lwc.html#comments">Comments (0)</a>
+<a href="/blog/2019/03/navigation-in-lightning-communities.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/webcomponents.html">WebComponents</a> 
+categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/03/using-render-in-lwc.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Using render() in LWC"></div>
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/03/navigation-in-lightning-communities.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Navigation in Lightning communities"></div>
 						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2019/03/using-render-in-lwc.html";
+							var permaLink = "https://wissel.net/blog/2019/03/navigation-in-lightning-communities.html";
 						</script>
 					</p>
 
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_4c94b700-3e93-11e9-a1a8-c550f64643d4" type="button">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_96ba06e0-447f-11e9-85c1-b77de648aedf" type="button">
 		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
 	            </button>
 	            </div>
-				<div id="commentform_4c94b700-3e93-11e9-a1a8-c550f64643d4"  class="collapse"></div>
+				<div id="commentform_96ba06e0-447f-11e9-85c1-b77de648aedf"  class="collapse"></div>
 				<div class="well well-raised">
 					<h4>Comments</h4>
 					<ol id="commentList">
@@ -239,12 +202,9 @@ categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/
 					</ol>
 				</div>
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2019/03/global-value-providers-in-lwc.html"><i class="icon-hand-left"></i>Global value providers in LWC</a>
+					<li><a href="/blog/2019/03/using-render-in-lwc.html"><i class="icon-hand-left"></i>Using render() in LWC</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2019/03/navigation-in-lightning-communities.html">Navigation in Lightning communities<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 			</div>
@@ -258,9 +218,6 @@ categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/
   </li>
   <li class="pull-right">
     <span class="divider">|</span><a href="/blog/categories/salesforce.html">Salesforce</a>
-  </li>
-  <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/webcomponents.html">WebComponents</a>
   </li>
 </ul>
 
@@ -324,7 +281,7 @@ categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/
 	</footer>
 
 	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/2019/03/using-render-in-lwc.html";
+		var permaLink = "https://wissel.net/blog/2019/03/navigation-in-lightning-communities.html";
 	</script>
 		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
 	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
@@ -359,7 +316,7 @@ categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/
 	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 	<script type="text/javascript">
 		var onloadCallback = function() {
-    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "4c94b700-3e93-11e9-a1a8-c550f64643d4");
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "96ba06e0-447f-11e9-85c1-b77de648aedf");
  		};
 	</script>
 

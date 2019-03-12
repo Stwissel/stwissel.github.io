@@ -125,6 +125,68 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				</div>
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2019/03/navigation-in-lightning-communities.html">Navigation in Lightning communities</a></small>
+					</h1>
+					<hr />
+					<div><p>In a recent project we had to design navigation in a Lightning community. This is what we learned along the way.</p> 
+<h3><a href="#beyond-the-menu" id="beyond-the-menu">Beyond the menu</a></h3> 
+<p>When you pick a <a href="https://www.salesforce.com/products/community-cloud/features/templates/">Lightning Template</a> you will have a build in menu navigation. This works well if all menu items are meant for all users (no assignment of audience), but breaks down for more sophisticated or programmatic navigation.</p> 
+<p>On first view the <a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/lwc.use_navigate">Lightning navigation service</a> (available in Aura or LWC) seems like the answer. However on inspection of <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-navigation/documentation">lightning-navigation</a> you find as supported experiences only Lightning Experience and Salesforce mobile app, Communities are missing.</p> 
+<p>Digging a little deeper and checking the <a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/lwc.reference_page_reference_type">Page Reference Types</a>, you will find "limited support for Communities". I tested it out, here are my findings:</p> 
+<ul> 
+ <li>The documentation is accurate. What is stated as working works, what is stated as not supported in communities does not work.</li> 
+ <li>The painfully missing piece is <code>standard__component</code> which would allow to navigate to a custom lightning component. It is the only component that supports <code>state</code> (more on that later)</li> 
+ <li>Navigate to <code>standard__objectPage</code> opens the list/page layout based on the user's profile. When you specify. <code>actionName="new"</code>, the standard object detail page will open. It will not use an eventual define new button overwrite</li> 
+ <li>Works as specified: <code>standard__recordPage</code>, <code>standard__webPage</code>, <code>standard__knowledgeArticlePage</code></li> 
+ <li>None of the navigation working in communities supports the <code>state</code> properties</li> 
+ <li>The most interesting navigation in communities is <code>standard__namedPage</code>. Beside the predefined default pages "Home","Account management", "Contact Support", "Error", "Top Articles" and "Topic Catalog", it supports "Custom Pages". In other words: any of the pages you have created in your community. So the missing <code>standard_component</code> can be mitigated by embedding it into a custom page. Keep in mind: the <code>pageName</code> property is the URL, not the name.</li> 
+</ul> 
+<h3><a href="#transferring-state" id="transferring-state">Transferring state</a></h3> 
+<p>As mentioned above, the <code>state</code> property gets ignored, dropped without an error when used with any of the working navigation items. The remedy for that is to use the session store. An Aura code snippet would looks like this:</p> 
+<pre class="brush: js">function(component, event, helper) {
+    event.preventDefault();
+    var navService = component.find("navService");
+    var pageReference = {
+        type: "standard__namedPage",
+        attributes: {
+            pageName: "some-page-name"
+        },
+        state: {
+            bingo: true,
+            answer: 42,
+            tango: "double"
+        }
+    };
+    sessionStorage.setItem('localTransfer', JSON.stringify(pageReference.state));
+    navService.navigate(pageReference);
+}
+</pre> 
+<p>I left the state in the <code>pageReference</code> JSON object to show that it doesn't harm. The <code>navService</code> component is defined as <code>&lt;lightning:navigation aura:id="navService"/&gt;</code> in Aura. On the receiving end you use:</p> 
+<pre class="brush: js">var localStuff = sessionStorage.getItem('localTransfer');
+if (localStuff) {
+	var state = JSON.parse(localStuff);
+	// Do the needed stuff here
+}
+</pre> 
+<p>As usual YMMV</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 12 March 2019
+<span class="divider">|</span>
+<a href="/blog/2019/03/navigation-in-lightning-communities.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/03/navigation-in-lightning-communities.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Navigation in Lightning communities"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/03/navigation-in-lightning-communities.html";
+						</script>
+					</p>
+
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2019/03/using-render-in-lwc.html">Using render() in LWC</a></small>
 					</h1>
 					<hr />

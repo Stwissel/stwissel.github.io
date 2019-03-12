@@ -6,7 +6,56 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Mon, 04 Mar 2019 16:02:17 +0000</pubdate>
+	<pubdate>Tue, 12 Mar 2019 05:13:36 +0000</pubdate>
+<item>
+	<title>Navigation in Lightning communities</title>
+	<description>&lt;p&gt;In a recent project we had to design navigation in a Lightning community. This is what we learned along the way.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#beyond-the-menu" id="beyond-the-menu"&gt;Beyond the menu&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;When you pick a &lt;a href="https://www.salesforce.com/products/community-cloud/features/templates/"&gt;Lightning Template&lt;/a&gt; you will have a build in menu navigation. This works well if all menu items are meant for all users (no assignment of audience), but breaks down for more sophisticated or programmatic navigation.&lt;/p&gt; 
+&lt;p&gt;On first view the &lt;a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/lwc.use_navigate"&gt;Lightning navigation service&lt;/a&gt; (available in Aura or LWC) seems like the answer. However on inspection of &lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-navigation/documentation"&gt;lightning-navigation&lt;/a&gt; you find as supported experiences only Lightning Experience and Salesforce mobile app, Communities are missing.&lt;/p&gt; 
+&lt;p&gt;Digging a little deeper and checking the &lt;a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/lwc.reference_page_reference_type"&gt;Page Reference Types&lt;/a&gt;, you will find "limited support for Communities". I tested it out, here are my findings:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;The documentation is accurate. What is stated as working works, what is stated as not supported in communities does not work.&lt;/li&gt; 
+ &lt;li&gt;The painfully missing piece is &lt;code&gt;standard__component&lt;/code&gt; which would allow to navigate to a custom lightning component. It is the only component that supports &lt;code&gt;state&lt;/code&gt; (more on that later)&lt;/li&gt; 
+ &lt;li&gt;Navigate to &lt;code&gt;standard__objectPage&lt;/code&gt; opens the list/page layout based on the user's profile. When you specify. &lt;code&gt;actionName="new"&lt;/code&gt;, the standard object detail page will open. It will not use an eventual define new button overwrite&lt;/li&gt; 
+ &lt;li&gt;Works as specified: &lt;code&gt;standard__recordPage&lt;/code&gt;, &lt;code&gt;standard__webPage&lt;/code&gt;, &lt;code&gt;standard__knowledgeArticlePage&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;None of the navigation working in communities supports the &lt;code&gt;state&lt;/code&gt; properties&lt;/li&gt; 
+ &lt;li&gt;The most interesting navigation in communities is &lt;code&gt;standard__namedPage&lt;/code&gt;. Beside the predefined default pages "Home","Account management", "Contact Support", "Error", "Top Articles" and "Topic Catalog", it supports "Custom Pages". In other words: any of the pages you have created in your community. So the missing &lt;code&gt;standard_component&lt;/code&gt; can be mitigated by embedding it into a custom page. Keep in mind: the &lt;code&gt;pageName&lt;/code&gt; property is the URL, not the name.&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#transferring-state" id="transferring-state"&gt;Transferring state&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;As mentioned above, the &lt;code&gt;state&lt;/code&gt; property gets ignored, dropped without an error when used with any of the working navigation items. The remedy for that is to use the session store. An Aura code snippet would looks like this:&lt;/p&gt; 
+&lt;pre class="brush: js"&gt;function(component, event, helper) {
+    event.preventDefault();
+    var navService = component.find("navService");
+    var pageReference = {
+        type: "standard__namedPage",
+        attributes: {
+            pageName: "some-page-name"
+        },
+        state: {
+            bingo: true,
+            answer: 42,
+            tango: "double"
+        }
+    };
+    sessionStorage.setItem('localTransfer', JSON.stringify(pageReference.state));
+    navService.navigate(pageReference);
+}
+&lt;/pre&gt; 
+&lt;p&gt;I left the state in the &lt;code&gt;pageReference&lt;/code&gt; JSON object to show that it doesn't harm. The &lt;code&gt;navService&lt;/code&gt; component is defined as &lt;code&gt;&amp;lt;lightning:navigation aura:id="navService"/&amp;gt;&lt;/code&gt; in Aura. On the receiving end you use:&lt;/p&gt; 
+&lt;pre class="brush: js"&gt;var localStuff = sessionStorage.getItem('localTransfer');
+if (localStuff) {
+	var state = JSON.parse(localStuff);
+	// Do the needed stuff here
+}
+&lt;/pre&gt; 
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2019/03/navigation-in-lightning-communities.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>96ba06e0-447f-11e9-85c1-b77de648aedf</guid>
+	<pubDate>12 March 2019</pubDate>
+
+</item>
 <item>
 	<title>Using render() in LWC</title>
 	<description>&lt;p&gt;Whatever template system you use, you will end up with show/hide logic based on your data's values. In Aura components you have an expression language (reminded me of JSF), in LWC external (in your JavaScript class) boolean values or functions.&lt;/p&gt; 
@@ -232,27 +281,6 @@
 	<author>Stephan H. Wissel</author>
 	<guid>5f197330-0e40-11e9-aa45-01ee17350376</guid>
 	<pubDate>02 January 2019</pubDate>
-
-</item>
-<item>
-	<title>Pattern in your Apex Controller</title>
-	<description>&lt;p&gt;A (software) &lt;a href="https://en.wikipedia.org/wiki/Software_design_pattern"&gt;design pattern&lt;/a&gt; is a general, reusable solution to a commonly occurring problem withing a given context. &lt;a href="https://en.wikipedia.org/wiki/Christopher_Alexander"&gt;Christoper Alexander&lt;/a&gt; inspired the &lt;a href="https://en.wikipedia.org/wiki/Design_Patterns"&gt;Gang of four&lt;/a&gt; to apply pattern to software and enumerate 23 classic software pattern.&lt;/p&gt; 
-&lt;p&gt;This article discusses how to use some of them in the context of &lt;a href="https://en.wikipedia.org/wiki/Salesforce.com#Apex"&gt;Apex&lt;/a&gt; controllers.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#the-context-same-same-but-different" id="the-context-same-same-but-different"&gt;The context: Same same, but different&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;You are creating an application to support construction on force.com that will serve multiple countries. Part of the requirements is to compute a risk score for any given project. While &lt;a href="https://www.iso.org/news/2012/12/Ref1685.html"&gt;ISO standards&lt;/a&gt; form the foundation of the assessment, each jurisdiction has some specialties that alter the logic eventually.&lt;/p&gt; 
-&lt;p&gt;This is just one of the requirements, you have many more that follow the &lt;code&gt;pattern&lt;/code&gt; &lt;a href="https://www.samesamebutdifferent.site/2017/08/same-same-but-different-origin/"&gt;Same Same - But different&lt;/a&gt;.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#patterns-used" id="patterns-used"&gt;Patterns used&lt;/a&gt;&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/Interface-based_programming"&gt;Interface based programming&lt;/a&gt;&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://msdn.microsoft.com/en-us/library/aa480019.aspx"&gt;Metadata driven application design&lt;/a&gt;&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/Facade_pattern"&gt;Facade pattern&lt;/a&gt;&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/Factory_method_pattern"&gt;Factory pattern&lt;/a&gt;&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;Besides those, you want to know &lt;a href="https://trailhead.salesforce.com/en/search?keywords=%22Apex%20Enterprise%20Patterns%22"&gt;Apex Enterprise Patterns&lt;/a&gt;. Go Trailhead and learn.&lt;/p&gt;</description>
-	<link>2018/12/pattern-in-your-apex-controller.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>01f2e0e0-0b04-11e9-8f1f-178be3bffe51</guid>
-	<pubDate>29 December 2018</pubDate>
 
 </item>
 
