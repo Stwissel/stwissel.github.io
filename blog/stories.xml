@@ -6,7 +6,65 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Thu, 14 Mar 2019 11:03:43 +0000</pubdate>
+	<pubdate>Sat, 16 Mar 2019 05:17:37 +0000</pubdate>
+<item>
+	<title>Finding Strings in recursively zipped files</title>
+	<description>&lt;p&gt;I had an itch to scratch. After using &lt;a href="https://appexchange.salesforce.com/appxListingDetail?listingId=a0N30000003HSXEEA4"&gt;Field Trip&lt;/a&gt; (which I like a lot) to determine unused fields, the team managing the external &lt;a href="https://www.informatica.com/"&gt;Informatica&lt;/a&gt; integration claimed they would need weeks to ensure none of the fields are used in any of their (hundreds) of pipelines.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#zip-inception" id="zip-inception"&gt;ZIP inception&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;My first reaction (OK, the second, first one isn't PC) was: Let's go after the source code and just use an &lt;a href="https://www.sublimetext.com/"&gt;editor of choice&lt;/a&gt; to do a find in files. Turns out: not so fast. The source export offered by the team was a zip file with an elaborate directory structure containing, tada, zip files. So each of the pipes would need multiple zip operations.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#itch-defined" id="itch-defined"&gt;Itch defined&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;I needed a tool that would start in a directory with a bunch of zip files, unpack them all. Check for zip files in the unpacked result, unzip these and repeat. Once done, take a list of strings and search for occurrences of those and generate a report which shows the files containing these strings&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#itch-scratched" id="itch-scratched"&gt;Itch scratched&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;I created &lt;a href="https://github.com/Stwissel/findStrings"&gt;findstring&lt;/a&gt;, a command line tool that takes a directory as starting point unzips what can be unzipped (optional) and searches for the occurrence of strings provided in a text file.&lt;/p&gt; 
+&lt;p&gt;Initially I contemplated to render the output as XML, so the final report could be designed in whatever fashion using XSLT. However following &lt;a href="https://en.wikipedia.org/wiki/KISS_principle"&gt;KISS&lt;/a&gt;, I ended up using &lt;a href="https://en.wikipedia.org/wiki/Markdown"&gt;Markdown&lt;/a&gt;. I might add the XML option later on.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#recursion" id="recursion"&gt;Recursion&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;The key piece of the tool is recursion (until you stack overflow ;-) ). Reading a directory and dive into directories found. I could have avoided that using &lt;a href="https://github.com/google/guava"&gt;Guava&lt;/a&gt; and its &lt;a href="https://google.github.io/guava/releases/snapshot/api/docs/com/google/common/io/Files.html#fileTraverser--"&gt;fileTraverser&lt;/a&gt;, but I like some Inception style coding. The key piece is this:&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;    private boolean expandSources(final File sourceDir) throws IOException {
+        boolean result = false;
+        final File[] allFiles = sourceDir.listFiles();
+
+        for (final File f : allFiles) {
+            if (f.isDirectory()) {
+                result = result || this.expandSources(f);
+
+            } else if (f.getName().endsWith(".zip")) {
+                final String newDirName = f.getAbsolutePath().replace(".zip", "");
+                final File newTarget = new File(newDirName);
+
+                // Need to scan the new directory too
+                if (this.expandFile(f, newTarget)) {
+                    result = result || this.expandSources(newTarget);
+                }
+            }
+        }
+        return result;
+
+    }
+&lt;/pre&gt; 
+&lt;p&gt;The function will return true as long as there was a zip file to be unzipped. The string finding operation (case insensitive) follows the same approach&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#use-cases" id="use-cases"&gt;Use cases&lt;/a&gt;&lt;/h3&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Find field usage in ZIP files. Works with a package downloaded from the meta data api or what Informatica exports&lt;/li&gt; 
+ &lt;li&gt;Check a source directory (doesn't need to contain zips) for keywords like &lt;code&gt;TODO&lt;/code&gt;, &lt;code&gt;FIXME&lt;/code&gt;, &lt;code&gt;XXX&lt;/code&gt;&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;The command line syntax is very simple:&lt;/p&gt; 
+&lt;p&gt;&lt;code&gt;java -jar findString.jar -d directory -s strings [-o output]&lt;/code&gt;&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;-d,?dir &amp;lt;arg&amp;gt; directory with all zip files&lt;/li&gt; 
+ &lt;li&gt;-s,?stringfile &amp;lt;arg&amp;gt; Filename with Strings to search, one per line&lt;/li&gt; 
+ &lt;li&gt;-o,?output &amp;lt;arg&amp;gt; Output file name for report in MD format&lt;/li&gt; 
+ &lt;li&gt;-nz,?nz Rerun find operation on a ready unzipped structure - good for alternate finds&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#limits" id="limits"&gt;Limits&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;In its current form the utility will check for strings in any file short of zip. Zip gets unpacked and the result checked. When your directory contains binary files (e.g. images) it will still look for the string occurrence inside. File extension filters might be a future enhancement (&lt;a href="https://github.com/Stwissel/findStrings/issues"&gt;share your opinion&lt;/a&gt;).&lt;/p&gt; 
+&lt;p&gt;Files are read into memory. So if your directory contains huge files, you will blow your heap. Source code files hardly pose an issue, so the approach worked for me. Alternatively a &lt;a href="https://docs.oracle.com/javase/7/docs/api/java/util/Scanner.html"&gt;scanner&lt;/a&gt; could be used, should the need arise.&lt;/p&gt; 
+&lt;p&gt;Go &lt;a href="https://github.com/Stwissel/findStrings/releases"&gt;give it a spin&lt;/a&gt; and keep in mind: YMMV&lt;/p&gt;</description>
+	<link>2019/03/finding-strings-in-recursively-zipped-files.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>478555c0-47a4-11e9-872b-771845fe5f6a</guid>
+	<pubDate>16 March 2019</pubDate>
+
+</item>
 <item>
 	<title>Testing Aura and LWC in a single Test</title>
 	<description>&lt;p&gt;You drank the &lt;a href="https://www.salesforce.com/company/news-press/press-releases/2018/12/181213-t/"&gt;CoolAid&lt;/a&gt; and noticed that the Aura framework &lt;a href="https://github.com/forcedotcom/aura"&gt;has been archived&lt;/a&gt;. You are hell bend to migrate your components.&lt;/p&gt; 
@@ -32,7 +90,7 @@ function test(btn){
   I.see("Nicely done")
 }  
 &lt;/pre&gt; 
-&lt;p&gt;Watch the result for yourself:&lt;/p&gt; 
+&lt;p&gt;Watch &lt;a href="https://snippet.uilicious.com/embed/test/private/6YxZnZYNnzWQ9JTP5Z1mub?step=1&amp;amp;autoplay=1"&gt;the result&lt;/a&gt; for yourself:&lt;/p&gt; 
 &lt;iframe id="inlineFrameExample" title="Inline Frame Example" width="800" height="600" src="https://snippet.uilicious.com/embed/test/private/6YxZnZYNnzWQ9JTP5Z1mub?step=1&amp;amp;autoplay=1"&gt; &lt;/iframe&gt; 
 &lt;p&gt;What I really like: UI-licious builds the collaboration feature around testing, so stakeholders can see any time what's going on. Give them a try!&lt;/p&gt;</description>
 	<link>2019/03/testing-aura-and-lwc-in-a-single-test.html</link>
@@ -258,33 +316,6 @@ if (localStuff) {
 	<author>Stephan H. Wissel</author>
 	<guid>c6b680f0-305a-11e9-bc80-c5b58f9cd89a</guid>
 	<pubDate>14 February 2019</pubDate>
-
-</item>
-<item>
-	<title>Reporting your validation formulas</title>
-	<description>&lt;p&gt;Validation formula are a convenient way to ensure your data integrity. With great powers? comes the risk of alienating users by preventing them entering data.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#why-look-at-them" id="why-look-at-them"&gt;Why look at them?&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;You can easily look at all formula in the Object Manager, but it is tedious to look at every formula one by one. You might ask yourself:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;Do all my formula exclude the integration profile?&lt;/li&gt; 
- &lt;li&gt;Are context (e.g. the country) specific formulas set correctly?&lt;/li&gt; 
- &lt;li&gt;Do validation rules follow the naming conventions?&lt;/li&gt; 
- &lt;li&gt;Are messages helpful or intimidating?&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#extract-and-report" id="extract-and-report"&gt;Extract and report&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;You already use &lt;a href="https://github.com/kgalant/PackageBuilder"&gt;PackageBuilder&lt;/a&gt; to extract objects (and other stuff) as &lt;a href="http://www.xml.org/"&gt;XML&lt;/a&gt;, so it is just a small step: slap all &lt;code&gt;*.object&lt;/code&gt; files into one big file and run an &lt;a href="https://en.wikipedia.org/wiki/XSLT"&gt;XSLT&lt;/a&gt; report over it.&lt;/p&gt; 
-&lt;p&gt;Not so fast! If you concatenate XML files using OS copy you end up with three problems:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;You don't have an XML root element. Like the &lt;a href="https://en.wikipedia.org/wiki/Highlander_(film)"&gt;Highlander&lt;/a&gt; - there can be only one. You could sandwich the files in opening and closing tags, but then you have the next problem&lt;/li&gt; 
- &lt;li&gt;XML files start &lt;code&gt;&amp;lt;?xml version="1.0" encoding="UTF-8"?&amp;gt;&lt;/code&gt; and copying that file will sprinkle that statement multiple times into your result. The XSLT processor will barf&lt;/li&gt; 
- &lt;li&gt;The result will get very big and any report will take a long time or even run out of memory&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#a-bit-of-tooling" id="a-bit-of-tooling"&gt;A bit of tooling&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;I solved, for my needs, using a small &lt;a href="https://gist.github.com/Stwissel/aeff1c523983ad7a89b33a7d2d67de43"&gt;Java class&lt;/a&gt; and &lt;a href="https://gist.github.com/Stwissel/cc2289fc319f468deacee7ba7649a4e6"&gt;one XSLT stylesheet&lt;/a&gt;. Java because: I'm familiar with it and NodeJS still sucks with XML. XSLT, because: I'm familiar with it (heard that before?) and the styling of the output is independent from the processing step. I presume you know how to initiate an &lt;a href="https://sourceforge.net/projects/saxon/files/Saxon-HE/9.9/"&gt;XSLT 2.0 transformation&lt;/a&gt;.&lt;/p&gt;</description>
-	<link>2019/02/reporting-your-validation-formulas.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>83a24c00-2af0-11e9-aa3f-a1b759d59560</guid>
-	<pubDate>07 February 2019</pubDate>
 
 </item>
 
