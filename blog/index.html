@@ -110,6 +110,90 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2019/03/mapping-recordids-to-object-names-offline-edition.html">Mapping recordIds to Object Names - Offline edition</a></small></h1>
+					<hr />
+					<div><p>Lightning in Communities is "Same Same but different". When you want to build neutral components, you need to know what object you are dealing with</p> 
+<h3><a href="#objectapiname-objectname-and-recordid" id="objectapiname-objectname-and-recordid">ObjectApiName, ObjectName and recordId</a></h3> 
+<p>In Lightning Aura components one can use <a href="https://developer.salesforce.com/docs/component-library/bundle/force:hasSObjectName/documentation"><code>force:hasSObjectName</code></a> to get access to an attribute <code>sObjectName</code>. In Lightning Web components one uses <a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/lwc.use_object_context"><code>@api objectApiName</code></a>. Except neither of those work in <strong>Communities</strong>.</p> 
+<p>The workaround is to look at the <code>recordId</code> and use <a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_methods_system_sobject_describe.htm"><code>DescribeSObjectResult.getKeyPrefix</code></a> to map a record to the object name. There's a <a href="http://www.fishofprey.com/2011/09/obscure-salesforce-object-key-prefixes.html">comprehensive list</a> by <a href="https://twitter.com/FishOfPrey">David</a> and my <a href="https://gist.github.com/Stwissel/890559482a4ff4ec61c80597dd47f6bd">version as JSON object</a>.</p> 
+<p>However, depending on your org, that list might vary. So I created a small component that lists out the objects in your current org. Enjoy:</p> 
+<h4><a href="#objectidspycls" id="objectidspycls">ObjectIdSpy.cls</a></h4> 
+<pre class="brush: java">public without sharing class ObjectIdSpy {  
+    @AuraEnabled(cacheable=true)
+    public static Map&lt;String,String&gt; getObjectIdMappings(){
+        Map&lt;String,String&gt; result = new Map&lt;String,String&gt;();
+        Map&lt;String, Schema.SObjectType&gt; gd = Schema.getGlobalDescribe();
+        for(String key : gd.keySet()) {
+            Schema.SObjectType ot = gd.get(key);
+            String curPrefix = ot.getDescribe().getKeyPrefix();
+            String curName = ot.getDescribe().getName();
+            // Fair warning: will omit objects that share the prefix
+            result.put(curPrefix, curName);
+        }
+      return result;
+    } 
+}
+
+</pre> 
+<h4><a href="#objectidspyhtml" id="objectidspyhtml">objectIdSpy.html</a></h4> 
+<pre class="brush: xml">&lt;template&gt;
+    &lt;lightning-card title="Object Spy"&gt;
+        &lt;pre&gt;
+{idList}
+        &lt;/pre&gt;
+    &lt;/lightning-card&gt;
+&lt;/template&gt;
+</pre> 
+<h4><a href="#objectidspyjs" id="objectidspyjs">objectIdSpy.js</a></h4> 
+<pre class="brush: js">import { LightningElement, track, wire } from 'lwc';
+import idSpy from '@salesforce/apex/ObjectIdSpy.getObjectIdMappings';
+
+export default class ObjectIdSpy extends LightningElement {
+  @track idList;
+
+  @wire(idSpy)
+  spiedUpon({ error, data }) {
+    if (data) {
+      this.idList = JSON.stringify(data, null, 2);
+    } else if (error) {
+      this.idList = JSON.stringify(error, null, 2);
+    }
+  }
+}
+
+</pre> 
+<h4><a href="#objectidspyjs-metaxml" id="objectidspyjs-metaxml">objectIdSpy.js-meta.xml</a></h4> 
+<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata" fqn="ObjectIdSpy"&gt;
+    &lt;apiVersion&gt;45.0&lt;/apiVersion&gt;
+    &lt;isExposed&gt;true&lt;/isExposed&gt;
+    &lt;masterLabel&gt;Object Id Spy&lt;/masterLabel&gt;
+    &lt;description&gt;Generates a JSON object of Id and object names&lt;/description&gt;
+    &lt;targets&gt;
+        &lt;target&gt;lightning__RecordPage&lt;/target&gt;
+        &lt;target&gt;lightning__AppPage&lt;/target&gt;
+        &lt;target&gt;lightning__HomePage&lt;/target&gt;
+    &lt;/targets&gt;
+&lt;/LightningComponentBundle&gt;
+</pre> 
+<p>As usual YMMV!</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 20 March 2019
+<span class="divider">|</span>
+<a href="/blog/2019/03/mapping-recordids-to-object-names-offline-edition.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/singapore.html">Singapore</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/03/mapping-recordids-to-object-names-offline-edition.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Mapping recordIds to Object Names - Offline edition"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/03/mapping-recordids-to-object-names-offline-edition.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2019/03/finding-strings-in-recursively-zipped-files.html">Finding Strings in recursively zipped files</a></small></h1>
 					<hr />
 					<div><p>I had an itch to scratch. After using <a href="https://appexchange.salesforce.com/appxListingDetail?listingId=a0N30000003HSXEEA4">Field Trip</a> (which I like a lot) to determine unused fields, the team managing the external <a href="https://www.informatica.com/">Informatica</a> integration claimed they would need weeks to ensure none of the fields are used in any of their (hundreds) of pipelines.</p> 
@@ -502,35 +586,6 @@ categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href=
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/02/the-efficiency-paradox.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="The Efficiency Paradox"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2019/02/the-efficiency-paradox.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2019/02/draining-the-happy-soup-part-1.html">Draining the happy soup - Part 1</a></small></h1>
-					<hr />
-					<div><p>Unleashing <a href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_dev2gp.htm">unlocked packages</a> promises to reduce risk, improve agility and drive home the full benefits of <a href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_intro.htm">SFDX</a></p> 
-<h3><a href="#some-planning-required" id="some-planning-required">Some planning required</a></h3> 
-<p>I'm following the approach "Throw and see what sticks to the wall". The rough idea: retrieve all meta data, convert it into SFDX format, distribute it over a number of packages and put it back together.</p> 
-<p>To make it more fun I picked an heavily <del>abused</del> customized and used org with more than 20,000 meta data artifacts (and a few surprises). Follow along.</p> 
-<h3><a href="#learning" id="learning">Learning</a></h3> 
-<p>Trailhead has <a href="https://trailhead.salesforce.com/en/content/learn/modules/unlocked-packages-for-customers">a module</a> on unlocked packages on its trail <a href="https://trailhead.salesforce.com/content/learn/trails/sfdx_get_startedhttps://trailhead.salesforce.com/content/learn/trails/sfdx_get_started">Get Started with Salesforce DX</a>.</p> 
-<p>While you are there, check out the (at time of writing the 15) modules on <a href="https://trailhead.salesforce.com/modules#tag=tag-alm">Application Lifecycle Management</a>.</p> 
-<h3><a href="#downloading" id="downloading">Downloading</a></h3> 
-<p>The <a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_metadata.htm">limits</a> for retrieving packages (10,000 elements, 39MB zip or about 400 MB raw) posed an issue for my XL org. So I used, growing fond of it, <a href="https://github.com/kgalant/PackageBuilder">PackageBuilder</a> to download all sources. It automatically creates multiple package.xml files when you exceed the limits.</p></div>
-					<hr />
- <a href="/blog/2019/02/draining-the-happy-soup-part-1.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 14 February 2019
-<span class="divider">|</span>
-<a href="/blog/2019/02/draining-the-happy-soup-part-1.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/sfdx.html">SFDX</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/02/draining-the-happy-soup-part-1.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Draining the happy soup - Part 1"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2019/02/draining-the-happy-soup-part-1.html";
 						</script>
 					</p>
 </p>
