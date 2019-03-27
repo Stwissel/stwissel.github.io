@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Mapping recordIds to Object Names - Offline edition - NotesSensei's Blog</title>
+<title>Re-Usable Dynamic Custom Lookup LWC edition - NotesSensei's Blog</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -12,14 +12,14 @@ ga('send', 'pageview');
 <meta http-equiv="X-UA-Compatible"  content="chrome=1" />
 <meta http-equiv="Content-Language" content="en" />
 <meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
-<meta property="og:title"     content="wissel.net - Mapping recordIds to Object Names - Offline edition" />
+<meta property="og:title"     content="wissel.net - Re-Usable Dynamic Custom Lookup LWC edition" />
 <meta property="og:type"      content="blog" />
-<meta property="og:url"       content="https://wissel.net/blog/2019/03/mapping-recordids-to-object-names-offline-edition.html" />
+<meta property="og:url"       content="https://wissel.net/blog/2019/03/re-usable-dynamic-custom-lookup-lwc-edition.html" />
 <meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
 <meta property="og:site_name" content="wissel.net" />
 <meta name="viewport"         content="width=device-width, initial-scale=1.0" />
 <meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
-<meta name="DC.Title"         content="NotesSensei's Weblog - Mapping recordIds to Object Names - Offline edition" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Re-Usable Dynamic Custom Lookup LWC edition" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
 <meta name="Copyright"        content="2019,2018 Stephan H. Wissel - Creative commons licence" />
@@ -110,10 +110,13 @@ catch(e){window.attachEvent("onload", $buo_f)}
   <li><a href="/blog/2019/">2019</a> <span class="divider">/</span></li>
   <li><a href="/blog/2019/03/">March</a></li>
   <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/lightning.html">Lightning</a>
+  </li>
+  <li class="pull-right">
     <span class="divider">|</span><a href="/blog/categories/salesforce.html">Salesforce</a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/singapore.html">Singapore</a>
+    <span class="divider">|</span><a href="/blog/categories/software.html">Software</a>
   </li>
 </ul>
 
@@ -121,105 +124,226 @@ catch(e){window.attachEvent("onload", $buo_f)}
 			<div class="span12">
 				
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2019/03/finding-strings-in-recursively-zipped-files.html"><i class="icon-hand-left"></i>Finding Strings in recursively zipped files</a>
+					<li><a href="/blog/2019/03/mapping-recordids-to-object-names-offline-edition.html"><i class="icon-hand-left"></i>Mapping recordIds to Object Names - Offline edition</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2019/03/re-usable-dynamic-custom-lookup-lwc-edition.html">Re-Usable Dynamic Custom Lookup LWC edition<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 				<article class="well well-raised">
-					<h1><small>Mapping recordIds to Object Names - Offline edition</small></h1>
+					<h1><small>Re-Usable Dynamic Custom Lookup LWC edition</small></h1>
 					<hr />
-					<div><p>Lightning in Communities is "Same Same but different". When you want to build neutral components, you need to know what object you are dealing with</p> 
-<h3><a href="#objectapiname-objectname-and-recordid" id="objectapiname-objectname-and-recordid">ObjectApiName, ObjectName and recordId</a></h3> 
-<p>In Lightning Aura components one can use <a href="https://developer.salesforce.com/docs/component-library/bundle/force:hasSObjectName/documentation"><code>force:hasSObjectName</code></a> to get access to an attribute <code>sObjectName</code>. In Lightning Web components one uses <a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/lwc.use_object_context"><code>@api objectApiName</code></a>. Except neither of those work in <strong>Communities</strong>.</p> 
-<p>The workaround is to look at the <code>recordId</code> and use <a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_methods_system_sobject_describe.htm"><code>DescribeSObjectResult.getKeyPrefix</code></a> to map a record to the object name. There's a <a href="http://www.fishofprey.com/2011/09/obscure-salesforce-object-key-prefixes.html">comprehensive list</a> by <a href="https://twitter.com/FishOfPrey">David</a> and my <a href="https://gist.github.com/Stwissel/890559482a4ff4ec61c80597dd47f6bd">version as JSON object</a>.</p> 
-<p>However, depending on your org, that list might vary. So I created a small component that lists out the objects in your current org. Enjoy:</p> 
-<h4><a href="#objectidspycls" id="objectidspycls">ObjectIdSpy.cls</a></h4> 
-<pre class="brush: java">public without sharing class ObjectIdSpy {  
-    @AuraEnabled(cacheable=true)
-    public static Map&lt;String,String&gt; getObjectIdMappings(){
-        Map&lt;String,String&gt; result = new Map&lt;String,String&gt;();
-        Map&lt;String, Schema.SObjectType&gt; gd = Schema.getGlobalDescribe();
-        for(String key : gd.keySet()) {
-            Schema.SObjectType ot = gd.get(key);
-            String curPrefix = ot.getDescribe().getKeyPrefix();
-            String curName = ot.getDescribe().getName();
-            // Fair warning: will omit objects that share the prefix
-            result.put(curPrefix, curName);
-        }
-      return result;
-    } 
-}
-
-</pre> 
-<h4><a href="#objectidspyhtml" id="objectidspyhtml">objectIdSpy.html</a></h4> 
+					<div><p>Over at <a href="http://sfdcmonkey.com/2017/07/17/re-usable-custom-lookup/">sfdcmonkey</a> there's a nice AURA component that allows for dynamic lookup of a given object. Super nice and useful. I wondered what it would take to be rebuild in <a href="https://developer.salesforce.com/docs/component-library/documentation/lwc">LWC</a></p> 
+<h3><a href="#same-same-but-different" id="same-same-but-different">Same, Same but different</a></h3> 
+<p>I want to achieve the same functionality, but would accept subtle differences. This is what I got:</p> 
+<ul> 
+ <li>The original component shows the object icon on the left. My version shows the search symbol that comes out of the box with <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-input/example">lightning-input</a></li> 
+ <li>I use 3 components instead of two. Input fields that trigger network calls are fairly common and it makes sense to <a href="https://www.maximintegrated.com/en/glossary/definitions.mvp/term/debounce/gpk/82">debounce</a> the input. So I created <code>c-ux-debounced-input</code> that signals entered data only after a period of 300ms</li> 
+ <li>The component dispatches an event when a result has been selected or cleared, so it can be used inside other components</li> 
+ <li>For now: it can be directly put on a lightning page in page builder and configured there. Useful for demos and test</li> 
+ <li>When you clear the selected object, the result list opens up again, so no second network call is made until you change the input value</li> 
+</ul><h3><a href="#the-code" id="the-code">The code</a></h3> 
+<p>The template is slightly lighter</p> 
 <pre class="brush: xml">&lt;template&gt;
-    &lt;lightning-card title="Object Spy"&gt;
-        &lt;pre&gt;
-{idList}
-        &lt;/pre&gt;
-    &lt;/lightning-card&gt;
+    &lt;div class={resultClass} data-select="single"&gt;
+        &lt;div class="slds-form-element__control"&gt;
+            &lt;!-- sequence completed record selected --&gt;
+            &lt;div if:true={selectedRecord}&gt;
+                &lt;label&gt;{label}&lt;/label&gt;
+                &lt;div class="slds-pill-container"&gt;
+                    &lt;lightning-pill
+                        class="pillSize"
+                        label={selectedRecord.Name}
+                        onremove={handlePillRemove}&gt;
+                        &lt;lightning-icon
+                            icon-name={iconName}
+                            variant="plain"
+                            alternative-text={selectedRecord.Name}&gt;
+                        &lt;/lightning-icon&gt;
+                    &lt;/lightning-pill&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+            &lt;!-- Input for search term --&gt;
+            &lt;c-ux-debounced-input
+                label={label}
+                onchange={handleSearchTerm}
+                if:false={selectedRecord}
+                value={lastSearchValue}&gt;
+            &lt;/c-ux-debounced-input&gt;
+        &lt;/div&gt;
+        &lt;ul
+            style="min-height:40px;margin-top:0px !important"
+            class="slds-listbox slds-listbox_vertical slds-dropdown slds-dropdown_fluid slds-lookup__menu slds"
+            role="listbox"&gt;
+            &lt;lightning-spinner
+                variant="brand"
+                size="small"
+                if:true={showSpinner}
+            &gt;&lt;/lightning-spinner&gt;
+            &lt;center&gt;{message}&lt;/center&gt;
+            &lt;template if:true={results} for:each={results} for:item="singleRec"&gt;
+                &lt;c-ux-quick-lookup-result
+                    icon-name={iconName}
+                    record={singleRec}
+                    onselection={handleRecordSelect}
+                    key={singleRec.Id}
+                &gt;&lt;/c-ux-quick-lookup-result&gt;
+            &lt;/template&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
 &lt;/template&gt;
+
 </pre> 
-<h4><a href="#objectidspyjs" id="objectidspyjs">objectIdSpy.js</a></h4> 
-<pre class="brush: js">import { LightningElement, track, wire } from 'lwc';
-import idSpy from '@salesforce/apex/ObjectIdSpy.getObjectIdMappings';
-
-export default class ObjectIdSpy extends LightningElement {
-  @track idList;
-
-  @wire(idSpy)
-  spiedUpon({ error, data }) {
-    if (data) {
-      this.idList = JSON.stringify(data, null, 2);
-    } else if (error) {
-      this.idList = JSON.stringify(error, null, 2);
-    }
-  }
+<p>The CSS is more or less the same</p> 
+<pre class="brush: css">.pillSize {
+    width: 100%;
 }
+</pre> 
+<p>The JavaScript is proper <a href="https://es6.io/">ES6</a>. It already contains some code for my "Next Stop"</p> 
+<pre class="brush: js">import { LightningElement, api, track } from 'lwc';
+import fetchLookUpValues from '@salesforce/apex/CustomLookUpController.fetchLookUpValues';
+import fetchExtendedLookUpValues from '@salesforce/apex/CustomLookUpController.fetchExtendedLookUpValues';
 
+export default class UxQuickLookup extends LightningElement {
+    @api objectApiName;
+    @api iconName = 'standard:account';
+    @api label = 'Lookup';
+    @api fields = null;
+
+    @track resultClass;
+    @track selectedRecord = null;
+    @track results = null;
+    @track message = null;
+    @track showSpinner = false;
+    @track lastSearchValue;
+
+    constructor() {
+        super();
+        this.switchResult(false);
+    }
+
+    handleSearchTerm(event) {
+        let searchValue = event.detail;
+        if (searchValue) {
+            this.switchResult(true);
+            this.message = 'searching...';
+            this.showSpinner = true;
+            let searchParams = {
+                searchKeyWord: searchValue,
+                objectName: this.objectApiName
+            };
+            if (this.fields) {
+                this.addFieldsToParam(searchParams);
+                fetchExtendedLookUpValues(searchParams)
+                    .then(result =&gt; this.setResult(result))
+                    .catch(error =&gt; this.handleError(error));
+            } else {
+                fetchLookUpValues(searchParams)
+                    .then(result =&gt; this.setResult(result))
+                    .catch(error =&gt; this.handleError(error));
+            }
+        } else {
+            this.switchResult(false);
+            this.message = null;
+            this.showSpinner = false;
+            this.results = null;
+        }
+        this.lastSearchValue = searchValue;
+    }
+
+    /* Ensure we always have Name and Id in the query */
+    addFieldsToParam(searchParam) {
+        let allFields = this.fields.split(',');
+        allFields.push('Id');
+        allFields.push('Name');
+        let cleanFields = this.dedupeArray(allFields).join(',');
+        searchParam.fieldsToQuery = cleanFields;
+    }
+
+    dedupeArray(incoming) {
+        var uniqEs6 = arrArg =&gt; {
+            return arrArg.filter((elem, pos, arr) =&gt; {
+                return arr.indexOf(elem) === pos;
+            });
+        };
+        return uniqEs6(incoming);
+    }
+
+    setResult(newValues) {
+        this.showSpinner = false;
+        if (newValues &amp;&amp; newValues.length &gt; 0) {
+            this.message = null;
+            this.results = newValues;
+        } else {
+            this.message = 'no results found';
+        }
+    }
+
+    /* Shows and hides the result area */
+    switchResult(on) {
+        this.resultClass = on
+            ? 'slds-form-element slds-lookup slds-is-open'
+            : 'slds-form-element slds-lookup slds-is-close';
+    }
+
+    handlePillRemove() {
+        this.selectedRecord = null;
+        let payload = {
+            detail: {
+                canceled: true,
+                recordId: null
+            }
+        };
+        let selected = new CustomEvent('selection', payload);
+        this.dispatchEvent(selected);
+        // Restore last results
+        this.switchResult(this.lastSearchValue &amp;&amp; this.results);
+    }
+
+    handleError(error) {
+        this.showSpinner = false;
+        this.message = "Sorry didn't work!";
+        let errorDispatch = new CustomEvent('failure', { detail: error });
+        this.dispatchEvent(errorDispatch);
+    }
+
+    handleRecordSelect(event) {
+        let record = event.detail;
+        this.selectedRecord = record;
+        let selectionDispatch = new CustomEvent('recordselected', {
+            detail: record
+        });
+        this.dispatchEvent(selectionDispatch);
+        this.switchResult(false);
+    }
+}
 </pre> 
-<h4><a href="#objectidspyjs-metaxml" id="objectidspyjs-metaxml">objectIdSpy.js-meta.xml</a></h4> 
-<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata" fqn="ObjectIdSpy"&gt;
-    &lt;apiVersion&gt;45.0&lt;/apiVersion&gt;
-    &lt;isExposed&gt;true&lt;/isExposed&gt;
-    &lt;masterLabel&gt;Object Id Spy&lt;/masterLabel&gt;
-    &lt;description&gt;Generates a JSON object of Id and object names&lt;/description&gt;
-    &lt;targets&gt;
-        &lt;target&gt;lightning__RecordPage&lt;/target&gt;
-        &lt;target&gt;lightning__AppPage&lt;/target&gt;
-        &lt;target&gt;lightning__HomePage&lt;/target&gt;
-    &lt;/targets&gt;
-&lt;/LightningComponentBundle&gt;
-</pre> 
-<p>As usual YMMV!</p></div>
+<p>What you don't see here are <code>c-ux-quick-lookup-result</code> and <code>c-ux-debounced-input</code>. To check those, head over to the <a href="https://github.com/Stwissel/lwcaura">repository</a>, have a look, take a clone and deploy it with <code>sfdx force:source:deploy -p experiments/experiment5</code> into a sandbox. Add the component to a lightning page and have a look.</p> 
+<h3><a href="#next-stop" id="next-stop">Next Stop</a></h3> 
+<p>When selecting object, the name might not be enough to pick the right value. So I'm looking into a way to optional display more field values. That's an interesting challenge for visualization.</p> 
+<p>As usual: YMMV</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 20 March 2019
+Stephan H Wissel</a> on 27 March 2019
 <span class="divider">|</span>
-<a href="/blog/2019/03/mapping-recordids-to-object-names-offline-edition.html#comments">Comments (0)</a>
+<a href="/blog/2019/03/re-usable-dynamic-custom-lookup-lwc-edition.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/singapore.html">Singapore</a> 
+categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/software.html">Software</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/03/mapping-recordids-to-object-names-offline-edition.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Mapping recordIds to Object Names - Offline edition"></div>
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/03/re-usable-dynamic-custom-lookup-lwc-edition.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Re-Usable Dynamic Custom Lookup LWC edition"></div>
 						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2019/03/mapping-recordids-to-object-names-offline-edition.html";
+							var permaLink = "https://wissel.net/blog/2019/03/re-usable-dynamic-custom-lookup-lwc-edition.html";
 						</script>
 					</p>
 
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_741dae00-4abc-11e9-93f7-9d01095f3788" type="button">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_8ff284d0-5042-11e9-b56a-cd55bbbbd610" type="button">
 		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
 	            </button>
 	            </div>
-				<div id="commentform_741dae00-4abc-11e9-93f7-9d01095f3788"  class="collapse"></div>
+				<div id="commentform_8ff284d0-5042-11e9-b56a-cd55bbbbd610"  class="collapse"></div>
 				<div class="well well-raised">
 					<h4>Comments</h4>
 					<ol id="commentList">
@@ -229,12 +353,9 @@ categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href=
 					</ol>
 				</div>
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2019/03/finding-strings-in-recursively-zipped-files.html"><i class="icon-hand-left"></i>Finding Strings in recursively zipped files</a>
+					<li><a href="/blog/2019/03/mapping-recordids-to-object-names-offline-edition.html"><i class="icon-hand-left"></i>Mapping recordIds to Object Names - Offline edition</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2019/03/re-usable-dynamic-custom-lookup-lwc-edition.html">Re-Usable Dynamic Custom Lookup LWC edition<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 			</div>
@@ -244,10 +365,13 @@ categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href=
   <li><a href="/blog/2019/">2019</a> <span class="divider">/</span></li>
   <li><a href="/blog/2019/03/">March</a></li>
   <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/lightning.html">Lightning</a>
+  </li>
+  <li class="pull-right">
     <span class="divider">|</span><a href="/blog/categories/salesforce.html">Salesforce</a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/singapore.html">Singapore</a>
+    <span class="divider">|</span><a href="/blog/categories/software.html">Software</a>
   </li>
 </ul>
 
@@ -311,7 +435,7 @@ categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href=
 	</footer>
 
 	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/2019/03/mapping-recordids-to-object-names-offline-edition.html";
+		var permaLink = "https://wissel.net/blog/2019/03/re-usable-dynamic-custom-lookup-lwc-edition.html";
 	</script>
 		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
 	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
@@ -346,7 +470,7 @@ categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href=
 	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 	<script type="text/javascript">
 		var onloadCallback = function() {
-    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "741dae00-4abc-11e9-93f7-9d01095f3788");
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "8ff284d0-5042-11e9-b56a-cd55bbbbd610");
  		};
 	</script>
 
