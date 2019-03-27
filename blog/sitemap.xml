@@ -6,7 +6,349 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Mon, 18 Feb 2019 08:22:05 +0000</pubdate>
+	<pubdate>Wed, 27 Mar 2019 05:24:31 +0000</pubdate>
+<item>
+	<title>Re-Usable Dynamic Custom Lookup LWC edition</title>
+	<description>&lt;p&gt;Over at &lt;a href="http://sfdcmonkey.com/2017/07/17/re-usable-custom-lookup/"&gt;sfdcmonkey&lt;/a&gt; there's a nice AURA component that allows for dynamic lookup of a given object. Super nice and useful. I wondered what it would take to be rebuild in &lt;a href="https://developer.salesforce.com/docs/component-library/documentation/lwc"&gt;LWC&lt;/a&gt;&lt;/p&gt; 
+&lt;p&gt;&lt;img src="/blog/images/2019/DynamicLookup.png" alt="Dynamic Lookup"&gt;&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#same-same-but-different" id="same-same-but-different"&gt;Same, Same but different&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;I want to achieve the same functionality, but would accept subtle differences. This is what I got:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;The original component shows the object icon on the left. My version shows the search symbol that comes out of the box with &lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-input/example"&gt;lightning-input&lt;/a&gt;&lt;/li&gt; 
+ &lt;li&gt;I use 3 components instead of two. Input fields that trigger network calls are fairly common and it makes sense to &lt;a href="https://www.maximintegrated.com/en/glossary/definitions.mvp/term/debounce/gpk/82"&gt;debounce&lt;/a&gt; the input. So I created &lt;code&gt;c-ux-debounced-input&lt;/code&gt; that signals entered data only after a period of 300ms&lt;/li&gt; 
+ &lt;li&gt;The component dispatches an event when a result has been selected or cleared, so it can be used inside other components&lt;/li&gt; 
+ &lt;li&gt;For now: it can be directly put on a lightning page in page builder and configured there. Useful for demos and test&lt;/li&gt; 
+ &lt;li&gt;When you clear the selected object, the result list opens up again, so no second network call is made until you change the input value&lt;/li&gt; 
+&lt;/ul&gt;</description>
+	<link>2019/03/re-usable-dynamic-custom-lookup-lwc-edition.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>8ff284d0-5042-11e9-b56a-cd55bbbbd610</guid>
+	<pubDate>27 March 2019</pubDate>
+
+</item>
+<item>
+	<title>Mapping recordIds to Object Names - Offline edition</title>
+	<description>&lt;p&gt;Lightning in Communities is "Same Same but different". When you want to build neutral components, you need to know what object you are dealing with&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#objectapiname-objectname-and-recordid" id="objectapiname-objectname-and-recordid"&gt;ObjectApiName, ObjectName and recordId&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;In Lightning Aura components one can use &lt;a href="https://developer.salesforce.com/docs/component-library/bundle/force:hasSObjectName/documentation"&gt;&lt;code&gt;force:hasSObjectName&lt;/code&gt;&lt;/a&gt; to get access to an attribute &lt;code&gt;sObjectName&lt;/code&gt;. In Lightning Web components one uses &lt;a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/lwc.use_object_context"&gt;&lt;code&gt;@api objectApiName&lt;/code&gt;&lt;/a&gt;. Except neither of those work in &lt;strong&gt;Communities&lt;/strong&gt;.&lt;/p&gt; 
+&lt;p&gt;The workaround is to look at the &lt;code&gt;recordId&lt;/code&gt; and use &lt;a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_methods_system_sobject_describe.htm"&gt;&lt;code&gt;DescribeSObjectResult.getKeyPrefix&lt;/code&gt;&lt;/a&gt; to map a record to the object name. There's a &lt;a href="http://www.fishofprey.com/2011/09/obscure-salesforce-object-key-prefixes.html"&gt;comprehensive list&lt;/a&gt; by &lt;a href="https://twitter.com/FishOfPrey"&gt;David&lt;/a&gt; and my &lt;a href="https://gist.github.com/Stwissel/890559482a4ff4ec61c80597dd47f6bd"&gt;version as JSON object&lt;/a&gt;.&lt;/p&gt; 
+&lt;p&gt;However, depending on your org, that list might vary. So I created a small component that lists out the objects in your current org. Enjoy:&lt;/p&gt; 
+&lt;h4&gt;&lt;a href="#objectidspycls" id="objectidspycls"&gt;ObjectIdSpy.cls&lt;/a&gt;&lt;/h4&gt; 
+&lt;pre class="brush: java"&gt;public without sharing class ObjectIdSpy {  
+    @AuraEnabled(cacheable=true)
+    public static Map&amp;lt;String,String&amp;gt; getObjectIdMappings(){
+        Map&amp;lt;String,String&amp;gt; result = new Map&amp;lt;String,String&amp;gt;();
+        Map&amp;lt;String, Schema.SObjectType&amp;gt; gd = Schema.getGlobalDescribe();
+        for(String key : gd.keySet()) {
+            Schema.SObjectType ot = gd.get(key);
+            String curPrefix = ot.getDescribe().getKeyPrefix();
+            String curName = ot.getDescribe().getName();
+            // Fair warning: will omit objects that share the prefix
+            result.put(curPrefix, curName);
+        }
+      return result;
+    } 
+}
+
+&lt;/pre&gt; 
+&lt;h4&gt;&lt;a href="#objectidspyhtml" id="objectidspyhtml"&gt;objectIdSpy.html&lt;/a&gt;&lt;/h4&gt; 
+&lt;pre class="brush: xml"&gt;&amp;lt;template&amp;gt;
+    &amp;lt;lightning-card title="Object Spy"&amp;gt;
+        &amp;lt;pre&amp;gt;
+{idList}
+        &amp;lt;/pre&amp;gt;
+    &amp;lt;/lightning-card&amp;gt;
+&amp;lt;/template&amp;gt;
+&lt;/pre&gt; 
+&lt;h4&gt;&lt;a href="#objectidspyjs" id="objectidspyjs"&gt;objectIdSpy.js&lt;/a&gt;&lt;/h4&gt; 
+&lt;pre class="brush: js"&gt;import { LightningElement, track, wire } from 'lwc';
+import idSpy from '@salesforce/apex/ObjectIdSpy.getObjectIdMappings';
+
+export default class ObjectIdSpy extends LightningElement {
+  @track idList;
+
+  @wire(idSpy)
+  spiedUpon({ error, data }) {
+    if (data) {
+      this.idList = JSON.stringify(data, null, 2);
+    } else if (error) {
+      this.idList = JSON.stringify(error, null, 2);
+    }
+  }
+}
+
+&lt;/pre&gt; 
+&lt;h4&gt;&lt;a href="#objectidspyjs-metaxml" id="objectidspyjs-metaxml"&gt;objectIdSpy.js-meta.xml&lt;/a&gt;&lt;/h4&gt; 
+&lt;pre class="brush: xml"&gt;&amp;lt;?xml version="1.0" encoding="UTF-8"?&amp;gt;
+&amp;lt;LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata" fqn="ObjectIdSpy"&amp;gt;
+    &amp;lt;apiVersion&amp;gt;45.0&amp;lt;/apiVersion&amp;gt;
+    &amp;lt;isExposed&amp;gt;true&amp;lt;/isExposed&amp;gt;
+    &amp;lt;masterLabel&amp;gt;Object Id Spy&amp;lt;/masterLabel&amp;gt;
+    &amp;lt;description&amp;gt;Generates a JSON object of Id and object names&amp;lt;/description&amp;gt;
+    &amp;lt;targets&amp;gt;
+        &amp;lt;target&amp;gt;lightning__RecordPage&amp;lt;/target&amp;gt;
+        &amp;lt;target&amp;gt;lightning__AppPage&amp;lt;/target&amp;gt;
+        &amp;lt;target&amp;gt;lightning__HomePage&amp;lt;/target&amp;gt;
+    &amp;lt;/targets&amp;gt;
+&amp;lt;/LightningComponentBundle&amp;gt;
+&lt;/pre&gt; 
+&lt;p&gt;As usual YMMV!&lt;/p&gt;</description>
+	<link>2019/03/mapping-recordids-to-object-names-offline-edition.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>741dae00-4abc-11e9-93f7-9d01095f3788</guid>
+	<pubDate>20 March 2019</pubDate>
+
+</item>
+<item>
+	<title>Finding Strings in recursively zipped files</title>
+	<description>&lt;p&gt;I had an itch to scratch. After using &lt;a href="https://appexchange.salesforce.com/appxListingDetail?listingId=a0N30000003HSXEEA4"&gt;Field Trip&lt;/a&gt; (which I like a lot) to determine unused fields, the team managing the external &lt;a href="https://www.informatica.com/"&gt;Informatica&lt;/a&gt; integration claimed they would need weeks to ensure none of the fields are used in any of their (hundreds) of pipelines.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#zip-inception" id="zip-inception"&gt;ZIP inception&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;My first reaction (OK, the second, first one isn't PC) was: Let's go after the source code and just use an &lt;a href="https://www.sublimetext.com/"&gt;editor of choice&lt;/a&gt; to do a find in files. Turns out: not so fast. The source export offered by the team was a zip file with an elaborate directory structure containing, tada, zip files. So each of the pipes would need multiple zip operations.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#itch-defined" id="itch-defined"&gt;Itch defined&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;I needed a tool that would start in a directory with a bunch of zip files, unpack them all. Check for zip files in the unpacked result, unzip these and repeat. Once done, take a list of strings and search for occurrences of those and generate a report which shows the files containing these strings&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#itch-scratched" id="itch-scratched"&gt;Itch scratched&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;I created &lt;a href="https://github.com/Stwissel/findStrings"&gt;findstring&lt;/a&gt;, a command line tool that takes a directory as starting point unzips what can be unzipped (optional) and searches for the occurrence of strings provided in a text file.&lt;/p&gt; 
+&lt;p&gt;Initially I contemplated to render the output as XML, so the final report could be designed in whatever fashion using XSLT. However following &lt;a href="https://en.wikipedia.org/wiki/KISS_principle"&gt;KISS&lt;/a&gt;, I ended up using &lt;a href="https://en.wikipedia.org/wiki/Markdown"&gt;Markdown&lt;/a&gt;. I might add the XML option later on.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#recursion" id="recursion"&gt;Recursion&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;The key piece of the tool is recursion (until you stack overflow ;-) ). Reading a directory and dive into directories found. I could have avoided that using &lt;a href="https://github.com/google/guava"&gt;Guava&lt;/a&gt; and its &lt;a href="https://google.github.io/guava/releases/snapshot/api/docs/com/google/common/io/Files.html#fileTraverser--"&gt;fileTraverser&lt;/a&gt;, but I like some Inception style coding. The key piece is this:&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;    private boolean expandSources(final File sourceDir) throws IOException {
+        boolean result = false;
+        final File[] allFiles = sourceDir.listFiles();
+
+        for (final File f : allFiles) {
+            if (f.isDirectory()) {
+                result = result || this.expandSources(f);
+
+            } else if (f.getName().endsWith(".zip")) {
+                final String newDirName = f.getAbsolutePath().replace(".zip", "");
+                final File newTarget = new File(newDirName);
+
+                // Need to scan the new directory too
+                if (this.expandFile(f, newTarget)) {
+                    result = result || this.expandSources(newTarget);
+                }
+            }
+        }
+        return result;
+
+    }
+&lt;/pre&gt; 
+&lt;p&gt;The function will return true as long as there was a zip file to be unzipped. The string finding operation (case insensitive) follows the same approach&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#use-cases" id="use-cases"&gt;Use cases&lt;/a&gt;&lt;/h3&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Find field usage in ZIP files. Works with a package downloaded from the meta data api or what Informatica exports&lt;/li&gt; 
+ &lt;li&gt;Check a source directory (doesn't need to contain zips) for keywords like &lt;code&gt;TODO&lt;/code&gt;, &lt;code&gt;FIXME&lt;/code&gt;, &lt;code&gt;XXX&lt;/code&gt;&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;The command line syntax is very simple:&lt;/p&gt; 
+&lt;p&gt;&lt;code&gt;java -jar findString.jar -d directory -s strings [-o output]&lt;/code&gt;&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;-d,?dir &amp;lt;arg&amp;gt; directory with all zip files&lt;/li&gt; 
+ &lt;li&gt;-s,?stringfile &amp;lt;arg&amp;gt; Filename with Strings to search, one per line&lt;/li&gt; 
+ &lt;li&gt;-o,?output &amp;lt;arg&amp;gt; Output file name for report in MD format&lt;/li&gt; 
+ &lt;li&gt;-nz,?nz Rerun find operation on a ready unzipped structure - good for alternate finds&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#limits" id="limits"&gt;Limits&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;In its current form the utility will check for strings in any file short of zip. Zip gets unpacked and the result checked. When your directory contains binary files (e.g. images) it will still look for the string occurrence inside. File extension filters might be a future enhancement (&lt;a href="https://github.com/Stwissel/findStrings/issues"&gt;share your opinion&lt;/a&gt;).&lt;/p&gt; 
+&lt;p&gt;Files are read into memory. So if your directory contains huge files, you will blow your heap. Source code files hardly pose an issue, so the approach worked for me. Alternatively a &lt;a href="https://docs.oracle.com/javase/7/docs/api/java/util/Scanner.html"&gt;scanner&lt;/a&gt; could be used, should the need arise.&lt;/p&gt; 
+&lt;p&gt;Go &lt;a href="https://github.com/Stwissel/findStrings/releases"&gt;give it a spin&lt;/a&gt; and keep in mind: YMMV&lt;/p&gt;</description>
+	<link>2019/03/finding-strings-in-recursively-zipped-files.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>478555c0-47a4-11e9-872b-771845fe5f6a</guid>
+	<pubDate>16 March 2019</pubDate>
+
+</item>
+<item>
+	<title>Testing Aura and LWC in a single Test</title>
+	<description>&lt;p&gt;You drank the &lt;a href="https://www.salesforce.com/company/news-press/press-releases/2018/12/181213-t/"&gt;CoolAid&lt;/a&gt; and noticed that the Aura framework &lt;a href="https://github.com/forcedotcom/aura"&gt;has been archived&lt;/a&gt;. You are hell bend to migrate your components.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#regression-test-required" id="regression-test-required"&gt;Regression Test required&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Aura components were testable using the &lt;a href="https://github.com/forcedotcom/LightningTestingService"&gt;Lightning Testing Service&lt;/a&gt;, while Lightning Web Components get tested using &lt;a href="https://github.com/salesforce/lwc-jest"&gt;lwc-jest&lt;/a&gt;. These tests are not compatible.&lt;/p&gt; 
+&lt;p&gt;&lt;a href="https://uilicious.com/"&gt;UI-licious&lt;/a&gt; to the rescue. UI-licious is a testing framework for UI tests. They use a simple JavaScript syntax to provide testing and a rather clever addressing of elements. Other than &lt;a href="https://www.seleniumhq.org/"&gt;Selenium&lt;/a&gt;, they don't rely on CSS selectors or XPath expressions (You still can use those).&lt;/p&gt; 
+&lt;p&gt;&lt;strong&gt;To be very clear:&lt;/strong&gt; A UI level testing library is &lt;strong&gt;not&lt;/strong&gt; a replacement for proper unit testing. UI-licious has two use cases here: top of the pyramid UI testing and spotting UI level regressions. To learn more about the "testing pyramid", check out &lt;a href="https://martinfowler.com/articles/practical-test-pyramid.html"&gt;Martin Fowler's essay&lt;/a&gt;.&lt;/p&gt; 
+&lt;p&gt;To give it a try I &lt;a href="https://github.com/Stwissel/lwcaura"&gt;created 2 components&lt;/a&gt; with identical functionality: one in Aura, one as LWC. The components show a dialog where you can pick values for radio buttons. &lt;a href="https://www.linkedin.com/in/shi-ling-tai-16679147/"&gt;Shi Ling&lt;/a&gt;, the CEO provided the test script (the login subroutine omitted for brevity):&lt;/p&gt; 
+&lt;pre class="brush: js"&gt;I.wait(30) // wait for salesforce to be ready
+I.click("App Launcher")
+I.click("Clown around")
+
+I.see("Having 2 components of the same type")
+
+test("The aura version")
+test("The LWC version")
+
+function test(btn){
+  I.click(btn)
+  I.see("Pick an Opportunity and Color")
+  I.click("Product Opportunity")
+  I.click("Red")
+  I.click("Select")
+  I.see("Nicely done")
+}  
+&lt;/pre&gt; 
+&lt;p&gt;Watch &lt;a href="https://snippet.uilicious.com/embed/test/private/6YxZnZYNnzWQ9JTP5Z1mub?step=1&amp;amp;autoplay=1"&gt;the result&lt;/a&gt; for yourself:&lt;/p&gt; 
+&lt;iframe id="inlineFrameExample" title="Inline Frame Example" width="800" height="600" src="https://snippet.uilicious.com/embed/test/private/6YxZnZYNnzWQ9JTP5Z1mub?step=1&amp;amp;autoplay=1"&gt; &lt;/iframe&gt; 
+&lt;p&gt;What I really like: UI-licious builds the collaboration feature around testing, so stakeholders can see any time what's going on. Give them a try!&lt;/p&gt;</description>
+	<link>2019/03/testing-aura-and-lwc-in-a-single-test.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>ac4ec4e0-4642-11e9-89b6-6f109a38b8f6</guid>
+	<pubDate>14 March 2019</pubDate>
+
+</item>
+<item>
+	<title>Navigation in Lightning communities</title>
+	<description>&lt;p&gt;In a recent project we had to design navigation in a Lightning community. This is what we learned along the way.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#beyond-the-menu" id="beyond-the-menu"&gt;Beyond the menu&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;When you pick a &lt;a href="https://www.salesforce.com/products/community-cloud/features/templates/"&gt;Lightning Template&lt;/a&gt; you will have a build in menu navigation. This works well if all menu items are meant for all users (no assignment of audience), but breaks down for more sophisticated or programmatic navigation.&lt;/p&gt; 
+&lt;p&gt;On first view the &lt;a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/lwc.use_navigate"&gt;Lightning navigation service&lt;/a&gt; (available in Aura or LWC) seems like the answer. However on inspection of &lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-navigation/documentation"&gt;lightning-navigation&lt;/a&gt; you find as supported experiences only Lightning Experience and Salesforce mobile app, Communities are missing.&lt;/p&gt; 
+&lt;p&gt;Digging a little deeper and checking the &lt;a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/lwc.reference_page_reference_type"&gt;Page Reference Types&lt;/a&gt;, you will find "limited support for Communities". I tested it out, here are my findings:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;The documentation is accurate. What is stated as working works, what is stated as not supported in communities does not work.&lt;/li&gt; 
+ &lt;li&gt;The painfully missing piece is &lt;code&gt;standard__component&lt;/code&gt; which would allow to navigate to a custom lightning component. It is the only component that supports &lt;code&gt;state&lt;/code&gt; (more on that later)&lt;/li&gt; 
+ &lt;li&gt;Navigate to &lt;code&gt;standard__objectPage&lt;/code&gt; opens the list/page layout based on the user's profile. When you specify. &lt;code&gt;actionName="new"&lt;/code&gt;, the standard object detail page will open. It will not use an eventual define new button overwrite&lt;/li&gt; 
+ &lt;li&gt;Works as specified: &lt;code&gt;standard__recordPage&lt;/code&gt;, &lt;code&gt;standard__knowledgeArticlePage&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;Doesn't work: &lt;code&gt;standard__webPage&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;None of the navigation working in communities supports the &lt;code&gt;state&lt;/code&gt; properties&lt;/li&gt; 
+ &lt;li&gt;The most interesting navigation in communities is &lt;code&gt;standard__namedPage&lt;/code&gt;. Beside the predefined default pages "Home","Account management", "Contact Support", "Error", "Top Articles" and "Topic Catalog", it supports "Custom Pages". In other words: any of the pages you have created in your community. So the missing &lt;code&gt;standard_component&lt;/code&gt; can be mitigated by embedding it into a custom page. Keep in mind: the &lt;code&gt;pageName&lt;/code&gt; property is the URL, not the name.&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#transferring-state" id="transferring-state"&gt;Transferring state&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;As mentioned above, the &lt;code&gt;state&lt;/code&gt; property gets ignored, dropped without an error when used with any of the working navigation items. The remedy for that is to use the session store. An Aura code snippet would looks like this:&lt;/p&gt; 
+&lt;pre class="brush: js"&gt;function(component, event, helper) {
+    event.preventDefault();
+    var navService = component.find("navService");
+    var pageReference = {
+        type: "standard__namedPage",
+        attributes: {
+            pageName: "some-page-name"
+        },
+        state: {
+            bingo: true,
+            answer: 42,
+            tango: "double"
+        }
+    };
+    sessionStorage.setItem('localTransfer', JSON.stringify(pageReference.state));
+    navService.navigate(pageReference);
+}
+&lt;/pre&gt; 
+&lt;p&gt;I left the state in the &lt;code&gt;pageReference&lt;/code&gt; JSON object to show that it doesn't harm. The &lt;code&gt;navService&lt;/code&gt; component is defined as &lt;code&gt;&amp;lt;lightning:navigation aura:id="navService"/&amp;gt;&lt;/code&gt; in Aura. On the receiving end you use:&lt;/p&gt; 
+&lt;pre class="brush: js"&gt;var localStuff = sessionStorage.getItem('localTransfer');
+if (localStuff) {
+	var state = JSON.parse(localStuff);
+	// Do the needed stuff here
+}
+&lt;/pre&gt; 
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2019/03/navigation-in-lightning-communities.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>96ba06e0-447f-11e9-85c1-b77de648aedf</guid>
+	<pubDate>12 March 2019</pubDate>
+
+</item>
+<item>
+	<title>Using render() in LWC</title>
+	<description>&lt;p&gt;Whatever template system you use, you will end up with show/hide logic based on your data's values. In Aura components you have an expression language (reminded me of JSF), in LWC external (in your JavaScript class) boolean values or functions.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#keep-it-tidy" id="keep-it-tidy"&gt;Keep it tidy&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;A common interaction pattern, similar to the Salesforce default behavior when you have more than one record type available, is to show a pre-selection (which record type), a main selection (required data) and (eventually) a post-selection (what's next?).&lt;/p&gt; 
+&lt;p&gt;In a lightning web component you can handle that easily using &lt;a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/create_conditional"&gt;&lt;code&gt;if:true|false&lt;/code&gt;&lt;/a&gt; inside your html template.&lt;/p&gt; 
+&lt;p&gt;But what if the sections are quite lengthy? Maintaining the HTML template can get messy. Enter the &lt;code&gt;render()&lt;/code&gt; method. In LWC this method doesn't to the actual rendering, but determines what template to use to render the component.&lt;/p&gt; 
+&lt;p&gt;There are a few simple rules:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;You need to import your template into your JavaScript file&lt;/li&gt; 
+ &lt;li&gt;The call to &lt;code&gt;render()&lt;/code&gt; must return the imported variable (see example below)&lt;/li&gt; 
+ &lt;li&gt;You can make the computation dependent on anything inside the class&lt;/li&gt; 
+ &lt;li&gt;You can't assemble the template in memory as a String, it will throw you an error&lt;/li&gt; 
+&lt;/ul&gt;</description>
+	<link>2019/03/using-render-in-lwc.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>4c94b700-3e93-11e9-a1a8-c550f64643d4</guid>
+	<pubDate>04 March 2019</pubDate>
+
+</item>
+<item>
+	<title>Global value providers in LWC</title>
+	<description>&lt;p&gt;Drinking the &lt;a href="https://www.webcomponents.org/specs"&gt;new CoolAid&lt;/a&gt; one has to come to terms with the old ways. We had a &lt;a href="/blog/2018/12/lwc-quick-overview.html"&gt;first glimpse&lt;/a&gt; before.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#same-but-different-reloaded" id="same-but-different-reloaded"&gt;Same but different, reloaded&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;When developing lightning components using the &lt;a href="https://github.com/forcedotcom/aura"&gt;Aura Framework&lt;/a&gt; you could use a series of global value providers that give you access to various data sets: &lt;code&gt;$ContentAsset&lt;/code&gt;, &lt;code&gt;$Labels&lt;/code&gt;, &lt;code&gt;$Locale&lt;/code&gt;, and &lt;code&gt;$Resource&lt;/code&gt;.&lt;/p&gt; 
+&lt;p&gt;While this convenient, it pollutes the global name space and it a very proprietary (albeit popular at its time) way to provide information. &lt;a href="https://developer.salesforce.com/docs/component-library/documentation/lwc"&gt;LWC&lt;/a&gt; fixes this in a very standard compliant way. This became possible thanks to the new capabilities in the JavaScript &lt;a href="http://www.ecma-international.org/ecma-262/6.0/"&gt;ES6&lt;/a&gt; standard.&lt;/p&gt; 
+&lt;p&gt;In LWC all information provided by Salesforce gets added using ES6 &lt;a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import"&gt;import&lt;/a&gt; statements from the &lt;code&gt;@salesforce&lt;/code&gt; name space. While that syntax is new to Salesforce developers, it is old news for the rest of JavaScript land. So here you go:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;&lt;code&gt;$ContentAsset&lt;/code&gt; -&amp;gt; &lt;code&gt;import assetName from @salesforce/contentAssetUrl/[AssetName]&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;$Labels&lt;/code&gt; -&amp;gt; &lt;code&gt;import labelName from @salesforce/label/[LabelName]&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;$Locale&lt;/code&gt; -&amp;gt; &lt;code&gt;import i18nproperty from @salesforce/i18n/[internationalizationProperty]&lt;/code&gt; (with various values)&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;$Resource&lt;/code&gt; -&amp;gt; &lt;code&gt;import resourceName from @salesforce/resourceUrl/[resourceName]&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;current User Id -&amp;gt; &lt;code&gt;import userId from @salesforce/User/Id&lt;/code&gt;&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;The &lt;code&gt;@salesforce&lt;/code&gt; name space provides access &lt;a href="http://component-library-dev.herokuapp.com/docs/component-library/documentation/lwc/lwc.reference_salesforce_modules"&gt;to additional data&lt;/a&gt;, like &lt;code&gt;apex&lt;/code&gt; and &lt;code&gt;schema&lt;/code&gt;.&lt;/p&gt; 
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2019/03/global-value-providers-in-lwc.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>d8655430-3bcb-11e9-b5fe-4b73381df565</guid>
+	<pubDate>01 March 2019</pubDate>
+
+</item>
+<item>
+	<title>From Excel to package.xml</title>
+	<description>&lt;p&gt;Cleaning up an org that has gone through several generations of ownership and objectives is fun. Some tooling helps&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#data-frugality" id="data-frugality"&gt;Data frugality&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;A computing principle, very much the anathema to Google and Facebook, is &lt;a href="https://martinfowler.com/bliki/Datensparsamkeit.html"&gt;Data Frugality&lt;/a&gt;, storing only what you actually need. It is the data equivalent to coders' &lt;a href="https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it"&gt;YAGNI&lt;/a&gt; principle. Latest since &lt;a href="http://ec.europa.eu/justice/newsroom/data-protection/infographic/2017/index_en.htm"&gt;GDPR&lt;/a&gt; it got center stage attention.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#your-cleanup-plan" id="your-cleanup-plan"&gt;Your cleanup plan&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;So your cleanup exercise has a few steps:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Find fields that don't have any data. You can use tools like &lt;a href="https://appexchange.salesforce.com/appxListingDetail?listingId=a0N30000003HSXEEA4"&gt;Field Trip&lt;/a&gt; to achieve that&lt;/li&gt; 
+ &lt;li&gt;Verify that these fields are not "about to be used", but "really obsolete"&lt;/li&gt; 
+ &lt;li&gt;Add all the fields that did have some data left over, but unused now&lt;/li&gt; 
+ &lt;li&gt;Add fields that contain data legal told you to get rid off&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;The absolute standard approach, of any consultant I have encountered, is to fire up an Excel sheet and track all fields in a list, capture insights in the &lt;code&gt;remarks&lt;/code&gt; column and have another column that indicates &lt;code&gt;can be deleted&lt;/code&gt; Status. Something like &lt;code&gt;Yes,No,Investigating&lt;/code&gt; or "Call Paul to clarify". I would be surprised if there's a different approach in the wild (in theory there are).&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#excel-as-source" id="excel-as-source"&gt;Excel as source?&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;In a current project the consultant neatly created one sheet (that's the page, not the file) per object, labeled with the object name, containing rows for all custom fields. Then the team went off to investigate. In result they identified more than one thousand fields to be deleted.&lt;/p&gt; 
+&lt;p&gt;Now to actually get rid of the fields, you could &lt;a href="https://www.mturk.com/"&gt;outsource&lt;/a&gt; some manual labor to either go into you org or use Copy-Paste to create a &lt;code&gt;destructivechanges.xml&lt;/code&gt; package file for use with the &lt;a href="https://developer.salesforce.com/docs/atlas.en-us.daas.meta/daas/daas_destructive_changes.htm"&gt;Salesforce ANT tool&lt;/a&gt;.&lt;/p&gt; 
+&lt;p&gt;In any case: the probability that there will be errors in transferring is approximately 100%. The business owner will point to: I signed off that spreadsheet and not that XML file! Finger pointing commencing.&lt;/p&gt; 
+&lt;p&gt;There must be a better way!&lt;/p&gt;</description>
+	<link>2019/02/from-excel-to-package.xml.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>e66be7a0-3730-11e9-89cf-09a347326aff</guid>
+	<pubDate>23 February 2019</pubDate>
+
+</item>
+<item>
+	<title>Draining the happy soup - Part 3</title>
+	<description>&lt;p&gt;In &lt;a href="/blog/2019/02/draining-the-happy-soup-part-2.html"&gt;Part 2&lt;/a&gt; we had a look at the plan. Now it is time to put it into motion. Let's setup our project structure&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#put-some-order-in-your-files" id="put-some-order-in-your-files"&gt;Put some order in your files&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Our goal is to distribute happy soup artifacts into packages. In this installment we setup the directory structure for that. Sticking to a clear structure makes it easier to get a step closer to package Nirvana step by step.&lt;/p&gt; 
+&lt;p&gt;&lt;img src="/blog/images/2019/SFDXDirectoryStructure.jpg" alt="Proposed directory structure"&gt;&lt;/p&gt; 
+&lt;p&gt;Let me run through some of the considerations:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;I'll keep all packages inside a single directory structure. Name the root after your org. What might pose a challenge is to name it &lt;code&gt;sfdx&lt;/code&gt; - too close to that hidden directory &lt;code&gt;.sfdx&lt;/code&gt; that does exist in your home directory and might exist in the project directories&lt;/li&gt; 
+ &lt;li&gt;You could keep the whole tree in a single repository or subject each package directory to its own repository. I'd prefer the later, since it allows a developer to pull only the relevant directories from source control (That's Option B)&lt;/li&gt; 
+ &lt;li&gt;The base directory, containing the artifacts that won't be packaged shall be named &lt;code&gt;HappySoup&lt;/code&gt;. While it is a rather colloquial term, it is well established&lt;/li&gt; 
+ &lt;li&gt;I'm a little old fashioned when it comes to directory names: no spaces, double byte characters (that includes ?) or special characters&lt;/li&gt; 
+ &lt;li&gt;You need to pay attention to &lt;code&gt;sfdx-project.json&lt;/code&gt; and &lt;code&gt;.sfdx&lt;/code&gt; as well as &lt;code&gt;.gitignore&lt;/code&gt;. More and that below&lt;/li&gt; 
+ &lt;li&gt;When you have mixed OS developer communities using Windows, MAC or Linux, directory delimiters could become a headache. My tongue-in-cheek recommendation for Windows would be to use &lt;a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10"&gt;WSL&lt;/a&gt;&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#key-files-and-directories" id="key-files-and-directories"&gt;Key files and directories&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Initially you want to divide, but not yet package. So your projects need to know about each other. Higher level packages, that in future will depend on base packages need to know about them and each package needs to know about the &lt;code&gt;HappySoup&lt;/code&gt;. To get there I adjust my &lt;code&gt;sfdx-project.json&lt;/code&gt;:&lt;/p&gt; 
+&lt;pre class="brush: js"&gt;{
+"packageDirectories" : [
+    { "path": "force-app", "default": true},
+    { "path" : "../ObjectBase/force-app" },
+    { "path" : "../HappySoup/force-app" }
+  ],
+"namespace": "",
+"sfdcLoginUrl" : "https://login.salesforce.com",
+"sourceApiVersion": "45.0"
+}
+&lt;/pre&gt; 
+&lt;p&gt;The key here are the relative path entries like &lt;code&gt;../HappySoup/force-app&lt;/code&gt;. When you use &lt;code&gt;sfdx force:source:push&lt;/code&gt; the content gets pushed to your scratch org, so it is complete. When you use &lt;code&gt;sfdx force:source:pull&lt;/code&gt; changes you made are copied down to the default path, so the adjacent projects remain as is.&lt;/p&gt; 
+&lt;p&gt;When using &lt;code&gt;pull&lt;/code&gt; and &lt;code&gt;push&lt;/code&gt; from &lt;a href="https://developer.salesforce.com/tools/extension_vscode"&gt;VSCode&lt;/a&gt; it will use the default user name configured for SFDX. To ensure that you don't push to or pull from the wrong place, you need to create one scratch org each using &lt;code&gt;sfdx force:org:create --f config/project-scratch-def.json -a [ScratchOrgAlias]&lt;/code&gt; and then execute &lt;code&gt;sfdx force:config:set defaultusername=[ScratchOrgAlias]&lt;/code&gt;.&lt;/p&gt; 
+&lt;p&gt;The command will create a &lt;code&gt;.sfdx&lt;/code&gt; directory and config files inside in your project. Unless all developers checking out that repository use the same aliases (unlikely), you want to add &lt;code&gt;.sfdx&lt;/code&gt; to your &lt;a href="https://github.com/forcedotcom/sfdx-simple/blob/master/.gitignore"&gt;.gitignore&lt;/a&gt; file.&lt;/p&gt; 
+&lt;p&gt;Now you are all set to move files from the happy soup to future package directories. With the relative path in your &lt;code&gt;sfdx-project.json&lt;/code&gt; no packaging is required now and you still can get a fully functioning scratch org.&lt;/p&gt; 
+&lt;p&gt;One pro tip: instead of relying on individual scratch definition files, you might opt to use the one in the happy soup, so all your scratches have the same shape.&lt;/p&gt; 
+&lt;p&gt;Next stop: building the solution before you package. As usual YMMV.&lt;/p&gt;</description>
+	<link>2019/02/draining-the-happy-soup-part-3.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>fa70b9a0-363c-11e9-bcba-578350efc416</guid>
+	<pubDate>22 February 2019</pubDate>
+
+</item>
 <item>
 	<title>Draining the happy soup - Part 2</title>
 	<description>&lt;p&gt;We stormed ahead in &lt;a href="/blog/2019/02/draining-the-happy-soup-part-1.html"&gt;Part 1&lt;/a&gt; and downloaded all the meta data in SFDX format. Now it's time to stop for a moment and ask: what's the plan?&lt;/p&gt; 
@@ -25,231 +367,6 @@
 	<author>Stephan H. Wissel</author>
 	<guid>37ce0350-334c-11e9-8f2c-e9611f89e0a8</guid>
 	<pubDate>18 February 2019</pubDate>
-
-</item>
-<item>
-	<title>The Efficiency Paradox</title>
-	<description>&lt;p&gt;A common setup in many organizations is to outsource development and/or operation to a system integrator. For agile organizations that can post &lt;a href="https://www.targetprocess.com/blog/agile-outsourcing-get-it-or-forget-it/"&gt;a challenge&lt;/a&gt;. A key is &lt;a href="https://twitter.com/notessensei/status/1096669398574587904"&gt;skillfulness&lt;/a&gt; - how &lt;a href="https://fastgood.cheap/"&gt;fast and good&lt;/a&gt; can it be implemented?&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#does-your-system-integrator-invest-in-efficiency" id="does-your-system-integrator-invest-in-efficiency"&gt;Does your System Integrator invest in efficiency?&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Competition is supposed to keep cost at bay, however customer relation and familiarity with the environment (In Dreamland everything is documented) pose a substantial barrier to entry. A barrier to entry will enable an incumbent vendor to charge more.&lt;/p&gt; 
-&lt;p&gt;So an engagement manager might see him/herself confronted with an interesting dynamic.&lt;/p&gt; 
-&lt;p&gt;&lt;img src="/blog/images/2019/TheEfficiencyParadox.png" alt="Feedback loop for efficiency"&gt;&lt;/p&gt; 
-&lt;p&gt;There are a slow and a fast loop running concurrently. Depending on the planning horizon, the engagement manager might not see the outer loop to the detriment of all participants. Let me walk you through:&lt;/p&gt; 
-&lt;ol&gt; 
- &lt;li&gt;Investment in better tools or skills leads to improved efficiency. Work is delivered faster, closer to actual requirements and with less defects&lt;/li&gt; 
- &lt;li&gt;In the short run this leads to a reduction in hours sold (bad for time and material contracts)&lt;/li&gt; 
- &lt;li&gt;A reduction in hours sold leads to reduced profitability since you have more resources sitting on the bench &lt;br&gt;&lt;br&gt;&lt;strong&gt;In conclusion&lt;/strong&gt;: As long as the barrier to entry protects you, investing in efficiency is bad for the bottom line. So investment in efficiency should only be made to keep the barrier to entry high enough (Add you own sarcasm tag here). However there's a longer running loop in motion:&lt;/li&gt; 
- &lt;li&gt; &lt;p&gt;Improved efficiency leads to better quality and shorter delivery time. Work is done fast and good (which might justify higher charges per hour)&lt;/p&gt; &lt;/li&gt; 
- &lt;li&gt;Getting good quality soon leads to an increase in customer satisfaction. Who doesn't like &lt;a href="https://www.supplyroom.com/us-military/product/46439/"&gt;swift and sure&lt;/a&gt; delivery&lt;/li&gt; 
- &lt;li&gt;Happy customers, especially when delivery times are short, will find an endless stream (only throttled by budget) of additional requirement to implement&lt;/li&gt; 
- &lt;li&gt;Having more and more new requirements coming in, keeps people off the bench and keeps utilization high. High utilization is the base of service profitability&lt;/li&gt; 
- &lt;li&gt;Investment in efficiency is justified&lt;/li&gt; 
-&lt;/ol&gt; 
-&lt;p&gt;This is a nice example of a &lt;a href="https://blog.deming.org/2016/04/systems-thinking-feedback-loops/"&gt;Systems Thinking Feedback Loop&lt;/a&gt;. Conclusions vary on observed time frames.&lt;/p&gt;</description>
-	<link>2019/02/the-efficiency-paradox.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>76241660-3344-11e9-837e-e390b698660e</guid>
-	<pubDate>18 February 2019</pubDate>
-
-</item>
-<item>
-	<title>Draining the happy soup - Part 1</title>
-	<description>&lt;p&gt;Unleashing &lt;a href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_dev2gp.htm"&gt;unlocked packages&lt;/a&gt; promises to reduce risk, improve agility and drive home the full benefits of &lt;a href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_intro.htm"&gt;SFDX&lt;/a&gt;&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#some-planning-required" id="some-planning-required"&gt;Some planning required&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;I'm following the approach "Throw and see what sticks to the wall". The rough idea: retrieve all meta data, convert it into SFDX format, distribute it over a number of packages and put it back together.&lt;/p&gt; 
-&lt;p&gt;To make it more fun I picked an heavily &lt;del&gt;abused&lt;/del&gt; customized and used org with more than 20,000 meta data artifacts (and a few surprises). Follow along.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#learning" id="learning"&gt;Learning&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Trailhead has &lt;a href="https://trailhead.salesforce.com/en/content/learn/modules/unlocked-packages-for-customers"&gt;a module&lt;/a&gt; on unlocked packages on its trail &lt;a href="https://trailhead.salesforce.com/content/learn/trails/sfdx_get_startedhttps://trailhead.salesforce.com/content/learn/trails/sfdx_get_started"&gt;Get Started with Salesforce DX&lt;/a&gt;.&lt;/p&gt; 
-&lt;p&gt;While you are there, check out the (at time of writing the 15) modules on &lt;a href="https://trailhead.salesforce.com/modules#tag=tag-alm"&gt;Application Lifecycle Management&lt;/a&gt;.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#downloading" id="downloading"&gt;Downloading&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;The &lt;a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_metadata.htm"&gt;limits&lt;/a&gt; for retrieving packages (10,000 elements, 39MB zip or about 400 MB raw) posed an issue for my XL org. So I used, growing fond of it, &lt;a href="https://github.com/kgalant/PackageBuilder"&gt;PackageBuilder&lt;/a&gt; to download all sources. It automatically creates multiple package.xml files when you exceed the limits.&lt;/p&gt;</description>
-	<link>2019/02/draining-the-happy-soup-part-1.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>c6b680f0-305a-11e9-bc80-c5b58f9cd89a</guid>
-	<pubDate>14 February 2019</pubDate>
-
-</item>
-<item>
-	<title>Reporting your validation formulas</title>
-	<description>&lt;p&gt;Validation formula are a convenient way to ensure your data integrity. With great powers? comes the risk of alienating users by preventing them entering data.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#why-look-at-them" id="why-look-at-them"&gt;Why look at them?&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;You can easily look at all formula in the Object Manager, but it is tedious to look at every formula one by one. You might ask yourself:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;Do all my formula exclude the integration profile?&lt;/li&gt; 
- &lt;li&gt;Are context (e.g. the country) specific formulas set correctly?&lt;/li&gt; 
- &lt;li&gt;Do validation rules follow the naming conventions?&lt;/li&gt; 
- &lt;li&gt;Are messages helpful or intimidating?&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#extract-and-report" id="extract-and-report"&gt;Extract and report&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;You already use &lt;a href="https://github.com/kgalant/PackageBuilder"&gt;PackageBuilder&lt;/a&gt; to extract objects (and other stuff) as &lt;a href="http://www.xml.org/"&gt;XML&lt;/a&gt;, so it is just a small step: slap all &lt;code&gt;*.object&lt;/code&gt; files into one big file and run an &lt;a href="https://en.wikipedia.org/wiki/XSLT"&gt;XSLT&lt;/a&gt; report over it.&lt;/p&gt; 
-&lt;p&gt;Not so fast! If you concatenate XML files using OS copy you end up with three problems:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;You don't have an XML root element. Like the &lt;a href="https://en.wikipedia.org/wiki/Highlander_(film)"&gt;Highlander&lt;/a&gt; - there can be only one. You could sandwich the files in opening and closing tags, but then you have the next problem&lt;/li&gt; 
- &lt;li&gt;XML files start &lt;code&gt;&amp;lt;?xml version="1.0" encoding="UTF-8"?&amp;gt;&lt;/code&gt; and copying that file will sprinkle that statement multiple times into your result. The XSLT processor will barf&lt;/li&gt; 
- &lt;li&gt;The result will get very big and any report will take a long time or even run out of memory&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#a-bit-of-tooling" id="a-bit-of-tooling"&gt;A bit of tooling&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;I solved, for my needs, using a small &lt;a href="https://gist.github.com/Stwissel/aeff1c523983ad7a89b33a7d2d67de43"&gt;Java class&lt;/a&gt; and &lt;a href="https://gist.github.com/Stwissel/cc2289fc319f468deacee7ba7649a4e6"&gt;one XSLT stylesheet&lt;/a&gt;. Java because: I'm familiar with it and NodeJS still sucks with XML. XSLT, because: I'm familiar with it (heard that before?) and the styling of the output is independent from the processing step. I presume you know how to initiate an &lt;a href="https://sourceforge.net/projects/saxon/files/Saxon-HE/9.9/"&gt;XSLT 2.0 transformation&lt;/a&gt;.&lt;/p&gt;</description>
-	<link>2019/02/reporting-your-validation-formulas.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>83a24c00-2af0-11e9-aa3f-a1b759d59560</guid>
-	<pubDate>07 February 2019</pubDate>
-
-</item>
-<item>
-	<title>Avoid the "Clean Code Shock" with PMD</title>
-	<description>&lt;p&gt;Your new year resolution includes "&lt;em&gt;Write clean Apex code&lt;/em&gt;". So you run &lt;a href="https://pmd.github.io/"&gt;PMD&lt;/a&gt; with a full ruleset and &lt;a href="/blog/2018/11/cleaning-up-an-apex-codebase-with-pmd.html"&gt;get shocked&lt;/a&gt; by the number of violations. You drop the resolution in a blink.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#dont-boil-the-ocean" id="dont-boil-the-ocean"&gt;Don't boil the Ocean&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Even a journey of a thousand miles &lt;a href="https://despair.com/collections/demotivators/products/ambition?variant=2457295747"&gt;starts with a single step&lt;/a&gt;, so let's break down the task into manageable chunks to &lt;a href="https://en.wikipedia.org/wiki/Divide_and_rule"&gt;divide and rule&lt;/a&gt;.&lt;br&gt; There are 2 dimensions you can use: &lt;strong&gt;Type of code&lt;/strong&gt; and &lt;strong&gt;priority levels&lt;/strong&gt;. Using them you can turn your &lt;a href="https://amzn.to/2RmMXvp"&gt;Clean Code&lt;/a&gt; journey into manageable stages.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#code-types" id="code-types"&gt;Code Types&lt;/a&gt;&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;Legacy code: all code that doesn't fall in any of the two other categories&lt;/li&gt; 
- &lt;li&gt;Changed code: code that needs change due to business requirements&lt;/li&gt; 
- &lt;li&gt;New code: new code written for new or changed functionality (applies to copy &amp;amp; paste too)&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#priority-levels" id="priority-levels"&gt;Priority Levels&lt;/a&gt;&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;1 = security and performance, will fail build&lt;/li&gt; 
- &lt;li&gt;2 = bad code, will fail build&lt;/li&gt; 
- &lt;li&gt;3 &amp;amp; 4 = hard to maintain code, will generate warning&lt;/li&gt; 
- &lt;li&gt;5 = ugly code, will generate hint&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;PMD rules for code types should have different priorities. A different number of tests will fail a build:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;11 for legacy code (all around performance and security)&lt;/li&gt; 
- &lt;li&gt;33 for changed code&lt;/li&gt; 
- &lt;li&gt;44 for new code&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;This will require to run PMD with different rulesets on &lt;a href="/blog/2018/11/cleaning-up-an-apex-codebase-with-pmd.html"&gt;subsets of your code base&lt;/a&gt;&lt;/p&gt;</description>
-	<link>2019/01/avoid-the-clean-code-shock-with-pmd.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>5f197330-0e40-11e9-aa45-01ee17350376</guid>
-	<pubDate>02 January 2019</pubDate>
-
-</item>
-<item>
-	<title>Pattern in your Apex Controller</title>
-	<description>&lt;p&gt;A (software) &lt;a href="https://en.wikipedia.org/wiki/Software_design_pattern"&gt;design pattern&lt;/a&gt; is a general, reusable solution to a commonly occurring problem withing a given context. &lt;a href="https://en.wikipedia.org/wiki/Christopher_Alexander"&gt;Christoper Alexander&lt;/a&gt; inspired the &lt;a href="https://en.wikipedia.org/wiki/Design_Patterns"&gt;Gang of four&lt;/a&gt; to apply pattern to software and enumerate 23 classic software pattern.&lt;/p&gt; 
-&lt;p&gt;This article discusses how to use some of them in the context of &lt;a href="https://en.wikipedia.org/wiki/Salesforce.com#Apex"&gt;Apex&lt;/a&gt; controllers.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#the-context-same-same-but-different" id="the-context-same-same-but-different"&gt;The context: Same same, but different&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;You are creating an application to support construction on force.com that will serve multiple countries. Part of the requirements is to compute a risk score for any given project. While &lt;a href="https://www.iso.org/news/2012/12/Ref1685.html"&gt;ISO standards&lt;/a&gt; form the foundation of the assessment, each jurisdiction has some specialties that alter the logic eventually.&lt;/p&gt; 
-&lt;p&gt;This is just one of the requirements, you have many more that follow the &lt;code&gt;pattern&lt;/code&gt; &lt;a href="https://www.samesamebutdifferent.site/2017/08/same-same-but-different-origin/"&gt;Same Same - But different&lt;/a&gt;.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#patterns-used" id="patterns-used"&gt;Patterns used&lt;/a&gt;&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/Interface-based_programming"&gt;Interface based programming&lt;/a&gt;&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://msdn.microsoft.com/en-us/library/aa480019.aspx"&gt;Metadata driven application design&lt;/a&gt;&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/Facade_pattern"&gt;Facade pattern&lt;/a&gt;&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/Factory_method_pattern"&gt;Factory pattern&lt;/a&gt;&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;Besides those, you want to know &lt;a href="https://trailhead.salesforce.com/en/search?keywords=%22Apex%20Enterprise%20Patterns%22"&gt;Apex Enterprise Patterns&lt;/a&gt;. Go Trailhead and learn.&lt;/p&gt;</description>
-	<link>2018/12/pattern-in-your-apex-controller.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>01f2e0e0-0b04-11e9-8f1f-178be3bffe51</guid>
-	<pubDate>29 December 2018</pubDate>
-
-</item>
-<item>
-	<title>Lightning Web Components (LWC) quick overview</title>
-	<description>&lt;p&gt;On December 13 Salesforce announced &lt;a href="https://www.salesforce.com/blog/2018/12/introducing-lightning-web-components-with-javascript"&gt;Lightning Web Components&lt;/a&gt; (LWC) a new way to build components on the Salesforce platform. Here is my take.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#expanding-lightning-family" id="expanding-lightning-family"&gt;Expanding Lightning Family&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;"Lightning" serves now as a family name for modern Salesforce development. LWC are the latest family members. We now have:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;Lightning Platform: the runtime environment&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://www.lightningdesignsystem.com/"&gt;Lightning Design System&lt;/a&gt;: providing the visuals&lt;/li&gt; 
- &lt;li&gt;The &lt;a href="https://github.com/forcedotcom/aura"&gt;Aura Framework&lt;/a&gt;: Implementing components for lightning&lt;/li&gt; 
- &lt;li&gt;&lt;a href="http://ng-lightning.github.io/ng-lightning/"&gt;ng-lightning&lt;/a&gt;: Angular components using the Lightning Design System - a open source contribution, not affiliated with commercial Salesforce&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://react.lightningdesignsystem.com/"&gt;Lightning React&lt;/a&gt;: React components using the Lightning Design system&lt;/li&gt; 
- &lt;li&gt;Last not least: &lt;a href="https://developer.salesforce.com/blogs/2018/12/introducing-lightning-web-components.html"&gt;Lightning Web Components&lt;/a&gt; (LWC)&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;The linked blog entries explain the rationale, so check them out.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#same-but-different" id="same-but-different"&gt;Same but different&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;The look and feel doesn't change, the way you code them does. For now &lt;a href="https://developer.salesforce.com/tools/sfdxcli"&gt;SFDX&lt;/a&gt;, &lt;a href="https://code.visualstudio.com/"&gt;Visual Studio Code&lt;/a&gt; and the &lt;a href="https://marketplace.visualstudio.com/items?itemName=salesforce.salesforcedx-vscode"&gt;Salesforce Extension Pack&lt;/a&gt; are to goto tools for the Spring 2019 release.&lt;/p&gt; 
-&lt;p&gt;&lt;img src="/blog/images/2018/ComponentMigration.png" alt="The new file structure 4 instead of 8 files"&gt;&lt;/p&gt; 
-&lt;p&gt;Instead of up to 8 files you only need 4. For one: all JavaScript (3 files) now lives in one &lt;a href="http://es6-features.org/"&gt;ES6&lt;/a&gt; JS file and we don't have an auradoc or svg file for now&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#co-existence" id="co-existence"&gt;Co-existence&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Existing &lt;a href="http://www.auraframework.org/"&gt;Aura based&lt;/a&gt; components will continue to work and will even allow to contain LWC components.&lt;/p&gt; 
-&lt;p&gt;&lt;img src="/blog/images/2018/ComponentContainment.png" alt="LWC in Aura, but not Aura in LWC"&gt;&lt;/p&gt; 
-&lt;p&gt;What you can't do is putting Aura components inside LWC. So your transition to LWC is bottom-up, not top-down&lt;/p&gt;</description>
-	<link>2018/12/lwc-quick-overview.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>e5f504f0-ff40-11e8-8efb-9b9b4e567902</guid>
-	<pubDate>14 December 2018</pubDate>
-
-</item>
-<item>
-	<title>Salesforce login statistics aggregation</title>
-	<description>&lt;p&gt;A recent requirement from a customer was "I'd like to analyze logins by users in Excel", despite a &lt;a href="https://success.salesforce.com/answers?id=90630000000gsJjAAI"&gt;dashboard&lt;/a&gt; approach would be sufficient. With a few million records aggregating in Excel wasn't particularly appealing&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#download-the-log" id="download-the-log"&gt;Download the log&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Salesforce setup allows to download the log as &lt;code&gt;csv&lt;/code&gt; or &lt;code&gt;csv.gz&lt;/code&gt; file. In any case you should use the later. I learned the hard way: the &lt;a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding"&gt;chunked transfer encoding&lt;/a&gt; might leave you with less data be processed than you expect.&lt;/p&gt; 
-&lt;p&gt;The &lt;a href="https://docs.oracle.com/javase/7/docs/api/java/util/Scanner.html"&gt;Scanner&lt;/a&gt; simply stopped after a few thousand entries, while the &lt;a href="https://commons.apache.org/proper/commons-csv/"&gt;csv parser&lt;/a&gt; barfed with an error.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#processing" id="processing"&gt;Processing&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;After downloading and extracting the csv I used a small Java routine (yep, I'm that old) to aggregate logins per user, capturing the count and the first/last login date as well as the country of login (with the disclaimer caveats) and the eventual community.&lt;/p&gt; 
-&lt;p&gt;For reliably and robustly reading csv in Java, usually I would use a &lt;a href="https://commons.apache.org/proper/commons-csv/"&gt;robust library&lt;/a&gt;, however in this case having no dependencies and using the scanner did just nicely.&lt;/p&gt;</description>
-	<link>2018/12/salesforce-login-statistics-aggregation.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>3ef8b2e0-f848-11e8-a160-81c62127bae4</guid>
-	<pubDate>05 December 2018</pubDate>
-
-</item>
-<item>
-	<title>Supercharge SFDX with Ui-licious</title>
-	<description>&lt;p&gt;You &lt;a href="https://developer.salesforce.com/tools/sfdxcli"&gt;drank the Coolaid&lt;/a&gt; and you are all in and really love your &lt;a href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_scratch_orgs.htm"&gt;Scratch Orgs&lt;/a&gt;. Just a few things drive you crazy.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#when-the-api-doesnt-expose-a-setting" id="when-the-api-doesnt-expose-a-setting"&gt;When the API doesn't expose a setting&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Your application is querying the OutOfOffice objects. Unfortunately they only exist when the Chatter settings have enabled them. To my best knowledge there is no API or config setting to achieve that from the command line. So automated testing in a scratch org won't work.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#ui-licious-to-the-rescue" id="ui-licious-to-the-rescue"&gt;Ui-licious to the rescue&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;&lt;a href="https://uilicious.com/"&gt;Ui-licious&lt;/a&gt; is a UI testing service that uses JavaScript as its scripting language. This makes an easy read and edit. A script that can set the missing OOO setting is short and simple (if you agree &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe"&gt;iFrames&lt;/a&gt; are easy to handle). You can (almost) read it out aloud:&lt;/p&gt; 
-&lt;pre class="brush: javascript"&gt;// URL Provided by data object from the command line
-I.goTo(DATA.result.url);
-I.must.see("Chatter Settings");
-// To ensure we work on the iFrame we get the id
-let iframeId = UI.execute("return document.getElementsByTagName('iframe')[0].getAttribute('id')");
-// The iFrame loads slowly
-I.wait(10);
-UI.context("#" + iframeId, () =&amp;gt; {
-	I.see("Chatter is a corporate network that lets your users work together, talk to each other, and share information, all in real time.");
-    I.click("Edit");
-    I.must.see("Save");
-    I.select("Users can set Out of Office messages");
-    I.click("Save");
-})
-&lt;/pre&gt; 
-&lt;p&gt;The interesting piece in the above is &lt;code&gt;DATA.result.url&lt;/code&gt; which is an JSON object that needs to be handed over to the Ui-licious. A small command script in tandem with SFDX does the trick. The beauty here: we directly can reuse the output of an sfdx command as input for the &lt;code&gt;uilicious-cli&lt;/code&gt;.&lt;/p&gt; 
-&lt;pre class="brush: bash"&gt;sfdx force:org:open -r -p lightning/setup/CollaborationSettings/home --json &amp;gt; local.json
-uilicious-cli  run "ProjectName" "ScriptName" --dataFile local.json -u uiliciousUser -p uiliciousPassword
-&lt;/pre&gt; 
-&lt;p&gt;It probably would be part of a larger CI script, but you get the idea! You might not store the output in a file, but use bash to capture it in memory and use &lt;code&gt;--dataObject&lt;/code&gt; instead. Full details are in &lt;a href="https://docs.uilicious.com/cli/test_data.html"&gt;the documentation&lt;/a&gt;.&lt;/p&gt; 
-&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
-	<link>2018/11/supercharge-sfdx-with-ui-licious.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>83ed9070-f206-11e8-a016-49d6fa66cb22</guid>
-	<pubDate>27 November 2018</pubDate>
-
-</item>
-<item>
-	<title>Cleaning up an APEX codebase with PMD</title>
-	<description>&lt;p&gt;You inherit a large code base, it is perfect, a work of beauty. Then you wake up to the ping of your &lt;a href="https://pmd.github.io"&gt;PMD&lt;/a&gt; run completion and find multiple thousands of rule violation (and you haven't even started to assert test assertions). Here is how to fix that.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#divide-and-conquer" id="divide-and-conquer"&gt;Divide and conquer&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;&lt;a href="https://www.investopedia.com/terms/b/boil-the-ocean.asp"&gt;Boiling the ocean&lt;/a&gt; and fix all issues in one go is hardly an option. So you need to strategize. PMD gives you a hint: every rule has a &lt;a href="https://pmd.github.io/pmd-6.9.0/pmd_userdocs_configuring_rules.html#message-and-priority-overriding"&gt;priority&lt;/a&gt; property, where you can specify how important this rule is. The higher the number, the less important the rule. You can run PMD using the &lt;code&gt;min -[somenumber]&lt;/code&gt; parameter which will ignore rules with a higher value.&lt;/p&gt; 
-&lt;p&gt;Next step is to decide what rules constitute your priority 1 and 2 buckets. I strongly recommend to make them mandatory fixes before the next deployment, so pick the rules carefully. The candidates I suggest are around performance and security:&lt;/p&gt; 
-&lt;h4&gt;&lt;a href="#priority-1" id="priority-1"&gt;Priority 1&lt;/a&gt;&lt;/h4&gt; 
-&lt;ul&gt; 
- &lt;li&gt;ApexXSSFromURLParam&lt;/li&gt; 
- &lt;li&gt;ApexSOQLInjection&lt;/li&gt; 
- &lt;li&gt;ApexOpenRedirect&lt;/li&gt; 
- &lt;li&gt;ApexInsecureEndpoint&lt;/li&gt; 
- &lt;li&gt;AvoidDmlStatementsInLoops&lt;/li&gt; 
- &lt;li&gt;AvoidSoqlInLoops&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h4&gt;&lt;a href="#priority-2" id="priority-2"&gt;Priority 2&lt;/a&gt;&lt;/h4&gt; 
-&lt;ul&gt; 
- &lt;li&gt;ApexCRUDViolation&lt;/li&gt; 
- &lt;li&gt;ApexSharingViolations&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;Thereafter you decide on priority 3 onwards. Strong candidates for level 3 are all the rules that ensure code is maintainable and avoid errors, like deep nesting or cyclomatic complexity (a fancy word for "messy code")&lt;/p&gt;</description>
-	<link>2018/11/cleaning-up-an-apex-codebase-with-pmd.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>a199cf60-eec5-11e8-91af-4f1de64b82e9</guid>
-	<pubDate>23 November 2018</pubDate>
 
 </item>
 

@@ -110,6 +110,450 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2019/03/re-usable-dynamic-custom-lookup-lwc-edition.html">Re-Usable Dynamic Custom Lookup LWC edition</a></small></h1>
+					<hr />
+					<div><p>Over at <a href="http://sfdcmonkey.com/2017/07/17/re-usable-custom-lookup/">sfdcmonkey</a> there's a nice AURA component that allows for dynamic lookup of a given object. Super nice and useful. I wondered what it would take to be rebuild in <a href="https://developer.salesforce.com/docs/component-library/documentation/lwc">LWC</a></p> 
+<p><img src="/blog/images/2019/DynamicLookup.png" alt="Dynamic Lookup"></p> 
+<h3><a href="#same-same-but-different" id="same-same-but-different">Same, Same but different</a></h3> 
+<p>I want to achieve the same functionality, but would accept subtle differences. This is what I got:</p> 
+<ul> 
+ <li>The original component shows the object icon on the left. My version shows the search symbol that comes out of the box with <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-input/example">lightning-input</a></li> 
+ <li>I use 3 components instead of two. Input fields that trigger network calls are fairly common and it makes sense to <a href="https://www.maximintegrated.com/en/glossary/definitions.mvp/term/debounce/gpk/82">debounce</a> the input. So I created <code>c-ux-debounced-input</code> that signals entered data only after a period of 300ms</li> 
+ <li>The component dispatches an event when a result has been selected or cleared, so it can be used inside other components</li> 
+ <li>For now: it can be directly put on a lightning page in page builder and configured there. Useful for demos and test</li> 
+ <li>When you clear the selected object, the result list opens up again, so no second network call is made until you change the input value</li> 
+</ul></div>
+					<hr />
+ <a href="/blog/2019/03/re-usable-dynamic-custom-lookup-lwc-edition.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 27 March 2019
+<span class="divider">|</span>
+<a href="/blog/2019/03/re-usable-dynamic-custom-lookup-lwc-edition.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/software.html">Software</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/03/re-usable-dynamic-custom-lookup-lwc-edition.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Re-Usable Dynamic Custom Lookup LWC edition"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/03/re-usable-dynamic-custom-lookup-lwc-edition.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1><small><a href="/blog/2019/03/mapping-recordids-to-object-names-offline-edition.html">Mapping recordIds to Object Names - Offline edition</a></small></h1>
+					<hr />
+					<div><p>Lightning in Communities is "Same Same but different". When you want to build neutral components, you need to know what object you are dealing with</p> 
+<h3><a href="#objectapiname-objectname-and-recordid" id="objectapiname-objectname-and-recordid">ObjectApiName, ObjectName and recordId</a></h3> 
+<p>In Lightning Aura components one can use <a href="https://developer.salesforce.com/docs/component-library/bundle/force:hasSObjectName/documentation"><code>force:hasSObjectName</code></a> to get access to an attribute <code>sObjectName</code>. In Lightning Web components one uses <a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/lwc.use_object_context"><code>@api objectApiName</code></a>. Except neither of those work in <strong>Communities</strong>.</p> 
+<p>The workaround is to look at the <code>recordId</code> and use <a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_methods_system_sobject_describe.htm"><code>DescribeSObjectResult.getKeyPrefix</code></a> to map a record to the object name. There's a <a href="http://www.fishofprey.com/2011/09/obscure-salesforce-object-key-prefixes.html">comprehensive list</a> by <a href="https://twitter.com/FishOfPrey">David</a> and my <a href="https://gist.github.com/Stwissel/890559482a4ff4ec61c80597dd47f6bd">version as JSON object</a>.</p> 
+<p>However, depending on your org, that list might vary. So I created a small component that lists out the objects in your current org. Enjoy:</p> 
+<h4><a href="#objectidspycls" id="objectidspycls">ObjectIdSpy.cls</a></h4> 
+<pre class="brush: java">public without sharing class ObjectIdSpy {  
+    @AuraEnabled(cacheable=true)
+    public static Map&lt;String,String&gt; getObjectIdMappings(){
+        Map&lt;String,String&gt; result = new Map&lt;String,String&gt;();
+        Map&lt;String, Schema.SObjectType&gt; gd = Schema.getGlobalDescribe();
+        for(String key : gd.keySet()) {
+            Schema.SObjectType ot = gd.get(key);
+            String curPrefix = ot.getDescribe().getKeyPrefix();
+            String curName = ot.getDescribe().getName();
+            // Fair warning: will omit objects that share the prefix
+            result.put(curPrefix, curName);
+        }
+      return result;
+    } 
+}
+
+</pre> 
+<h4><a href="#objectidspyhtml" id="objectidspyhtml">objectIdSpy.html</a></h4> 
+<pre class="brush: xml">&lt;template&gt;
+    &lt;lightning-card title="Object Spy"&gt;
+        &lt;pre&gt;
+{idList}
+        &lt;/pre&gt;
+    &lt;/lightning-card&gt;
+&lt;/template&gt;
+</pre> 
+<h4><a href="#objectidspyjs" id="objectidspyjs">objectIdSpy.js</a></h4> 
+<pre class="brush: js">import { LightningElement, track, wire } from 'lwc';
+import idSpy from '@salesforce/apex/ObjectIdSpy.getObjectIdMappings';
+
+export default class ObjectIdSpy extends LightningElement {
+  @track idList;
+
+  @wire(idSpy)
+  spiedUpon({ error, data }) {
+    if (data) {
+      this.idList = JSON.stringify(data, null, 2);
+    } else if (error) {
+      this.idList = JSON.stringify(error, null, 2);
+    }
+  }
+}
+
+</pre> 
+<h4><a href="#objectidspyjs-metaxml" id="objectidspyjs-metaxml">objectIdSpy.js-meta.xml</a></h4> 
+<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata" fqn="ObjectIdSpy"&gt;
+    &lt;apiVersion&gt;45.0&lt;/apiVersion&gt;
+    &lt;isExposed&gt;true&lt;/isExposed&gt;
+    &lt;masterLabel&gt;Object Id Spy&lt;/masterLabel&gt;
+    &lt;description&gt;Generates a JSON object of Id and object names&lt;/description&gt;
+    &lt;targets&gt;
+        &lt;target&gt;lightning__RecordPage&lt;/target&gt;
+        &lt;target&gt;lightning__AppPage&lt;/target&gt;
+        &lt;target&gt;lightning__HomePage&lt;/target&gt;
+    &lt;/targets&gt;
+&lt;/LightningComponentBundle&gt;
+</pre> 
+<p>As usual YMMV!</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 20 March 2019
+<span class="divider">|</span>
+<a href="/blog/2019/03/mapping-recordids-to-object-names-offline-edition.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/singapore.html">Singapore</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/03/mapping-recordids-to-object-names-offline-edition.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Mapping recordIds to Object Names - Offline edition"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/03/mapping-recordids-to-object-names-offline-edition.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1><small><a href="/blog/2019/03/finding-strings-in-recursively-zipped-files.html">Finding Strings in recursively zipped files</a></small></h1>
+					<hr />
+					<div><p>I had an itch to scratch. After using <a href="https://appexchange.salesforce.com/appxListingDetail?listingId=a0N30000003HSXEEA4">Field Trip</a> (which I like a lot) to determine unused fields, the team managing the external <a href="https://www.informatica.com/">Informatica</a> integration claimed they would need weeks to ensure none of the fields are used in any of their (hundreds) of pipelines.</p> 
+<h3><a href="#zip-inception" id="zip-inception">ZIP inception</a></h3> 
+<p>My first reaction (OK, the second, first one isn't PC) was: Let's go after the source code and just use an <a href="https://www.sublimetext.com/">editor of choice</a> to do a find in files. Turns out: not so fast. The source export offered by the team was a zip file with an elaborate directory structure containing, tada, zip files. So each of the pipes would need multiple zip operations.</p> 
+<h3><a href="#itch-defined" id="itch-defined">Itch defined</a></h3> 
+<p>I needed a tool that would start in a directory with a bunch of zip files, unpack them all. Check for zip files in the unpacked result, unzip these and repeat. Once done, take a list of strings and search for occurrences of those and generate a report which shows the files containing these strings</p> 
+<h3><a href="#itch-scratched" id="itch-scratched">Itch scratched</a></h3> 
+<p>I created <a href="https://github.com/Stwissel/findStrings">findstring</a>, a command line tool that takes a directory as starting point unzips what can be unzipped (optional) and searches for the occurrence of strings provided in a text file.</p> 
+<p>Initially I contemplated to render the output as XML, so the final report could be designed in whatever fashion using XSLT. However following <a href="https://en.wikipedia.org/wiki/KISS_principle">KISS</a>, I ended up using <a href="https://en.wikipedia.org/wiki/Markdown">Markdown</a>. I might add the XML option later on.</p> 
+<h3><a href="#recursion" id="recursion">Recursion</a></h3> 
+<p>The key piece of the tool is recursion (until you stack overflow ;-) ). Reading a directory and dive into directories found. I could have avoided that using <a href="https://github.com/google/guava">Guava</a> and its <a href="https://google.github.io/guava/releases/snapshot/api/docs/com/google/common/io/Files.html#fileTraverser--">fileTraverser</a>, but I like some Inception style coding. The key piece is this:</p> 
+<pre class="brush: java">    private boolean expandSources(final File sourceDir) throws IOException {
+        boolean result = false;
+        final File[] allFiles = sourceDir.listFiles();
+
+        for (final File f : allFiles) {
+            if (f.isDirectory()) {
+                result = result || this.expandSources(f);
+
+            } else if (f.getName().endsWith(".zip")) {
+                final String newDirName = f.getAbsolutePath().replace(".zip", "");
+                final File newTarget = new File(newDirName);
+
+                // Need to scan the new directory too
+                if (this.expandFile(f, newTarget)) {
+                    result = result || this.expandSources(newTarget);
+                }
+            }
+        }
+        return result;
+
+    }
+</pre> 
+<p>The function will return true as long as there was a zip file to be unzipped. The string finding operation (case insensitive) follows the same approach</p> 
+<h3><a href="#use-cases" id="use-cases">Use cases</a></h3> 
+<ul> 
+ <li>Find field usage in ZIP files. Works with a package downloaded from the meta data api or what Informatica exports</li> 
+ <li>Check a source directory (doesn't need to contain zips) for keywords like <code>TODO</code>, <code>FIXME</code>, <code>XXX</code></li> 
+</ul> 
+<p>The command line syntax is very simple:</p> 
+<p><code>java -jar findString.jar -d directory -s strings [-o output]</code></p> 
+<ul> 
+ <li>-d,?dir &lt;arg&gt; directory with all zip files</li> 
+ <li>-s,?stringfile &lt;arg&gt; Filename with Strings to search, one per line</li> 
+ <li>-o,?output &lt;arg&gt; Output file name for report in MD format</li> 
+ <li>-nz,?nz Rerun find operation on a ready unzipped structure - good for alternate finds</li> 
+</ul> 
+<h3><a href="#limits" id="limits">Limits</a></h3> 
+<p>In its current form the utility will check for strings in any file short of zip. Zip gets unpacked and the result checked. When your directory contains binary files (e.g. images) it will still look for the string occurrence inside. File extension filters might be a future enhancement (<a href="https://github.com/Stwissel/findStrings/issues">share your opinion</a>).</p> 
+<p>Files are read into memory. So if your directory contains huge files, you will blow your heap. Source code files hardly pose an issue, so the approach worked for me. Alternatively a <a href="https://docs.oracle.com/javase/7/docs/api/java/util/Scanner.html">scanner</a> could be used, should the need arise.</p> 
+<p>Go <a href="https://github.com/Stwissel/findStrings/releases">give it a spin</a> and keep in mind: YMMV</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 16 March 2019
+<span class="divider">|</span>
+<a href="/blog/2019/03/finding-strings-in-recursively-zipped-files.html#comments">Comments (1)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/singapore.html">Singapore</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/03/finding-strings-in-recursively-zipped-files.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Finding Strings in recursively zipped files"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/03/finding-strings-in-recursively-zipped-files.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1><small><a href="/blog/2019/03/testing-aura-and-lwc-in-a-single-test.html">Testing Aura and LWC in a single Test</a></small></h1>
+					<hr />
+					<div><p>You drank the <a href="https://www.salesforce.com/company/news-press/press-releases/2018/12/181213-t/">CoolAid</a> and noticed that the Aura framework <a href="https://github.com/forcedotcom/aura">has been archived</a>. You are hell bend to migrate your components.</p> 
+<h3><a href="#regression-test-required" id="regression-test-required">Regression Test required</a></h3> 
+<p>Aura components were testable using the <a href="https://github.com/forcedotcom/LightningTestingService">Lightning Testing Service</a>, while Lightning Web Components get tested using <a href="https://github.com/salesforce/lwc-jest">lwc-jest</a>. These tests are not compatible.</p> 
+<p><a href="https://uilicious.com/">UI-licious</a> to the rescue. UI-licious is a testing framework for UI tests. They use a simple JavaScript syntax to provide testing and a rather clever addressing of elements. Other than <a href="https://www.seleniumhq.org/">Selenium</a>, they don't rely on CSS selectors or XPath expressions (You still can use those).</p> 
+<p><strong>To be very clear:</strong> A UI level testing library is <strong>not</strong> a replacement for proper unit testing. UI-licious has two use cases here: top of the pyramid UI testing and spotting UI level regressions. To learn more about the "testing pyramid", check out <a href="https://martinfowler.com/articles/practical-test-pyramid.html">Martin Fowler's essay</a>.</p> 
+<p>To give it a try I <a href="https://github.com/Stwissel/lwcaura">created 2 components</a> with identical functionality: one in Aura, one as LWC. The components show a dialog where you can pick values for radio buttons. <a href="https://www.linkedin.com/in/shi-ling-tai-16679147/">Shi Ling</a>, the CEO provided the test script (the login subroutine omitted for brevity):</p> 
+<pre class="brush: js">I.wait(30) // wait for salesforce to be ready
+I.click("App Launcher")
+I.click("Clown around")
+
+I.see("Having 2 components of the same type")
+
+test("The aura version")
+test("The LWC version")
+
+function test(btn){
+  I.click(btn)
+  I.see("Pick an Opportunity and Color")
+  I.click("Product Opportunity")
+  I.click("Red")
+  I.click("Select")
+  I.see("Nicely done")
+}  
+</pre> 
+<p>Watch <a href="https://snippet.uilicious.com/embed/test/private/6YxZnZYNnzWQ9JTP5Z1mub?step=1&amp;autoplay=1">the result</a> for yourself:</p> 
+<iframe id="inlineFrameExample" title="Inline Frame Example" width="800" height="600" src="https://snippet.uilicious.com/embed/test/private/6YxZnZYNnzWQ9JTP5Z1mub?step=1&amp;autoplay=1"> </iframe> 
+<p>What I really like: UI-licious builds the collaboration feature around testing, so stakeholders can see any time what's going on. Give them a try!</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 14 March 2019
+<span class="divider">|</span>
+<a href="/blog/2019/03/testing-aura-and-lwc-in-a-single-test.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/webcomponents.html">WebComponents</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/03/testing-aura-and-lwc-in-a-single-test.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Testing Aura and LWC in a single Test"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/03/testing-aura-and-lwc-in-a-single-test.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1><small><a href="/blog/2019/03/navigation-in-lightning-communities.html">Navigation in Lightning communities</a></small></h1>
+					<hr />
+					<div><p>In a recent project we had to design navigation in a Lightning community. This is what we learned along the way.</p> 
+<h3><a href="#beyond-the-menu" id="beyond-the-menu">Beyond the menu</a></h3> 
+<p>When you pick a <a href="https://www.salesforce.com/products/community-cloud/features/templates/">Lightning Template</a> you will have a build in menu navigation. This works well if all menu items are meant for all users (no assignment of audience), but breaks down for more sophisticated or programmatic navigation.</p> 
+<p>On first view the <a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/lwc.use_navigate">Lightning navigation service</a> (available in Aura or LWC) seems like the answer. However on inspection of <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-navigation/documentation">lightning-navigation</a> you find as supported experiences only Lightning Experience and Salesforce mobile app, Communities are missing.</p> 
+<p>Digging a little deeper and checking the <a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/lwc.reference_page_reference_type">Page Reference Types</a>, you will find "limited support for Communities". I tested it out, here are my findings:</p> 
+<ul> 
+ <li>The documentation is accurate. What is stated as working works, what is stated as not supported in communities does not work.</li> 
+ <li>The painfully missing piece is <code>standard__component</code> which would allow to navigate to a custom lightning component. It is the only component that supports <code>state</code> (more on that later)</li> 
+ <li>Navigate to <code>standard__objectPage</code> opens the list/page layout based on the user's profile. When you specify. <code>actionName="new"</code>, the standard object detail page will open. It will not use an eventual define new button overwrite</li> 
+ <li>Works as specified: <code>standard__recordPage</code>, <code>standard__knowledgeArticlePage</code></li> 
+ <li>Doesn't work: <code>standard__webPage</code></li> 
+ <li>None of the navigation working in communities supports the <code>state</code> properties</li> 
+ <li>The most interesting navigation in communities is <code>standard__namedPage</code>. Beside the predefined default pages "Home","Account management", "Contact Support", "Error", "Top Articles" and "Topic Catalog", it supports "Custom Pages". In other words: any of the pages you have created in your community. So the missing <code>standard_component</code> can be mitigated by embedding it into a custom page. Keep in mind: the <code>pageName</code> property is the URL, not the name.</li> 
+</ul> 
+<h3><a href="#transferring-state" id="transferring-state">Transferring state</a></h3> 
+<p>As mentioned above, the <code>state</code> property gets ignored, dropped without an error when used with any of the working navigation items. The remedy for that is to use the session store. An Aura code snippet would looks like this:</p> 
+<pre class="brush: js">function(component, event, helper) {
+    event.preventDefault();
+    var navService = component.find("navService");
+    var pageReference = {
+        type: "standard__namedPage",
+        attributes: {
+            pageName: "some-page-name"
+        },
+        state: {
+            bingo: true,
+            answer: 42,
+            tango: "double"
+        }
+    };
+    sessionStorage.setItem('localTransfer', JSON.stringify(pageReference.state));
+    navService.navigate(pageReference);
+}
+</pre> 
+<p>I left the state in the <code>pageReference</code> JSON object to show that it doesn't harm. The <code>navService</code> component is defined as <code>&lt;lightning:navigation aura:id="navService"/&gt;</code> in Aura. On the receiving end you use:</p> 
+<pre class="brush: js">var localStuff = sessionStorage.getItem('localTransfer');
+if (localStuff) {
+	var state = JSON.parse(localStuff);
+	// Do the needed stuff here
+}
+</pre> 
+<p>As usual YMMV</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 12 March 2019
+<span class="divider">|</span>
+<a href="/blog/2019/03/navigation-in-lightning-communities.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/03/navigation-in-lightning-communities.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Navigation in Lightning communities"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/03/navigation-in-lightning-communities.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1><small><a href="/blog/2019/03/using-render-in-lwc.html">Using render() in LWC</a></small></h1>
+					<hr />
+					<div><p>Whatever template system you use, you will end up with show/hide logic based on your data's values. In Aura components you have an expression language (reminded me of JSF), in LWC external (in your JavaScript class) boolean values or functions.</p> 
+<h3><a href="#keep-it-tidy" id="keep-it-tidy">Keep it tidy</a></h3> 
+<p>A common interaction pattern, similar to the Salesforce default behavior when you have more than one record type available, is to show a pre-selection (which record type), a main selection (required data) and (eventually) a post-selection (what's next?).</p> 
+<p>In a lightning web component you can handle that easily using <a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/create_conditional"><code>if:true|false</code></a> inside your html template.</p> 
+<p>But what if the sections are quite lengthy? Maintaining the HTML template can get messy. Enter the <code>render()</code> method. In LWC this method doesn't to the actual rendering, but determines what template to use to render the component.</p> 
+<p>There are a few simple rules:</p> 
+<ul> 
+ <li>You need to import your template into your JavaScript file</li> 
+ <li>The call to <code>render()</code> must return the imported variable (see example below)</li> 
+ <li>You can make the computation dependent on anything inside the class</li> 
+ <li>You can't assemble the template in memory as a String, it will throw you an error</li> 
+</ul></div>
+					<hr />
+ <a href="/blog/2019/03/using-render-in-lwc.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 04 March 2019
+<span class="divider">|</span>
+<a href="/blog/2019/03/using-render-in-lwc.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/webcomponents.html">WebComponents</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/03/using-render-in-lwc.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Using render() in LWC"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/03/using-render-in-lwc.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1><small><a href="/blog/2019/03/global-value-providers-in-lwc.html">Global value providers in LWC</a></small></h1>
+					<hr />
+					<div><p>Drinking the <a href="https://www.webcomponents.org/specs">new CoolAid</a> one has to come to terms with the old ways. We had a <a href="/blog/2018/12/lwc-quick-overview.html">first glimpse</a> before.</p> 
+<h3><a href="#same-but-different-reloaded" id="same-but-different-reloaded">Same but different, reloaded</a></h3> 
+<p>When developing lightning components using the <a href="https://github.com/forcedotcom/aura">Aura Framework</a> you could use a series of global value providers that give you access to various data sets: <code>$ContentAsset</code>, <code>$Labels</code>, <code>$Locale</code>, and <code>$Resource</code>.</p> 
+<p>While this convenient, it pollutes the global name space and it a very proprietary (albeit popular at its time) way to provide information. <a href="https://developer.salesforce.com/docs/component-library/documentation/lwc">LWC</a> fixes this in a very standard compliant way. This became possible thanks to the new capabilities in the JavaScript <a href="http://www.ecma-international.org/ecma-262/6.0/">ES6</a> standard.</p> 
+<p>In LWC all information provided by Salesforce gets added using ES6 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import">import</a> statements from the <code>@salesforce</code> name space. While that syntax is new to Salesforce developers, it is old news for the rest of JavaScript land. So here you go:</p> 
+<ul> 
+ <li><code>$ContentAsset</code> -&gt; <code>import assetName from @salesforce/contentAssetUrl/[AssetName]</code></li> 
+ <li><code>$Labels</code> -&gt; <code>import labelName from @salesforce/label/[LabelName]</code></li> 
+ <li><code>$Locale</code> -&gt; <code>import i18nproperty from @salesforce/i18n/[internationalizationProperty]</code> (with various values)</li> 
+ <li><code>$Resource</code> -&gt; <code>import resourceName from @salesforce/resourceUrl/[resourceName]</code></li> 
+ <li>current User Id -&gt; <code>import userId from @salesforce/User/Id</code></li> 
+</ul> 
+<p>The <code>@salesforce</code> name space provides access <a href="http://component-library-dev.herokuapp.com/docs/component-library/documentation/lwc/lwc.reference_salesforce_modules">to additional data</a>, like <code>apex</code> and <code>schema</code>.</p> 
+<p>As usual YMMV</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 01 March 2019
+<span class="divider">|</span>
+<a href="/blog/2019/03/global-value-providers-in-lwc.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/webcomponents.html">WebComponents</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/03/global-value-providers-in-lwc.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Global value providers in LWC"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/03/global-value-providers-in-lwc.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1><small><a href="/blog/2019/02/from-excel-to-package.xml.html">From Excel to package.xml</a></small></h1>
+					<hr />
+					<div><p>Cleaning up an org that has gone through several generations of ownership and objectives is fun. Some tooling helps</p> 
+<h3><a href="#data-frugality" id="data-frugality">Data frugality</a></h3> 
+<p>A computing principle, very much the anathema to Google and Facebook, is <a href="https://martinfowler.com/bliki/Datensparsamkeit.html">Data Frugality</a>, storing only what you actually need. It is the data equivalent to coders' <a href="https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it">YAGNI</a> principle. Latest since <a href="http://ec.europa.eu/justice/newsroom/data-protection/infographic/2017/index_en.htm">GDPR</a> it got center stage attention.</p> 
+<h3><a href="#your-cleanup-plan" id="your-cleanup-plan">Your cleanup plan</a></h3> 
+<p>So your cleanup exercise has a few steps:</p> 
+<ul> 
+ <li>Find fields that don't have any data. You can use tools like <a href="https://appexchange.salesforce.com/appxListingDetail?listingId=a0N30000003HSXEEA4">Field Trip</a> to achieve that</li> 
+ <li>Verify that these fields are not "about to be used", but "really obsolete"</li> 
+ <li>Add all the fields that did have some data left over, but unused now</li> 
+ <li>Add fields that contain data legal told you to get rid off</li> 
+</ul> 
+<p>The absolute standard approach, of any consultant I have encountered, is to fire up an Excel sheet and track all fields in a list, capture insights in the <code>remarks</code> column and have another column that indicates <code>can be deleted</code> Status. Something like <code>Yes,No,Investigating</code> or "Call Paul to clarify". I would be surprised if there's a different approach in the wild (in theory there are).</p> 
+<h3><a href="#excel-as-source" id="excel-as-source">Excel as source?</a></h3> 
+<p>In a current project the consultant neatly created one sheet (that's the page, not the file) per object, labeled with the object name, containing rows for all custom fields. Then the team went off to investigate. In result they identified more than one thousand fields to be deleted.</p> 
+<p>Now to actually get rid of the fields, you could <a href="https://www.mturk.com/">outsource</a> some manual labor to either go into you org or use Copy-Paste to create a <code>destructivechanges.xml</code> package file for use with the <a href="https://developer.salesforce.com/docs/atlas.en-us.daas.meta/daas/daas_destructive_changes.htm">Salesforce ANT tool</a>.</p> 
+<p>In any case: the probability that there will be errors in transferring is approximately 100%. The business owner will point to: I signed off that spreadsheet and not that XML file! Finger pointing commencing.</p> 
+<p>There must be a better way!</p></div>
+					<hr />
+ <a href="/blog/2019/02/from-excel-to-package.xml.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 23 February 2019
+<span class="divider">|</span>
+<a href="/blog/2019/02/from-excel-to-package.xml.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/xml.html">XML</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/02/from-excel-to-package.xml.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="From Excel to package.xml"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/02/from-excel-to-package.xml.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
+					<h1><small><a href="/blog/2019/02/draining-the-happy-soup-part-3.html">Draining the happy soup - Part 3</a></small></h1>
+					<hr />
+					<div><p>In <a href="/blog/2019/02/draining-the-happy-soup-part-2.html">Part 2</a> we had a look at the plan. Now it is time to put it into motion. Let's setup our project structure</p> 
+<h3><a href="#put-some-order-in-your-files" id="put-some-order-in-your-files">Put some order in your files</a></h3> 
+<p>Our goal is to distribute happy soup artifacts into packages. In this installment we setup the directory structure for that. Sticking to a clear structure makes it easier to get a step closer to package Nirvana step by step.</p> 
+<p><img src="/blog/images/2019/SFDXDirectoryStructure.jpg" alt="Proposed directory structure"></p> 
+<p>Let me run through some of the considerations:</p> 
+<ul> 
+ <li>I'll keep all packages inside a single directory structure. Name the root after your org. What might pose a challenge is to name it <code>sfdx</code> - too close to that hidden directory <code>.sfdx</code> that does exist in your home directory and might exist in the project directories</li> 
+ <li>You could keep the whole tree in a single repository or subject each package directory to its own repository. I'd prefer the later, since it allows a developer to pull only the relevant directories from source control (That's Option B)</li> 
+ <li>The base directory, containing the artifacts that won't be packaged shall be named <code>HappySoup</code>. While it is a rather colloquial term, it is well established</li> 
+ <li>I'm a little old fashioned when it comes to directory names: no spaces, double byte characters (that includes ?) or special characters</li> 
+ <li>You need to pay attention to <code>sfdx-project.json</code> and <code>.sfdx</code> as well as <code>.gitignore</code>. More and that below</li> 
+ <li>When you have mixed OS developer communities using Windows, MAC or Linux, directory delimiters could become a headache. My tongue-in-cheek recommendation for Windows would be to use <a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10">WSL</a></li> 
+</ul> 
+<h3><a href="#key-files-and-directories" id="key-files-and-directories">Key files and directories</a></h3> 
+<p>Initially you want to divide, but not yet package. So your projects need to know about each other. Higher level packages, that in future will depend on base packages need to know about them and each package needs to know about the <code>HappySoup</code>. To get there I adjust my <code>sfdx-project.json</code>:</p> 
+<pre class="brush: js">{
+"packageDirectories" : [
+    { "path": "force-app", "default": true},
+    { "path" : "../ObjectBase/force-app" },
+    { "path" : "../HappySoup/force-app" }
+  ],
+"namespace": "",
+"sfdcLoginUrl" : "https://login.salesforce.com",
+"sourceApiVersion": "45.0"
+}
+</pre> 
+<p>The key here are the relative path entries like <code>../HappySoup/force-app</code>. When you use <code>sfdx force:source:push</code> the content gets pushed to your scratch org, so it is complete. When you use <code>sfdx force:source:pull</code> changes you made are copied down to the default path, so the adjacent projects remain as is.</p> 
+<p>When using <code>pull</code> and <code>push</code> from <a href="https://developer.salesforce.com/tools/extension_vscode">VSCode</a> it will use the default user name configured for SFDX. To ensure that you don't push to or pull from the wrong place, you need to create one scratch org each using <code>sfdx force:org:create --f config/project-scratch-def.json -a [ScratchOrgAlias]</code> and then execute <code>sfdx force:config:set defaultusername=[ScratchOrgAlias]</code>.</p> 
+<p>The command will create a <code>.sfdx</code> directory and config files inside in your project. Unless all developers checking out that repository use the same aliases (unlikely), you want to add <code>.sfdx</code> to your <a href="https://github.com/forcedotcom/sfdx-simple/blob/master/.gitignore">.gitignore</a> file.</p> 
+<p>Now you are all set to move files from the happy soup to future package directories. With the relative path in your <code>sfdx-project.json</code> no packaging is required now and you still can get a fully functioning scratch org.</p> 
+<p>One pro tip: instead of relying on individual scratch definition files, you might opt to use the one in the happy soup, so all your scratches have the same shape.</p> 
+<p>Next stop: building the solution before you package. As usual YMMV.</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 22 February 2019
+<span class="divider">|</span>
+<a href="/blog/2019/02/draining-the-happy-soup-part-3.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/sfdx.html">SFDX</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/02/draining-the-happy-soup-part-3.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Draining the happy soup - Part 3"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/02/draining-the-happy-soup-part-3.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2019/02/draining-the-happy-soup-part-2.html">Draining the happy soup - Part 2</a></small></h1>
 					<hr />
 					<div><p>We stormed ahead in <a href="/blog/2019/02/draining-the-happy-soup-part-1.html">Part 1</a> and downloaded all the meta data in SFDX format. Now it's time to stop for a moment and ask: what's the plan?</p> 
@@ -137,337 +581,6 @@ categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href=
 						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/02/draining-the-happy-soup-part-2.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Draining the happy soup - Part 2"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2019/02/draining-the-happy-soup-part-2.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2019/02/the-efficiency-paradox.html">The Efficiency Paradox</a></small></h1>
-					<hr />
-					<div><p>A common setup in many organizations is to outsource development and/or operation to a system integrator. For agile organizations that can post <a href="https://www.targetprocess.com/blog/agile-outsourcing-get-it-or-forget-it/">a challenge</a>. A key is <a href="https://twitter.com/notessensei/status/1096669398574587904">skillfulness</a> - how <a href="https://fastgood.cheap/">fast and good</a> can it be implemented?</p> 
-<h3><a href="#does-your-system-integrator-invest-in-efficiency" id="does-your-system-integrator-invest-in-efficiency">Does your System Integrator invest in efficiency?</a></h3> 
-<p>Competition is supposed to keep cost at bay, however customer relation and familiarity with the environment (In Dreamland everything is documented) pose a substantial barrier to entry. A barrier to entry will enable an incumbent vendor to charge more.</p> 
-<p>So an engagement manager might see him/herself confronted with an interesting dynamic.</p> 
-<p><img src="/blog/images/2019/TheEfficiencyParadox.png" alt="Feedback loop for efficiency"></p> 
-<p>There are a slow and a fast loop running concurrently. Depending on the planning horizon, the engagement manager might not see the outer loop to the detriment of all participants. Let me walk you through:</p> 
-<ol> 
- <li>Investment in better tools or skills leads to improved efficiency. Work is delivered faster, closer to actual requirements and with less defects</li> 
- <li>In the short run this leads to a reduction in hours sold (bad for time and material contracts)</li> 
- <li>A reduction in hours sold leads to reduced profitability since you have more resources sitting on the bench <br><br><strong>In conclusion</strong>: As long as the barrier to entry protects you, investing in efficiency is bad for the bottom line. So investment in efficiency should only be made to keep the barrier to entry high enough (Add you own sarcasm tag here). However there's a longer running loop in motion:</li> 
- <li> <p>Improved efficiency leads to better quality and shorter delivery time. Work is done fast and good (which might justify higher charges per hour)</p> </li> 
- <li>Getting good quality soon leads to an increase in customer satisfaction. Who doesn't like <a href="https://www.supplyroom.com/us-military/product/46439/">swift and sure</a> delivery</li> 
- <li>Happy customers, especially when delivery times are short, will find an endless stream (only throttled by budget) of additional requirement to implement</li> 
- <li>Having more and more new requirements coming in, keeps people off the bench and keeps utilization high. High utilization is the base of service profitability</li> 
- <li>Investment in efficiency is justified</li> 
-</ol> 
-<p>This is a nice example of a <a href="https://blog.deming.org/2016/04/systems-thinking-feedback-loops/">Systems Thinking Feedback Loop</a>. Conclusions vary on observed time frames.</p></div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 18 February 2019
-<span class="divider">|</span>
-<a href="/blog/2019/02/the-efficiency-paradox.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/singapore.html">Singapore</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/02/the-efficiency-paradox.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="The Efficiency Paradox"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2019/02/the-efficiency-paradox.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2019/02/draining-the-happy-soup-part-1.html">Draining the happy soup - Part 1</a></small></h1>
-					<hr />
-					<div><p>Unleashing <a href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_dev2gp.htm">unlocked packages</a> promises to reduce risk, improve agility and drive home the full benefits of <a href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_intro.htm">SFDX</a></p> 
-<h3><a href="#some-planning-required" id="some-planning-required">Some planning required</a></h3> 
-<p>I'm following the approach "Throw and see what sticks to the wall". The rough idea: retrieve all meta data, convert it into SFDX format, distribute it over a number of packages and put it back together.</p> 
-<p>To make it more fun I picked an heavily <del>abused</del> customized and used org with more than 20,000 meta data artifacts (and a few surprises). Follow along.</p> 
-<h3><a href="#learning" id="learning">Learning</a></h3> 
-<p>Trailhead has <a href="https://trailhead.salesforce.com/en/content/learn/modules/unlocked-packages-for-customers">a module</a> on unlocked packages on its trail <a href="https://trailhead.salesforce.com/content/learn/trails/sfdx_get_startedhttps://trailhead.salesforce.com/content/learn/trails/sfdx_get_started">Get Started with Salesforce DX</a>.</p> 
-<p>While you are there, check out the (at time of writing the 15) modules on <a href="https://trailhead.salesforce.com/modules#tag=tag-alm">Application Lifecycle Management</a>.</p> 
-<h3><a href="#downloading" id="downloading">Downloading</a></h3> 
-<p>The <a href="https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_metadata.htm">limits</a> for retrieving packages (10,000 elements, 39MB zip or about 400 MB raw) posed an issue for my XL org. So I used, growing fond of it, <a href="https://github.com/kgalant/PackageBuilder">PackageBuilder</a> to download all sources. It automatically creates multiple package.xml files when you exceed the limits.</p></div>
-					<hr />
- <a href="/blog/2019/02/draining-the-happy-soup-part-1.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 14 February 2019
-<span class="divider">|</span>
-<a href="/blog/2019/02/draining-the-happy-soup-part-1.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/sfdx.html">SFDX</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/02/draining-the-happy-soup-part-1.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Draining the happy soup - Part 1"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2019/02/draining-the-happy-soup-part-1.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2019/02/reporting-your-validation-formulas.html">Reporting your validation formulas</a></small></h1>
-					<hr />
-					<div><p>Validation formula are a convenient way to ensure your data integrity. With great powers? comes the risk of alienating users by preventing them entering data.</p> 
-<h3><a href="#why-look-at-them" id="why-look-at-them">Why look at them?</a></h3> 
-<p>You can easily look at all formula in the Object Manager, but it is tedious to look at every formula one by one. You might ask yourself:</p> 
-<ul> 
- <li>Do all my formula exclude the integration profile?</li> 
- <li>Are context (e.g. the country) specific formulas set correctly?</li> 
- <li>Do validation rules follow the naming conventions?</li> 
- <li>Are messages helpful or intimidating?</li> 
-</ul> 
-<h3><a href="#extract-and-report" id="extract-and-report">Extract and report</a></h3> 
-<p>You already use <a href="https://github.com/kgalant/PackageBuilder">PackageBuilder</a> to extract objects (and other stuff) as <a href="http://www.xml.org/">XML</a>, so it is just a small step: slap all <code>*.object</code> files into one big file and run an <a href="https://en.wikipedia.org/wiki/XSLT">XSLT</a> report over it.</p> 
-<p>Not so fast! If you concatenate XML files using OS copy you end up with three problems:</p> 
-<ul> 
- <li>You don't have an XML root element. Like the <a href="https://en.wikipedia.org/wiki/Highlander_(film)">Highlander</a> - there can be only one. You could sandwich the files in opening and closing tags, but then you have the next problem</li> 
- <li>XML files start <code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;</code> and copying that file will sprinkle that statement multiple times into your result. The XSLT processor will barf</li> 
- <li>The result will get very big and any report will take a long time or even run out of memory</li> 
-</ul> 
-<h3><a href="#a-bit-of-tooling" id="a-bit-of-tooling">A bit of tooling</a></h3> 
-<p>I solved, for my needs, using a small <a href="https://gist.github.com/Stwissel/aeff1c523983ad7a89b33a7d2d67de43">Java class</a> and <a href="https://gist.github.com/Stwissel/cc2289fc319f468deacee7ba7649a4e6">one XSLT stylesheet</a>. Java because: I'm familiar with it and NodeJS still sucks with XML. XSLT, because: I'm familiar with it (heard that before?) and the styling of the output is independent from the processing step. I presume you know how to initiate an <a href="https://sourceforge.net/projects/saxon/files/Saxon-HE/9.9/">XSLT 2.0 transformation</a>.</p></div>
-					<hr />
- <a href="/blog/2019/02/reporting-your-validation-formulas.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 07 February 2019
-<span class="divider">|</span>
-<a href="/blog/2019/02/reporting-your-validation-formulas.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/salesforce.html">Salesforce</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/02/reporting-your-validation-formulas.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Reporting your validation formulas"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2019/02/reporting-your-validation-formulas.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2019/01/avoid-the-clean-code-shock-with-pmd.html">Avoid the "Clean Code Shock" with PMD</a></small></h1>
-					<hr />
-					<div><p>Your new year resolution includes "<em>Write clean Apex code</em>". So you run <a href="https://pmd.github.io/">PMD</a> with a full ruleset and <a href="/blog/2018/11/cleaning-up-an-apex-codebase-with-pmd.html">get shocked</a> by the number of violations. You drop the resolution in a blink.</p> 
-<h3><a href="#dont-boil-the-ocean" id="dont-boil-the-ocean">Don't boil the Ocean</a></h3> 
-<p>Even a journey of a thousand miles <a href="https://despair.com/collections/demotivators/products/ambition?variant=2457295747">starts with a single step</a>, so let's break down the task into manageable chunks to <a href="https://en.wikipedia.org/wiki/Divide_and_rule">divide and rule</a>.<br> There are 2 dimensions you can use: <strong>Type of code</strong> and <strong>priority levels</strong>. Using them you can turn your <a href="https://amzn.to/2RmMXvp">Clean Code</a> journey into manageable stages.</p> 
-<h3><a href="#code-types" id="code-types">Code Types</a></h3> 
-<ul> 
- <li>Legacy code: all code that doesn't fall in any of the two other categories</li> 
- <li>Changed code: code that needs change due to business requirements</li> 
- <li>New code: new code written for new or changed functionality (applies to copy &amp; paste too)</li> 
-</ul> 
-<h3><a href="#priority-levels" id="priority-levels">Priority Levels</a></h3> 
-<ul> 
- <li>1 = security and performance, will fail build</li> 
- <li>2 = bad code, will fail build</li> 
- <li>3 &amp; 4 = hard to maintain code, will generate warning</li> 
- <li>5 = ugly code, will generate hint</li> 
-</ul> 
-<p>PMD rules for code types should have different priorities. A different number of tests will fail a build:</p> 
-<ul> 
- <li>11 for legacy code (all around performance and security)</li> 
- <li>33 for changed code</li> 
- <li>44 for new code</li> 
-</ul> 
-<p>This will require to run PMD with different rulesets on <a href="/blog/2018/11/cleaning-up-an-apex-codebase-with-pmd.html">subsets of your code base</a></p></div>
-					<hr />
- <a href="/blog/2019/01/avoid-the-clean-code-shock-with-pmd.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 02 January 2019
-<span class="divider">|</span>
-<a href="/blog/2019/01/avoid-the-clean-code-shock-with-pmd.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/apex.html">Apex</a>  <a href="/blog/categories/pmd.html">PMD</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/01/avoid-the-clean-code-shock-with-pmd.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Avoid the "Clean Code Shock" with PMD"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2019/01/avoid-the-clean-code-shock-with-pmd.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2018/12/pattern-in-your-apex-controller.html">Pattern in your Apex Controller</a></small></h1>
-					<hr />
-					<div><p>A (software) <a href="https://en.wikipedia.org/wiki/Software_design_pattern">design pattern</a> is a general, reusable solution to a commonly occurring problem withing a given context. <a href="https://en.wikipedia.org/wiki/Christopher_Alexander">Christoper Alexander</a> inspired the <a href="https://en.wikipedia.org/wiki/Design_Patterns">Gang of four</a> to apply pattern to software and enumerate 23 classic software pattern.</p> 
-<p>This article discusses how to use some of them in the context of <a href="https://en.wikipedia.org/wiki/Salesforce.com#Apex">Apex</a> controllers.</p> 
-<h3><a href="#the-context-same-same-but-different" id="the-context-same-same-but-different">The context: Same same, but different</a></h3> 
-<p>You are creating an application to support construction on force.com that will serve multiple countries. Part of the requirements is to compute a risk score for any given project. While <a href="https://www.iso.org/news/2012/12/Ref1685.html">ISO standards</a> form the foundation of the assessment, each jurisdiction has some specialties that alter the logic eventually.</p> 
-<p>This is just one of the requirements, you have many more that follow the <code>pattern</code> <a href="https://www.samesamebutdifferent.site/2017/08/same-same-but-different-origin/">Same Same - But different</a>.</p> 
-<h3><a href="#patterns-used" id="patterns-used">Patterns used</a></h3> 
-<ul> 
- <li><a href="https://en.wikipedia.org/wiki/Interface-based_programming">Interface based programming</a></li> 
- <li><a href="https://msdn.microsoft.com/en-us/library/aa480019.aspx">Metadata driven application design</a></li> 
- <li><a href="https://en.wikipedia.org/wiki/Facade_pattern">Facade pattern</a></li> 
- <li><a href="https://en.wikipedia.org/wiki/Factory_method_pattern">Factory pattern</a></li> 
-</ul> 
-<p>Besides those, you want to know <a href="https://trailhead.salesforce.com/en/search?keywords=%22Apex%20Enterprise%20Patterns%22">Apex Enterprise Patterns</a>. Go Trailhead and learn.</p></div>
-					<hr />
- <a href="/blog/2018/12/pattern-in-your-apex-controller.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 29 December 2018
-<span class="divider">|</span>
-<a href="/blog/2018/12/pattern-in-your-apex-controller.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/apex.html">Apex</a>  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/software.html">Software</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/12/pattern-in-your-apex-controller.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Pattern in your Apex Controller"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2018/12/pattern-in-your-apex-controller.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2018/12/lwc-quick-overview.html">Lightning Web Components (LWC) quick overview</a></small></h1>
-					<hr />
-					<div><p>On December 13 Salesforce announced <a href="https://www.salesforce.com/blog/2018/12/introducing-lightning-web-components-with-javascript">Lightning Web Components</a> (LWC) a new way to build components on the Salesforce platform. Here is my take.</p> 
-<h3><a href="#expanding-lightning-family" id="expanding-lightning-family">Expanding Lightning Family</a></h3> 
-<p>"Lightning" serves now as a family name for modern Salesforce development. LWC are the latest family members. We now have:</p> 
-<ul> 
- <li>Lightning Platform: the runtime environment</li> 
- <li><a href="https://www.lightningdesignsystem.com/">Lightning Design System</a>: providing the visuals</li> 
- <li>The <a href="https://github.com/forcedotcom/aura">Aura Framework</a>: Implementing components for lightning</li> 
- <li><a href="http://ng-lightning.github.io/ng-lightning/">ng-lightning</a>: Angular components using the Lightning Design System - a open source contribution, not affiliated with commercial Salesforce</li> 
- <li><a href="https://react.lightningdesignsystem.com/">Lightning React</a>: React components using the Lightning Design system</li> 
- <li>Last not least: <a href="https://developer.salesforce.com/blogs/2018/12/introducing-lightning-web-components.html">Lightning Web Components</a> (LWC)</li> 
-</ul> 
-<p>The linked blog entries explain the rationale, so check them out.</p> 
-<h3><a href="#same-but-different" id="same-but-different">Same but different</a></h3> 
-<p>The look and feel doesn't change, the way you code them does. For now <a href="https://developer.salesforce.com/tools/sfdxcli">SFDX</a>, <a href="https://code.visualstudio.com/">Visual Studio Code</a> and the <a href="https://marketplace.visualstudio.com/items?itemName=salesforce.salesforcedx-vscode">Salesforce Extension Pack</a> are to goto tools for the Spring 2019 release.</p> 
-<p><img src="/blog/images/2018/ComponentMigration.png" alt="The new file structure 4 instead of 8 files"></p> 
-<p>Instead of up to 8 files you only need 4. For one: all JavaScript (3 files) now lives in one <a href="http://es6-features.org/">ES6</a> JS file and we don't have an auradoc or svg file for now</p> 
-<h3><a href="#co-existence" id="co-existence">Co-existence</a></h3> 
-<p>Existing <a href="http://www.auraframework.org/">Aura based</a> components will continue to work and will even allow to contain LWC components.</p> 
-<p><img src="/blog/images/2018/ComponentContainment.png" alt="LWC in Aura, but not Aura in LWC"></p> 
-<p>What you can't do is putting Aura components inside LWC. So your transition to LWC is bottom-up, not top-down</p></div>
-					<hr />
- <a href="/blog/2018/12/lwc-quick-overview.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 14 December 2018
-<span class="divider">|</span>
-<a href="/blog/2018/12/lwc-quick-overview.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/12/lwc-quick-overview.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Lightning Web Components (LWC) quick overview"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2018/12/lwc-quick-overview.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2018/12/salesforce-login-statistics-aggregation.html">Salesforce login statistics aggregation</a></small></h1>
-					<hr />
-					<div><p>A recent requirement from a customer was "I'd like to analyze logins by users in Excel", despite a <a href="https://success.salesforce.com/answers?id=90630000000gsJjAAI">dashboard</a> approach would be sufficient. With a few million records aggregating in Excel wasn't particularly appealing</p> 
-<h3><a href="#download-the-log" id="download-the-log">Download the log</a></h3> 
-<p>Salesforce setup allows to download the log as <code>csv</code> or <code>csv.gz</code> file. In any case you should use the later. I learned the hard way: the <a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding">chunked transfer encoding</a> might leave you with less data be processed than you expect.</p> 
-<p>The <a href="https://docs.oracle.com/javase/7/docs/api/java/util/Scanner.html">Scanner</a> simply stopped after a few thousand entries, while the <a href="https://commons.apache.org/proper/commons-csv/">csv parser</a> barfed with an error.</p> 
-<h3><a href="#processing" id="processing">Processing</a></h3> 
-<p>After downloading and extracting the csv I used a small Java routine (yep, I'm that old) to aggregate logins per user, capturing the count and the first/last login date as well as the country of login (with the disclaimer caveats) and the eventual community.</p> 
-<p>For reliably and robustly reading csv in Java, usually I would use a <a href="https://commons.apache.org/proper/commons-csv/">robust library</a>, however in this case having no dependencies and using the scanner did just nicely.</p></div>
-					<hr />
- <a href="/blog/2018/12/salesforce-login-statistics-aggregation.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 05 December 2018
-<span class="divider">|</span>
-<a href="/blog/2018/12/salesforce-login-statistics-aggregation.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/12/salesforce-login-statistics-aggregation.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Salesforce login statistics aggregation"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2018/12/salesforce-login-statistics-aggregation.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2018/11/supercharge-sfdx-with-ui-licious.html">Supercharge SFDX with Ui-licious</a></small></h1>
-					<hr />
-					<div><p>You <a href="https://developer.salesforce.com/tools/sfdxcli">drank the Coolaid</a> and you are all in and really love your <a href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_scratch_orgs.htm">Scratch Orgs</a>. Just a few things drive you crazy.</p> 
-<h3><a href="#when-the-api-doesnt-expose-a-setting" id="when-the-api-doesnt-expose-a-setting">When the API doesn't expose a setting</a></h3> 
-<p>Your application is querying the OutOfOffice objects. Unfortunately they only exist when the Chatter settings have enabled them. To my best knowledge there is no API or config setting to achieve that from the command line. So automated testing in a scratch org won't work.</p> 
-<h3><a href="#ui-licious-to-the-rescue" id="ui-licious-to-the-rescue">Ui-licious to the rescue</a></h3> 
-<p><a href="https://uilicious.com/">Ui-licious</a> is a UI testing service that uses JavaScript as its scripting language. This makes an easy read and edit. A script that can set the missing OOO setting is short and simple (if you agree <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe">iFrames</a> are easy to handle). You can (almost) read it out aloud:</p> 
-<pre class="brush: javascript">// URL Provided by data object from the command line
-I.goTo(DATA.result.url);
-I.must.see("Chatter Settings");
-// To ensure we work on the iFrame we get the id
-let iframeId = UI.execute("return document.getElementsByTagName('iframe')[0].getAttribute('id')");
-// The iFrame loads slowly
-I.wait(10);
-UI.context("#" + iframeId, () =&gt; {
-	I.see("Chatter is a corporate network that lets your users work together, talk to each other, and share information, all in real time.");
-    I.click("Edit");
-    I.must.see("Save");
-    I.select("Users can set Out of Office messages");
-    I.click("Save");
-})
-</pre> 
-<p>The interesting piece in the above is <code>DATA.result.url</code> which is an JSON object that needs to be handed over to the Ui-licious. A small command script in tandem with SFDX does the trick. The beauty here: we directly can reuse the output of an sfdx command as input for the <code>uilicious-cli</code>.</p> 
-<pre class="brush: bash">sfdx force:org:open -r -p lightning/setup/CollaborationSettings/home --json &gt; local.json
-uilicious-cli  run "ProjectName" "ScriptName" --dataFile local.json -u uiliciousUser -p uiliciousPassword
-</pre> 
-<p>It probably would be part of a larger CI script, but you get the idea! You might not store the output in a file, but use bash to capture it in memory and use <code>--dataObject</code> instead. Full details are in <a href="https://docs.uilicious.com/cli/test_data.html">the documentation</a>.</p> 
-<p>As usual YMMV</p></div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 27 November 2018
-<span class="divider">|</span>
-<a href="/blog/2018/11/supercharge-sfdx-with-ui-licious.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/11/supercharge-sfdx-with-ui-licious.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Supercharge SFDX with Ui-licious"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2018/11/supercharge-sfdx-with-ui-licious.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2018/11/cleaning-up-an-apex-codebase-with-pmd.html">Cleaning up an APEX codebase with PMD</a></small></h1>
-					<hr />
-					<div><p>You inherit a large code base, it is perfect, a work of beauty. Then you wake up to the ping of your <a href="https://pmd.github.io">PMD</a> run completion and find multiple thousands of rule violation (and you haven't even started to assert test assertions). Here is how to fix that.</p> 
-<h3><a href="#divide-and-conquer" id="divide-and-conquer">Divide and conquer</a></h3> 
-<p><a href="https://www.investopedia.com/terms/b/boil-the-ocean.asp">Boiling the ocean</a> and fix all issues in one go is hardly an option. So you need to strategize. PMD gives you a hint: every rule has a <a href="https://pmd.github.io/pmd-6.9.0/pmd_userdocs_configuring_rules.html#message-and-priority-overriding">priority</a> property, where you can specify how important this rule is. The higher the number, the less important the rule. You can run PMD using the <code>min -[somenumber]</code> parameter which will ignore rules with a higher value.</p> 
-<p>Next step is to decide what rules constitute your priority 1 and 2 buckets. I strongly recommend to make them mandatory fixes before the next deployment, so pick the rules carefully. The candidates I suggest are around performance and security:</p> 
-<h4><a href="#priority-1" id="priority-1">Priority 1</a></h4> 
-<ul> 
- <li>ApexXSSFromURLParam</li> 
- <li>ApexSOQLInjection</li> 
- <li>ApexOpenRedirect</li> 
- <li>ApexInsecureEndpoint</li> 
- <li>AvoidDmlStatementsInLoops</li> 
- <li>AvoidSoqlInLoops</li> 
-</ul> 
-<h4><a href="#priority-2" id="priority-2">Priority 2</a></h4> 
-<ul> 
- <li>ApexCRUDViolation</li> 
- <li>ApexSharingViolations</li> 
-</ul> 
-<p>Thereafter you decide on priority 3 onwards. Strong candidates for level 3 are all the rules that ensure code is maintainable and avoid errors, like deep nesting or cyclomatic complexity (a fancy word for "messy code")</p></div>
-					<hr />
- <a href="/blog/2018/11/cleaning-up-an-apex-codebase-with-pmd.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 23 November 2018
-<span class="divider">|</span>
-<a href="/blog/2018/11/cleaning-up-an-apex-codebase-with-pmd.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/apex.html">Apex</a>  <a href="/blog/categories/pmd.html">PMD</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2018/11/cleaning-up-an-apex-codebase-with-pmd.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Cleaning up an APEX codebase with PMD"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2018/11/cleaning-up-an-apex-codebase-with-pmd.html";
 						</script>
 					</p>
 </p>
@@ -583,6 +696,7 @@ categories:  <a href="/blog/categories/apex.html">Apex</a>  <a href="/blog/categ
 						<li ><a href="/blog/categories/twins.html">Twins</a></li>
 						<li ><a href="/blog/categories/umsys.html">UMsys</a></li>
 						<li ><a href="/blog/categories/vertx.html">vert.x</a></li>
+						<li ><a href="/blog/categories/webcomponents.html">WebComponents</a></li>
 						<li ><a href="/blog/categories/webdevelopment.html">WebDevelopment</a></li>
 						<li ><a href="/blog/categories/workflow.html">Workflow</a></li>
 						<li ><a href="/blog/categories/writingchinese.html">Writing Chinese</a></li>
