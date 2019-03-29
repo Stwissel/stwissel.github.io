@@ -6,7 +6,53 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Thu, 28 Mar 2019 15:14:32 +0000</pubdate>
+	<pubdate>Fri, 29 Mar 2019 10:00:30 +0000</pubdate>
+<item>
+	<title>Extract field definitions from object.xml</title>
+	<description>&lt;p&gt;The other department asked: can I have a csv list of fields with Name,Type,length from Salesforce. The only source they have are the object.xml files from a meta data API export&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#some-counting-required" id="some-counting-required"&gt;Some counting required&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;The object.xml file contains size information for text files only. For date and numbers that's not an issue. The sticky part are pick lists and multi select pick lists.&lt;/p&gt; 
+&lt;p&gt;A little XSLT goes a long way. The magic is in the expression &lt;code&gt;max((s:valueSet/s:valueSetDefinition/s:value/s:fullName/string-length()))&lt;/code&gt; For your enjoyment, the full style sheet:&lt;/p&gt; 
+&lt;pre class="brush: xml"&gt;&amp;lt;?xml version="1.0" encoding="UTF-8"?&amp;gt;
+&amp;lt;xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
+    xmlns:s="http://soap.sforce.com/2006/04/metadata"
+    exclude-result-prefixes="xs xd"
+    version="2.0"&amp;gt;
+   
+   &amp;lt;xsl:output method="text" encoding="UTF-8" /&amp;gt;
+    
+    &amp;lt;xsl:template match="/"&amp;gt;
+name,type,length
+&amp;lt;xsl:apply-templates select="/s:CustomObject/s:fields" /&amp;gt;
+    &amp;lt;/xsl:template&amp;gt;
+    
+    &amp;lt;xsl:template match="s:fields"&amp;gt;
+&amp;lt;xsl:value-of select="s:fullName"/&amp;gt;,&amp;lt;xsl:value-of select="s:type"/&amp;gt;,&amp;lt;xsl:value-of select="s:length"/&amp;gt;
+        &amp;lt;xsl:text&amp;gt;&amp;amp;#xa;&amp;lt;/xsl:text&amp;gt;
+    &amp;lt;/xsl:template&amp;gt;    
+    
+    &amp;lt;xsl:template match="s:fields[s:type='Picklist' or s:type='MultiselectPicklist']"&amp;gt;
+&amp;lt;xsl:value-of select="s:fullName"/&amp;gt;,&amp;lt;xsl:value-of select="s:type"/&amp;gt;,&amp;lt;xsl:value-of select="max((s:valueSet/s:valueSetDefinition/s:value/s:fullName/string-length()))" /&amp;gt;
+        &amp;lt;xsl:text&amp;gt;&amp;amp;#xa;&amp;lt;/xsl:text&amp;gt;
+    &amp;lt;/xsl:template&amp;gt;
+
+&amp;lt;!-- stuff without use --&amp;gt;
+&amp;lt;xsl:template match="s:fields[s:formula]" /&amp;gt;
+    &amp;lt;xsl:template match="s:fields[not(s:type)]" /&amp;gt;
+&amp;lt;xsl:template match="s:fields[s:type='Picklist' and not(s:valueSet)]" /&amp;gt;  
+    
+&amp;lt;/xsl:stylesheet&amp;gt;
+&lt;/pre&gt; 
+&lt;p&gt;One of the little stumbling blocks: a namespace for &lt;code&gt;http://soap.sforce.com/2006/04/metadata&lt;/code&gt; is required.&lt;/p&gt; 
+&lt;p&gt;As usual: YMMV&lt;/p&gt;</description>
+	<link>2019/03/extract-field-definitions-from-object.xml.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>7a3b8300-5207-11e9-b271-ab59574ac46b</guid>
+	<pubDate>29 March 2019</pubDate>
+
+</item>
 <item>
 	<title>Re-Usable Dynamic Custom Lookup LWC edition</title>
 	<description>&lt;p&gt;Over at &lt;a href="http://sfdcmonkey.com/2017/07/17/re-usable-custom-lookup/"&gt;sfdcmonkey&lt;/a&gt; there's a nice AURA component that allows for dynamic lookup of a given object. Super nice and useful. I wondered what it would take to be rebuild in &lt;a href="https://developer.salesforce.com/docs/component-library/documentation/lwc"&gt;LWC&lt;/a&gt;&lt;/p&gt; 
@@ -347,26 +393,6 @@ if (localStuff) {
 	<author>Stephan H. Wissel</author>
 	<guid>fa70b9a0-363c-11e9-bcba-578350efc416</guid>
 	<pubDate>22 February 2019</pubDate>
-
-</item>
-<item>
-	<title>Draining the happy soup - Part 2</title>
-	<description>&lt;p&gt;We stormed ahead in &lt;a href="/blog/2019/02/draining-the-happy-soup-part-1.html"&gt;Part 1&lt;/a&gt; and downloaded all the meta data in SFDX format. Now it's time to stop for a moment and ask: what's the plan?&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#you-need-a-plan" id="you-need-a-plan"&gt;You need a plan&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;When embarking on the SFDX package journey, the start is Phase 0. You have an org that contains all your meta data and zero or more (managed) packages from &lt;a href="https://appexchange.salesforce.com/"&gt;AppExchange&lt;/a&gt;. That's the &lt;a href="https://vignette.wikia.nocookie.net/shrek/images/5/58/Fc19d7db9cbcb7659aae3dce7bf6b3c1.jpg/revision/latest?cb=20170129025042"&gt;swamp&lt;/a&gt; you want to drain.&lt;/p&gt; 
-&lt;p&gt;&lt;img src="/blog/images/2019/Phase0.jpg" alt="Phase 0 - happy soup"&gt;&lt;/p&gt; 
-&lt;p&gt;Before you move to phase 1, you need to be clear how you want to structure your packages. High level could look like this:&lt;/p&gt; 
-&lt;p&gt;&lt;img src="/blog/images/2019/Structure.jpg" alt="Structure - happy soup"&gt;&lt;/p&gt; 
-&lt;ol&gt; 
- &lt;li&gt;You have an unpackaged base, that over time will shrink. The interesting challenge is to deal with dependencies there&lt;/li&gt; 
- &lt;li&gt;Some of the components will be used across all system - most likely extensions to standard objects or triggers and utility classes. Core LWC components are good candidates for base packages too. There can be more than one base package&lt;/li&gt; 
- &lt;li&gt;Your business components. Slice them by business function, country specifics or business unit. Most likely will resemble some of your organization structure&lt;/li&gt; 
- &lt;li&gt;A package from AppExchange or a legacy package will not depend on anything. In my current project we moved all VisualForce stuff (pages and controllers) there, since these won't be needed after the lightning migration is concluded and then can be uninstalled easily.&lt;/li&gt; 
-&lt;/ol&gt;</description>
-	<link>2019/02/draining-the-happy-soup-part-2.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>37ce0350-334c-11e9-8f2c-e9611f89e0a8</guid>
-	<pubDate>18 February 2019</pubDate>
 
 </item>
 

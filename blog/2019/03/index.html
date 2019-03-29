@@ -125,6 +125,65 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				</div>
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2019/03/extract-field-definitions-from-object.xml.html">Extract field definitions from object.xml</a></small>
+					</h1>
+					<hr />
+					<div><p>The other department asked: can I have a csv list of fields with Name,Type,length from Salesforce. The only source they have are the object.xml files from a meta data API export</p> 
+<h3><a href="#some-counting-required" id="some-counting-required">Some counting required</a></h3> 
+<p>The object.xml file contains size information for text files only. For date and numbers that's not an issue. The sticky part are pick lists and multi select pick lists.</p> 
+<p>A little XSLT goes a long way. The magic is in the expression <code>max((s:valueSet/s:valueSetDefinition/s:value/s:fullName/string-length()))</code> For your enjoyment, the full style sheet:</p> 
+<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
+    xmlns:s="http://soap.sforce.com/2006/04/metadata"
+    exclude-result-prefixes="xs xd"
+    version="2.0"&gt;
+   
+   &lt;xsl:output method="text" encoding="UTF-8" /&gt;
+    
+    &lt;xsl:template match="/"&gt;
+name,type,length
+&lt;xsl:apply-templates select="/s:CustomObject/s:fields" /&gt;
+    &lt;/xsl:template&gt;
+    
+    &lt;xsl:template match="s:fields"&gt;
+&lt;xsl:value-of select="s:fullName"/&gt;,&lt;xsl:value-of select="s:type"/&gt;,&lt;xsl:value-of select="s:length"/&gt;
+        &lt;xsl:text&gt;&amp;#xa;&lt;/xsl:text&gt;
+    &lt;/xsl:template&gt;    
+    
+    &lt;xsl:template match="s:fields[s:type='Picklist' or s:type='MultiselectPicklist']"&gt;
+&lt;xsl:value-of select="s:fullName"/&gt;,&lt;xsl:value-of select="s:type"/&gt;,&lt;xsl:value-of select="max((s:valueSet/s:valueSetDefinition/s:value/s:fullName/string-length()))" /&gt;
+        &lt;xsl:text&gt;&amp;#xa;&lt;/xsl:text&gt;
+    &lt;/xsl:template&gt;
+
+&lt;!-- stuff without use --&gt;
+&lt;xsl:template match="s:fields[s:formula]" /&gt;
+    &lt;xsl:template match="s:fields[not(s:type)]" /&gt;
+&lt;xsl:template match="s:fields[s:type='Picklist' and not(s:valueSet)]" /&gt;  
+    
+&lt;/xsl:stylesheet&gt;
+</pre> 
+<p>One of the little stumbling blocks: a namespace for <code>http://soap.sforce.com/2006/04/metadata</code> is required.</p> 
+<p>As usual: YMMV</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 29 March 2019
+<span class="divider">|</span>
+<a href="/blog/2019/03/extract-field-definitions-from-object.xml.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/singapore.html">Singapore</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.notessensei.com/blog/2019/03/extract-field-definitions-from-object.xml.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;googleplus&quot;]" data-title="Extract field definitions from object.xml"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/03/extract-field-definitions-from-object.xml.html";
+						</script>
+					</p>
+
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2019/03/re-usable-dynamic-custom-lookup-lwc-edition.html">Re-Usable Dynamic Custom Lookup LWC edition</a></small>
 					</h1>
 					<hr />
