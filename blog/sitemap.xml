@@ -3,10 +3,85 @@
 <channel>
 	<title>wissel.net Usability - Productivity - Business - The web - Singapore and Twins</title>
 	<link>https://wissel.net/blog/stories.rss</link>
-	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: IBM Lotus Notes and Domino, IBM Websphere, other IBM Lotus stuff,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
+	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 10 Apr 2019 03:10:19 +0000</pubdate>
+	<pubdate>Thu, 11 Apr 2019 04:06:00 +0000</pubdate>
+<item>
+	<title>Lightning Layouts, Input Fields and Field Level Security</title>
+	<description>&lt;p&gt;The more control you want (or need) to exercise over the page layouts presented to your users, the more details you need to take care of. While the default record details and the &lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:recordForm/documentation"&gt;&lt;code&gt;lightning-record-form&lt;/code&gt;&lt;/a&gt; take care of hiding fields, without a trace, the current user doesn't have access to, you need to handle that yourself in a custom layout. Here is how.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#show-me-yours" id="show-me-yours"&gt;Show me yours&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;A typical custom form layout might look like this:&lt;/p&gt; 
+&lt;pre class="brush: xml"&gt;&amp;lt;template&amp;gt;
+    &amp;lt;lightning-record-edit-form
+        record-id={recordId}
+        object-api-name="Contact"
+        onload={formLoadHandler}
+        onsubmit={formSubmitHandler}
+        onsuccess={formSuccessHandler}
+    &amp;gt;
+        &amp;lt;lightning-layout multiple-rows="true"&amp;gt;
+            &amp;lt;lightning-layout-item size="12"&amp;gt;
+                &amp;lt;lightning-messages&amp;gt; &amp;lt;/lightning-messages&amp;gt;
+            &amp;lt;/lightning-layout-item&amp;gt;
+            &amp;lt;lightning-layout-item padding="around-small" size="6"&amp;gt;
+                &amp;lt;lightning-input-field field-name="Name"&amp;gt;
+                &amp;lt;/lightning-input-field&amp;gt;
+            &amp;lt;/lightning-layout-item&amp;gt;
+            &amp;lt;lightning-layout-item padding="around-small" size="6"&amp;gt;
+                &amp;lt;lightning-input-field field-name="Department"&amp;gt;
+                &amp;lt;/lightning-input-field&amp;gt;
+            &amp;lt;/lightning-layout-item&amp;gt;
+            &amp;lt;lightning-layout-item padding="around-small" size="6"&amp;gt;
+                &amp;lt;lightning-input-field field-name="HomePhone"&amp;gt;
+                &amp;lt;/lightning-input-field&amp;gt;
+            &amp;lt;/lightning-layout-item&amp;gt;
+            &amp;lt;lightning-layout-item padding="around-small" size="6"&amp;gt;
+                &amp;lt;lightning-input-field field-name="CleanStatus"&amp;gt;
+                &amp;lt;/lightning-input-field&amp;gt;
+            &amp;lt;/lightning-layout-item&amp;gt;
+            &amp;lt;lightning-button
+                class="slds-m-top_small"
+                variant="brand"
+                type="submit"
+                name="save"
+                label="Save"
+            &amp;gt;
+            &amp;lt;/lightning-button&amp;gt;
+        &amp;lt;/lightning-layout&amp;gt;
+    &amp;lt;/lightning-record-edit-form&amp;gt;
+&amp;lt;/template&amp;gt;
+&lt;/pre&gt; 
+&lt;p&gt;Now, when a user doesn't have field level access to, let's say &lt;code&gt;HomePhone&lt;/code&gt; (GDPR anyone?), the form would render with an empty space in the second row. To prevent this two steps are necessary:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Add a render condition to the &lt;code&gt;lightning-layout-item&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;Compute the value for it in the &lt;code&gt;onload&lt;/code&gt; event of the &lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-record-edit-form/documentation"&gt;&lt;code&gt;lightning-record-edit-form&lt;/code&gt;&lt;/a&gt;&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;A &lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-layout-item/example"&gt;&lt;code&gt;lightning-layout-item&lt;/code&gt;&lt;/a&gt; would look like this:&lt;/p&gt; 
+&lt;pre class="brush: xml"&gt;&amp;lt;lightning-layout-item padding="around-small" size="6" if:true={canSee.HomePhone}&amp;gt;
+    &amp;lt;lightning-input-field field-name="HomePhone"&amp;gt;
+    &amp;lt;/lightning-input-field&amp;gt;
+&amp;lt;/lightning-layout-item&amp;gt;
+&lt;/pre&gt; 
+&lt;p&gt;The only difference is the &lt;code&gt;if:true={canSee.number}&lt;/code&gt;&lt;/p&gt; 
+&lt;p&gt;In your JavaScript file you add &lt;code&gt;@track canSee = {}&lt;/code&gt; to initialize your visibility tracker. Finally you amend the &lt;code&gt;formLoadHandler&lt;/code&gt; to populate the &lt;code&gt;canSee&lt;/code&gt; variable:&lt;/p&gt; 
+&lt;pre class="brush: js"&gt;formLoadHandler(event) {
+        let fields = event.detail.record.fields;
+
+        for (let f in fields) {
+            if (fields.hasOwnProperty(f)) {
+            	this.canSee[f] = true;
+            }
+        }
+    }    
+&lt;/pre&gt; 
+&lt;p&gt;As usual YMMV.&lt;/p&gt;</description>
+	<link>2019/04/lightning-layouts-input-fields-and-field-level-security.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>79bb1120-5c07-11e9-94a3-a76c5fd18cda</guid>
+	<pubDate>11 April 2019</pubDate>
+
+</item>
 <item>
 	<title>Mixing lightning-input-fields with custom data aware fields</title>
 	<description>&lt;p&gt;Salesforce lightning offers a developer various ways to design custom forms when page layouts are not enough. The &lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-record-edit-form/documentation"&gt;record-edit-form&lt;/a&gt; strikes a nice balance: it uses Lightning data service and allows one to design your own layout and field selection.&lt;/p&gt; 
@@ -381,26 +456,6 @@ if (localStuff) {
 	<author>Stephan H. Wissel</author>
 	<guid>96ba06e0-447f-11e9-85c1-b77de648aedf</guid>
 	<pubDate>12 March 2019</pubDate>
-
-</item>
-<item>
-	<title>Using render() in LWC</title>
-	<description>&lt;p&gt;Whatever template system you use, you will end up with show/hide logic based on your data's values. In Aura components you have an expression language (reminded me of JSF), in LWC external (in your JavaScript class) boolean values or functions.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#keep-it-tidy" id="keep-it-tidy"&gt;Keep it tidy&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;A common interaction pattern, similar to the Salesforce default behavior when you have more than one record type available, is to show a pre-selection (which record type), a main selection (required data) and (eventually) a post-selection (what's next?).&lt;/p&gt; 
-&lt;p&gt;In a lightning web component you can handle that easily using &lt;a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/create_conditional"&gt;&lt;code&gt;if:true|false&lt;/code&gt;&lt;/a&gt; inside your html template.&lt;/p&gt; 
-&lt;p&gt;But what if the sections are quite lengthy? Maintaining the HTML template can get messy. Enter the &lt;code&gt;render()&lt;/code&gt; method. In LWC this method doesn't to the actual rendering, but determines what template to use to render the component.&lt;/p&gt; 
-&lt;p&gt;There are a few simple rules:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;You need to import your template into your JavaScript file&lt;/li&gt; 
- &lt;li&gt;The call to &lt;code&gt;render()&lt;/code&gt; must return the imported variable (see example below)&lt;/li&gt; 
- &lt;li&gt;You can make the computation dependent on anything inside the class&lt;/li&gt; 
- &lt;li&gt;You can't assemble the template in memory as a String, it will throw you an error&lt;/li&gt; 
-&lt;/ul&gt;</description>
-	<link>2019/03/using-render-in-lwc.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>4c94b700-3e93-11e9-a1a8-c550f64643d4</guid>
-	<pubDate>04 March 2019</pubDate>
 
 </item>
 

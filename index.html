@@ -110,6 +110,92 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2019/04/lightning-layouts-input-fields-and-field-level-security.html">Lightning Layouts, Input Fields and Field Level Security</a></small></h1>
+					<hr />
+					<div><p>The more control you want (or need) to exercise over the page layouts presented to your users, the more details you need to take care of. While the default record details and the <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:recordForm/documentation"><code>lightning-record-form</code></a> take care of hiding fields, without a trace, the current user doesn't have access to, you need to handle that yourself in a custom layout. Here is how.</p> 
+<h3><a href="#show-me-yours" id="show-me-yours">Show me yours</a></h3> 
+<p>A typical custom form layout might look like this:</p> 
+<pre class="brush: xml">&lt;template&gt;
+    &lt;lightning-record-edit-form
+        record-id={recordId}
+        object-api-name="Contact"
+        onload={formLoadHandler}
+        onsubmit={formSubmitHandler}
+        onsuccess={formSuccessHandler}
+    &gt;
+        &lt;lightning-layout multiple-rows="true"&gt;
+            &lt;lightning-layout-item size="12"&gt;
+                &lt;lightning-messages&gt; &lt;/lightning-messages&gt;
+            &lt;/lightning-layout-item&gt;
+            &lt;lightning-layout-item padding="around-small" size="6"&gt;
+                &lt;lightning-input-field field-name="Name"&gt;
+                &lt;/lightning-input-field&gt;
+            &lt;/lightning-layout-item&gt;
+            &lt;lightning-layout-item padding="around-small" size="6"&gt;
+                &lt;lightning-input-field field-name="Department"&gt;
+                &lt;/lightning-input-field&gt;
+            &lt;/lightning-layout-item&gt;
+            &lt;lightning-layout-item padding="around-small" size="6"&gt;
+                &lt;lightning-input-field field-name="HomePhone"&gt;
+                &lt;/lightning-input-field&gt;
+            &lt;/lightning-layout-item&gt;
+            &lt;lightning-layout-item padding="around-small" size="6"&gt;
+                &lt;lightning-input-field field-name="CleanStatus"&gt;
+                &lt;/lightning-input-field&gt;
+            &lt;/lightning-layout-item&gt;
+            &lt;lightning-button
+                class="slds-m-top_small"
+                variant="brand"
+                type="submit"
+                name="save"
+                label="Save"
+            &gt;
+            &lt;/lightning-button&gt;
+        &lt;/lightning-layout&gt;
+    &lt;/lightning-record-edit-form&gt;
+&lt;/template&gt;
+</pre> 
+<p>Now, when a user doesn't have field level access to, let's say <code>HomePhone</code> (GDPR anyone?), the form would render with an empty space in the second row. To prevent this two steps are necessary:</p> 
+<ul> 
+ <li>Add a render condition to the <code>lightning-layout-item</code></li> 
+ <li>Compute the value for it in the <code>onload</code> event of the <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-record-edit-form/documentation"><code>lightning-record-edit-form</code></a></li> 
+</ul> 
+<p>A <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-layout-item/example"><code>lightning-layout-item</code></a> would look like this:</p> 
+<pre class="brush: xml">&lt;lightning-layout-item padding="around-small" size="6" if:true={canSee.HomePhone}&gt;
+    &lt;lightning-input-field field-name="HomePhone"&gt;
+    &lt;/lightning-input-field&gt;
+&lt;/lightning-layout-item&gt;
+</pre> 
+<p>The only difference is the <code>if:true={canSee.number}</code></p> 
+<p>In your JavaScript file you add <code>@track canSee = {}</code> to initialize your visibility tracker. Finally you amend the <code>formLoadHandler</code> to populate the <code>canSee</code> variable:</p> 
+<pre class="brush: js">formLoadHandler(event) {
+        let fields = event.detail.record.fields;
+
+        for (let f in fields) {
+            if (fields.hasOwnProperty(f)) {
+            	this.canSee[f] = true;
+            }
+        }
+    }    
+</pre> 
+<p>As usual YMMV.</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 11 April 2019
+<span class="divider">|</span>
+<a href="/blog/2019/04/lightning-layouts-input-fields-and-field-level-security.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/singapore.html">Singapore</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2019/04/lightning-layouts-input-fields-and-field-level-security.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Lightning Layouts, Input Fields and Field Level Security" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/04/lightning-layouts-input-fields-and-field-level-security.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2019/04/mixing-lightning-input-fields-with-custom-data-aware-fields.html">Mixing lightning-input-fields with custom data aware fields</a></small></h1>
 					<hr />
 					<div><p>Salesforce lightning offers a developer various ways to design custom forms when page layouts are not enough. The <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-record-edit-form/documentation">record-edit-form</a> strikes a nice balance: it uses Lightning data service and allows one to design your own layout and field selection.</p> 
@@ -582,38 +668,6 @@ categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/
 						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2019/03/navigation-in-lightning-communities.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Navigation in Lightning communities" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2019/03/navigation-in-lightning-communities.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2019/03/using-render-in-lwc.html">Using render() in LWC</a></small></h1>
-					<hr />
-					<div><p>Whatever template system you use, you will end up with show/hide logic based on your data's values. In Aura components you have an expression language (reminded me of JSF), in LWC external (in your JavaScript class) boolean values or functions.</p> 
-<h3><a href="#keep-it-tidy" id="keep-it-tidy">Keep it tidy</a></h3> 
-<p>A common interaction pattern, similar to the Salesforce default behavior when you have more than one record type available, is to show a pre-selection (which record type), a main selection (required data) and (eventually) a post-selection (what's next?).</p> 
-<p>In a lightning web component you can handle that easily using <a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/create_conditional"><code>if:true|false</code></a> inside your html template.</p> 
-<p>But what if the sections are quite lengthy? Maintaining the HTML template can get messy. Enter the <code>render()</code> method. In LWC this method doesn't to the actual rendering, but determines what template to use to render the component.</p> 
-<p>There are a few simple rules:</p> 
-<ul> 
- <li>You need to import your template into your JavaScript file</li> 
- <li>The call to <code>render()</code> must return the imported variable (see example below)</li> 
- <li>You can make the computation dependent on anything inside the class</li> 
- <li>You can't assemble the template in memory as a String, it will throw you an error</li> 
-</ul></div>
-					<hr />
- <a href="/blog/2019/03/using-render-in-lwc.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 04 March 2019
-<span class="divider">|</span>
-<a href="/blog/2019/03/using-render-in-lwc.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/webcomponents.html">WebComponents</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2019/03/using-render-in-lwc.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Using render() in LWC" data-twitter-via="@notessensei"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2019/03/using-render-in-lwc.html";
 						</script>
 					</p>
 </p>
