@@ -6,7 +6,35 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Tue, 09 Jul 2019 04:27:49 +0000</pubdate>
+	<pubdate>Tue, 09 Jul 2019 07:13:42 +0000</pubdate>
+<item>
+	<title>Adding a proxy to your Salesforce Communities</title>
+	<description>&lt;p&gt;Running a community site might come with a number of interesting requirement:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Scan uploaded files for maleware or copyright violations&lt;/li&gt; 
+ &lt;li&gt;Filter language for profanities&lt;/li&gt; 
+ &lt;li&gt;Comply with local data retention rules (e.g. local before cloud)&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;For most of these task &lt;a href="https://appexchange.salesforce.com/"&gt;AppExchange&lt;/a&gt; will be the goto place to find solution. However sometimes you want to process &lt;strong&gt;before&lt;/strong&gt; data hits the platform. This is the moment where you need a proxy.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#clicks-not-code" id="clicks-not-code"&gt;Clicks not Code&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;To be ready to proxy, there are a few steps involved. I went through a few loops, to come to this working sequence:&lt;/p&gt; 
+&lt;ol&gt; 
+ &lt;li&gt;Register a domain. You will use it to run your community. Using a custom domain is essential to avoid https headaches later on&lt;/li&gt; 
+ &lt;li&gt;Obtain a SSL certificate for the custom domain. The easiest part, if you have access to a public host, is to use &lt;a href="https://letsencrypt.org/"&gt;LetsEncrypt&lt;/a&gt; to obtain the cert and then &lt;a href="/blog/2018/03/letsencrypt-java-keystore.html"&gt;transform it to JKS&lt;/a&gt;. The certs are only valid for 90 days, but we only need it for a short while in JKS. On e.g. &lt;a href="https://nginx.org/"&gt;Nginx&lt;/a&gt; one can &lt;a href="https://www.nginx.com/blog/using-free-ssltls-certificates-from-lets-encrypt-with-nginx/"&gt;auto renew&lt;/a&gt; the certs&lt;/li&gt; 
+ &lt;li&gt;Upload the cert into Salesforce in &lt;code&gt;Security - Certificate and Key Management - Import from Keystore&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;Follow the Steps 1 and 4 (you did 3 already). You need access to your DNS for that. The Domain needs to be fully qualified, you can't use your root (a DNS limitation). Let's say your base is &lt;code&gt;acme.com&lt;/code&gt; and you want your partner community to be reachable at &lt;code&gt;partners.acme.com&lt;/code&gt; and your Salesforce Org ID is &lt;code&gt;1234567890abcdefgh&lt;/code&gt;, then you need a &lt;code&gt;CNAME&lt;/code&gt; entry that says &lt;code&gt;partners&lt;/code&gt; -&amp;gt; &lt;code&gt;partners.acme.com.1234567890abcdefgh.live.siteforce.com.&lt;/code&gt; &lt;strong&gt;Important&lt;/strong&gt;: The entry needs to end with a DOT (.) otherwise CNAME tries to link it back to your domain&lt;/li&gt; 
+ &lt;li&gt;Test the whole setup. Make sure you can use all community functions using the URL &lt;a href="https://www.xkcd.com"&gt;&lt;code&gt;https://partners.acme.com/&lt;/code&gt;&lt;/a&gt;&lt;/li&gt; 
+ &lt;li&gt;Now back to the DNS. Point the CNAME entry to your host (e.g. &lt;a href="https://heroku.com"&gt;Heroku&lt;/a&gt; or delete it and create a A record pointing to e.g. &lt;a href="https://digitalocean.com"&gt;DigitalOcean&lt;/a&gt;&lt;/li&gt; 
+ &lt;li&gt;Make sure the Proxy sends the HOST header has the value of your custom domain, not the force.com. Your proxy serves as &lt;a href="https://help.salesforce.com/articleView?id=000315329&amp;amp;language=en_US&amp;amp;type=1"&gt;your own CDN&lt;/a&gt;&lt;/li&gt; 
+&lt;/ol&gt; 
+&lt;p&gt;Little boomer: You can't do this in a sandbox or a developer org, needs to be production or trial.&lt;/p&gt; 
+&lt;p&gt;Next stop: discuss what proxy to use and options to consider. As usual YMMV.&lt;/p&gt;</description>
+	<link>2019/06/adding-a-proxy-to-your-salesforce-communities.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>c1fe6140-9b30-11e9-ad06-ed6374046d03</guid>
+	<pubDate>30 June 2019</pubDate>
+
+</item>
 <item>
 	<title>Turning a blog into a video with invideo.io</title>
 	<description>&lt;p&gt;my &lt;a href="/blog/2019/04/lwc-components-with-self-contained-images.html"&gt;last entry&lt;/a&gt; on LWC was a fairly technical piece. To my surprise Nirav from &lt;a href="https://invideo.io/"&gt;InVideo&lt;/a&gt; approached me and suggested to turn this into a video.&lt;/p&gt; 
@@ -361,64 +389,6 @@ export default class ObjectIdSpy extends LightningElement {
 	<author>Stephan H. Wissel</author>
 	<guid>741dae00-4abc-11e9-93f7-9d01095f3788</guid>
 	<pubDate>20 March 2019</pubDate>
-
-</item>
-<item>
-	<title>Finding Strings in recursively zipped files</title>
-	<description>&lt;p&gt;I had an itch to scratch. After using &lt;a href="https://appexchange.salesforce.com/appxListingDetail?listingId=a0N30000003HSXEEA4"&gt;Field Trip&lt;/a&gt; (which I like a lot) to determine unused fields, the team managing the external &lt;a href="https://www.informatica.com/"&gt;Informatica&lt;/a&gt; integration claimed they would need weeks to ensure none of the fields are used in any of their (hundreds) of pipelines.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#zip-inception" id="zip-inception"&gt;ZIP inception&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;My first reaction (OK, the second, first one isn't PC) was: Let's go after the source code and just use an &lt;a href="https://www.sublimetext.com/"&gt;editor of choice&lt;/a&gt; to do a find in files. Turns out: not so fast. The source export offered by the team was a zip file with an elaborate directory structure containing, tada, zip files. So each of the pipes would need multiple zip operations.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#itch-defined" id="itch-defined"&gt;Itch defined&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;I needed a tool that would start in a directory with a bunch of zip files, unpack them all. Check for zip files in the unpacked result, unzip these and repeat. Once done, take a list of strings and search for occurrences of those and generate a report which shows the files containing these strings&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#itch-scratched" id="itch-scratched"&gt;Itch scratched&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;I created &lt;a href="https://github.com/Stwissel/findStrings"&gt;findstring&lt;/a&gt;, a command line tool that takes a directory as starting point unzips what can be unzipped (optional) and searches for the occurrence of strings provided in a text file.&lt;/p&gt; 
-&lt;p&gt;Initially I contemplated to render the output as XML, so the final report could be designed in whatever fashion using XSLT. However following &lt;a href="https://en.wikipedia.org/wiki/KISS_principle"&gt;KISS&lt;/a&gt;, I ended up using &lt;a href="https://en.wikipedia.org/wiki/Markdown"&gt;Markdown&lt;/a&gt;. I might add the XML option later on.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#recursion" id="recursion"&gt;Recursion&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;The key piece of the tool is recursion (until you stack overflow ;-) ). Reading a directory and dive into directories found. I could have avoided that using &lt;a href="https://github.com/google/guava"&gt;Guava&lt;/a&gt; and its &lt;a href="https://google.github.io/guava/releases/snapshot/api/docs/com/google/common/io/Files.html#fileTraverser--"&gt;fileTraverser&lt;/a&gt;, but I like some Inception style coding. The key piece is this:&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;    private boolean expandSources(final File sourceDir) throws IOException {
-        boolean result = false;
-        final File[] allFiles = sourceDir.listFiles();
-
-        for (final File f : allFiles) {
-            if (f.isDirectory()) {
-                result = result || this.expandSources(f);
-
-            } else if (f.getName().endsWith(".zip")) {
-                final String newDirName = f.getAbsolutePath().replace(".zip", "");
-                final File newTarget = new File(newDirName);
-
-                // Need to scan the new directory too
-                if (this.expandFile(f, newTarget)) {
-                    result = result || this.expandSources(newTarget);
-                }
-            }
-        }
-        return result;
-
-    }
-&lt;/pre&gt; 
-&lt;p&gt;The function will return true as long as there was a zip file to be unzipped. The string finding operation (case insensitive) follows the same approach&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#use-cases" id="use-cases"&gt;Use cases&lt;/a&gt;&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;Find field usage in ZIP files. Works with a package downloaded from the meta data api or what Informatica exports&lt;/li&gt; 
- &lt;li&gt;Check a source directory (doesn't need to contain zips) for keywords like &lt;code&gt;TODO&lt;/code&gt;, &lt;code&gt;FIXME&lt;/code&gt;, &lt;code&gt;XXX&lt;/code&gt;&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;The command line syntax is very simple:&lt;/p&gt; 
-&lt;p&gt;&lt;code&gt;java -jar findString.jar -d directory -s strings [-o output]&lt;/code&gt;&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;-d,?dir &amp;lt;arg&amp;gt; directory with all zip files&lt;/li&gt; 
- &lt;li&gt;-s,?stringfile &amp;lt;arg&amp;gt; Filename with Strings to search, one per line&lt;/li&gt; 
- &lt;li&gt;-o,?output &amp;lt;arg&amp;gt; Output file name for report in MD format&lt;/li&gt; 
- &lt;li&gt;-nz,?nz Rerun find operation on a ready unzipped structure - good for alternate finds&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#limits" id="limits"&gt;Limits&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;In its current form the utility will check for strings in any file short of zip. Zip gets unpacked and the result checked. When your directory contains binary files (e.g. images) it will still look for the string occurrence inside. File extension filters might be a future enhancement (&lt;a href="https://github.com/Stwissel/findStrings/issues"&gt;share your opinion&lt;/a&gt;).&lt;/p&gt; 
-&lt;p&gt;Files are read into memory. So if your directory contains huge files, you will blow your heap. Source code files hardly pose an issue, so the approach worked for me. Alternatively a &lt;a href="https://docs.oracle.com/javase/7/docs/api/java/util/Scanner.html"&gt;scanner&lt;/a&gt; could be used, should the need arise.&lt;/p&gt; 
-&lt;p&gt;Go &lt;a href="https://github.com/Stwissel/findStrings/releases"&gt;give it a spin&lt;/a&gt; and keep in mind: YMMV&lt;/p&gt;</description>
-	<link>2019/03/finding-strings-in-recursively-zipped-files.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>478555c0-47a4-11e9-872b-771845fe5f6a</guid>
-	<pubDate>16 March 2019</pubDate>
 
 </item>
 
