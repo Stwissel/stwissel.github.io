@@ -5,8 +5,55 @@
 	<link>https://wissel.net/blog/stories.rss</link>
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
-	<copyright>(C) 2003 - 2018 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 14 Aug 2019 11:46:26 +0000</pubdate>
+	<copyright>(C) 2003 - 2019 Stephan H. Wissel, All rights reserved</copyright>
+	<pubdate>Fri, 06 Sep 2019 12:31:12 +0000</pubdate>
+<item>
+	<title>Vert.x and OpenAPI</title>
+	<description>&lt;p&gt;In the shiny new world of the &lt;a href="https://www.gartner.com/smarterwithgartner/welcome-to-the-api-economy/"&gt;API Economy&lt;/a&gt; your API definition and its enforcement is everything. The current &lt;a href="https://xkcd.com/927/"&gt;standard&lt;/a&gt; for REST based APIs is &lt;a href="https://www.openapis.org/"&gt;OpenAPI&lt;/a&gt;. What it gives you is a JSON or YAML file that describes how your API looks like. There is a whole zoo of tools around that allow to visualize, edit, run Mock servers or generate client and server code.&lt;/p&gt; 
+&lt;p&gt;My favorite editor for OpenAPI specs is &lt;a href="https://www.apicur.io/"&gt;Apicurio&lt;/a&gt;, a project driven by &lt;a href="https://www.redhat.com"&gt;RedHat&lt;/a&gt;. It strikes a nice balance between being UI driven and leaving you access to the full source code of your specification.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#what-to-do-with-it" id="what-to-do-with-it"&gt;What to do with it&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Your API specification defines:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;the endpoints (a.k.a the URLS that you can use)&lt;/li&gt; 
+ &lt;li&gt;the mime types that can be sent or will received&lt;/li&gt; 
+ &lt;li&gt;the parameters in the path (the URL)&lt;/li&gt; 
+ &lt;li&gt;the parameters in the query (the part that looks like &lt;code&gt;?color=red&amp;amp;shape=circle&lt;/code&gt;)&lt;/li&gt; 
+ &lt;li&gt;the body to send and receive&lt;/li&gt; 
+ &lt;li&gt;the authentication / authorization requirements&lt;/li&gt; 
+ &lt;li&gt;the potential &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status"&gt;status codes&lt;/a&gt; (we love 2xx)&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;To handle all this, it smells like boilerplate or, if you are lucky, ready library. &lt;a href="http://vertx.io/"&gt;vert.x&lt;/a&gt; has the later. It provides the &lt;a href="https://vertx.io/docs/vertx-web-api-contract/java/"&gt;API Contract&lt;/a&gt; module that is designed to handle all this for you. You simply add the module to your &lt;code&gt;pom.xml&lt;/code&gt; and load your json or yaml OpenApi specification file:&lt;/p&gt; 
+&lt;pre class="brush: xml"&gt;&amp;lt;dependency&amp;gt;
+ &amp;lt;groupId&amp;gt;io.vertx&amp;lt;/groupId&amp;gt;
+ &amp;lt;artifactId&amp;gt;vertx-web-api-contract&amp;lt;/artifactId&amp;gt;
+ &amp;lt;version&amp;gt;3.8.1&amp;lt;/version&amp;gt;
+&amp;lt;/dependency&amp;gt;
+&lt;/pre&gt; 
+&lt;p&gt;The &lt;a href="https://vertx.io/docs/vertx-web-api-contract/java/#_openapi_3"&gt;documentation&lt;/a&gt; shows the code to turn the OpenApi speccification into a Router factory:&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;OpenAPI3RouterFactory.create(
+  vertx,
+  "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml",
+  ar -&amp;gt; {
+    if (ar.succeeded()) {
+      // Spec loaded with success
+      OpenAPI3RouterFactory routerFactory = ar.result();
+    } else {
+      // Something went wrong during router factory initialization
+      Throwable exception = ar.cause();
+    }
+  });
+&lt;/pre&gt; 
+&lt;p&gt;As you can see, you can load the spec from an URL (there's an auth option too). So while your API is evolving using &lt;a href="https://www.apicur.io/"&gt;Apicurio&lt;/a&gt; you can live load the latest and greated from the live preview (should make some interesting breakages ;-) ).&lt;/p&gt; 
+&lt;p&gt;You then add your routes using &lt;code&gt;routerFactory.addHandlerByOperationId("awesomeOperation",this::awesomeOperationHandler)&lt;/code&gt;. Vert.x doesn't use the path to match the handler, but the operationId. This allows you to update path information without breaking your code. There is a detailed &lt;a href="https://how-to.vertx.io/web-and-openapi-howto/"&gt;how-to document&lt;/a&gt; describing the steps.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#generate-a-skeleton-for-vertx" id="generate-a-skeleton-for-vertx"&gt;Generate a skeleton for vert.x&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;As long as you haven't specified a handler for an operation, Vert.x will automatically reply with &lt;code&gt;501 Not implemented&lt;/code&gt; and not throw any error. To give you a headstart, you can generate the base code. First option is to head to &lt;a href="https://start.vertx.io/"&gt;start.vertx.io&lt;/a&gt; to generate a standard project skeleton, saving you the manual work of creating all dependencies in your &lt;code&gt;pom.xml&lt;/code&gt; file. Using "&lt;em&gt;Show dependency panel&lt;/em&gt;" provides a convenient way to pick the modules you need.&lt;/p&gt; 
+&lt;p&gt;But there are better ways. You can use an &lt;a href="https://openapi-generator.tech/"&gt;OpenAPI Generator&lt;/a&gt; or the advanced &lt;a href="https://vertx-starter.jetdrone.xyz/#maven"&gt;Vert.x Starter&lt;/a&gt; courtesy of &lt;a href="https://www.linkedin.com/in/pmlopes/"&gt;Paulo Lopes&lt;/a&gt;. In his tool you specify what it shall generate in a dropdown that defaults to "&lt;em&gt;Empty Project&lt;/em&gt;". Once you change that to "&lt;em&gt;OpenAPI Server&lt;/em&gt;" the form will alloow you to upload your OpenAPI specification and you get a complete project rendered with all handler stubs including the security handler. There's also a &lt;a href="https://vertx-starter.jetdrone.xyz/#npm"&gt;JavaScript&lt;/a&gt; version available.&lt;/p&gt;</description>
+	<link>2019/09/vertx-and-openapi.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>86e88e10-d08b-11e9-ae24-cf34c96a740e</guid>
+	<pubDate>06 September 2019</pubDate>
+
+</item>
 <item>
 	<title>Adding a proxy to your Salesforce Communities</title>
 	<description>&lt;p&gt;Running a community site might come with a number of interesting requirement:&lt;/p&gt; 
@@ -316,79 +363,6 @@ name,type,length
 	<author>Stephan H. Wissel</author>
 	<guid>8ff284d0-5042-11e9-b56a-cd55bbbbd610</guid>
 	<pubDate>27 March 2019</pubDate>
-
-</item>
-<item>
-	<title>Mapping recordIds to Object Names - Offline edition</title>
-	<description>&lt;p&gt;Lightning in Communities is "Same Same but different". When you want to build neutral components, you need to know what object you are dealing with&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#objectapiname-objectname-and-recordid" id="objectapiname-objectname-and-recordid"&gt;ObjectApiName, ObjectName and recordId&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;In Lightning Aura components one can use &lt;a href="https://developer.salesforce.com/docs/component-library/bundle/force:hasSObjectName/documentation"&gt;&lt;code&gt;force:hasSObjectName&lt;/code&gt;&lt;/a&gt; to get access to an attribute &lt;code&gt;sObjectName&lt;/code&gt;. In Lightning Web components one uses &lt;a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/lwc.use_object_context"&gt;&lt;code&gt;@api objectApiName&lt;/code&gt;&lt;/a&gt;. Except neither of those work in &lt;strong&gt;Communities&lt;/strong&gt;.&lt;/p&gt; 
-&lt;p&gt;The workaround is to look at the &lt;code&gt;recordId&lt;/code&gt; and use &lt;a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_methods_system_sobject_describe.htm"&gt;&lt;code&gt;DescribeSObjectResult.getKeyPrefix&lt;/code&gt;&lt;/a&gt; to map a record to the object name. There's a &lt;a href="http://www.fishofprey.com/2011/09/obscure-salesforce-object-key-prefixes.html"&gt;comprehensive list&lt;/a&gt; by &lt;a href="https://twitter.com/FishOfPrey"&gt;David&lt;/a&gt; and my &lt;a href="https://gist.github.com/Stwissel/890559482a4ff4ec61c80597dd47f6bd"&gt;version as JSON object&lt;/a&gt;.&lt;/p&gt; 
-&lt;p&gt;However, depending on your org, that list might vary. So I created a small component that lists out the objects in your current org. Enjoy:&lt;/p&gt; 
-&lt;h4&gt;&lt;a href="#objectidspycls" id="objectidspycls"&gt;ObjectIdSpy.cls&lt;/a&gt;&lt;/h4&gt; 
-&lt;pre class="brush: java"&gt;public without sharing class ObjectIdSpy {  
-    @AuraEnabled(cacheable=true)
-    public static Map&amp;lt;String,String&amp;gt; getObjectIdMappings(){
-        Map&amp;lt;String,String&amp;gt; result = new Map&amp;lt;String,String&amp;gt;();
-        Map&amp;lt;String, Schema.SObjectType&amp;gt; gd = Schema.getGlobalDescribe();
-        for(String key : gd.keySet()) {
-            Schema.SObjectType ot = gd.get(key);
-            String curPrefix = ot.getDescribe().getKeyPrefix();
-            String curName = ot.getDescribe().getName();
-            // Fair warning: will omit objects that share the prefix
-            result.put(curPrefix, curName);
-        }
-      return result;
-    } 
-}
-
-&lt;/pre&gt; 
-&lt;h4&gt;&lt;a href="#objectidspyhtml" id="objectidspyhtml"&gt;objectIdSpy.html&lt;/a&gt;&lt;/h4&gt; 
-&lt;pre class="brush: xml"&gt;&amp;lt;template&amp;gt;
-    &amp;lt;lightning-card title="Object Spy"&amp;gt;
-        &amp;lt;pre&amp;gt;
-{idList}
-        &amp;lt;/pre&amp;gt;
-    &amp;lt;/lightning-card&amp;gt;
-&amp;lt;/template&amp;gt;
-&lt;/pre&gt; 
-&lt;h4&gt;&lt;a href="#objectidspyjs" id="objectidspyjs"&gt;objectIdSpy.js&lt;/a&gt;&lt;/h4&gt; 
-&lt;pre class="brush: js"&gt;import { LightningElement, track, wire } from 'lwc';
-import idSpy from '@salesforce/apex/ObjectIdSpy.getObjectIdMappings';
-
-export default class ObjectIdSpy extends LightningElement {
-  @track idList;
-
-  @wire(idSpy)
-  spiedUpon({ error, data }) {
-    if (data) {
-      this.idList = JSON.stringify(data, null, 2);
-    } else if (error) {
-      this.idList = JSON.stringify(error, null, 2);
-    }
-  }
-}
-
-&lt;/pre&gt; 
-&lt;h4&gt;&lt;a href="#objectidspyjs-metaxml" id="objectidspyjs-metaxml"&gt;objectIdSpy.js-meta.xml&lt;/a&gt;&lt;/h4&gt; 
-&lt;pre class="brush: xml"&gt;&amp;lt;?xml version="1.0" encoding="UTF-8"?&amp;gt;
-&amp;lt;LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata" fqn="ObjectIdSpy"&amp;gt;
-    &amp;lt;apiVersion&amp;gt;45.0&amp;lt;/apiVersion&amp;gt;
-    &amp;lt;isExposed&amp;gt;true&amp;lt;/isExposed&amp;gt;
-    &amp;lt;masterLabel&amp;gt;Object Id Spy&amp;lt;/masterLabel&amp;gt;
-    &amp;lt;description&amp;gt;Generates a JSON object of Id and object names&amp;lt;/description&amp;gt;
-    &amp;lt;targets&amp;gt;
-        &amp;lt;target&amp;gt;lightning__RecordPage&amp;lt;/target&amp;gt;
-        &amp;lt;target&amp;gt;lightning__AppPage&amp;lt;/target&amp;gt;
-        &amp;lt;target&amp;gt;lightning__HomePage&amp;lt;/target&amp;gt;
-    &amp;lt;/targets&amp;gt;
-&amp;lt;/LightningComponentBundle&amp;gt;
-&lt;/pre&gt; 
-&lt;p&gt;As usual YMMV!&lt;/p&gt;</description>
-	<link>2019/03/mapping-recordids-to-object-names-offline-edition.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>741dae00-4abc-11e9-93f7-9d01095f3788</guid>
-	<pubDate>20 March 2019</pubDate>
 
 </item>
 

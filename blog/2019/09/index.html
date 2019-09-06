@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>NotesSensei's Blog - Category: vert.x</title>
+<title>NotesSensei's Blog by month: By Date: September 2019</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -52,7 +52,7 @@ ga('send', 'pageview');
 
 <link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="https://feeds.feedburner.com/Wisselnetfeed" />
 
-<meta name="Revisit-After" content="7 Days" />
+<meta name="Revisit-After" content="90 Days" />
 </head>
 <body>
 	<div class="navbar navbar-inverse navbar-fixed-top">
@@ -109,167 +109,87 @@ try {document.addEventListener("DOMContentLoaded", $buo_f,false)}
 catch(e){window.attachEvent("onload", $buo_f)}
 </script>
 
-
 		<div class="row-fluid">
 			<div class="span9">
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/categories/umsys.html"><i class="icon-hand-left"></i>UMsys</a>
+					<li><a href="/blog/2019/06/index.html"><i class="icon-hand-left"></i>By Date: June 2019</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
 					<span class="divider">|</span>
-					<li><a href="/blog/categories/webcomponents.html">WebComponents<i class="icon-hand-right"></i></a>
+					<li><a href="/blog/categories/afterhours.html">After hours<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 
 				<div class="well well-raised">
-					<h1>vert.x</h1>
-				</div>
-				<div class="well">
-					<h1>
-						2019
-					</h1>
+					<h1>By Date: September 2019</h1>
 				</div>
 				<article class="well well-raised">
 					<h1>
 						<small><a href="/blog/2019/09/vertx-and-openapi.html">Vert.x and OpenAPI</a></small>
 					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+					<hr />
+					<div><p>In the shiny new world of the <a href="https://www.gartner.com/smarterwithgartner/welcome-to-the-api-economy/">API Economy</a> your API definition and its enforcement is everything. The current <a href="https://xkcd.com/927/">standard</a> for REST based APIs is <a href="https://www.openapis.org/">OpenAPI</a>. What it gives you is a JSON or YAML file that describes how your API looks like. There is a whole zoo of tools around that allow to visualize, edit, run Mock servers or generate client and server code.</p> 
+<p>My favorite editor for OpenAPI specs is <a href="https://www.apicur.io/">Apicurio</a>, a project driven by <a href="https://www.redhat.com">RedHat</a>. It strikes a nice balance between being UI driven and leaving you access to the full source code of your specification.</p> 
+<h3><a href="#what-to-do-with-it" id="what-to-do-with-it">What to do with it</a></h3> 
+<p>Your API specification defines:</p> 
+<ul> 
+ <li>the endpoints (a.k.a the URLS that you can use)</li> 
+ <li>the mime types that can be sent or will received</li> 
+ <li>the parameters in the path (the URL)</li> 
+ <li>the parameters in the query (the part that looks like <code>?color=red&amp;shape=circle</code>)</li> 
+ <li>the body to send and receive</li> 
+ <li>the authentication / authorization requirements</li> 
+ <li>the potential <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status">status codes</a> (we love 2xx)</li> 
+</ul> 
+<p>To handle all this, it smells like boilerplate or, if you are lucky, ready library. <a href="http://vertx.io/">vert.x</a> has the later. It provides the <a href="https://vertx.io/docs/vertx-web-api-contract/java/">API Contract</a> module that is designed to handle all this for you. You simply add the module to your <code>pom.xml</code> and load your json or yaml OpenApi specification file:</p> 
+<pre class="brush: xml">&lt;dependency&gt;
+ &lt;groupId&gt;io.vertx&lt;/groupId&gt;
+ &lt;artifactId&gt;vertx-web-api-contract&lt;/artifactId&gt;
+ &lt;version&gt;3.8.1&lt;/version&gt;
+&lt;/dependency&gt;
+</pre> 
+<p>The <a href="https://vertx.io/docs/vertx-web-api-contract/java/#_openapi_3">documentation</a> shows the code to turn the OpenApi speccification into a Router factory:</p> 
+<pre class="brush: java">OpenAPI3RouterFactory.create(
+  vertx,
+  "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml",
+  ar -&gt; {
+    if (ar.succeeded()) {
+      // Spec loaded with success
+      OpenAPI3RouterFactory routerFactory = ar.result();
+    } else {
+      // Something went wrong during router factory initialization
+      Throwable exception = ar.cause();
+    }
+  });
+</pre> 
+<p>As you can see, you can load the spec from an URL (there's an auth option too). So while your API is evolving using <a href="https://www.apicur.io/">Apicurio</a> you can live load the latest and greated from the live preview (should make some interesting breakages ;-) ).</p> 
+<p>You then add your routes using <code>routerFactory.addHandlerByOperationId("awesomeOperation",this::awesomeOperationHandler)</code>. Vert.x doesn't use the path to match the handler, but the operationId. This allows you to update path information without breaking your code. There is a detailed <a href="https://how-to.vertx.io/web-and-openapi-howto/">how-to document</a> describing the steps.</p> 
+<h3><a href="#generate-a-skeleton-for-vertx" id="generate-a-skeleton-for-vertx">Generate a skeleton for vert.x</a></h3> 
+<p>As long as you haven't specified a handler for an operation, Vert.x will automatically reply with <code>501 Not implemented</code> and not throw any error. To give you a headstart, you can generate the base code. First option is to head to <a href="https://start.vertx.io/">start.vertx.io</a> to generate a standard project skeleton, saving you the manual work of creating all dependencies in your <code>pom.xml</code> file. Using "<em>Show dependency panel</em>" provides a convenient way to pick the modules you need.</p> 
+<p>But there are better ways. You can use an <a href="https://openapi-generator.tech/">OpenAPI Generator</a> or the advanced <a href="https://vertx-starter.jetdrone.xyz/#maven">Vert.x Starter</a> courtesy of <a href="https://www.linkedin.com/in/pmlopes/">Paulo Lopes</a>. In his tool you specify what it shall generate in a dropdown that defaults to "<em>Empty Project</em>". Once you change that to "<em>OpenAPI Server</em>" the form will alloow you to upload your OpenAPI specification and you get a complete project rendered with all handler stubs including the security handler. There's also a <a href="https://vertx-starter.jetdrone.xyz/#npm">JavaScript</a> version available.</p></div>
+					<hr />
+ <a href="/blog/2019/09/vertx-and-openapi.html">Read more</a>
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 06 September 2019
 <span class="divider">|</span>
 <a href="/blog/2019/09/vertx-and-openapi.html#comments">Comments (0)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/vertx.html">vert.x</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
-				</article>
- 				<div class="well">
-					<h1>
-						2018
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/03/a-filtering-proxy-server-with-vertx.html">A filtering proxy server with vert.x</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 04 March 2018
-<span class="divider">|</span>
-<a href="/blog/2018/03/a-filtering-proxy-server-with-vertx.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2019/09/vertx-and-openapi.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Vert.x and OpenAPI" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/09/vertx-and-openapi.html";
+						</script>
+					</p>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/02/query-a-json-object-like-xpath.html">Query a JSON object like XPath in Java</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 28 February 2018
-<span class="divider">|</span>
-<a href="/blog/2018/02/query-a-json-object-like-xpath.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						2016
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2016/04/annotations-to-supercharge-your-vertx-development.html">Annotations to supercharge your vert.x development</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 02 April 2016
-<span class="divider">|</span>
-<a href="/blog/2016/04/annotations-to-supercharge-your-vertx-development.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/vertx.html">vert.x</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2016/02/now-we-are-token-authorization-using-json-web-token-in-domino.html">Now we are token - Authorization using JSON Web Token in Domino</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 24 February 2016
-<span class="divider">|</span>
-<a href="/blog/2016/02/now-we-are-token-authorization-using-json-web-token-in-domino.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2016/02/vertx-and-domino.html">Vert.x and Domino</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 18 February 2016
-<span class="divider">|</span>
-<a href="/blog/2016/02/vertx-and-domino.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						2014
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2014/09/rendering-a-notes-view-as-json-rest-service-on-your-client.html">Rendering a Notes view as JSON REST service - on your client</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 25 September 2014
-<span class="divider">|</span>
-<a href="/blog/2014/09/rendering-a-notes-view-as-json-rest-service-on-your-client.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2014/08/designing-a-rest-api-for-email.html">Designing a REST API for eMail</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 08 August 2014
-<span class="divider">|</span>
-<a href="/blog/2014/08/designing-a-rest-api-for-email.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2014/08/running-vertx-with-the-openntf-domino-api.html">Running vert.x with the OpenNTF Domino API</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 06 August 2014
-<span class="divider">|</span>
-<a href="/blog/2014/08/running-vertx-with-the-openntf-domino-api.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2014/07/adventures-with-vertx-64bit-and-the-ibm-notes-client.html">Adventures with vert.x, 64Bit and the IBM Notes client</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 17 July 2014
-<span class="divider">|</span>
-<a href="/blog/2014/07/adventures-with-vertx-64bit-and-the-ibm-notes-client.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
-
-				</article>
- 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/categories/umsys.html"><i class="icon-hand-left"></i>UMsys</a>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2019/06/index.html"><i class="icon-hand-left"></i>By Date: June 2019</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
 					<span class="divider">|</span>
-					<li><a href="/blog/categories/webcomponents.html">WebComponents<i class="icon-hand-right"></i></a>
+					<li><a href="/blog/categories/afterhours.html">After hours<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 
@@ -339,7 +259,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 						<li ><a href="/blog/categories/travel.html">Travel</a></li>
 						<li ><a href="/blog/categories/twins.html">Twins</a></li>
 						<li ><a href="/blog/categories/umsys.html">UMsys</a></li>
-						<li  class="active"><a href="/blog/categories/vertx.html">vert.x</a></li>
+						<li ><a href="/blog/categories/vertx.html">vert.x</a></li>
 						<li ><a href="/blog/categories/webcomponents.html">WebComponents</a></li>
 						<li ><a href="/blog/categories/webdevelopment.html">WebDevelopment</a></li>
 						<li ><a href="/blog/categories/workflow.html">Workflow</a></li>
@@ -436,9 +356,6 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 		</div>
 	</footer>
 
-	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/categories/vertx.html";
-	</script>
 		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
 	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
@@ -465,4 +382,3 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 
 </body>
 </html>
-
