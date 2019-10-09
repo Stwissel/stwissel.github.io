@@ -6,7 +6,56 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2019 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Fri, 06 Sep 2019 12:31:12 +0000</pubdate>
+	<pubdate>Wed, 09 Oct 2019 11:25:39 +0000</pubdate>
+<item>
+	<title>The calDAV Standard - navigating the RFC jungle</title>
+	<description>&lt;p&gt;Application interoperability is key to wide spread adoption. Luckily there are &lt;a href="https://xkcd.com/927/"&gt;so many open standards&lt;/a&gt; that one can claim to be open without being interoperable. On a protocol level &lt;a href="https://tools.ietf.org/html/rfc7230"&gt;HTTP&lt;/a&gt; and &lt;a href="https://tools.ietf.org/html/rfc5321"&gt;SMTP&lt;/a&gt; were huge successes, as well as &lt;a href="https://tools.ietf.org/html/rfc2045"&gt;HTML/MIME&lt;/a&gt; for message content. Beyond that it gets murky. None of the big vendors (outside the OpenSource space) has adopted an open protocol for chat and presence.&lt;/p&gt; 
+&lt;p&gt;For other standards, most notably &lt;a href="https://en.wikipedia.org/wiki/CalDAV"&gt;Calendaring&lt;/a&gt;, support is murkey. On key contributor might be the &lt;a href="https://en.wikipedia.org/wiki/Request_for_Comments"&gt;RFC&lt;/a&gt; process that produces documents that are hard to follow and lack sample implementations. They are work outcomes of a &lt;a href="https://en.wikipedia.org/wiki/Design_by_committee"&gt;committee&lt;/a&gt; after all. In this series of blog entries I will (try to) highlight the moving parts of a &lt;strong&gt;calendar server&lt;/strong&gt; implementation. The non-moving parts here are the calendar clients to target: Apple calendar on iOS and &lt;a href="https://support.apple.com/en-us/guide/calendar/welcome/mac"&gt;macOS&lt;/a&gt;, &lt;a href="https://www.thunderbird.net/"&gt;Thurnderbird&lt;/a&gt; and a few others.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#involved-standards" id="involved-standards"&gt;Involved standards&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;There is a series of RFC that cover calendar operation, with various degrees of relevance:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;&lt;a href="http://tools.ietf.org/html/rfc4918"&gt;RFC 4918&lt;/a&gt;: webDAV. Defines additional HTTP verbs and XML formats&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="http://tools.ietf.org/html/rfc4791"&gt;RFC 4791&lt;/a&gt;: calDAV. Defines again additional HTTP verbs&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="http://tools.ietf.org/html/rfc5545"&gt;RFC 5545&lt;/a&gt;: iCalendar. Calendar data as plain text, or &lt;a href="https://tools.ietf.org/html/rfc6321"&gt;XML&lt;/a&gt; or &lt;a href="https://tools.ietf.org/html/rfc7265"&gt;JSON&lt;/a&gt;&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://tools.ietf.org/html/rfc7953"&gt;RFC 7953&lt;/a&gt;: vAvailability. Free/Busy lookup specification&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://tools.ietf.org/html/rfc7986"&gt;RFC 7986&lt;/a&gt;: Extended properties for iCalendar&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="http://tools.ietf.org/html/rfc6638"&gt;RFC 6638&lt;/a&gt;: Scheduling extensions&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://tools.ietf.org/html/rfc8607"&gt;RFC 8607&lt;/a&gt;: Managed attachments in calendar entries&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://tools.ietf.org/html/rfc8144"&gt;RFC 8144&lt;/a&gt;: Use of Prefer Header field in webDAV&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://tools.ietf.org/html/rfc5785"&gt;RFC 5785&lt;/a&gt;: Definitions for the &lt;code&gt;/.well-known/&lt;/code&gt; URL&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#technologies" id="technologies"&gt;Technologies&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Based on the RFC we can see what are the moving parts that constitute the calendar API:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;HTTP extensions: With the introduction of new HTTP keywords (e.g. &lt;a href="https://tools.ietf.org/html/rfc8144#appendix-B.2"&gt;REPORT&lt;/a&gt; or &lt;a href="http://www.webdav.org/specs/rfc4918.html#METHOD_PROPFIND"&gt;PRPOPFIND&lt;/a&gt;), the basic &lt;a href=""&gt;REST&lt;/a&gt; idea gets turned upside down by having verbs with specific meanings instead of the ususal &lt;a href=""&gt;CRUD&lt;/a&gt; logic. In a more contemporary approach the actual actions would be represented by the URL, but that would be too easy.&lt;/li&gt; 
+ &lt;li&gt;iCalendar: a text based key/value format for calendar information, with little goodies like identifying multi-line entries just by some indentation&lt;/li&gt; 
+ &lt;li&gt;XML: inherited from webDAV: angle bracked infested data structure that &lt;strong&gt;does not&lt;/strong&gt; care about white space or indentation. This gets juicy when it contains an iCalendar as payload, that is very well sensitive to indents.&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#vendor-and-consortium-documentation" id="vendor-and-consortium-documentation"&gt;Vendor and consortium documentation&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;There are plenty of trees in the woods, so the task is scavenging, not planting. Besides the RFC, this is what I found:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;&lt;a href="https://developers.google.com/calendar/caldav/v2/guide"&gt;Google&lt;/a&gt; has a partial calDAV implementation. Their approach seem to be: only what's needed for a typical client&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://github.com/apple/ccs-calendarserver"&gt;Apple&lt;/a&gt; opensourced their &lt;a href="https://www.calendarserver.org/"&gt;Calendar Server&lt;/a&gt; including a &lt;a href="https://www.calendarserver.org/CalDAVTester.html"&gt;Test Suite&lt;/a&gt; and a &lt;a href="https://hub.docker.com/r/pluies/ccs-calendarserver/"&gt;Docker Image&lt;/a&gt; (&lt;a href="https://www.uponmyshoulder.com/blog/2017/apple-contact-calendar-server-dockerised/"&gt;Blog post&lt;/a&gt;)&lt;/li&gt; 
+ &lt;li&gt;The &lt;a href="https://www.calconnect.org/"&gt;CalConnect&lt;/a&gt; consortium provides a nice &lt;a href="https://devguide.calconnect.org/Table-of-Contents"&gt;Developer Guide&lt;/a&gt;, mostly focused on data formats and client implementations&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="http://www.webdav.org/"&gt;webDAV Community&lt;/a&gt; provides information around webDAV and its implementations&lt;/li&gt; 
+ &lt;li&gt;Joomla's &lt;a href="https://icalendar.org/"&gt;iCalendar.org&lt;/a&gt; provides a &lt;a href="https://icalendar.org/validator.html"&gt;validator&lt;/a&gt;&lt;/li&gt; 
+ &lt;li&gt;Most notably absent: &lt;a href="https://www.google.com/search?q=Microsoft+calendar+sync"&gt;Microsoft&lt;/a&gt;. They do support calDAV, but only if you are on the &lt;a href="https://www.ctrl.blog/entry/windows-pim-sync-partnersonly.html"&gt;nice list&lt;/a&gt; There are &lt;a href="https://www.ctrl.blog/entry/how-to-win10-webdav-syncengine.html"&gt;solutions&lt;/a&gt; and &lt;a href="https://www.webdavsystem.com/server/access/caldav/ms_outlook_caldav_synchronizer/"&gt;AddOns&lt;/a&gt;. In the Microsoft world calendaring is served with &lt;a href="https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/explore-the-ews-managed-api-ews-and-web-services-in-exchange"&gt;SOAP / EWS&lt;/a&gt; or the shiny new &lt;a href="https://docs.microsoft.com/en-us/graph/api/resources/calendar?view=graph-rest-1.0"&gt;Microsoft Graph API&lt;/a&gt;&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#the-tools" id="the-tools"&gt;The tools&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Gearing up to battle with an API mandates to be armed with the right toolset. This skilled craftsman suggests:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;&lt;a href="https://www.getpostman.com/"&gt;Postman&lt;/a&gt;: We want to test different HTTP commands, Postman makes that easy&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://curl.haxx.se/"&gt;CURL&lt;/a&gt;: Anything HTTP, from the command line, for professionals or CI/CD&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://www.charlesproxy.com/"&gt;Charles Proxy&lt;/a&gt;: When testing endpoints used by actual client applications it allows you to see the traffic&lt;/li&gt; 
+ &lt;li&gt;&lt;a href="https://www.docker.com/"&gt;Docker&lt;/a&gt;: Running a few calendar servers to see how they "tick" in docker&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;This is just the beginning of a long trip, stay tuned!&lt;/p&gt;</description>
+	<link>2019/10/the-caldav-standard.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>7e298730-ea43-11e9-8305-9f51de60c8f2</guid>
+	<pubDate>09 October 2019</pubDate>
+
+</item>
 <item>
 	<title>Vert.x and OpenAPI</title>
 	<description>&lt;p&gt;In the shiny new world of the &lt;a href="https://www.gartner.com/smarterwithgartner/welcome-to-the-api-economy/"&gt;API Economy&lt;/a&gt; your API definition and its enforcement is everything. The current &lt;a href="https://xkcd.com/927/"&gt;standard&lt;/a&gt; for REST based APIs is &lt;a href="https://www.openapis.org/"&gt;OpenAPI&lt;/a&gt;. What it gives you is a JSON or YAML file that describes how your API looks like. There is a whole zoo of tools around that allow to visualize, edit, run Mock servers or generate client and server code.&lt;/p&gt; 
@@ -344,25 +393,6 @@ name,type,length
 	<author>Stephan H. Wissel</author>
 	<guid>7a3b8300-5207-11e9-b271-ab59574ac46b</guid>
 	<pubDate>29 March 2019</pubDate>
-
-</item>
-<item>
-	<title>Re-Usable Dynamic Custom Lookup LWC edition</title>
-	<description>&lt;p&gt;Over at &lt;a href="http://sfdcmonkey.com/2017/07/17/re-usable-custom-lookup/"&gt;sfdcmonkey&lt;/a&gt; there's a nice AURA component that allows for dynamic lookup of a given object. Super nice and useful. I wondered what it would take to be rebuild in &lt;a href="https://developer.salesforce.com/docs/component-library/documentation/lwc"&gt;LWC&lt;/a&gt;&lt;/p&gt; 
-&lt;p&gt;&lt;img src="/blog/images/2019/DynamicLookup.png" alt="Dynamic Lookup"&gt;&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#same-same-but-different" id="same-same-but-different"&gt;Same, Same but different&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;I want to achieve the same functionality, but would accept subtle differences. This is what I got:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;The original component shows the object icon on the left. My version shows the search symbol that comes out of the box with &lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-input/example"&gt;lightning-input&lt;/a&gt;&lt;/li&gt; 
- &lt;li&gt;I use 3 components instead of two. Input fields that trigger network calls are fairly common and it makes sense to &lt;a href="https://www.maximintegrated.com/en/glossary/definitions.mvp/term/debounce/gpk/82"&gt;debounce&lt;/a&gt; the input. So I created &lt;code&gt;c-ux-debounced-input&lt;/code&gt; that signals entered data only after a period of 300ms&lt;/li&gt; 
- &lt;li&gt;The component dispatches an event when a result has been selected or cleared, so it can be used inside other components&lt;/li&gt; 
- &lt;li&gt;For now: it can be directly put on a lightning page in page builder and configured there. Useful for demos and test&lt;/li&gt; 
- &lt;li&gt;When you clear the selected object, the result list opens up again, so no second network call is made until you change the input value&lt;/li&gt; 
-&lt;/ul&gt;</description>
-	<link>2019/03/re-usable-dynamic-custom-lookup-lwc-edition.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>8ff284d0-5042-11e9-b56a-cd55bbbbd610</guid>
-	<pubDate>27 March 2019</pubDate>
 
 </item>
 
