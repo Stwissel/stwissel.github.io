@@ -6,7 +6,24 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2019 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 09 Oct 2019 11:34:54 +0000</pubdate>
+	<pubdate>Fri, 11 Oct 2019 15:13:56 +0000</pubdate>
+<item>
+	<title>A calDAV reference server</title>
+	<description>&lt;p&gt;After having a look at the &lt;a href="/blog/2019/10/the-caldav-standard.html"&gt;many standards&lt;/a&gt; involved, it is time to check out a standard or reference implementation. Cutting a long story short: it looks to me the OpenSource &lt;a href="https://github.com/apple/ccs-calendarserver"&gt;Apple Calendar and Contacts Server (ccs)&lt;/a&gt; is my best bet. While the &lt;a href="https://www.calendarserver.org/"&gt;documentation&lt;/a&gt; is rather light, it has been battle tested with my range of targeted clients&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#to-docker-or-to-vm" id="to-docker-or-to-vm"&gt;To Docker or to VM?&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Trying to avoid the &lt;a href="https://blog.codinghorror.com/the-works-on-my-machine-certification-program/"&gt;Works on my machine&lt;/a&gt; certification, a native install was out of the question. So Docker or VM? A search yielded &lt;a href="https://hub.docker.com/r/pluies/ccs-calendarserver/"&gt;one hit&lt;/a&gt; (&lt;a href="https://www.uponmyshoulder.com/blog/2017/apple-contact-calendar-server-dockerised/"&gt;with explanation&lt;/a&gt;) and none for for a ready baked VM. On closer inspection, the docker image, being 2 years old, didn't use the current version, so we had to re-create the image. While on it, I decided to give a VM a shot:&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#apple-calendar-server-on-ubuntu-1804" id="apple-calendar-server-on-ubuntu-1804"&gt;Apple calendar server on Ubuntu 18.04&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;To keep things light, I started with the &lt;a href="https://ubuntu.com/download/desktop/thank-you?version=18.04.3&amp;amp;architecture=amd64"&gt;current LTS version 18.04&lt;/a&gt; desktop and a minimal install with 4G RAM. First order after the install is to get updates and install modules for the VirtualBox extensions:&lt;/p&gt; 
+&lt;pre class="brush: bash"&gt;sudo apt update
+sudo apt install gcc make perl
+sudo apt dist-upgrade
+&lt;/pre&gt;</description>
+	<link>2019/10/caldav-reference-server.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>63512d10-ebf5-11e9-8763-c7987d104598</guid>
+	<pubDate>11 October 2019</pubDate>
+
+</item>
 <item>
 	<title>The calDAV Standard - navigating the RFC jungle</title>
 	<description>&lt;p&gt;Application interoperability is key to wide spread adoption. Luckily there are &lt;a href="https://xkcd.com/927/"&gt;so many open standards&lt;/a&gt; that one can claim to be open without being interoperable. On a protocol level &lt;a href="https://tools.ietf.org/html/rfc7230"&gt;HTTP&lt;/a&gt; and &lt;a href="https://tools.ietf.org/html/rfc5321"&gt;SMTP&lt;/a&gt; were huge successes, as well as &lt;a href="https://tools.ietf.org/html/rfc2045"&gt;HTML/MIME&lt;/a&gt; for message content. Beyond that it gets murky. None of the big vendors (outside the OpenSource space) has adopted an open protocol for chat and presence.&lt;/p&gt; 
@@ -23,33 +40,7 @@
  &lt;li&gt;&lt;a href="https://tools.ietf.org/html/rfc8607"&gt;RFC 8607&lt;/a&gt;: Managed attachments in calendar entries&lt;/li&gt; 
  &lt;li&gt;&lt;a href="https://tools.ietf.org/html/rfc8144"&gt;RFC 8144&lt;/a&gt;: Use of Prefer Header field in webDAV&lt;/li&gt; 
  &lt;li&gt;&lt;a href="https://tools.ietf.org/html/rfc5785"&gt;RFC 5785&lt;/a&gt;: Definitions for the &lt;code&gt;/.well-known/&lt;/code&gt; URL&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#technologies" id="technologies"&gt;Technologies&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Based on the RFC we can see what are the moving parts that constitute the calendar API:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;HTTP extensions: With the introduction of new HTTP keywords (e.g. &lt;a href="https://tools.ietf.org/html/rfc8144#appendix-B.2"&gt;REPORT&lt;/a&gt; or &lt;a href="http://www.webdav.org/specs/rfc4918.html#METHOD_PROPFIND"&gt;PRPOPFIND&lt;/a&gt;), the basic &lt;a href=""&gt;REST&lt;/a&gt; idea gets turned upside down by having verbs with specific meanings instead of the ususal &lt;a href=""&gt;CRUD&lt;/a&gt; logic. In a more contemporary approach the actual actions would be represented by the URL, but that would be too easy.&lt;/li&gt; 
- &lt;li&gt;iCalendar: a text based key/value format for calendar information, with little goodies like identifying multi-line entries just by some indentation&lt;/li&gt; 
- &lt;li&gt;XML: inherited from webDAV: angle bracked infested data structure that &lt;strong&gt;does not&lt;/strong&gt; care about white space or indentation. This gets juicy when it contains an iCalendar as payload, that is very well sensitive to indents.&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#vendor-and-consortium-documentation" id="vendor-and-consortium-documentation"&gt;Vendor and consortium documentation&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;There are plenty of trees in the woods, so the task is scavenging, not planting. Besides the RFC, this is what I found:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;&lt;a href="https://developers.google.com/calendar/caldav/v2/guide"&gt;Google&lt;/a&gt; has a partial calDAV implementation. Their approach seem to be: only what's needed for a typical client&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://github.com/apple/ccs-calendarserver"&gt;Apple&lt;/a&gt; opensourced their &lt;a href="https://www.calendarserver.org/"&gt;Calendar Server&lt;/a&gt; including a &lt;a href="https://www.calendarserver.org/CalDAVTester.html"&gt;Test Suite&lt;/a&gt; and a &lt;a href="https://hub.docker.com/r/pluies/ccs-calendarserver/"&gt;Docker Image&lt;/a&gt; (&lt;a href="https://www.uponmyshoulder.com/blog/2017/apple-contact-calendar-server-dockerised/"&gt;Blog post&lt;/a&gt;)&lt;/li&gt; 
- &lt;li&gt;The &lt;a href="https://www.calconnect.org/"&gt;CalConnect&lt;/a&gt; consortium provides a nice &lt;a href="https://devguide.calconnect.org/Table-of-Contents"&gt;Developer Guide&lt;/a&gt;, mostly focused on data formats and client implementations&lt;/li&gt; 
- &lt;li&gt;&lt;a href="http://www.webdav.org/"&gt;webDAV Community&lt;/a&gt; provides information around webDAV and its implementations&lt;/li&gt; 
- &lt;li&gt;Joomla's &lt;a href="https://icalendar.org/"&gt;iCalendar.org&lt;/a&gt; provides a &lt;a href="https://icalendar.org/validator.html"&gt;validator&lt;/a&gt;&lt;/li&gt; 
- &lt;li&gt;Most notably absent: &lt;a href="https://www.google.com/search?q=Microsoft+calendar+sync"&gt;Microsoft&lt;/a&gt;. They do support calDAV, but only if you are on the &lt;a href="https://www.ctrl.blog/entry/windows-pim-sync-partnersonly.html"&gt;nice list&lt;/a&gt; There are &lt;a href="https://www.ctrl.blog/entry/how-to-win10-webdav-syncengine.html"&gt;solutions&lt;/a&gt; and &lt;a href="https://www.webdavsystem.com/server/access/caldav/ms_outlook_caldav_synchronizer/"&gt;AddOns&lt;/a&gt;. In the Microsoft world calendaring is served with &lt;a href="https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/explore-the-ews-managed-api-ews-and-web-services-in-exchange"&gt;SOAP / EWS&lt;/a&gt; or the shiny new &lt;a href="https://docs.microsoft.com/en-us/graph/api/resources/calendar?view=graph-rest-1.0"&gt;Microsoft Graph API&lt;/a&gt;&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#the-tools" id="the-tools"&gt;The tools&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Gearing up to battle with an API mandates to be armed with the right toolset. This skilled craftsman suggests:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;&lt;a href="https://www.getpostman.com/"&gt;Postman&lt;/a&gt;: We want to test different HTTP commands, Postman makes that easy&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://curl.haxx.se/"&gt;CURL&lt;/a&gt;: Anything HTTP, from the command line, for professionals or CI/CD&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://www.charlesproxy.com/"&gt;Charles Proxy&lt;/a&gt;: When testing endpoints used by actual client applications it allows you to see the traffic&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://www.docker.com/"&gt;Docker&lt;/a&gt;: Running a few calendar servers to see how they "tick" in docker&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;This is just the beginning of a long trip, stay tuned!&lt;/p&gt;</description>
+&lt;/ul&gt;</description>
 	<link>2019/10/the-caldav-standard.html</link>
 	<author>Stephan H. Wissel</author>
 	<guid>7e298730-ea43-11e9-8305-9f51de60c8f2</guid>
@@ -342,57 +333,6 @@ for (let i = max; i &amp;gt;= 0; i--) {
 	<author>Stephan H. Wissel</author>
 	<guid>fb5286b0-544f-11e9-8212-c16ddd71fa21</guid>
 	<pubDate>01 April 2019</pubDate>
-
-</item>
-<item>
-	<title>Extract field definitions from object.xml</title>
-	<description>&lt;p&gt;The other department asked: can I have a csv list of fields with Name,Type,length from Salesforce. The only source they have are the object.xml files from a meta data API export&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#some-counting-required" id="some-counting-required"&gt;Some counting required&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;The object.xml file contains size information for text files only. For date and numbers that's not an issue. The sticky part are pick lists and multi select pick lists.&lt;/p&gt; 
-&lt;p&gt;A little XSLT goes a long way. The magic is in the expression &lt;code&gt;max((s:valueSet/s:valueSetDefinition/s:value/s:fullName/string-length()))&lt;/code&gt; For your enjoyment, the full style sheet:&lt;/p&gt; 
-&lt;pre class="brush: xml"&gt;&amp;lt;?xml version="1.0" encoding="UTF-8"?&amp;gt;
-&amp;lt;xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-    xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
-    xmlns:s="http://soap.sforce.com/2006/04/metadata"
-    exclude-result-prefixes="xs xd"
-    version="2.0"&amp;gt;
-   
-   &amp;lt;xsl:output method="text" encoding="UTF-8" /&amp;gt;
-    
-    &amp;lt;xsl:template match="/"&amp;gt;
-name,type,length
-&amp;lt;xsl:apply-templates select="/s:CustomObject/s:fields" /&amp;gt;
-    &amp;lt;/xsl:template&amp;gt;
-    
-    &amp;lt;xsl:template match="s:fields"&amp;gt;
-&amp;lt;xsl:value-of select="s:fullName"/&amp;gt;,&amp;lt;xsl:value-of select="s:type"/&amp;gt;,&amp;lt;xsl:value-of select="s:length"/&amp;gt;
-        &amp;lt;xsl:text&amp;gt;&amp;amp;#xa;&amp;lt;/xsl:text&amp;gt;
-    &amp;lt;/xsl:template&amp;gt;    
-    
-    &amp;lt;xsl:template match="s:fields[s:type='MultiselectPicklist']"&amp;gt;
-        &amp;lt;xsl:value-of select="s:fullName"/&amp;gt;,&amp;lt;xsl:value-of select="s:type"/&amp;gt;,&amp;lt;xsl:value-of select="sum((s:valueSet/s:valueSetDefinition/s:value/s:fullName/string-length()))+count(s:valueSet/s:valueSetDefinition/s:value/s:fullName)" /&amp;gt;
-        &amp;lt;xsl:text&amp;gt;&amp;amp;#xa;&amp;lt;/xsl:text&amp;gt;
-    &amp;lt;/xsl:template&amp;gt;
-    
-    &amp;lt;xsl:template match="s:fields[s:type='Picklist']"&amp;gt;
-        &amp;lt;xsl:value-of select="s:fullName"/&amp;gt;,&amp;lt;xsl:value-of select="s:type"/&amp;gt;,&amp;lt;xsl:value-of select="max((s:valueSet/s:valueSetDefinition/s:value/s:fullName/string-length()))" /&amp;gt;
-        &amp;lt;xsl:text&amp;gt;&amp;amp;#xa;&amp;lt;/xsl:text&amp;gt;
-    &amp;lt;/xsl:template&amp;gt;    
-
-&amp;lt;!-- stuff without use --&amp;gt;
-&amp;lt;xsl:template match="s:fields[s:formula]" /&amp;gt;
-    &amp;lt;xsl:template match="s:fields[not(s:type)]" /&amp;gt;
-&amp;lt;xsl:template match="s:fields[s:type='Picklist' and not(s:valueSet)]" /&amp;gt;  
-    
-&amp;lt;/xsl:stylesheet&amp;gt;
-&lt;/pre&gt; 
-&lt;p&gt;One of the little stumbling blocks: a namespace for &lt;code&gt;http://soap.sforce.com/2006/04/metadata&lt;/code&gt; is required.&lt;/p&gt; 
-&lt;p&gt;As usual: YMMV&lt;/p&gt;</description>
-	<link>2019/03/extract-field-definitions-from-object.xml.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>7a3b8300-5207-11e9-b271-ab59574ac46b</guid>
-	<pubDate>29 March 2019</pubDate>
 
 </item>
 
