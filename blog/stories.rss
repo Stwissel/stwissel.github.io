@@ -6,7 +6,54 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2019 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Tue, 15 Oct 2019 19:30:09 +0000</pubdate>
+	<pubdate>Wed, 16 Oct 2019 18:02:17 +0000</pubdate>
+<item>
+	<title>Create your own Certificate Authority (CA)</title>
+	<description>&lt;p&gt;&lt;strong&gt;Warning&lt;/strong&gt; Do NOT, never, ever do that to a production system!&lt;/p&gt; 
+&lt;p&gt;Promised? OK! Here's the use case: you want to test your systems that have made up addresses like &lt;code&gt;awesomeserver.local&lt;/code&gt; and don't want to deal with certificate warnings or fancy errors that arise when you just use a self signed cert. This post is a self-reference for my convenience. There are &lt;a href="https://www.google.com/search?q=crrate+your+own+CA"&gt;ample other instructions&lt;/a&gt; out there.&lt;/p&gt; 
+&lt;p&gt;&lt;strong&gt;Disclaimer&lt;/strong&gt;: I mostly followed &lt;a href="https://jamielinux.com/docs/openssl-certificate-authority/introduction.html"&gt;this instructions&lt;/a&gt; short of updating some of the commands to use &lt;a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography"&gt;elliptic-curve&lt;/a&gt; cyphers.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#useful-with-a-side-of-work" id="useful-with-a-side-of-work"&gt;Useful with a side of work&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;The process requires a series of steps:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Create the private key and root certificate&lt;/li&gt; 
+ &lt;li&gt;Create an intermediate key and certificate&lt;/li&gt; 
+ &lt;li&gt;Create certs for your servers&lt;/li&gt; 
+ &lt;li&gt;Convert them if necessary (e.g. for import in Java Keystors JKS)&lt;/li&gt; 
+ &lt;li&gt;Make the public key of the root and intermediate certs available&lt;/li&gt; 
+ &lt;li&gt;Import these certs in all browsers and runtimes that you will use for testing&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;Normal mortal users, without these imports will get scary error messages. While this doesn't deter the determined, it's good for a laugh.&lt;br&gt; We don't want old school certs, so we aim at a modern &lt;a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography"&gt;Elliptic-curve&lt;/a&gt; cert (&lt;a href="https://www.erianna.com/ecdsa-certificate-authorities-and-certificates-with-openssl/"&gt;Details here&lt;/a&gt;). Here we go:&lt;/p&gt; 
+&lt;h4&gt;&lt;a href="#setting-up-the-directory-structure" id="setting-up-the-directory-structure"&gt;Setting up the directory structure&lt;/a&gt;&lt;/h4&gt; 
+&lt;pre class="brush: bash"&gt;mkdir -pv -m 600 /root/ca/intermediate
+cd /root/ca
+curl https://jamielinux.com/docs/openssl-certificate-authority/_downloads/root-config.txt -o openssl.cnf
+curl https://jamielinux.com/docs/openssl-certificate-authority/_downloads/intermediate-config.txt -o intermediate/openssl.cnf
+mkdir certs crl newcerts private
+chmod 700 private
+touch index.txt
+echo 1000 &amp;gt; serial
+cd intermediate
+mkdir certs crl csr newcerts private
+chmod 700 private
+touch index.txt
+echo 1000 &amp;gt; serial
+echo 1000 &amp;gt; crlnumber
+cd ..
+&lt;/pre&gt; 
+&lt;p&gt;You want to check the downloaded files and eventually change the path in case you have chosen to us a different one.&lt;/p&gt; 
+&lt;h4&gt;&lt;a href="#the-root-ca" id="the-root-ca"&gt;The Root CA&lt;/a&gt;&lt;/h4&gt; 
+&lt;pre class="brush: bash"&gt;export OPENSSL_CONF=./openssl.cnf
+openssl ecparam -genkey -name prime256v1 -outform PEM | openssl ec -aes256 -out private/ca.key.pem
+chmod 400 private/ca.key.pem
+openssl req -config openssl.cnf -key private/ca.key.pem -new -x509 -days 7300 -SHA384 -extensions v3_ca -out certs/ca.cert.pem
+&lt;/pre&gt; 
+&lt;p&gt;Keep them save - remember: its on my harddrive only isn't save!!!&lt;br&gt; You want to check the file using &lt;code&gt;openssl x509 -noout -text -in certs/ca.cert.pem&lt;/code&gt; or on macOS just hit the space key in finder.&lt;/p&gt;</description>
+	<link>2019/10/create-your-own-ca.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>38f93a70-efd9-11e9-a2e9-314ebf01b1fc</guid>
+	<pubDate>16 October 2019</pubDate>
+
+</item>
 <item>
 	<title>What's on your gRPC wire, Protocol Buffers or JSON?</title>
 	<description>&lt;p&gt;The hot kid on the block for microservice APIs is &lt;a href="https://grpc.io/"&gt;gRPC&lt;/a&gt;, a Google developed, OpenSource &lt;strong&gt;binary&lt;/strong&gt; wire protocol.&lt;/p&gt; 
@@ -304,21 +351,6 @@ sudo apt dist-upgrade
 	<link>2019/04/mixing-lightning-input-fields-with-custom-data-aware-fields.html</link>
 	<author>Stephan H. Wissel</author>
 	<guid>d960bf80-5838-11e9-8c30-b3972ad3cc9f</guid>
-	<pubDate>06 April 2019</pubDate>
-
-</item>
-<item>
-	<title>Dynamic Lookup for LWC - update</title>
-	<description>&lt;p&gt;There's always room for some improvement. So I updated&lt;/p&gt; 
-&lt;p&gt;&lt;img src="/blog/images/2019/DynamicLookup2.png" alt="Dynamic Lookup"&gt;&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#is-this-the-account-you-are-looking-for" id="is-this-the-account-you-are-looking-for"&gt;Is this the account you are looking for?&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;The &lt;a href="/blog/2019/03/re-usable-dynamic-custom-lookup-lwc-edition.html"&gt;dynamic lookup&lt;/a&gt; works like a charm, including on the Salesforce mobile app. The only catch: with only the object name visible it was less useful than the standard lookup. There are too many objects with the same name.&lt;/p&gt; 
-&lt;p&gt;The solution: I added a new parameter &lt;code&gt;fields&lt;/code&gt; that allows to specify the fields you want to be displayed. To separate them, I choose &lt;a href="https://www.lightningdesignsystem.com/components/badges/"&gt;Badges&lt;/a&gt;. IMHO there isn't much value in showing fieldNames and mess up the display.&lt;/p&gt; 
-&lt;p&gt;The source code can be found in &lt;a href="https://github.com/Stwissel/lwcaura/tree/master/experiments/experiment5/main/default/lwc"&gt;Experiment 5&lt;/a&gt;, enjoy! As usual YMMV!&lt;/p&gt; 
-&lt;p&gt;Next stop: proper &lt;a href="https://jestjs.io/"&gt;Jest&lt;/a&gt; test harness&lt;/p&gt;</description>
-	<link>2019/04/dynamic-lookup-for-lwc-update.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>064cfad0-5835-11e9-80c9-15cc4ab76379</guid>
 	<pubDate>06 April 2019</pubDate>
 
 </item>

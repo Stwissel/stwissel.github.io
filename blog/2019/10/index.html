@@ -125,6 +125,67 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				</div>
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2019/10/create-your-own-ca.html">Create your own Certificate Authority (CA)</a></small>
+					</h1>
+					<hr />
+					<div><p><strong>Warning</strong> Do NOT, never, ever do that to a production system!</p> 
+<p>Promised? OK! Here's the use case: you want to test your systems that have made up addresses like <code>awesomeserver.local</code> and don't want to deal with certificate warnings or fancy errors that arise when you just use a self signed cert. This post is a self-reference for my convenience. There are <a href="https://www.google.com/search?q=crrate+your+own+CA">ample other instructions</a> out there.</p> 
+<p><strong>Disclaimer</strong>: I mostly followed <a href="https://jamielinux.com/docs/openssl-certificate-authority/introduction.html">this instructions</a> short of updating some of the commands to use <a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography">elliptic-curve</a> cyphers.</p> 
+<h3><a href="#useful-with-a-side-of-work" id="useful-with-a-side-of-work">Useful with a side of work</a></h3> 
+<p>The process requires a series of steps:</p> 
+<ul> 
+ <li>Create the private key and root certificate</li> 
+ <li>Create an intermediate key and certificate</li> 
+ <li>Create certs for your servers</li> 
+ <li>Convert them if necessary (e.g. for import in Java Keystors JKS)</li> 
+ <li>Make the public key of the root and intermediate certs available</li> 
+ <li>Import these certs in all browsers and runtimes that you will use for testing</li> 
+</ul> 
+<p>Normal mortal users, without these imports will get scary error messages. While this doesn't deter the determined, it's good for a laugh.<br> We don't want old school certs, so we aim at a modern <a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography">Elliptic-curve</a> cert (<a href="https://www.erianna.com/ecdsa-certificate-authorities-and-certificates-with-openssl/">Details here</a>). Here we go:</p> 
+<h4><a href="#setting-up-the-directory-structure" id="setting-up-the-directory-structure">Setting up the directory structure</a></h4> 
+<pre class="brush: bash">mkdir -pv -m 600 /root/ca/intermediate
+cd /root/ca
+curl https://jamielinux.com/docs/openssl-certificate-authority/_downloads/root-config.txt -o openssl.cnf
+curl https://jamielinux.com/docs/openssl-certificate-authority/_downloads/intermediate-config.txt -o intermediate/openssl.cnf
+mkdir certs crl newcerts private
+chmod 700 private
+touch index.txt
+echo 1000 &gt; serial
+cd intermediate
+mkdir certs crl csr newcerts private
+chmod 700 private
+touch index.txt
+echo 1000 &gt; serial
+echo 1000 &gt; crlnumber
+cd ..
+</pre> 
+<p>You want to check the downloaded files and eventually change the path in case you have chosen to us a different one.</p> 
+<h4><a href="#the-root-ca" id="the-root-ca">The Root CA</a></h4> 
+<pre class="brush: bash">export OPENSSL_CONF=./openssl.cnf
+openssl ecparam -genkey -name prime256v1 -outform PEM | openssl ec -aes256 -out private/ca.key.pem
+chmod 400 private/ca.key.pem
+openssl req -config openssl.cnf -key private/ca.key.pem -new -x509 -days 7300 -SHA384 -extensions v3_ca -out certs/ca.cert.pem
+</pre> 
+<p>Keep them save - remember: its on my harddrive only isn't save!!!<br> You want to check the file using <code>openssl x509 -noout -text -in certs/ca.cert.pem</code> or on macOS just hit the space key in finder.</p></div>
+					<hr />
+ <a href="/blog/2019/10/create-your-own-ca.html">Read more</a>
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 16 October 2019
+<span class="divider">|</span>
+<a href="/blog/2019/10/create-your-own-ca.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/singapore.html">Singapore</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2019/10/create-your-own-ca.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Create your own Certificate Authority (CA)" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/10/create-your-own-ca.html";
+						</script>
+					</p>
+
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2019/10/whats-on-your-grpc-wire-protobuffer-or-json.html">What's on your gRPC wire, Protocol Buffers or JSON?</a></small>
 					</h1>
 					<hr />
