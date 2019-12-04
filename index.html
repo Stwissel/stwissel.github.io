@@ -110,6 +110,112 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2019/12/a-streaming-pattern-for-the-vert.x-eventbus.html">A Streaming Pattern for the vert.x EventBus (Part 1)</a></small></h1>
+					<hr />
+					<div><p>When dealing with large amounts of data, using <a href="https://www.baeldung.com/java-8-streams">Streams</a> allows processing happen the moment data arrives, not just when data is complete. Streaming is core to <a href="http://reactivex.io/">reactive programming</a>. This blog entry describes an approach where the <a href="https://vertx.io">vert.x</a> EventBus sits between requester and resource</p> 
+<h3><a href="#the-scenario" id="the-scenario">The scenario</a></h3> 
+<p><img src="/blog/images/2019/EventBus1.png" alt="Classic Eventbus Request Response"></p> 
+<p>Image created using <a href="http://www.websequencediagrams.com/">WebSequenceDiagramms</a></p> 
+<pre class="brush: bash">title Vert.x EventBus
+
+participant Requester
+participant EventBus
+participant DataSource
+
+Requester-&gt;EventBus: request DataSet
+EventBus-&gt;DataSource: forward request
+DataSource-&gt;Requester: reply with data
+</pre> 
+<p>A requester (e.g. the handler of a HTTP Listener) sends a request via the <a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/EventBus.html">EventBus</a> using a <strong>request-response</strong> pattern with <a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/EventBus.html#request-java.lang.String-java.lang.Object-io.vertx.core.eventbus.DeliveryOptions-io.vertx.core.Handler-"><code>EventBus.request(...)</code></a>. Simple and easy. The problem with this: one request has one response. That doesn't work for streaming data.</p> 
+<h3><a href="#taking-a-page-from-the-military" id="taking-a-page-from-the-military">Taking a page from the military</a></h3> 
+<p>The standard pattern for military commands is:</p> 
+<ol> 
+ <li>Utter the command</li> 
+ <li>Accnowledge the command</li> 
+ <li>Execute the command (<a href="https://en.wikipedia.org/wiki/Risk_(game)">Conquer 14 countries</a>, might take time. For Germans: <a href="https://de.wikipedia.org/wiki/Risiko_(Spiel)">Liberate 14 countries</a>)</li> 
+ <li>Report completion of command</li> 
+</ol> 
+<h3><a href="#applying-to-the-eventbus" id="applying-to-the-eventbus">Applying to the EventBus</a></h3> 
+<p>Following the pattern above the first request/response only will establish the Intent (btw. <a href="https://www.davidmarquet.com/turn-the-ship-around-a-true-story-of-turning-followers-into-leaders-by-david-marquet/">Intent Based Leadership</a> is a smoking hot topic). Item 2 and 3 will be handled by a publish and subscribe pattern.</p> 
+<p>So our scenario now looks like this:</p> 
+<p><img src="/blog/images/2019/EventBus2.png" alt="Classic Eventbus Request Response"></p> 
+<p>Image created using <a href="http://www.websequencediagrams.com/">WebSequenceDiagramms</a></p> 
+<pre class="brush: bash">title Vert.x EventBus Streaming
+
+participant Requester
+participant EventBus
+participant DataSource
+
+Requester-&gt;Requester: start listening\non temp address
+note over Requester, DataSource: Start request/response
+Requester-&gt;EventBus: request Stream\notify on temp address
+EventBus-&gt;DataSource: forward request
+DataSource-&gt;Requester: reply withaccnowledgement
+note over Requester, DataSource: End of request/response
+note over Requester, DataSource: Start publish/subscribe
+DataSource-&gt;Requester: publish first data
+DataSource-&gt;Requester: publish more data
+DataSource-&gt;Requester: publish last data
+Requester-&gt;Requester: end listening\non temp address
+note over Requester, DataSource: End of publish/subscribe
+</pre> 
+<p>To implement this, I'm taking advantage of EventBus' <a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/DeliveryOptions.html">DeliveryOptions</a> that allow me to set header values. I define a header <code>StreamListenerAddress</code> that my data source will use for publishing data:</p> 
+<pre class="brush: java">// Error handling omitted
+public void initiateStreamResponse(final String dataAddress, final JsonObject requestMessage, Promise&lt;Void&gt; didItWork) {
+	final String streamListenerAddress = "tempListenerAddresses." + UUID.randomUUID().toString();
+	final EventBus eventBus = this.getVertx().eventBus();
+	final MessageConsumer&lt;JsonObject&gt; dataReceiver = eventBus.consumer(streamListenerAddress);
+	dataReceiver.handler(handler -&gt; {
+		final boolean isFirst = Boolean.parseBoolean(headers.get("first"));
+		final boolean isComplete = Boolean.parseBoolean(headers.get("complete"));
+		/*
+	      Here goes the code feeding into the requester's logic e.g. a chunked HTTP response
+	      or a websocket publish or a gRPC push. isFirst and isComplete can be true at the
+	      same time when there is only a single response
+		*/
+	    ditItWork.complete();  
+	});
+	DeliveryOptions deliveryOptions = new DeliveryOptions();
+	deliveryOptions.addHeader("StreamListenerAddress",streamListenerAddress);
+	eventBus.request(dataAddress, requestMessage, deliveryOptions, ar -&gt; {
+			if (ar.succeeded()) {
+				final Message&lt;Object&gt; resultMessage = ar.result();
+				final boolean success = Boolean.parseBoolean(resultMessage.headers().get(Constants.HEADER_SUCCESS));
+				if (!success) {
+					consumer.unregister();
+					didItWork.fail(new Error("Request for Data unsuccessfull"));
+				}
+
+			} else {
+				consumer.unregister();
+				didItWork.fail(ar.cause());
+			}
+		});
+}
+</pre> 
+<h2><a href="#what-next" id="what-next">What next?</a></h2> 
+<ul> 
+ <li>In Part 2 I will describe the data source part of this approach</li> 
+ <li>In Part 2 I will wrap that in observable and observer</li> 
+</ul> 
+<p>I'm using this pattern in the <a href="https://www.projectkeep/io">Keep API</a>, YMMV</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 04 December 2019
+<span class="divider">|</span>
+<a href="/blog/2019/12/a-streaming-pattern-for-the-vert.x-eventbus.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/reactive.html">Reactive</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2019/12/a-streaming-pattern-for-the-vert.x-eventbus.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="A Streaming Pattern for the vert.x EventBus (Part 1)" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2019/12/a-streaming-pattern-for-the-vert.x-eventbus.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2019/10/deep-human-super-skills-for-a-vuca-world.html">Deep Human Super Skills for a VUCA world</a></small></h1>
 					<hr />
 					<div><p>We live in a world dominated by volatility, uncertainty, complexity and ambiguity (<a href="https://en.wikipedia.org/wiki/Volatility,_uncertainty,_complexity_and_ambiguity">VUCA</a>). Our traditional approach to a working career, learning a specific skill and stick to it, doesn't fit anymore. What is needed instead, is the subject of the book <a href="https://www.deep-human.com/">Deep Human</a> writen by <a href="https://www.linkedin.com/in/crystal-lim-lange/">Crystal Lim-Lange</a> and <a href="https://www.linkedin.com/in/wolfgreg/">Dr. Gregor Lim-Lange</a>.</p> 
@@ -495,44 +601,6 @@ categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href=
 					</p>
 </p>
 				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2019/04/lwc-components-with-self-contained-images.html">LWC components with self contained images</a></small></h1>
-					<hr />
-					<div><p>When you create your LWC components, it is easy to include Salesforce predefined icons using <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-icon/example"><code>lightning-icon</code></a>. However once you need a custom icon, you point to an external URL, breaking the self containment. Unless you use <code>url(data:)</code>. Here is what I did</p> 
-<h3><a href="#a-scalable-check-mark" id="a-scalable-check-mark">A scalable check mark</a></h3> 
-<p><img src="/blog/images/2019/checkmark.png" alt="Dynamic Lookup"></p> 
-<p>For a list selection component I wanted a green check mark, like the picture above, indicate a selected record (more on the component in a later post). Since LWC doesn't allow (yet?) to store image assets inside a bundle and I wanted the component to be self contained.</p> 
-<p>The solution is to use <code>data:image/svg+xml</code> for a background image. The details were nicely outlined in <a href="https://css-tricks.com/using-svg/">css-tricks</a>. I tried to use <a href="https://en.wikipedia.org/wiki/Scalable_Vector_Graphics">svg</a> as source code directly, but failed to get it to work. So I resorted to use <code>base64</code>. It is an additional step, using <a href="https://www.base64encode.org/">an online Base64 encoder</a>.</p> 
-<h3><a href="#making-images" id="making-images">Making images</a></h3> 
-<p>SVG is just an XML based text format, so you could create your image in notepad (take that jpg!). However you probably want to use a <a href="https://www.justinmind.com/blog/11-great-free-paid-svg-editors-for-ux-designers/">graphic editor</a>. My choice here is <a href="https://www.sketch.com/">Sketch</a> (which gives me funny looks from designers: why a developer uses one of their tools). There were some steps worth to mention:</p> 
-<ul> 
- <li>When using text (like the check mark), convert that to a svg path. Right click on text and select "Convert to outlines". This allows the text to scale with the rest of the image</li> 
- <li>Use the Edit-Copy-Copy SVG Code rather than use the export functionality</li> 
- <li>The resulting SVG is "talkative", you can edit and remove quite some content: 
-  <ul> 
-   <li>remove width and height attributes from the <code>&lt;svg&gt;</code> element, but keep the viewbox. Also remove the xlink name space</li> 
-   <li>the <code>&lt;g&gt;</code> element doesn't need any attribute</li> 
-   <li><code>&lt;polygon&gt;</code> only needs <code>fill</code> and <code>points</code> attribute</li> 
-   <li>All numeric values have many digits. You can round them up</li> 
-  </ul> </li> 
-</ul></div>
-					<hr />
- <a href="/blog/2019/04/lwc-components-with-self-contained-images.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 18 April 2019
-<span class="divider">|</span>
-<a href="/blog/2019/04/lwc-components-with-self-contained-images.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2019/04/lwc-components-with-self-contained-images.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="LWC components with self contained images" data-twitter-via="@notessensei"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2019/04/lwc-components-with-self-contained-images.html";
-						</script>
-					</p>
-</p>
-				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/all.html" title="That's a loooong list!">Older entries<i class="icon-hand-right"></i></a>
 					</li>
@@ -593,7 +661,7 @@ categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/
 				<aside id="sidebar_categoriesArchive" class="well">
 					<ul class="nav nav-list">
 						<li class="nav-header">Categories</li>
-						<li ><a href="/blog/categories/afterhours.html">After Hours</a></li>
+						<li ><a href="/blog/categories/afterhours.html">After hours</a></li>
 						<li ><a href="/blog/categories/apex.html">Apex</a></li>
 						<li ><a href="/blog/categories/blog.html">Blog</a></li>
 						<li ><a href="/blog/categories/bluemix.html">Bluemix</a></li>
@@ -634,6 +702,7 @@ categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/
 						<li ><a href="/blog/categories/omnisophie.html">Omnisophie</a></li>
 						<li ><a href="/blog/categories/opensource.html">OpenSource</a></li>
 						<li ><a href="/blog/categories/pmd.html">PMD</a></li>
+						<li ><a href="/blog/categories/reactive.html">Reactive</a></li>
 						<li ><a href="/blog/categories/salesforce.html">Salesforce</a></li>
 						<li ><a href="/blog/categories/sametime.html">Sametime</a></li>
 						<li ><a href="/blog/categories/sfdx.html">SFDX</a></li>

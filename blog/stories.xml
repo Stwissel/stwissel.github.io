@@ -6,7 +6,102 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2019 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Mon, 28 Oct 2019 23:32:06 +0000</pubdate>
+	<pubdate>Wed, 04 Dec 2019 07:00:11 +0000</pubdate>
+<item>
+	<title>A Streaming Pattern for the vert.x EventBus (Part 1)</title>
+	<description>&lt;p&gt;When dealing with large amounts of data, using &lt;a href="https://www.baeldung.com/java-8-streams"&gt;Streams&lt;/a&gt; allows processing happen the moment data arrives, not just when data is complete. Streaming is core to &lt;a href="http://reactivex.io/"&gt;reactive programming&lt;/a&gt;. This blog entry describes an approach where the &lt;a href="https://vertx.io"&gt;vert.x&lt;/a&gt; EventBus sits between requester and resource&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#the-scenario" id="the-scenario"&gt;The scenario&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;&lt;img src="/blog/images/2019/EventBus1.png" alt="Classic Eventbus Request Response"&gt;&lt;/p&gt; 
+&lt;p&gt;Image created using &lt;a href="http://www.websequencediagrams.com/"&gt;WebSequenceDiagramms&lt;/a&gt;&lt;/p&gt; 
+&lt;pre class="brush: bash"&gt;title Vert.x EventBus
+
+participant Requester
+participant EventBus
+participant DataSource
+
+Requester-&amp;gt;EventBus: request DataSet
+EventBus-&amp;gt;DataSource: forward request
+DataSource-&amp;gt;Requester: reply with data
+&lt;/pre&gt; 
+&lt;p&gt;A requester (e.g. the handler of a HTTP Listener) sends a request via the &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/EventBus.html"&gt;EventBus&lt;/a&gt; using a &lt;strong&gt;request-response&lt;/strong&gt; pattern with &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/EventBus.html#request-java.lang.String-java.lang.Object-io.vertx.core.eventbus.DeliveryOptions-io.vertx.core.Handler-"&gt;&lt;code&gt;EventBus.request(...)&lt;/code&gt;&lt;/a&gt;. Simple and easy. The problem with this: one request has one response. That doesn't work for streaming data.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#taking-a-page-from-the-military" id="taking-a-page-from-the-military"&gt;Taking a page from the military&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;The standard pattern for military commands is:&lt;/p&gt; 
+&lt;ol&gt; 
+ &lt;li&gt;Utter the command&lt;/li&gt; 
+ &lt;li&gt;Accnowledge the command&lt;/li&gt; 
+ &lt;li&gt;Execute the command (&lt;a href="https://en.wikipedia.org/wiki/Risk_(game)"&gt;Conquer 14 countries&lt;/a&gt;, might take time. For Germans: &lt;a href="https://de.wikipedia.org/wiki/Risiko_(Spiel)"&gt;Liberate 14 countries&lt;/a&gt;)&lt;/li&gt; 
+ &lt;li&gt;Report completion of command&lt;/li&gt; 
+&lt;/ol&gt; 
+&lt;h3&gt;&lt;a href="#applying-to-the-eventbus" id="applying-to-the-eventbus"&gt;Applying to the EventBus&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Following the pattern above the first request/response only will establish the Intent (btw. &lt;a href="https://www.davidmarquet.com/turn-the-ship-around-a-true-story-of-turning-followers-into-leaders-by-david-marquet/"&gt;Intent Based Leadership&lt;/a&gt; is a smoking hot topic). Item 2 and 3 will be handled by a publish and subscribe pattern.&lt;/p&gt; 
+&lt;p&gt;So our scenario now looks like this:&lt;/p&gt; 
+&lt;p&gt;&lt;img src="/blog/images/2019/EventBus2.png" alt="Classic Eventbus Request Response"&gt;&lt;/p&gt; 
+&lt;p&gt;Image created using &lt;a href="http://www.websequencediagrams.com/"&gt;WebSequenceDiagramms&lt;/a&gt;&lt;/p&gt; 
+&lt;pre class="brush: bash"&gt;title Vert.x EventBus Streaming
+
+participant Requester
+participant EventBus
+participant DataSource
+
+Requester-&amp;gt;Requester: start listening\non temp address
+note over Requester, DataSource: Start request/response
+Requester-&amp;gt;EventBus: request Stream\notify on temp address
+EventBus-&amp;gt;DataSource: forward request
+DataSource-&amp;gt;Requester: reply withaccnowledgement
+note over Requester, DataSource: End of request/response
+note over Requester, DataSource: Start publish/subscribe
+DataSource-&amp;gt;Requester: publish first data
+DataSource-&amp;gt;Requester: publish more data
+DataSource-&amp;gt;Requester: publish last data
+Requester-&amp;gt;Requester: end listening\non temp address
+note over Requester, DataSource: End of publish/subscribe
+&lt;/pre&gt; 
+&lt;p&gt;To implement this, I'm taking advantage of EventBus' &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/DeliveryOptions.html"&gt;DeliveryOptions&lt;/a&gt; that allow me to set header values. I define a header &lt;code&gt;StreamListenerAddress&lt;/code&gt; that my data source will use for publishing data:&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;// Error handling omitted
+public void initiateStreamResponse(final String dataAddress, final JsonObject requestMessage, Promise&amp;lt;Void&amp;gt; didItWork) {
+	final String streamListenerAddress = "tempListenerAddresses." + UUID.randomUUID().toString();
+	final EventBus eventBus = this.getVertx().eventBus();
+	final MessageConsumer&amp;lt;JsonObject&amp;gt; dataReceiver = eventBus.consumer(streamListenerAddress);
+	dataReceiver.handler(handler -&amp;gt; {
+		final boolean isFirst = Boolean.parseBoolean(headers.get("first"));
+		final boolean isComplete = Boolean.parseBoolean(headers.get("complete"));
+		/*
+	      Here goes the code feeding into the requester's logic e.g. a chunked HTTP response
+	      or a websocket publish or a gRPC push. isFirst and isComplete can be true at the
+	      same time when there is only a single response
+		*/
+	    ditItWork.complete();  
+	});
+	DeliveryOptions deliveryOptions = new DeliveryOptions();
+	deliveryOptions.addHeader("StreamListenerAddress",streamListenerAddress);
+	eventBus.request(dataAddress, requestMessage, deliveryOptions, ar -&amp;gt; {
+			if (ar.succeeded()) {
+				final Message&amp;lt;Object&amp;gt; resultMessage = ar.result();
+				final boolean success = Boolean.parseBoolean(resultMessage.headers().get(Constants.HEADER_SUCCESS));
+				if (!success) {
+					consumer.unregister();
+					didItWork.fail(new Error("Request for Data unsuccessfull"));
+				}
+
+			} else {
+				consumer.unregister();
+				didItWork.fail(ar.cause());
+			}
+		});
+}
+&lt;/pre&gt; 
+&lt;h2&gt;&lt;a href="#what-next" id="what-next"&gt;What next?&lt;/a&gt;&lt;/h2&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;In Part 2 I will describe the data source part of this approach&lt;/li&gt; 
+ &lt;li&gt;In Part 2 I will wrap that in observable and observer&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;I'm using this pattern in the &lt;a href="https://www.projectkeep/io"&gt;Keep API&lt;/a&gt;, YMMV&lt;/p&gt;</description>
+	<link>2019/12/a-streaming-pattern-for-the-vert.x-eventbus.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>33a42fc0-1659-11ea-991f-61b456ce46f5</guid>
+	<pubDate>04 December 2019</pubDate>
+
+</item>
 <item>
 	<title>Deep Human Super Skills for a VUCA world</title>
 	<description>&lt;p&gt;We live in a world dominated by volatility, uncertainty, complexity and ambiguity (&lt;a href="https://en.wikipedia.org/wiki/Volatility,_uncertainty,_complexity_and_ambiguity"&gt;VUCA&lt;/a&gt;). Our traditional approach to a working career, learning a specific skill and stick to it, doesn't fit anymore. What is needed instead, is the subject of the book &lt;a href="https://www.deep-human.com/"&gt;Deep Human&lt;/a&gt; writen by &lt;a href="https://www.linkedin.com/in/crystal-lim-lange/"&gt;Crystal Lim-Lange&lt;/a&gt; and &lt;a href="https://www.linkedin.com/in/wolfgreg/"&gt;Dr. Gregor Lim-Lange&lt;/a&gt;.&lt;/p&gt; 
@@ -287,32 +382,6 @@ sudo apt dist-upgrade
 	<author>Stephan H. Wissel</author>
 	<guid>255c75b0-9b31-11e9-a152-55ff2b418ddd</guid>
 	<pubDate>15 June 2019</pubDate>
-
-</item>
-<item>
-	<title>LWC components with self contained images</title>
-	<description>&lt;p&gt;When you create your LWC components, it is easy to include Salesforce predefined icons using &lt;a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-icon/example"&gt;&lt;code&gt;lightning-icon&lt;/code&gt;&lt;/a&gt;. However once you need a custom icon, you point to an external URL, breaking the self containment. Unless you use &lt;code&gt;url(data:)&lt;/code&gt;. Here is what I did&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#a-scalable-check-mark" id="a-scalable-check-mark"&gt;A scalable check mark&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;&lt;img src="/blog/images/2019/checkmark.png" alt="Dynamic Lookup"&gt;&lt;/p&gt; 
-&lt;p&gt;For a list selection component I wanted a green check mark, like the picture above, indicate a selected record (more on the component in a later post). Since LWC doesn't allow (yet?) to store image assets inside a bundle and I wanted the component to be self contained.&lt;/p&gt; 
-&lt;p&gt;The solution is to use &lt;code&gt;data:image/svg+xml&lt;/code&gt; for a background image. The details were nicely outlined in &lt;a href="https://css-tricks.com/using-svg/"&gt;css-tricks&lt;/a&gt;. I tried to use &lt;a href="https://en.wikipedia.org/wiki/Scalable_Vector_Graphics"&gt;svg&lt;/a&gt; as source code directly, but failed to get it to work. So I resorted to use &lt;code&gt;base64&lt;/code&gt;. It is an additional step, using &lt;a href="https://www.base64encode.org/"&gt;an online Base64 encoder&lt;/a&gt;.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#making-images" id="making-images"&gt;Making images&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;SVG is just an XML based text format, so you could create your image in notepad (take that jpg!). However you probably want to use a &lt;a href="https://www.justinmind.com/blog/11-great-free-paid-svg-editors-for-ux-designers/"&gt;graphic editor&lt;/a&gt;. My choice here is &lt;a href="https://www.sketch.com/"&gt;Sketch&lt;/a&gt; (which gives me funny looks from designers: why a developer uses one of their tools). There were some steps worth to mention:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;When using text (like the check mark), convert that to a svg path. Right click on text and select "Convert to outlines". This allows the text to scale with the rest of the image&lt;/li&gt; 
- &lt;li&gt;Use the Edit-Copy-Copy SVG Code rather than use the export functionality&lt;/li&gt; 
- &lt;li&gt;The resulting SVG is "talkative", you can edit and remove quite some content: 
-  &lt;ul&gt; 
-   &lt;li&gt;remove width and height attributes from the &lt;code&gt;&amp;lt;svg&amp;gt;&lt;/code&gt; element, but keep the viewbox. Also remove the xlink name space&lt;/li&gt; 
-   &lt;li&gt;the &lt;code&gt;&amp;lt;g&amp;gt;&lt;/code&gt; element doesn't need any attribute&lt;/li&gt; 
-   &lt;li&gt;&lt;code&gt;&amp;lt;polygon&amp;gt;&lt;/code&gt; only needs &lt;code&gt;fill&lt;/code&gt; and &lt;code&gt;points&lt;/code&gt; attribute&lt;/li&gt; 
-   &lt;li&gt;All numeric values have many digits. You can round them up&lt;/li&gt; 
-  &lt;/ul&gt; &lt;/li&gt; 
-&lt;/ul&gt;</description>
-	<link>2019/04/lwc-components-with-self-contained-images.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>1cb1c450-619e-11e9-99c9-55bd07fdd987</guid>
-	<pubDate>18 April 2019</pubDate>
 
 </item>
 
