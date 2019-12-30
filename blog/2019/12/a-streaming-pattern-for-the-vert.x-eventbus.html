@@ -122,11 +122,21 @@ catch(e){window.attachEvent("onload", $buo_f)}
 
 		<div class="row-fluid">
 			<div class="span12">
-				
+							<div class="well well-raised">
+				<p>This article is part of a mini series. Read them all:</p>
+				<h3>EventBus Streaming</h3>
+				<ol reversed class="nav nav-list">
+					<li  class="active"><a href="/blog/2019/12/a-streaming-pattern-for-the-vert.x-eventbus.html">A Streaming Pattern for the vert.x EventBus (Part 1)</a></li>
+				</ol>
+			</div>	
+
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/2019/10/deep-human-super-skills-for-a-vuca-world.html"><i class="icon-hand-left"></i>Deep Human Super Skills for a VUCA world</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+					<span class="divider">|</span>
+					<li><a href="/blog/2019/12/http-debugging-cheat-sheet.html">http(s) debugging cheat sheet<i class="icon-hand-right"></i></a>
+					</li>
 				</ul>
 
 				<article class="well well-raised">
@@ -144,7 +154,8 @@ participant DataSource
 
 Requester-&gt;EventBus: request DataSet
 EventBus-&gt;DataSource: forward request
-DataSource-&gt;Requester: reply with data
+DataSource-&gt;EventBus: reply with data
+EventBus-&gt;Requester: forward reply
 </pre> 
 <p>A requester (e.g. the handler of a HTTP Listener) sends a request via the <a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/EventBus.html">EventBus</a> using a <strong>request-response</strong> pattern with <a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/EventBus.html#request-java.lang.String-java.lang.Object-io.vertx.core.eventbus.DeliveryOptions-io.vertx.core.Handler-"><code>EventBus.request(...)</code></a>. Simple and easy. The problem with this: one request has one response. That doesn't work for streaming data.</p> 
 <h3><a href="#taking-a-page-from-the-military" id="taking-a-page-from-the-military">Taking a page from the military</a></h3> 
@@ -166,17 +177,21 @@ participant Requester
 participant EventBus
 participant DataSource
 
-Requester-&gt;Requester: start listening\non temp address
+Requester-&gt;EventBus: start listening\non temp address
 note over Requester, DataSource: Start request/response
 Requester-&gt;EventBus: request Stream\notify on temp address
 EventBus-&gt;DataSource: forward request
-DataSource-&gt;Requester: reply withaccnowledgement
+DataSource-&gt;EventBus: reply withaccnowledgement
+EventBus-&gt;Requester: forward response
 note over Requester, DataSource: End of request/response
 note over Requester, DataSource: Start publish/subscribe
-DataSource-&gt;Requester: publish first data
-DataSource-&gt;Requester: publish more data
-DataSource-&gt;Requester: publish last data
-Requester-&gt;Requester: end listening\non temp address
+DataSource-&gt;EventBus: publish first data
+EventBus-&gt;Requester: forward response
+DataSource-&gt;EventBus: publish more data
+EventBus-&gt;Requester: forward response
+DataSource-&gt;EventBus: publish last data
+EventBus-&gt;Requester: forward response
+Requester-&gt;EventBus: end listening\non temp address
 note over Requester, DataSource: End of publish/subscribe
 </pre> 
 <p>To implement this, I'm taking advantage of EventBus' <a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/DeliveryOptions.html">DeliveryOptions</a> that allow me to set header values. I define a header <code>StreamListenerAddress</code> that my data source will use for publishing data:</p> 
@@ -254,6 +269,9 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 					<li><a href="/blog/2019/10/deep-human-super-skills-for-a-vuca-world.html"><i class="icon-hand-left"></i>Deep Human Super Skills for a VUCA world</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+					<span class="divider">|</span>
+					<li><a href="/blog/2019/12/http-debugging-cheat-sheet.html">http(s) debugging cheat sheet<i class="icon-hand-right"></i></a>
+					</li>
 				</ul>
 
 			</div>
