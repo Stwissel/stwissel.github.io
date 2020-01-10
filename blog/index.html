@@ -110,6 +110,56 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2020/01/unit-tests-and-singletons.html">Unit Tests and Singletons</a></small></h1>
+					<hr />
+					<div><p>Good developers <a href="https://apiumhub.com/tech-blog-barcelona/top-benefits-of-unit-testing/">test their code</a>. There are plenty of frameworks and tools around to make it less painful. Not every code is testable, so you <a href="https://en.wikipedia.org/wiki/Test-driven_development">write test first</a>, to avoid getting stuck with untestable code. However there are situations where <a href="https://en.wikipedia.org/wiki/Unit_testing">Unit Testing</a> and pattern get into each other's way</p> 
+<h3><a href="#the-singleton-and-test-isolation" id="the-singleton-and-test-isolation">The singleton and test isolation</a></h3> 
+<p>I'm a big fan of <a href="https://www.javatpoint.com/design-patterns-in-java">design patterns</a>, after all they are <strong>a well-proven solutions</strong> for specific known problems. E.g. the <a href="https://en.wikipedia.org/wiki/Observer_pattern">observer pattern</a> is the foundation of <a href="http://reactivex.io/">reactive programming</a>.</p> 
+<p>A common approach to implementing cache is the <a href="https://en.wikipedia.org/wiki/Singleton_pattern">singleton pattern</a>, that ensures all your code talks to the same cache instance ,independent of what cache you actually use: <a href="https://www.aerospike.com/">Aerospike</a>, <a href="https://redis.io/">Redis</a>, <a href="https://github.com/google/guava/wiki/CachesExplained">Guava</a>, <a href="https://commons.apache.org/proper/commons-jcs/">JCS</a> or others.</p> 
+<p>Your singleton would look like this:</p> 
+<pre class="brush: java">public enum TicketCache {
+  INSTANCE;
+  
+  public Set&lt;String&gt; getTickets(final String systemId) {
+    Set&lt;String&gt; result = new HashSet&lt;&gt;();
+    // Your cache related code goes here
+    return result;
+  }
+  
+  public TicketCache addTicket(final String systemId, final String ticketId) {
+    // Your cache/persistence code goes here
+    return this;
+  }
+}
+</pre> 
+<p>and a method in a class returning tickets (e.g. in a user object) for a user could look like this:</p> 
+<pre class="brush: java">  public Set&lt;String&gt; getUserTickets() {
+    Set&lt;String&gt; result = new HashSet&lt;&gt;();
+    Set&lt;String&gt; systemsResponsibleFor = this.getSystems();
+    systemsResponsibleFor.forEach(systemId -&gt; 
+      result.addAll(TicketCache.INSTANCE.getTickets(systemId)));
+    return result;
+  }
+</pre> 
+<p>Now when you want to test this method, you have a dependency on <code>TicketCache</code> and can't test the <code>getUserTickets()</code> method in isolation. You are at <a href="https://stackoverflow.com/questions/995340/is-implementing-a-cache-considered-a-difficult-problem">the mercy</a> of your cache implementation. But there <strong>is a better way</strong></p></div>
+					<hr />
+ <a href="/blog/2020/01/unit-tests-and-singletons.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 10 January 2020
+<span class="divider">|</span>
+<a href="/blog/2020/01/unit-tests-and-singletons.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/01/unit-tests-and-singletons.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Unit Tests and Singletons" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2020/01/unit-tests-and-singletons.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2019/12/http-debugging-cheat-sheet.html">http(s) debugging cheat sheet</a></small></h1>
 					<hr />
 					<div><p><a href="https://en.wikipedia.org/wiki/Martin_Luther">Martin Luther</a> is <a href="hhttps://www.redensarten-index.de/suche.php?suchbegriff=~~dem%20Volk%20aufs%20Maul%20schauen">attributed</a> with the utterance "You have to watch how people talk". What works for the famous <a href="https://en.wikipedia.org/wiki/Luther_Bible">bible translation</a> applies to APIs as well. Despite <a href="https://www.openapis.org/">Open Standards</a> and <a href="https://www.ietf.org/">a standard body</a>, APIs do their own thing, not necessarily documented as they are.</p> 
@@ -600,45 +650,6 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 					</p>
 </p>
 				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2019/06/adding-a-proxy-to-your-salesforce-communities.html">Adding a proxy to your Salesforce Communities</a></small></h1>
-					<hr />
-					<div><p>Running a community site might come with a number of interesting requirement:</p> 
-<ul> 
- <li>Scan uploaded files for maleware or copyright violations</li> 
- <li>Filter language for profanities</li> 
- <li>Comply with local data retention rules (e.g. local before cloud)</li> 
-</ul> 
-<p>For most of these task <a href="https://appexchange.salesforce.com/">AppExchange</a> will be the goto place to find solution. However sometimes you want to process <strong>before</strong> data hits the platform. This is the moment where you need a proxy.</p> 
-<h3><a href="#clicks-not-code" id="clicks-not-code">Clicks not Code</a></h3> 
-<p>To be ready to proxy, there are a few steps involved. I went through a few loops, to come to this working sequence:</p> 
-<ol> 
- <li>Register a domain. You will use it to run your community. Using a custom domain is essential to avoid https headaches later on</li> 
- <li>Obtain a SSL certificate for the custom domain. The easiest part, if you have access to a public host, is to use <a href="https://letsencrypt.org/">LetsEncrypt</a> to obtain the cert and then <a href="/blog/2018/03/letsencrypt-java-keystore.html">transform it to JKS</a>. The certs are only valid for 90 days, but we only need it for a short while in JKS. On e.g. <a href="https://nginx.org/">Nginx</a> one can <a href="https://www.nginx.com/blog/using-free-ssltls-certificates-from-lets-encrypt-with-nginx/">auto renew</a> the certs</li> 
- <li>Upload the cert into Salesforce in <code>Security - Certificate and Key Management - Import from Keystore</code></li> 
- <li>Follow the Steps 1 and 4 (you did 3 already). You need access to your DNS for that. The Domain needs to be fully qualified, you can't use your root (a DNS limitation). Let's say your base is <code>acme.com</code> and you want your partner community to be reachable at <code>partners.acme.com</code> and your Salesforce Org ID is <code>1234567890abcdefgh</code>, then you need a <code>CNAME</code> entry that says <code>partners</code> -&gt; <code>partners.acme.com.1234567890abcdefgh.live.siteforce.com.</code> <strong>Important</strong>: The entry needs to end with a DOT (.) otherwise CNAME tries to link it back to your domain</li> 
- <li>Test the whole setup. Make sure you can use all community functions using the URL <a href="https://www.xkcd.com"><code>https://partners.acme.com/</code></a></li> 
- <li>Now back to the DNS. Point the CNAME entry to your host (e.g. <a href="https://heroku.com">Heroku</a> or delete it and create a A record pointing to e.g. <a href="https://digitalocean.com">DigitalOcean</a></li> 
- <li>Make sure the Proxy sends the HOST header has the value of your custom domain, not the force.com. Your proxy serves as <a href="https://help.salesforce.com/articleView?id=000315329&amp;language=en_US&amp;type=1">your own CDN</a></li> 
-</ol> 
-<p>Little boomer: You can't do this in a sandbox or a developer org, needs to be production or trial.</p> 
-<p>Next stop: discuss what proxy to use and options to consider. As usual YMMV.</p></div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 30 June 2019
-<span class="divider">|</span>
-<a href="/blog/2019/06/adding-a-proxy-to-your-salesforce-communities.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/singapore.html">Singapore</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2019/06/adding-a-proxy-to-your-salesforce-communities.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Adding a proxy to your Salesforce Communities" data-twitter-via="@notessensei"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2019/06/adding-a-proxy-to-your-salesforce-communities.html";
-						</script>
-					</p>
-</p>
-				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/all.html" title="That's a loooong list!">Older entries<i class="icon-hand-right"></i></a>
 					</li>
@@ -779,6 +790,7 @@ categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href=
 						<li ><a href="/blog/2017/">2017</a></li>
 						<li ><a href="/blog/2018/">2018</a></li>
 						<li ><a href="/blog/2019/">2019</a></li>
+						<li ><a href="/blog/2020/">2020</a></li>
 						<li ><a href="/blog/all.html" title="That's a long list!">Complete archive</a></li>
 					</ul>
 				</aside>

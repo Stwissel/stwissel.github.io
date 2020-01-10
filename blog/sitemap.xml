@@ -6,7 +6,45 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2019 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Thu, 09 Jan 2020 12:33:56 +0000</pubdate>
+	<pubdate>Fri, 10 Jan 2020 11:07:49 +0000</pubdate>
+<item>
+	<title>Unit Tests and Singletons</title>
+	<description>&lt;p&gt;Good developers &lt;a href="https://apiumhub.com/tech-blog-barcelona/top-benefits-of-unit-testing/"&gt;test their code&lt;/a&gt;. There are plenty of frameworks and tools around to make it less painful. Not every code is testable, so you &lt;a href="https://en.wikipedia.org/wiki/Test-driven_development"&gt;write test first&lt;/a&gt;, to avoid getting stuck with untestable code. However there are situations where &lt;a href="https://en.wikipedia.org/wiki/Unit_testing"&gt;Unit Testing&lt;/a&gt; and pattern get into each other's way&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#the-singleton-and-test-isolation" id="the-singleton-and-test-isolation"&gt;The singleton and test isolation&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;I'm a big fan of &lt;a href="https://www.javatpoint.com/design-patterns-in-java"&gt;design patterns&lt;/a&gt;, after all they are &lt;strong&gt;a well-proven solutions&lt;/strong&gt; for specific known problems. E.g. the &lt;a href="https://en.wikipedia.org/wiki/Observer_pattern"&gt;observer pattern&lt;/a&gt; is the foundation of &lt;a href="http://reactivex.io/"&gt;reactive programming&lt;/a&gt;.&lt;/p&gt; 
+&lt;p&gt;A common approach to implementing cache is the &lt;a href="https://en.wikipedia.org/wiki/Singleton_pattern"&gt;singleton pattern&lt;/a&gt;, that ensures all your code talks to the same cache instance ,independent of what cache you actually use: &lt;a href="https://www.aerospike.com/"&gt;Aerospike&lt;/a&gt;, &lt;a href="https://redis.io/"&gt;Redis&lt;/a&gt;, &lt;a href="https://github.com/google/guava/wiki/CachesExplained"&gt;Guava&lt;/a&gt;, &lt;a href="https://commons.apache.org/proper/commons-jcs/"&gt;JCS&lt;/a&gt; or others.&lt;/p&gt; 
+&lt;p&gt;Your singleton would look like this:&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;public enum TicketCache {
+  INSTANCE;
+  
+  public Set&amp;lt;String&amp;gt; getTickets(final String systemId) {
+    Set&amp;lt;String&amp;gt; result = new HashSet&amp;lt;&amp;gt;();
+    // Your cache related code goes here
+    return result;
+  }
+  
+  public TicketCache addTicket(final String systemId, final String ticketId) {
+    // Your cache/persistence code goes here
+    return this;
+  }
+}
+&lt;/pre&gt; 
+&lt;p&gt;and a method in a class returning tickets (e.g. in a user object) for a user could look like this:&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;  public Set&amp;lt;String&amp;gt; getUserTickets() {
+    Set&amp;lt;String&amp;gt; result = new HashSet&amp;lt;&amp;gt;();
+    Set&amp;lt;String&amp;gt; systemsResponsibleFor = this.getSystems();
+    systemsResponsibleFor.forEach(systemId -&amp;gt; 
+      result.addAll(TicketCache.INSTANCE.getTickets(systemId)));
+    return result;
+  }
+&lt;/pre&gt; 
+&lt;p&gt;Now when you want to test this method, you have a dependency on &lt;code&gt;TicketCache&lt;/code&gt; and can't test the &lt;code&gt;getUserTickets()&lt;/code&gt; method in isolation. You are at &lt;a href="https://stackoverflow.com/questions/995340/is-implementing-a-cache-considered-a-difficult-problem"&gt;the mercy&lt;/a&gt; of your cache implementation. But there &lt;strong&gt;is a better way&lt;/strong&gt;&lt;/p&gt;</description>
+	<link>2020/01/unit-tests-and-singletons.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>254ad5b0-3390-11ea-81da-9f01f1d1b51b</guid>
+	<pubDate>10 January 2020</pubDate>
+
+</item>
 <item>
 	<title>http(s) debugging cheat sheet</title>
 	<description>&lt;p&gt;&lt;a href="https://en.wikipedia.org/wiki/Martin_Luther"&gt;Martin Luther&lt;/a&gt; is &lt;a href="hhttps://www.redensarten-index.de/suche.php?suchbegriff=~~dem%20Volk%20aufs%20Maul%20schauen"&gt;attributed&lt;/a&gt; with the utterance "You have to watch how people talk". What works for the famous &lt;a href="https://en.wikipedia.org/wiki/Luther_Bible"&gt;bible translation&lt;/a&gt; applies to APIs as well. Despite &lt;a href="https://www.openapis.org/"&gt;Open Standards&lt;/a&gt; and &lt;a href="https://www.ietf.org/"&gt;a standard body&lt;/a&gt;, APIs do their own thing, not necessarily documented as they are.&lt;/p&gt; 
@@ -392,34 +430,6 @@ sudo apt dist-upgrade
 	<author>Stephan H. Wissel</author>
 	<guid>86e88e10-d08b-11e9-ae24-cf34c96a740e</guid>
 	<pubDate>06 September 2019</pubDate>
-
-</item>
-<item>
-	<title>Adding a proxy to your Salesforce Communities</title>
-	<description>&lt;p&gt;Running a community site might come with a number of interesting requirement:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;Scan uploaded files for maleware or copyright violations&lt;/li&gt; 
- &lt;li&gt;Filter language for profanities&lt;/li&gt; 
- &lt;li&gt;Comply with local data retention rules (e.g. local before cloud)&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;For most of these task &lt;a href="https://appexchange.salesforce.com/"&gt;AppExchange&lt;/a&gt; will be the goto place to find solution. However sometimes you want to process &lt;strong&gt;before&lt;/strong&gt; data hits the platform. This is the moment where you need a proxy.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#clicks-not-code" id="clicks-not-code"&gt;Clicks not Code&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;To be ready to proxy, there are a few steps involved. I went through a few loops, to come to this working sequence:&lt;/p&gt; 
-&lt;ol&gt; 
- &lt;li&gt;Register a domain. You will use it to run your community. Using a custom domain is essential to avoid https headaches later on&lt;/li&gt; 
- &lt;li&gt;Obtain a SSL certificate for the custom domain. The easiest part, if you have access to a public host, is to use &lt;a href="https://letsencrypt.org/"&gt;LetsEncrypt&lt;/a&gt; to obtain the cert and then &lt;a href="/blog/2018/03/letsencrypt-java-keystore.html"&gt;transform it to JKS&lt;/a&gt;. The certs are only valid for 90 days, but we only need it for a short while in JKS. On e.g. &lt;a href="https://nginx.org/"&gt;Nginx&lt;/a&gt; one can &lt;a href="https://www.nginx.com/blog/using-free-ssltls-certificates-from-lets-encrypt-with-nginx/"&gt;auto renew&lt;/a&gt; the certs&lt;/li&gt; 
- &lt;li&gt;Upload the cert into Salesforce in &lt;code&gt;Security - Certificate and Key Management - Import from Keystore&lt;/code&gt;&lt;/li&gt; 
- &lt;li&gt;Follow the Steps 1 and 4 (you did 3 already). You need access to your DNS for that. The Domain needs to be fully qualified, you can't use your root (a DNS limitation). Let's say your base is &lt;code&gt;acme.com&lt;/code&gt; and you want your partner community to be reachable at &lt;code&gt;partners.acme.com&lt;/code&gt; and your Salesforce Org ID is &lt;code&gt;1234567890abcdefgh&lt;/code&gt;, then you need a &lt;code&gt;CNAME&lt;/code&gt; entry that says &lt;code&gt;partners&lt;/code&gt; -&amp;gt; &lt;code&gt;partners.acme.com.1234567890abcdefgh.live.siteforce.com.&lt;/code&gt; &lt;strong&gt;Important&lt;/strong&gt;: The entry needs to end with a DOT (.) otherwise CNAME tries to link it back to your domain&lt;/li&gt; 
- &lt;li&gt;Test the whole setup. Make sure you can use all community functions using the URL &lt;a href="https://www.xkcd.com"&gt;&lt;code&gt;https://partners.acme.com/&lt;/code&gt;&lt;/a&gt;&lt;/li&gt; 
- &lt;li&gt;Now back to the DNS. Point the CNAME entry to your host (e.g. &lt;a href="https://heroku.com"&gt;Heroku&lt;/a&gt; or delete it and create a A record pointing to e.g. &lt;a href="https://digitalocean.com"&gt;DigitalOcean&lt;/a&gt;&lt;/li&gt; 
- &lt;li&gt;Make sure the Proxy sends the HOST header has the value of your custom domain, not the force.com. Your proxy serves as &lt;a href="https://help.salesforce.com/articleView?id=000315329&amp;amp;language=en_US&amp;amp;type=1"&gt;your own CDN&lt;/a&gt;&lt;/li&gt; 
-&lt;/ol&gt; 
-&lt;p&gt;Little boomer: You can't do this in a sandbox or a developer org, needs to be production or trial.&lt;/p&gt; 
-&lt;p&gt;Next stop: discuss what proxy to use and options to consider. As usual YMMV.&lt;/p&gt;</description>
-	<link>2019/06/adding-a-proxy-to-your-salesforce-communities.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>c1fe6140-9b30-11e9-ad06-ed6374046d03</guid>
-	<pubDate>30 June 2019</pubDate>
 
 </item>
 
