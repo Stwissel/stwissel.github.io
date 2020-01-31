@@ -6,12 +6,39 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2019 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Fri, 31 Jan 2020 19:01:39 +0000</pubdate>
+	<pubdate>Fri, 31 Jan 2020 19:50:38 +0000</pubdate>
 <item>
-	<title>Running a CalDAV server on Ubuntu</title>
+	<title>Generating JWT tokens for tests</title>
+	<description>&lt;p&gt;There are many options for &lt;a href="https://auth0.com/docs/authorization/concepts/authz-and-authn"&gt;Authentication and Authorisation&lt;/a&gt;. I'm fond of &lt;a href="https://jwt.io/"&gt;Json Web Tokens&lt;/a&gt; (JWT), implementing &lt;a href="https://tools.ietf.org/html/rfc7519"&gt;RFC7519&lt;/a&gt;. Mostly because they are like &lt;a href="https://en.wikipedia.org/wiki/IBM_Lightweight_Third-Party_Authentication"&gt;LTPA&lt;/a&gt; &lt;del&gt;for grownups&lt;/del&gt;, but standard compliant&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#quis-custodiet-ipsos-custodes" id="quis-custodiet-ipsos-custodes"&gt;Quis custodiet ipsos custodes?&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;JWT contains information that is digitally signed (and optional encrypted), so a receiving end can verify that the information is correct. The key elements here are:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;the JWT contains a claim, at least the &lt;strong&gt;subject&lt;/strong&gt; that is tamper resistant by being digitally signed&lt;/li&gt; 
+ &lt;li&gt;JWT issuer and JWT consumer trust each other, by either having a shared secret (bad idea) or using a public/private key pair. The issuer signs the information with a private key. The consumer (your application server) verifies the signature using the public key&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;So besides protecting the private key of the issuer, you also want to be clear who's keys you trust. The one who &lt;a href="s://en.wikipedia.org/wiki/Quis_custodiet_ipsos_custodes%3F"&gt;holds your identity&lt;/a&gt; can impersonate you at any time (so you might rethink if "Login with Facebook" is such a brilliant idea after all).&lt;/p&gt; 
+&lt;p&gt;However when &lt;strong&gt;testing&lt;/strong&gt; systems, you develop local, you want to be able to have any user at your disposal, so you can generate the claim that is the &lt;a href="https://en.wikipedia.org/wiki/Open_sesame"&gt;Open Sesame&lt;/a&gt; to your test regime&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#building-a-claim" id="building-a-claim"&gt;Building a claim&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;We start by building the raw claim &lt;strong&gt;template.json&lt;/strong&gt; file:&lt;/p&gt; 
+&lt;pre class="brush: javascript"&gt;{
+  "iss": "Alibaba Caves",
+  "aud": "40Thiefs",
+  "expSeconds": 300
+}
+&lt;/pre&gt; 
+&lt;p&gt;It contains an issuer, an audience and the duration in seconds. The later one is for my convenience. The receiving system might or might not check issuer (iss) and/or audience (aud).&lt;/p&gt; 
+&lt;p&gt;Next step is to create a public/private key pair&lt;/p&gt;</description>
+	<link>2020/01/generating-jwt-tokens-for-tests.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>955d04d0-445d-11ea-a785-85867ba0af46</guid>
+	<pubDate>01 February 2020</pubDate>
+
+</item>
+<item>
+	<title>Running a CalDAV server on Ubuntu (2020 edition)</title>
 	<description>&lt;p&gt;When playing with &lt;a href="https://en.wikipedia.org/wiki/CalDAV"&gt;calDAV&lt;/a&gt; it makes sense to have a reference implementation to refer to. The &lt;em&gt;GOLD&lt;/em&gt; standard ist &lt;a href="https://www.calendarserver.org/"&gt;Apple's CalendarServer&lt;/a&gt; with its lovely &lt;a href="https://github.com/apple/ccs-calendarserver"&gt;Open Source Repository&lt;/a&gt;.&lt;/p&gt; 
 &lt;p&gt;Getting it to work on Linux (Ubuntu in my case), isn't for the faint of heart. Here is what you need to do.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#file-system-preparation" id="file-system-preparation"&gt;File system preparation&lt;/a&gt;&lt;/h3&gt; 
+&lt;h2&gt;&lt;a href="#file-system-preparation" id="file-system-preparation"&gt;File system preparation&lt;/a&gt;&lt;/h2&gt; 
 &lt;p&gt;Calendar server needs extended attributes. The default &lt;a href="https://en.wikipedia.org/wiki/Ext4"&gt;Ext4&lt;/a&gt; file system does support them out of the box, but you want to check first (you might have a different file system after all):&lt;/p&gt; 
 &lt;h3&gt;&lt;a href="#check-if-file-system-supports-extended-attributes" id="check-if-file-system-supports-extended-attributes"&gt;Check if file system supports extended attributes&lt;/a&gt;&lt;/h3&gt; 
 &lt;p&gt;Check using this command:&lt;/p&gt; 
@@ -24,7 +51,7 @@ getfattr test.txt
 &lt;h3&gt;&lt;a href="#enable-extended-atttributes-if-required" id="enable-extended-atttributes-if-required"&gt;Enable extended atttributes if required&lt;/a&gt;&lt;/h3&gt; 
 &lt;p&gt;&lt;strong&gt;Important&lt;/strong&gt; if the previous command worked, skip this step. Don't mess with fstab! Make a backup copy if required and have your emergency boot stick ready. A messed up &lt;strong&gt;fstab&lt;/strong&gt; will prevent your machine from booting!&lt;/p&gt; 
 &lt;p&gt;Edit &lt;code&gt;/etc/fstab&lt;/code&gt;. In the 4th colum of the file system add &lt;code&gt;user_xattr&lt;/code&gt;. There might be values like &lt;code&gt;noatime&lt;/code&gt; or &lt;code&gt;defaults&lt;/code&gt;. Add &lt;code&gt;user_xattr&lt;/code&gt; separated by a comma. &lt;strong&gt;Reboot&lt;/strong&gt;.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#install-calendar-server" id="install-calendar-server"&gt;Install calendar server&lt;/a&gt;&lt;/h3&gt; 
+&lt;h2&gt;&lt;a href="#install-calendar-server" id="install-calendar-server"&gt;Install calendar server&lt;/a&gt;&lt;/h2&gt; 
 &lt;p&gt;Execute &lt;code&gt;sudo apt install calendarserver postgresql&lt;/code&gt;.&lt;/p&gt; 
 &lt;p&gt;The server wants a &lt;strong&gt;postgresql&lt;/strong&gt; database, so you need to be sure to have that installed too. Apple loves Python, so there ill be quite some phython packages installed, as well as a new user &lt;strong&gt;caldavd&lt;/strong&gt; Since this is a system user, its home directory is &lt;code&gt;/var/spool/caldav&lt;/code&gt;&lt;/p&gt;</description>
 	<link>2020/01/running-a-caldav-server-on-ubuntu.html</link>
@@ -386,29 +413,6 @@ sudo apt dist-upgrade
 	<author>Stephan H. Wissel</author>
 	<guid>63512d10-ebf5-11e9-8763-c7987d104598</guid>
 	<pubDate>11 October 2019</pubDate>
-
-</item>
-<item>
-	<title>The calDAV Standard - navigating the RFC jungle</title>
-	<description>&lt;p&gt;Application interoperability is key to wide spread adoption. Luckily there are &lt;a href="https://xkcd.com/927/"&gt;so many open standards&lt;/a&gt; that one can claim to be open without being interoperable. On a protocol level &lt;a href="https://tools.ietf.org/html/rfc7230"&gt;HTTP&lt;/a&gt; and &lt;a href="https://tools.ietf.org/html/rfc5321"&gt;SMTP&lt;/a&gt; were huge successes, as well as &lt;a href="https://tools.ietf.org/html/rfc2045"&gt;HTML/MIME&lt;/a&gt; for message content. Beyond that it gets murky. None of the big vendors (outside the OpenSource space) has adopted an open protocol for chat and presence.&lt;/p&gt; 
-&lt;p&gt;For other standards, most notably &lt;a href="https://en.wikipedia.org/wiki/CalDAV"&gt;Calendaring&lt;/a&gt;, support is murkey. On key contributor might be the &lt;a href="https://en.wikipedia.org/wiki/Request_for_Comments"&gt;RFC&lt;/a&gt; process that produces documents that are hard to follow and lack sample implementations. They are work outcomes of a &lt;a href="https://en.wikipedia.org/wiki/Design_by_committee"&gt;committee&lt;/a&gt; after all. In this series of blog entries I will (try to) highlight the moving parts of a &lt;strong&gt;calendar server&lt;/strong&gt; implementation. The non-moving parts here are the calendar clients to target: Apple calendar on iOS and &lt;a href="https://support.apple.com/en-us/guide/calendar/welcome/mac"&gt;macOS&lt;/a&gt;, &lt;a href="https://www.thunderbird.net/"&gt;Thurnderbird&lt;/a&gt; and a few others.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#involved-standards" id="involved-standards"&gt;Involved standards&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;There is a series of RFC that cover calendar operation, with various degrees of relevance:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;&lt;a href="http://tools.ietf.org/html/rfc4918"&gt;RFC 4918&lt;/a&gt;: webDAV. Defines additional HTTP verbs and XML formats&lt;/li&gt; 
- &lt;li&gt;&lt;a href="http://tools.ietf.org/html/rfc4791"&gt;RFC 4791&lt;/a&gt;: calDAV. Defines again additional HTTP verbs&lt;/li&gt; 
- &lt;li&gt;&lt;a href="http://tools.ietf.org/html/rfc5545"&gt;RFC 5545&lt;/a&gt;: iCalendar. Calendar data as plain text, or &lt;a href="https://tools.ietf.org/html/rfc6321"&gt;XML&lt;/a&gt; or &lt;a href="https://tools.ietf.org/html/rfc7265"&gt;JSON&lt;/a&gt;&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://tools.ietf.org/html/rfc7953"&gt;RFC 7953&lt;/a&gt;: vAvailability. Free/Busy lookup specification&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://tools.ietf.org/html/rfc7986"&gt;RFC 7986&lt;/a&gt;: Extended properties for iCalendar&lt;/li&gt; 
- &lt;li&gt;&lt;a href="http://tools.ietf.org/html/rfc6638"&gt;RFC 6638&lt;/a&gt;: Scheduling extensions&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://tools.ietf.org/html/rfc8607"&gt;RFC 8607&lt;/a&gt;: Managed attachments in calendar entries&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://tools.ietf.org/html/rfc8144"&gt;RFC 8144&lt;/a&gt;: Use of Prefer Header field in webDAV&lt;/li&gt; 
- &lt;li&gt;&lt;a href="https://tools.ietf.org/html/rfc5785"&gt;RFC 5785&lt;/a&gt;: Definitions for the &lt;code&gt;/.well-known/&lt;/code&gt; URL&lt;/li&gt; 
-&lt;/ul&gt;</description>
-	<link>2019/10/the-caldav-standard.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>7e298730-ea43-11e9-8305-9f51de60c8f2</guid>
-	<pubDate>09 October 2019</pubDate>
 
 </item>
 

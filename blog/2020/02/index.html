@@ -116,7 +116,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
 					<span class="divider">|</span>
-					<li><a href="/blog/categories/afterhours.html">After Hours<i class="icon-hand-right"></i></a>
+					<li><a href="/blog/categories/afterhours.html">After hours<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 
@@ -125,12 +125,53 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				</div>
 				<article class="well well-raised">
 					<h1>
-						<small><a href="/blog/2020/01/running-a-caldav-server-on-ubuntu.html">Running a CalDAV server on Ubuntu</a></small>
+						<small><a href="/blog/2020/01/generating-jwt-tokens-for-tests.html">Generating JWT tokens for tests</a></small>
+					</h1>
+					<hr />
+					<div><p>There are many options for <a href="https://auth0.com/docs/authorization/concepts/authz-and-authn">Authentication and Authorisation</a>. I'm fond of <a href="https://jwt.io/">Json Web Tokens</a> (JWT), implementing <a href="https://tools.ietf.org/html/rfc7519">RFC7519</a>. Mostly because they are like <a href="https://en.wikipedia.org/wiki/IBM_Lightweight_Third-Party_Authentication">LTPA</a> <del>for grownups</del>, but standard compliant</p> 
+<h3><a href="#quis-custodiet-ipsos-custodes" id="quis-custodiet-ipsos-custodes">Quis custodiet ipsos custodes?</a></h3> 
+<p>JWT contains information that is digitally signed (and optional encrypted), so a receiving end can verify that the information is correct. The key elements here are:</p> 
+<ul> 
+ <li>the JWT contains a claim, at least the <strong>subject</strong> that is tamper resistant by being digitally signed</li> 
+ <li>JWT issuer and JWT consumer trust each other, by either having a shared secret (bad idea) or using a public/private key pair. The issuer signs the information with a private key. The consumer (your application server) verifies the signature using the public key</li> 
+</ul> 
+<p>So besides protecting the private key of the issuer, you also want to be clear who's keys you trust. The one who <a href="s://en.wikipedia.org/wiki/Quis_custodiet_ipsos_custodes%3F">holds your identity</a> can impersonate you at any time (so you might rethink if "Login with Facebook" is such a brilliant idea after all).</p> 
+<p>However when <strong>testing</strong> systems, you develop local, you want to be able to have any user at your disposal, so you can generate the claim that is the <a href="https://en.wikipedia.org/wiki/Open_sesame">Open Sesame</a> to your test regime</p> 
+<h3><a href="#building-a-claim" id="building-a-claim">Building a claim</a></h3> 
+<p>We start by building the raw claim <strong>template.json</strong> file:</p> 
+<pre class="brush: javascript">{
+  "iss": "Alibaba Caves",
+  "aud": "40Thiefs",
+  "expSeconds": 300
+}
+</pre> 
+<p>It contains an issuer, an audience and the duration in seconds. The later one is for my convenience. The receiving system might or might not check issuer (iss) and/or audience (aud).</p> 
+<p>Next step is to create a public/private key pair</p></div>
+					<hr />
+ <a href="/blog/2020/01/generating-jwt-tokens-for-tests.html">Read more</a>
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 01 February 2020
+<span class="divider">|</span>
+<a href="/blog/2020/01/generating-jwt-tokens-for-tests.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/01/generating-jwt-tokens-for-tests.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Generating JWT tokens for tests" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2020/01/generating-jwt-tokens-for-tests.html";
+						</script>
+					</p>
+
+				</article>
+				<article class="well well-raised">
+					<h1>
+						<small><a href="/blog/2020/01/running-a-caldav-server-on-ubuntu.html">Running a CalDAV server on Ubuntu (2020 edition)</a></small>
 					</h1>
 					<hr />
 					<div><p>When playing with <a href="https://en.wikipedia.org/wiki/CalDAV">calDAV</a> it makes sense to have a reference implementation to refer to. The <em>GOLD</em> standard ist <a href="https://www.calendarserver.org/">Apple's CalendarServer</a> with its lovely <a href="https://github.com/apple/ccs-calendarserver">Open Source Repository</a>.</p> 
 <p>Getting it to work on Linux (Ubuntu in my case), isn't for the faint of heart. Here is what you need to do.</p> 
-<h3><a href="#file-system-preparation" id="file-system-preparation">File system preparation</a></h3> 
+<h2><a href="#file-system-preparation" id="file-system-preparation">File system preparation</a></h2> 
 <p>Calendar server needs extended attributes. The default <a href="https://en.wikipedia.org/wiki/Ext4">Ext4</a> file system does support them out of the box, but you want to check first (you might have a different file system after all):</p> 
 <h3><a href="#check-if-file-system-supports-extended-attributes" id="check-if-file-system-supports-extended-attributes">Check if file system supports extended attributes</a></h3> 
 <p>Check using this command:</p> 
@@ -143,7 +184,7 @@ getfattr test.txt
 <h3><a href="#enable-extended-atttributes-if-required" id="enable-extended-atttributes-if-required">Enable extended atttributes if required</a></h3> 
 <p><strong>Important</strong> if the previous command worked, skip this step. Don't mess with fstab! Make a backup copy if required and have your emergency boot stick ready. A messed up <strong>fstab</strong> will prevent your machine from booting!</p> 
 <p>Edit <code>/etc/fstab</code>. In the 4th colum of the file system add <code>user_xattr</code>. There might be values like <code>noatime</code> or <code>defaults</code>. Add <code>user_xattr</code> separated by a comma. <strong>Reboot</strong>.</p> 
-<h3><a href="#install-calendar-server" id="install-calendar-server">Install calendar server</a></h3> 
+<h2><a href="#install-calendar-server" id="install-calendar-server">Install calendar server</a></h2> 
 <p>Execute <code>sudo apt install calendarserver postgresql</code>.</p> 
 <p>The server wants a <strong>postgresql</strong> database, so you need to be sure to have that installed too. Apple loves Python, so there ill be quite some phython packages installed, as well as a new user <strong>caldavd</strong> Since this is a system user, its home directory is <code>/var/spool/caldav</code></p></div>
 					<hr />
@@ -156,7 +197,7 @@ Stephan H Wissel</a> on 01 February 2020
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/caldav.html">calDAV</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/01/running-a-caldav-server-on-ubuntu.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Running a CalDAV server on Ubuntu" data-twitter-via="@notessensei"></div>
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/01/running-a-caldav-server-on-ubuntu.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Running a CalDAV server on Ubuntu (2020 edition)" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2020/01/running-a-caldav-server-on-ubuntu.html";
 						</script>
@@ -168,7 +209,7 @@ categories:  <a href="/blog/categories/caldav.html">calDAV</a>  <a href="/blog/c
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
 					<span class="divider">|</span>
-					<li><a href="/blog/categories/afterhours.html">After Hours<i class="icon-hand-right"></i></a>
+					<li><a href="/blog/categories/afterhours.html">After hours<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 
@@ -188,7 +229,7 @@ categories:  <a href="/blog/categories/caldav.html">calDAV</a>  <a href="/blog/c
 				<aside id="sidebar_categoriesArchive" class="well">
 					<ul class="nav nav-list">
 						<li class="nav-header">Categories</li>
-						<li ><a href="/blog/categories/afterhours.html">After Hours</a></li>
+						<li ><a href="/blog/categories/afterhours.html">After hours</a></li>
 						<li ><a href="/blog/categories/apex.html">Apex</a></li>
 						<li ><a href="/blog/categories/blog.html">Blog</a></li>
 						<li ><a href="/blog/categories/bluemix.html">Bluemix</a></li>
