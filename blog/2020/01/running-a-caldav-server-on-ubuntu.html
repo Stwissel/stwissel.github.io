@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Running a CalDAV server on Ubuntu - NotesSensei's Blog</title>
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-72033-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible"  content="chrome=1" />
+<meta http-equiv="Content-Language" content="en" />
+<meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
+<meta property="og:title"     content="wissel.net - Running a CalDAV server on Ubuntu" />
+<meta property="og:type"      content="blog" />
+<meta property="og:url"       content="https://wissel.net/blog/2020/01/running-a-caldav-server-on-ubuntu.html" />
+<meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
+<meta property="og:site_name" content="wissel.net" />
+<meta name="viewport"         content="width=device-width, initial-scale=1.0" />
+<meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Running a CalDAV server on Ubuntu" />
+<meta name="Author"           content="Stephan H. Wissel" />
+<meta name="ICBM"             content="1.2994, 103.8425" />
+<meta name="Copyright"        content="2020,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="twitter:site"     content="@notessensei" />
+<meta name="twitter:card"     content="summary" />
+<meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
+<meta name="description"
+	content="Running a CalDAV server on Ubuntu - When playing with calDAV it makes sense to have a reference implementation to refer to. The GOLD standard ist Apple&#39;s CalendarServer with its lovely Open Source Repository. Getting it to work on Linux (Ubuntu in my case), isn&#39;t for the faint of heart. Here is what you need to do. File system prepara" />
+<meta name="Keywords"
+	content="calDAV,WebDevelopment," />
+<meta name="Abstract"
+	content="Running a CalDAV server on Ubuntu - When playing with calDAV it makes sense to have a reference implementation to refer to. The GOLD standard ist Apple&#39;s CalendarServer with its lovely Open Source Repository. Getting it to work on Linux (Ubuntu in my case), isn&#39;t for the faint of heart. Here is what you need to do. File system prepara" />
+<!--[if lt IE 9]>
+		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
+<link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
+<link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
+
+
+<link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="https://feeds.feedburner.com/Wisselnetfeed" />
+
+<meta name="Revisit-After" content="90 Days" />
+</head>
+<body>
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<a class="btn btn-navbar" data-toggle="collapse"
+				data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+				class="icon-bar"></span> <span class="icon-bar"></span>
+			</a> <a class="brand" href="/">wissel.net</a>
+			<div class="nav-collapse">
+				<ul class="nav">
+					<li><a href="/index.html">Home</a></li>
+					<li class="active"><a href="/blog/">Blog</a></li>
+					<li><a href="/blog/series.html">Series</a></li>
+					<li><a href="/blog/downloads/">Downloads</a></li>
+					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
+					<li><a href="/blog/imprint.html">About / Imprint</a></li>
+				</ul>
+				<form action="//www.google.com/cse" id="cse-search-box"
+					class="navbar-search pull-right">
+					<div>
+						<input type="hidden" name="cx"
+							value="partner-pub-4562257798204150:muo14ionenw" /> <input
+							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
+							name="q" class="search-query span2" placeholder="Search" />
+						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+<div class="navbar-spacer"></div>
+
+	<div class="container">
+    		<br />
+		<header>
+			<div id="mainsmall"  class="hero-unit">
+				<h2>wissel.net</h2>
+				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+			</div>
+		</header>
+
+    <script> 
+var $buoop = {notify:{e:-0.01,f:-0.01,o:-0.01,s:-0.01,c:-0.01},insecure:true,unsupported:true,api:5}; 
+function $buo_f(){ 
+ var e = document.createElement("script"); 
+ e.src = "//browser-update.org/update.min.js"; 
+ document.body.appendChild(e);
+};
+try {document.addEventListener("DOMContentLoaded", $buo_f,false)}
+catch(e){window.attachEvent("onload", $buo_f)}
+</script>
+
+    <ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2020/">2020</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2020/02/">February</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/caldav.html">calDAV</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
+  </li>
+</ul>
+
+		<div class="row-fluid">
+			<div class="span12">
+				
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2020/01/unit-tests-and-singletons.html"><i class="icon-hand-left"></i>Unit Tests and Singletons</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+				<article class="well well-raised">
+					<h1><small>Running a CalDAV server on Ubuntu</small></h1>
+					<hr />
+					<div><p>When playing with <a href="https://en.wikipedia.org/wiki/CalDAV">calDAV</a> it makes sense to have a reference implementation to refer to. The <em>GOLD</em> standard ist <a href="https://www.calendarserver.org/">Apple's CalendarServer</a> with its lovely <a href="https://github.com/apple/ccs-calendarserver">Open Source Repository</a>.</p> 
+<p>Getting it to work on Linux (Ubuntu in my case), isn't for the faint of heart. Here is what you need to do.</p> 
+<h3><a href="#file-system-preparation" id="file-system-preparation">File system preparation</a></h3> 
+<p>Calendar server needs extended attributes. The default <a href="https://en.wikipedia.org/wiki/Ext4">Ext4</a> file system does support them out of the box, but you want to check first (you might have a different file system after all):</p> 
+<h3><a href="#check-if-file-system-supports-extended-attributes" id="check-if-file-system-supports-extended-attributes">Check if file system supports extended attributes</a></h3> 
+<p>Try this command:</p> 
+<pre><code>touch test.txt
+setfattr -n user.test -v "hello" test.txt
+getfattr test.txt
+</code></pre>
+<code> <p>Expected output: <code>user.test</code></p> <p>If the command <code>setfattr</code> is not available, install with <code>sudo install attr</code></p> <h3><a href="#enable-extended-atttributes-if-required" id="enable-extended-atttributes-if-required">Enable extended atttributes if required</a></h3> <p><strong>Important</strong> if the previous command worked, skip this step. Don't mess with fstab! Make a backup copy if required and have your emergency boot stick ready. A messed up <strong>fstab</strong> will prevent your machine from booting!</p> <p>Edit <code>/etc/fstab</code>. In the 4th colum of the file system add <code>user_xattr</code>. There might be values like <code>noatime</code> or <code>defaults</code>. Add <code>user_xattr</code> separated by a comma. Reboot.</p> <h3><a href="#install-calendar-server" id="install-calendar-server">Install calendar server</a></h3> <p>Execute <code>sudo apt install calendarserver postgresql</code>.</p> <p>The server wants a <strong>postgresql</strong> database, so you need to be sure to have that installed too. Apple loves Python, so there ill be quite some phython packages installed, as well as a new user <strong>caldavd</strong> Since this is a system user, its home directory is <code>/var/spool/caldav</code></p> </code><h3><a href="#configure-the-calendar-server" id="configure-the-calendar-server">Configure the calendar server</a></h3> 
+<p>Execute <code>sudo nano /etc/caldavd/caldavd.plist</code> (if you don't have <code>nano</code> install it or use vi)</p> 
+<ul> 
+ <li>Set the server host name</li> 
+ <li>Optional: Switch on SSL and look for the SSL / TLS section for keys</li> 
+</ul> 
+<p>Edit <code>/etc/default/calendarserver</code> uncomment <code>start_calendar_server=yes</code></p> 
+<h2><a href="#configure-the-database" id="configure-the-database">Configure the database</a></h2> 
+<p>There <a href="https://help.apple.com/advancedserveradmin/mac/10.7/#apd708AF27C-256D-4F8C-AA1F-2C854F5FA348">used to be</a> a script <code>calendarserver_bootstrap_database</code> which is missing from the current installation, so we do it the hard way:</p> 
+<pre class="brush: bash">sudo -u postgres createuser caldavd --no-createdb --no-createrole --no-superuser
+sudo -u postgres createdb --owner=caldavd caldav
+sudo -u caldavd psql -f /usr/lib/python2.7/dist-packages/txdav/common/datastore/sql_schema/current.sql caldav
+</pre> 
+<p>Check with <code>sudo service calendarserver status</code> and then start with <code>sudo service calendarserver start</code> - it also will restarn on reboot</p> 
+<h3><a href="#obsolete-information-found-in-other-instructions" id="obsolete-information-found-in-other-instructions">Obsolete information (found in other instructions)</a></h3> 
+<p>When <a href="https://www.lmgtfy.com/">poking around</a> (see also the links below), one comes across a <a href="https://askubuntu.com/questions/879513/how-do-i-use-calendarserver">lot of frustration</a>, fine <a href="https://groups.google.com/forum/#!topic/linux.debian.bugs.dist/arh1b3aA7sc">geeki-speak</a> and quite some <a href="https://www.mail-archive.com/calendarserver-dev@lists.macosforge.org/msg01451.html">outdated information</a>. Some of the things you <strong>don't need to try</strong> (or do for that matter):</p> 
+<ul> 
+ <li>copy files from <code>/usr/share/doc/calendarserver/examples</code></li> 
+ <li>file <code>sudoer.plist</code> (gone, not needed anymore)</li> 
+ <li>run <code>calendarserver_bootstrap_database</code> - it's gone (even if the <a href="https://manpages.ubuntu.com/manpages/trusty/en/man8/calendarserver_bootstrap_database.8.html">manpage</a> still exists)</li> 
+ <li>look for <code>calendarserver_manage_postgres</code> - gone</li> 
+ <li>launch calendar with <code>/etc/init.d/calendarserver start</code></li> 
+ <li>create extra users</li> 
+ <li>mess with permissions</li> 
+ <li>install <a href="https://wiki.ubuntu.com/CalendarServer/GutsyRecipe">extra packages</a> (YMMV here!)</li> 
+</ul> 
+<h3><a href="#the-result" id="the-result">The result</a></h3> 
+<p>You will have a calendar server listening on <a href="http://localhost:8008">localhost:8008</a> with 2 users:</p> 
+<ul> 
+ <li>admin / admin</li> 
+ <li>test / test</li> 
+</ul> 
+<p>** DO NOT USE SUCH A SYSTEM IN PRODUCTION **</p> 
+<h3><a href="#next-steps" id="next-steps">Next steps</a></h3> 
+<ul> 
+ <li>Configure HTTPS</li> 
+ <li>Use a different user directory</li> 
+ <li>backup your stuff</li> 
+ <li>Install the <a href="https://www.calendarserver.org/CalDAVTester.html">Test suite</a> and run it</li> 
+</ul> 
+<p>Check <a href="https://www.calendarserver.org/Documentation.html">the documentation</a> for details!</p> 
+<h3><a href="#sources" id="sources">Sources:</a></h3> 
+<ul> 
+ <li>The <a href="http://metadata.ftp-master.debian.org/changelogs/main/c/calendarserver/testing_calendarserver.README.Debian">best hints to get it to work</a></li> 
+ <li><a href="https://www.deanspot.org/alex/2009/03/23/installing-apples-calendarserver-ubuntu.html">Dean's blog for starters</a></li> 
+ <li><a href="https://help.apple.com/advancedserveradmin/mac/10.7/#apd708AF27C-256D-4F8C-AA1F-2C854F5FA348">Apple documentation</a> - some commands are also on Linux, some are not (for Germans: Rate mal mit Rosenthal)</li> 
+ <li><a href="https://wiki.debian.org/CalendarServer">Debian Wiki</a></li> 
+ <li><a href="https://wiki.ubuntu.com/CalendarServer">Ubuntu Wiki</a></li> 
+ <li><a href="https://wiki.ubuntu.com/CalendarServer/GutsyRecipe">Ubuntu instructions</a></li> 
+ <li><a href="https://www.calendarserver.org/QuickStart.html">Quick path to frustration</a></li> 
+</ul> 
+<p>As usual: YMMV</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 01 February 2020
+<span class="divider">|</span>
+<a href="/blog/2020/01/running-a-caldav-server-on-ubuntu.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/caldav.html">calDAV</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/01/running-a-caldav-server-on-ubuntu.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Running a CalDAV server on Ubuntu" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2020/01/running-a-caldav-server-on-ubuntu.html";
+						</script>
+					</p>
+
+				</article>
+				<a name="comments"></a>
+				<div class="well well-raised" style="text-align : center">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_b30bbb10-4459-11ea-95b7-c1696d82d3ca" type="button">
+		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
+	            </button>
+	            </div>
+				<div id="commentform_b30bbb10-4459-11ea-95b7-c1696d82d3ca"  class="collapse"></div>
+				<div class="well well-raised">
+					<h4>Comments</h4>
+					<ol id="commentList">
+						<li id="nocomments">
+							<h5>No comments yet, be the first to comment</h5>
+						</li>
+					</ol>
+				</div>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2020/01/unit-tests-and-singletons.html"><i class="icon-hand-left"></i>Unit Tests and Singletons</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+			</div>
+		</div>
+		<ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2020/">2020</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2020/02/">February</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/caldav.html">calDAV</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
+  </li>
+</ul>
+
+	</div>
+	<footer>
+		<div class="container">
+			<div class="row">
+				<div class="span2">
+					<h4>About Me</h4>
+					<p>
+						I work as "Solution Director Innovation" for HCL Software. I'm based in Singapore.
+						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
+					</p>
+					<a href="//stackoverflow.com/users/131021/stwissel">
+					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmers" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmers">
+				</a>
+				</div>
+				<div class="span2">
+					<h4>Contact</h4>
+					<ul>
+						<li><a href="https://www.twitter.com/notessensei">Twitter</a></li>
+						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+						<li><a href="https://www.xing.com/profile/StephanH_Wissel">XING</a></li>
+						<li><a href="https://astore.amazon.com/wissenetblog-20">Amazon Store</a></li>
+						<li><a href="https://kindle.amazon.com/profile/Stephan-H--Wissel/1659300">Amazon Kindle</a></li>
+						<li><a href="http://notessensei.spreadshirt.com/">NotesSensei's Spreadshirt shop</a></li>
+						<li><a href="http://about.me/stephan.wissel/#" title="Another identity site, nothing much here">About Me</a></li>
+					</ul>
+				</div>
+				<div class="span8">
+					<h4>Disclaimer</h4>
+					<p>This site is in no way affiliated, endorsed, sanctioned,
+						supported, nor enlightened by my current or previous employers.
+						I may be an employee, but the opinions, theories, facts, etc.
+						presented here are my own and are in now way given in any official
+						capacity. In short, these are my words and this is my site, not
+						my current or former employers' - and don't even begin to think otherwise.</p>
+					<p>
+						<b>&copy; 2003 - 2020 Stephan H. Wissel - some rights reserved</b> as
+						listed here: <a rel="license"
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
+							alt="Creative Commons License" style="border-width: 0"
+							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
+						Unless otherwise labeled by its originating author, the content
+						found on this site is made available under the terms of an <a
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
+							target="_blank"
+							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
+							Creative Commons License</a>, with the exception that no rights are
+						granted -- since they are not mine to grant -- in any logo,
+						graphic design, trademarks or trade names of any type. Code
+						samples and code downloads on this site are, unless otherwise
+						labeled, made available under an <a
+							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
+							2.0</a> license. Other license models are available on written
+						request and written confirmation.
+					</p>
+				</div>
+			</div>
+		</div>
+	</footer>
+
+	<script type="text/javascript">
+		var permaLink = "https://wissel.net/blog/2020/01/running-a-caldav-server-on-ubuntu.html";
+	</script>
+		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
+	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
+	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
+    <script type="text/javascript" src="/blog/js2/shCore.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushJava.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushJScript.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushXml.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushBash.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		_uacct = "UA-72033-1";
+		urchinTracker();
+	</script>
+	<script type="text/javascript" src="//feeds.feedburner.com/~s/Wisselnet?i=https://wissel.net/blog" charset="utf-8"></script>
+    <script type="text/javascript">
+    $(document).ready(function() {
+            SyntaxHighlighter.all();
+    });
+    </script>
+
+		<script src="/blog/js2/mustache.js"></script>
+	<script src="/blog/js2/blogcomments.js"></script>
+	<script type="text/javascript" src="/blog/js2/Markdown.Converter.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Sanitizer.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Editor.js"></script>
+	<script type="text/javascript" src="//www.google.com/recaptcha/api.js"></script>
+	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+	<script type="text/javascript">
+		var onloadCallback = function() {
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "b30bbb10-4459-11ea-95b7-c1696d82d3ca");
+ 		};
+	</script>
+
+</body>
+</html>
