@@ -134,12 +134,19 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <h3><a href="#file-system-preparation" id="file-system-preparation">File system preparation</a></h3> 
 <p>Calendar server needs extended attributes. The default <a href="https://en.wikipedia.org/wiki/Ext4">Ext4</a> file system does support them out of the box, but you want to check first (you might have a different file system after all):</p> 
 <h3><a href="#check-if-file-system-supports-extended-attributes" id="check-if-file-system-supports-extended-attributes">Check if file system supports extended attributes</a></h3> 
-<p>Try this command:</p> 
-<pre><code>touch test.txt
+<p>Check using this command:</p> 
+<pre class="brush: bash">touch test.txt
 setfattr -n user.test -v "hello" test.txt
 getfattr test.txt
-</code></pre>
-<code> <p>Expected output: <code>user.test</code></p> <p>If the command <code>setfattr</code> is not available, install with <code>sudo install attr</code></p> <h3><a href="#enable-extended-atttributes-if-required" id="enable-extended-atttributes-if-required">Enable extended atttributes if required</a></h3> <p><strong>Important</strong> if the previous command worked, skip this step. Don't mess with fstab! Make a backup copy if required and have your emergency boot stick ready. A messed up <strong>fstab</strong> will prevent your machine from booting!</p> <p>Edit <code>/etc/fstab</code>. In the 4th colum of the file system add <code>user_xattr</code>. There might be values like <code>noatime</code> or <code>defaults</code>. Add <code>user_xattr</code> separated by a comma. Reboot.</p> <h3><a href="#install-calendar-server" id="install-calendar-server">Install calendar server</a></h3> <p>Execute <code>sudo apt install calendarserver postgresql</code>.</p> <p>The server wants a <strong>postgresql</strong> database, so you need to be sure to have that installed too. Apple loves Python, so there ill be quite some phython packages installed, as well as a new user <strong>caldavd</strong> Since this is a system user, its home directory is <code>/var/spool/caldav</code></p> </code><h3><a href="#configure-the-calendar-server" id="configure-the-calendar-server">Configure the calendar server</a></h3> 
+</pre> 
+<p>Expected output: <strong>user.test</strong></p> 
+<p>If the command <code>setfattr</code> is not available, install with <code>sudo install attr</code></p> 
+<h3><a href="#enable-extended-atttributes-if-required" id="enable-extended-atttributes-if-required">Enable extended atttributes if required</a></h3> 
+<p><strong>Important</strong> if the previous command worked, skip this step. Don't mess with fstab! Make a backup copy if required and have your emergency boot stick ready. A messed up <strong>fstab</strong> will prevent your machine from booting!</p> 
+<p>Edit <code>/etc/fstab</code>. In the 4th colum of the file system add <code>user_xattr</code>. There might be values like <code>noatime</code> or <code>defaults</code>. Add <code>user_xattr</code> separated by a comma. <strong>Reboot</strong>.</p> 
+<h3><a href="#install-calendar-server" id="install-calendar-server">Install calendar server</a></h3> 
+<p>Execute <code>sudo apt install calendarserver postgresql</code>.</p> 
+<p>The server wants a <strong>postgresql</strong> database, so you need to be sure to have that installed too. Apple loves Python, so there ill be quite some phython packages installed, as well as a new user <strong>caldavd</strong> Since this is a system user, its home directory is <code>/var/spool/caldav</code></p><h3><a href="#configure-the-calendar-server" id="configure-the-calendar-server">Configure the calendar server</a></h3> 
 <p>Execute <code>sudo nano /etc/caldavd/caldavd.plist</code> (if you don't have <code>nano</code> install it or use vi)</p> 
 <ul> 
  <li>Set the server host name</li> 
@@ -152,12 +159,13 @@ getfattr test.txt
 sudo -u postgres createdb --owner=caldavd caldav
 sudo -u caldavd psql -f /usr/lib/python2.7/dist-packages/txdav/common/datastore/sql_schema/current.sql caldav
 </pre> 
-<p>Check with <code>sudo service calendarserver status</code> and then start with <code>sudo service calendarserver start</code> - it also will restarn on reboot</p> 
+<p>Check with <code>sudo service calendarserver status</code> and then start with <code>sudo service calendarserver start</code> - it also will restart on reboot</p> 
 <h3><a href="#obsolete-information-found-in-other-instructions" id="obsolete-information-found-in-other-instructions">Obsolete information (found in other instructions)</a></h3> 
-<p>When <a href="https://www.lmgtfy.com/">poking around</a> (see also the links below), one comes across a <a href="https://askubuntu.com/questions/879513/how-do-i-use-calendarserver">lot of frustration</a>, fine <a href="https://groups.google.com/forum/#!topic/linux.debian.bugs.dist/arh1b3aA7sc">geeki-speak</a> and quite some <a href="https://www.mail-archive.com/calendarserver-dev@lists.macosforge.org/msg01451.html">outdated information</a>. Some of the things you <strong>don't need to try</strong> (or do for that matter):</p> 
+<p>When <a href="https://www.lmgtfy.com/">poking around</a> (see also the links below), one comes across a <a href="https://askubuntu.com/questions/879513/how-do-i-use-calendarserver">lot of frustration</a>, fine <a href="https://groups.google.com/forum/#!topic/linux.debian.bugs.dist/arh1b3aA7sc">geeki-speak</a> and quite some <a href="https://www.mail-archive.com/calendarserver-dev@lists.macosforge.org/msg01451.html">outdated information</a>.</p> 
+<p>Some of the things you <strong>don't need to try</strong> (or do for that matter):</p> 
 <ul> 
  <li>copy files from <code>/usr/share/doc/calendarserver/examples</code></li> 
- <li>file <code>sudoer.plist</code> (gone, not needed anymore)</li> 
+ <li>check for file <code>sudoer.plist</code> (gone, not needed anymore)</li> 
  <li>run <code>calendarserver_bootstrap_database</code> - it's gone (even if the <a href="https://manpages.ubuntu.com/manpages/trusty/en/man8/calendarserver_bootstrap_database.8.html">manpage</a> still exists)</li> 
  <li>look for <code>calendarserver_manage_postgres</code> - gone</li> 
  <li>launch calendar with <code>/etc/init.d/calendarserver start</code></li> 
@@ -171,7 +179,7 @@ sudo -u caldavd psql -f /usr/lib/python2.7/dist-packages/txdav/common/datastore/
  <li>admin / admin</li> 
  <li>test / test</li> 
 </ul> 
-<p>** DO NOT USE SUCH A SYSTEM IN PRODUCTION **</p> 
+<h2><a href="#do-not-use-such-a-system-in-production" id="do-not-use-such-a-system-in-production">DO NOT USE SUCH A SYSTEM IN PRODUCTION</a></h2> 
 <h3><a href="#next-steps" id="next-steps">Next steps</a></h3> 
 <ul> 
  <li>Configure HTTPS</li> 
