@@ -125,6 +125,43 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				</div>
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2020/02/domino-administration-back-to-basics-part-2.html">Domino Administration Back to Basics Part 2 - Networking</a></small>
+					</h1>
+					<hr />
+					<div><p>In <a href="/blog/2020/02/domino-administration-back-to-basics-part-1.html">Part 1</a> we learned about the marvelous world of Notes Names, <a href="https://en.wikipedia.org/wiki/X.400">X400</a> and the perils of messing with certificates. One big difference to <a href="https://en.wikipedia.org/wiki/X.509">X509</a> is the (<a href="https://github.com/IBM/domino-docker">almost</a>) absence of certificate <a href="https://www.openssl.org/">Command Line tools</a> that can be <a href="https://www.wissel.net/blog/2019/10/create-your-own-ca.html">so much fun</a>.</p> 
+<h3><a href="#domino-networking-protocols-as-you-like-it" id="domino-networking-protocols-as-you-like-it">Domino Networking - protocols </a><a href="https://en.wikipedia.org/wiki/As_You_Like_It">as you like it</a></h3> 
+<p>Domino predates the rise of <a href="https://en.wikipedia.org/wiki/Internet_protocol_suite">TCP/IP</a> and the internet. To no surprise it has its own idea about networking. Starting with protocol support:</p> 
+<ul> 
+ <li><a href="https://en.wikipedia.org/wiki/NetBIOS_Frames">Netbios</a> using <a href="https://en.wikipedia.org/wiki/Network_Driver_Interface_Specification">NDIS</a> (doesn't route) and</li> 
+ <li><a href="https://en.wikipedia.org/wiki/IPX/SPX">IPX/SPX</a> A protocol from days long past, when red boxes weren't Redhat but Novell</li> 
+ <li><a href="https://help.hcltechsw.com/notes/11.0.0/locacc_direct_dialup_loc_conn_t.html">X.PC DialUp</a> - Yes. A modem or something that takes <a href="https://en.wikipedia.org/wiki/Hayes_command_set">modem commands</a> and will establish a serial connection, no longer ships with Notes</li> 
+ <li>A few more obscure protocols: Vines, SPXII</li> 
+ <li>last not least TCP/IP</li> 
+</ul> 
+<p>Having this zoo of protocols, Notes needs its own version of name resolution. That version is called <a href="https://help.hcltechsw.com/domino/11.0.0/conf_settingupnotesnamednetworks_t.html">Notes Named Network</a></p> 
+<h3><a href="#one-step-back-what-makes-a-notes-domain" id="one-step-back-what-makes-a-notes-domain">One step back: What makes a Notes Domain?</a></h3> 
+<p>A <strong>Notes Domain</strong> consists out of one or more server that use a Domino directory (a.k.a Public Name &amp; Addressbook a.k.a <code>names.nsf</code>) with the same replica id (a story for another time) as the other member servers <strong>and</strong> have the same Domain name in their server document (that's where most of the server's setting are stored).</p> 
+<p>A popular point of confusion: Notes Names (from Part1) and Notes Domains: It is quite common to name your Domain after your orgID, but not mandatory. SO you could have <code>HeavyRock/Acme@Acme</code> or <code>Sandstone/Acme@ToonsInc</code> or <code>Machine/Blowup@Acme</code> The first and the last would be in the same Domain, while the first and second share the Org certifier. Anything goes, but to keep it simple, keep OrgId and Domain the same - unless you have 5 good reasons not to.</p> 
+<p>Another one: <strong>NEVER</strong> name your Notes Domain so it could be mistaken for an internet Domain. So no <code>.</code> in the name. Spaces interestingly are OK!</p></div>
+					<hr />
+ <a href="/blog/2020/02/domino-administration-back-to-basics-part-2.html">Read more</a>
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 05 February 2020
+<span class="divider">|</span>
+<a href="/blog/2020/02/domino-administration-back-to-basics-part-2.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/categories/networking.html">Networking</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/02/domino-administration-back-to-basics-part-2.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Domino Administration Back to Basics Part 2 - Networking" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2020/02/domino-administration-back-to-basics-part-2.html";
+						</script>
+					</p>
+
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2020/02/domino-administration-back-to-basics-part-1.html">Domino Administration - Back to Basics (Part 1) Certificates</a></small>
 					</h1>
 					<hr />
@@ -135,7 +172,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <p>So the minimum is a common name and an Org. The starting point of each Domino journey is the creation of the OrgID. All other parts depend on it. Note: there isn't a country ID, even if country mentioned after the Org. When you create your OrgID (while setting up the very first server), you can specify the country and it becomes part of the OrgID.</p> 
 <p>In practise however I haven't seen many OrgIDs that would carry a country code in them. So you can skip that part.</p> 
 <h3><a href="#signing-ids" id="signing-ids">Signing Ids</a></h3> 
-<p>Using the OrgID as signing certificat, one can go and create server and user certificates. E.g using the OrgID <code>/O=Acme</code> one can create <code>/CN=Coyotee/O=Acme</code>. For convenience the qualifiers are usually omitted, their meaning results from the position (and the fact that country is 2 letter if present and Orgs have 3 or more). So instead of <code>/CN=Coyotee/O=Acme</code> one can write <code>/Coyotee/Acme</code>.</p> 
+<p>Using the OrgID as signing certificat, one can go and create server and user certificates. E.g using the OrgID <code>/O=Acme</code> one can create <code>/CN=Coyotee/O=Acme</code>. For convenience the qualifiers are usually omitted, their meaning results from the position (and the fact that country is 2 letter if present and Orgs have 3 or more). So instead of <code>/CN=Coyotee/O=Acme</code> one can write <code>Coyotee/Acme</code>.</p> 
 <p>In practise however more enlightened organisation use their OrgCert as cautiously as root certificates in the <a href="https://en.wikipedia.org/wiki/X.509">X509</a> world and only <a href="https://help.hcltechsw.com/domino/11.0.0/othr_registeringanorganizationalunitcertifieriddialogbo_t.html">register/sign</a> Organizational Unit (<code>/OU=</code>) Ids which then can be used to sign server and user certificates.</p> 
 <p>Trust between certificate is hierarchical, similar to Internet certificates, so IDs having the same root (/O) certifier recognizse each other. The hierachy can be used in Access Control (another story for another time) to grant access to all IDs at a given level e.g. <code>/OU=Management/O=Acme</code></p> 
 <h3><a href="#cross-certification" id="cross-certification">Cross Certification</a></h3> 
@@ -156,6 +193,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>ID Files, both on the server and the client are used to encrypt databases. Loose the ID, loose access! A well managed IDVault is your life insurance</li> 
  <li>Back things up. Make sure they are save! One organisation I encountered printed hex dumps of all cert and server ids and locked them in their corporate vault. Smart move. I wonder if they repeated that, as they should, at key rollover time</li> 
  <li>Certificates don't live forever. They need to <a href="https://help.hcltechsw.com/domino/11.0.0/conf_certificateauthoritykeyrollover_t.html">roll over keys</a>. Plan that well and use an IDVault - and back up everything before you start</li> 
+ <li><strong>Pro Tip</strong>: If you are shure your server's future DNS name won't change, you can name the <code>CN</code> part after the full qualified DNS name. E.g <code>CN=lion.exoticpets.org/OU=Servers/O=Pets4Us</code>. It will help as you will learn in <a href="/blog/2020/02/domino-administration-back-to-basics-part-2.html">Part 2</a></li> 
  <li>Really: use an IDVault</li> 
  <li>Did I mention: use an IDVault</li> 
 </ul> 
@@ -165,7 +203,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 04 February 2020
 <span class="divider">|</span>
-<a href="/blog/2020/02/domino-administration-back-to-basics-part-1.html#comments">Comments (1)</a>
+<a href="/blog/2020/02/domino-administration-back-to-basics-part-1.html#comments">Comments (2)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/domino.html">Domino</a> 
 
@@ -302,6 +340,7 @@ categories:  <a href="/blog/categories/caldav.html">calDAV</a>  <a href="/blog/c
 						<li ><a href="/blog/categories/grpc.html">gRPC</a></li>
 						<li ><a href="/blog/categories/gtd.html">GTD</a></li>
 						<li ><a href="/blog/categories/heroku.html">Heroku</a></li>
+						<li ><a href="/blog/categories/https.html">HTTP(S)</a></li>
 						<li ><a href="/blog/categories/ibm.html">IBM</a></li>
 						<li ><a href="/blog/categories/ibmlotus.html">IBM - Lotus</a></li>
 						<li ><a href="/blog/categories/ibmnotes.html">IBM Notes</a></li>
@@ -316,6 +355,7 @@ categories:  <a href="/blog/categories/caldav.html">calDAV</a>  <a href="/blog/c
 						<li ><a href="/blog/categories/lotusphere.html">Lotusphere</a></li>
 						<li ><a href="/blog/categories/mac.html">Mac</a></li>
 						<li ><a href="/blog/categories/mobile.html">Mobile</a></li>
+						<li ><a href="/blog/categories/networking.html">Networking</a></li>
 						<li ><a href="/blog/categories/nginx.html">nginx</a></li>
 						<li ><a href="/blog/categories/nodejs.html">NodeJS</a></li>
 						<li ><a href="/blog/categories/nodered.html">NodeRED</a></li>
@@ -323,6 +363,7 @@ categories:  <a href="/blog/categories/caldav.html">calDAV</a>  <a href="/blog/c
 						<li ><a href="/blog/categories/omnisophie.html">Omnisophie</a></li>
 						<li ><a href="/blog/categories/opensource.html">OpenSource</a></li>
 						<li ><a href="/blog/categories/pmd.html">PMD</a></li>
+						<li ><a href="/blog/categories/protocols.html">Protocols</a></li>
 						<li ><a href="/blog/categories/reactive.html">Reactive</a></li>
 						<li ><a href="/blog/categories/salesforce.html">Salesforce</a></li>
 						<li ><a href="/blog/categories/sametime.html">Sametime</a></li>
