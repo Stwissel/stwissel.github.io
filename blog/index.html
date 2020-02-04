@@ -110,6 +110,57 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2020/02/domino-administration-back-to-basics-part-1.html">Domino Administration - Back to Basics (Part 1) Certificates</a></small></h1>
+					<hr />
+					<div><p>Domino is different, a lot of its concepts predate the internet and quite often inspired the standards. This is not an step-by-step instruction, but an introduction into concepts. The "step by step" approach is another story for another time.</p> 
+<h3><a href="#in-the-beginning-was-the-certificate" id="in-the-beginning-was-the-certificate">In the beginning was the Certificate</a></h3> 
+<p>Notes and Domino run <a href="https://help.hcltechsw.com/domino/11.0.0/plan_certifieridsandcertificates_c.html">using ID</a> files. This are not merly files that can arbitrarily reconstructed, but cryptographically created <a href="https://en.wikipedia.org/wiki/Public-key_cryptography">Public Private key pairs</a>. To avoid naming collisions the key names are hierarchical (Since R2), so anyone can call their server <strong>Server1</strong> without confusion (sort of). This hierarchy is achieved using <a href="https://en.wikipedia.org/wiki/X.400">X400</a> naming conventions, an early competitor to DNS naming. A X400 name can consist out of multiple parts, these are the ones Domino is using:</p> 
+<p><img src="/blog/images/2020/X400Names.png" alt="X500 Name"></p> 
+<p>So the minimum is a common name and an Org. The starting point of each Domino journey is the creation of the OrgID. All other parts depend on it. Note: there isn't a country ID, even if country mentioned after the Org. When you create your OrgID (while setting up the very first server), you can specify the country and it becomes part of the OrgID.</p> 
+<p>In practise however I haven't seen many OrgIDs that would carry a country code in them. So you can skip that part.</p> 
+<h3><a href="#signing-ids" id="signing-ids">Signing Ids</a></h3> 
+<p>Using the OrgID as signing certificat, one can go and create server and user certificates. E.g using the OrgID <code>/O=Acme</code> one can create <code>/CN=Coyotee/O=Acme</code>. For convenience the qualifiers are usually omitted, their meaning results from the position (and the fact that country is 2 letter if present and Orgs have 3 or more). So instead of <code>/CN=Coyotee/O=Acme</code> one can write <code>/Coyotee/Acme</code>.</p> 
+<p>In practise however more enlightened organisation use their OrgCert as cautiously as root certificates in the <a href="https://en.wikipedia.org/wiki/X.509">X509</a> world and only <a href="https://help.hcltechsw.com/domino/11.0.0/othr_registeringanorganizationalunitcertifieriddialogbo_t.html">register/sign</a> Organizational Unit (<code>/OU=</code>) Ids which then can be used to sign server and user certificates.</p> 
+<p>Trust between certificate is hierarchical, similar to Internet certificates, so IDs having the same root (/O) certifier recognizse each other. The hierachy can be used in Access Control (another story for another time) to grant access to all IDs at a given level e.g. <code>/OU=Management/O=Acme</code></p> 
+<h3><a href="#cross-certification" id="cross-certification">Cross Certification</a></h3> 
+<p>To include certificates with a different root one uses <a href="https://help.hcltechsw.com/domino/11.0.0/conf_creatingacrosscertificatefromanotescertifier_t.html">Cross Certificates</a> which are captured in the directory (and/or local addressbook, the user's personal directory). When one creates a cross-certification for an <code>/O</code> id, all the decendants (<code>/OU/OU/O</code>) are recognized too.</p> 
+<h3><a href="#insights" id="insights">Insights</a></h3> 
+<p>In no specific order:</p> 
+<ul> 
+ <li>In Notes/Domino the terms ID and certificate are loosely used interchangable</li> 
+ <li>The concepts are similar to Internet certificates. Main difference: the parts are named and limited how long the chain can be (6 parts max). In practise you rarely see 6 level deep internet domains or Notes Names</li> 
+ <li>The 4th level of <code>/OU</code> doesn't need a certifier. It is mainly recommended to distinguish multiple "John Doe"</li> 
+ <li>Notes names are separated by <code>/</code>, Internet names separate the common name with <code>@</code> and the domain parts with <code>.</code></li> 
+ <li>Internet names have a central naming registry run by <a href="https://en.wikipedia.org/wiki/Internet_Assigned_Numbers_Authority">IANA</a>, while Domino's central registy <a href="http://www.notes.net/">Notes.net</a> never took off. So you can create as many <code>/O=Acme</code> certifiers as you like (technically you can do that with your <a href="/blog/2019/10/create-your-own-ca.html">own CA too</a>)</li> 
+ <li>Creating Certificates with the same name does NOT create the same public/private key pair. All trust relations will not work. IDs signed with the old certifier will throw a trust error for the new one. Also all cross-certificates break</li> 
+ <li>Cleaning up Name conflicts is a huge mess. So don't do that</li> 
+ <li>Notes IDs can hold X509 certificates for signing internet messages</li> 
+ <li>A personal Notes address book or the Domino directory can hold external X509 public keys to validate signatures or encrypt outgoing messages</li> 
+ <li>To minimize the hassle for handling certificates Domino provides a <a href="https://help.hcltechsw.com/domino/11.0.0/conf_dominoserverbasedcertificationauthority_c.html">Certificate Authority</a> and an <a href="https://help.hcltechsw.com/domino/11.0.0/conf_creatingandconfiguringanidvault_t.html">ID-Vault</a>. Set them up. Saves headaches!</li> 
+ <li>ID Files, both on the server and the client are used to encrypt databases. Loose the ID, loose access! A well managed IDVault is your life insurance</li> 
+ <li>Back things up. Make sure they are save! One organisation I encountered printed hex dumps of all cert and server ids and locked them in their corporate vault. Smart move. I wonder if they repeated that, as they should, at key rollover time</li> 
+ <li>Certificates don't live forever. They need to <a href="https://help.hcltechsw.com/domino/11.0.0/conf_certificateauthoritykeyrollover_t.html">roll over keys</a>. Plan that well and use an IDVault - and back up everything before you start</li> 
+ <li>Really: use an IDVault</li> 
+ <li>Did I mention: use an IDVault</li> 
+</ul> 
+<p>What are your insights or concepts you like to know?</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 04 February 2020
+<span class="divider">|</span>
+<a href="/blog/2020/02/domino-administration-back-to-basics-part-1.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/domino.html">Domino</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/02/domino-administration-back-to-basics-part-1.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Domino Administration - Back to Basics (Part 1) Certificates" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2020/02/domino-administration-back-to-basics-part-1.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2020/01/generating-jwt-tokens-for-tests.html">Generating JWT tokens for tests</a></small></h1>
 					<hr />
 					<div><p>There are many options for <a href="https://auth0.com/docs/authorization/concepts/authz-and-authn">Authentication and Authorisation</a>. I'm fond of <a href="https://jwt.io/">Json Web Tokens</a> (JWT), implementing <a href="https://tools.ietf.org/html/rfc7519">RFC7519</a>. Mostly because they are like <a href="https://en.wikipedia.org/wiki/IBM_Lightweight_Third-Party_Authentication">LTPA</a> <del>for grownups</del>, but standard compliant</p> 
@@ -600,35 +651,6 @@ categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/c
 						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2019/10/whats-on-your-grpc-wire-protobuffer-or-json.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="What's on your gRPC wire, Protocol Buffers or JSON?" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2019/10/whats-on-your-grpc-wire-protobuffer-or-json.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2019/10/caldav-reference-server.html">A calDAV reference server</a></small></h1>
-					<hr />
-					<div><p>After having a look at the <a href="/blog/2019/10/the-caldav-standard.html">many standards</a> involved, it is time to check out a standard or reference implementation. Cutting a long story short: it looks to me the OpenSource <a href="https://github.com/apple/ccs-calendarserver">Apple Calendar and Contacts Server (ccs)</a> is my best bet. While the <a href="https://www.calendarserver.org/">documentation</a> is rather light, it has been battle tested with my range of targeted clients</p> 
-<h3><a href="#to-docker-or-to-vm" id="to-docker-or-to-vm">To Docker or to VM?</a></h3> 
-<p>Trying to avoid the <a href="https://blog.codinghorror.com/the-works-on-my-machine-certification-program/">Works on my machine</a> certification, a native install was out of the question. So Docker or VM? A search yielded <a href="https://hub.docker.com/r/pluies/ccs-calendarserver/">one hit</a> (<a href="https://www.uponmyshoulder.com/blog/2017/apple-contact-calendar-server-dockerised/">with explanation</a>) and none for for a ready baked VM. On closer inspection, the docker image, being 2 years old, didn't use the current version, so we had to re-create the image. While on it, I decided to give a VM a shot:</p> 
-<h3><a href="#apple-calendar-server-on-ubuntu-1804" id="apple-calendar-server-on-ubuntu-1804">Apple calendar server on Ubuntu 18.04</a></h3> 
-<p>To keep things light, I started with the <a href="https://ubuntu.com/download/desktop/thank-you?version=18.04.3&amp;architecture=amd64">current LTS version 18.04</a> desktop and a minimal install with 4G RAM. First order after the install is to get updates and install modules for the VirtualBox extensions:</p> 
-<pre class="brush: bash">sudo apt update
-sudo apt install gcc make perl
-sudo apt dist-upgrade
-</pre></div>
-					<hr />
- <a href="/blog/2019/10/caldav-reference-server.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 11 October 2019
-<span class="divider">|</span>
-<a href="/blog/2019/10/caldav-reference-server.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/caldav.html">calDAV</a>  <a href="/blog/categories/domino.html">Domino</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2019/10/caldav-reference-server.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="A calDAV reference server" data-twitter-via="@notessensei"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2019/10/caldav-reference-server.html";
 						</script>
 					</p>
 </p>

@@ -6,7 +6,47 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2019 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Tue, 04 Feb 2020 08:32:29 +0000</pubdate>
+	<pubdate>Tue, 04 Feb 2020 08:35:32 +0000</pubdate>
+<item>
+	<title>Domino Administration - Back to Basics (Part 1) Certificates</title>
+	<description>&lt;p&gt;Domino is different, a lot of its concepts predate the internet and quite often inspired the standards. This is not an step-by-step instruction, but an introduction into concepts. The "step by step" approach is another story for another time.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#in-the-beginning-was-the-certificate" id="in-the-beginning-was-the-certificate"&gt;In the beginning was the Certificate&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Notes and Domino run &lt;a href="https://help.hcltechsw.com/domino/11.0.0/plan_certifieridsandcertificates_c.html"&gt;using ID&lt;/a&gt; files. This are not merly files that can arbitrarily reconstructed, but cryptographically created &lt;a href="https://en.wikipedia.org/wiki/Public-key_cryptography"&gt;Public Private key pairs&lt;/a&gt;. To avoid naming collisions the key names are hierarchical (Since R2), so anyone can call their server &lt;strong&gt;Server1&lt;/strong&gt; without confusion (sort of). This hierarchy is achieved using &lt;a href="https://en.wikipedia.org/wiki/X.400"&gt;X400&lt;/a&gt; naming conventions, an early competitor to DNS naming. A X400 name can consist out of multiple parts, these are the ones Domino is using:&lt;/p&gt; 
+&lt;p&gt;&lt;img src="/blog/images/2020/X400Names.png" alt="X500 Name"&gt;&lt;/p&gt; 
+&lt;p&gt;So the minimum is a common name and an Org. The starting point of each Domino journey is the creation of the OrgID. All other parts depend on it. Note: there isn't a country ID, even if country mentioned after the Org. When you create your OrgID (while setting up the very first server), you can specify the country and it becomes part of the OrgID.&lt;/p&gt; 
+&lt;p&gt;In practise however I haven't seen many OrgIDs that would carry a country code in them. So you can skip that part.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#signing-ids" id="signing-ids"&gt;Signing Ids&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Using the OrgID as signing certificat, one can go and create server and user certificates. E.g using the OrgID &lt;code&gt;/O=Acme&lt;/code&gt; one can create &lt;code&gt;/CN=Coyotee/O=Acme&lt;/code&gt;. For convenience the qualifiers are usually omitted, their meaning results from the position (and the fact that country is 2 letter if present and Orgs have 3 or more). So instead of &lt;code&gt;/CN=Coyotee/O=Acme&lt;/code&gt; one can write &lt;code&gt;/Coyotee/Acme&lt;/code&gt;.&lt;/p&gt; 
+&lt;p&gt;In practise however more enlightened organisation use their OrgCert as cautiously as root certificates in the &lt;a href="https://en.wikipedia.org/wiki/X.509"&gt;X509&lt;/a&gt; world and only &lt;a href="https://help.hcltechsw.com/domino/11.0.0/othr_registeringanorganizationalunitcertifieriddialogbo_t.html"&gt;register/sign&lt;/a&gt; Organizational Unit (&lt;code&gt;/OU=&lt;/code&gt;) Ids which then can be used to sign server and user certificates.&lt;/p&gt; 
+&lt;p&gt;Trust between certificate is hierarchical, similar to Internet certificates, so IDs having the same root (/O) certifier recognizse each other. The hierachy can be used in Access Control (another story for another time) to grant access to all IDs at a given level e.g. &lt;code&gt;/OU=Management/O=Acme&lt;/code&gt;&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#cross-certification" id="cross-certification"&gt;Cross Certification&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;To include certificates with a different root one uses &lt;a href="https://help.hcltechsw.com/domino/11.0.0/conf_creatingacrosscertificatefromanotescertifier_t.html"&gt;Cross Certificates&lt;/a&gt; which are captured in the directory (and/or local addressbook, the user's personal directory). When one creates a cross-certification for an &lt;code&gt;/O&lt;/code&gt; id, all the decendants (&lt;code&gt;/OU/OU/O&lt;/code&gt;) are recognized too.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#insights" id="insights"&gt;Insights&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;In no specific order:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;In Notes/Domino the terms ID and certificate are loosely used interchangable&lt;/li&gt; 
+ &lt;li&gt;The concepts are similar to Internet certificates. Main difference: the parts are named and limited how long the chain can be (6 parts max). In practise you rarely see 6 level deep internet domains or Notes Names&lt;/li&gt; 
+ &lt;li&gt;The 4th level of &lt;code&gt;/OU&lt;/code&gt; doesn't need a certifier. It is mainly recommended to distinguish multiple "John Doe"&lt;/li&gt; 
+ &lt;li&gt;Notes names are separated by &lt;code&gt;/&lt;/code&gt;, Internet names separate the common name with &lt;code&gt;@&lt;/code&gt; and the domain parts with &lt;code&gt;.&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;Internet names have a central naming registry run by &lt;a href="https://en.wikipedia.org/wiki/Internet_Assigned_Numbers_Authority"&gt;IANA&lt;/a&gt;, while Domino's central registy &lt;a href="http://www.notes.net/"&gt;Notes.net&lt;/a&gt; never took off. So you can create as many &lt;code&gt;/O=Acme&lt;/code&gt; certifiers as you like (technically you can do that with your &lt;a href="/blog/2019/10/create-your-own-ca.html"&gt;own CA too&lt;/a&gt;)&lt;/li&gt; 
+ &lt;li&gt;Creating Certificates with the same name does NOT create the same public/private key pair. All trust relations will not work. IDs signed with the old certifier will throw a trust error for the new one. Also all cross-certificates break&lt;/li&gt; 
+ &lt;li&gt;Cleaning up Name conflicts is a huge mess. So don't do that&lt;/li&gt; 
+ &lt;li&gt;Notes IDs can hold X509 certificates for signing internet messages&lt;/li&gt; 
+ &lt;li&gt;A personal Notes address book or the Domino directory can hold external X509 public keys to validate signatures or encrypt outgoing messages&lt;/li&gt; 
+ &lt;li&gt;To minimize the hassle for handling certificates Domino provides a &lt;a href="https://help.hcltechsw.com/domino/11.0.0/conf_dominoserverbasedcertificationauthority_c.html"&gt;Certificate Authority&lt;/a&gt; and an &lt;a href="https://help.hcltechsw.com/domino/11.0.0/conf_creatingandconfiguringanidvault_t.html"&gt;ID-Vault&lt;/a&gt;. Set them up. Saves headaches!&lt;/li&gt; 
+ &lt;li&gt;ID Files, both on the server and the client are used to encrypt databases. Loose the ID, loose access! A well managed IDVault is your life insurance&lt;/li&gt; 
+ &lt;li&gt;Back things up. Make sure they are save! One organisation I encountered printed hex dumps of all cert and server ids and locked them in their corporate vault. Smart move. I wonder if they repeated that, as they should, at key rollover time&lt;/li&gt; 
+ &lt;li&gt;Certificates don't live forever. They need to &lt;a href="https://help.hcltechsw.com/domino/11.0.0/conf_certificateauthoritykeyrollover_t.html"&gt;roll over keys&lt;/a&gt;. Plan that well and use an IDVault - and back up everything before you start&lt;/li&gt; 
+ &lt;li&gt;Really: use an IDVault&lt;/li&gt; 
+ &lt;li&gt;Did I mention: use an IDVault&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;What are your insights or concepts you like to know?&lt;/p&gt;</description>
+	<link>2020/02/domino-administration-back-to-basics-part-1.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>c136bf10-4714-11ea-8b49-d54a8f36cab2</guid>
+	<pubDate>04 February 2020</pubDate>
+
+</item>
 <item>
 	<title>Generating JWT tokens for tests</title>
 	<description>&lt;p&gt;There are many options for &lt;a href="https://auth0.com/docs/authorization/concepts/authz-and-authn"&gt;Authentication and Authorisation&lt;/a&gt;. I'm fond of &lt;a href="https://jwt.io/"&gt;Json Web Tokens&lt;/a&gt; (JWT), implementing &lt;a href="https://tools.ietf.org/html/rfc7519"&gt;RFC7519&lt;/a&gt;. Mostly because they are like &lt;a href="https://en.wikipedia.org/wiki/IBM_Lightweight_Third-Party_Authentication"&gt;LTPA&lt;/a&gt; &lt;del&gt;for grownups&lt;/del&gt;, but standard compliant&lt;/p&gt; 
@@ -396,23 +436,6 @@ openssl req -config openssl.cnf -key private/ca.key.pem -new -x509 -days 7300 -S
 	<author>Stephan H. Wissel</author>
 	<guid>529f9d60-ef5d-11e9-ad93-715e4f586c95</guid>
 	<pubDate>15 October 2019</pubDate>
-
-</item>
-<item>
-	<title>A calDAV reference server</title>
-	<description>&lt;p&gt;After having a look at the &lt;a href="/blog/2019/10/the-caldav-standard.html"&gt;many standards&lt;/a&gt; involved, it is time to check out a standard or reference implementation. Cutting a long story short: it looks to me the OpenSource &lt;a href="https://github.com/apple/ccs-calendarserver"&gt;Apple Calendar and Contacts Server (ccs)&lt;/a&gt; is my best bet. While the &lt;a href="https://www.calendarserver.org/"&gt;documentation&lt;/a&gt; is rather light, it has been battle tested with my range of targeted clients&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#to-docker-or-to-vm" id="to-docker-or-to-vm"&gt;To Docker or to VM?&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Trying to avoid the &lt;a href="https://blog.codinghorror.com/the-works-on-my-machine-certification-program/"&gt;Works on my machine&lt;/a&gt; certification, a native install was out of the question. So Docker or VM? A search yielded &lt;a href="https://hub.docker.com/r/pluies/ccs-calendarserver/"&gt;one hit&lt;/a&gt; (&lt;a href="https://www.uponmyshoulder.com/blog/2017/apple-contact-calendar-server-dockerised/"&gt;with explanation&lt;/a&gt;) and none for for a ready baked VM. On closer inspection, the docker image, being 2 years old, didn't use the current version, so we had to re-create the image. While on it, I decided to give a VM a shot:&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#apple-calendar-server-on-ubuntu-1804" id="apple-calendar-server-on-ubuntu-1804"&gt;Apple calendar server on Ubuntu 18.04&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;To keep things light, I started with the &lt;a href="https://ubuntu.com/download/desktop/thank-you?version=18.04.3&amp;amp;architecture=amd64"&gt;current LTS version 18.04&lt;/a&gt; desktop and a minimal install with 4G RAM. First order after the install is to get updates and install modules for the VirtualBox extensions:&lt;/p&gt; 
-&lt;pre class="brush: bash"&gt;sudo apt update
-sudo apt install gcc make perl
-sudo apt dist-upgrade
-&lt;/pre&gt;</description>
-	<link>2019/10/caldav-reference-server.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>63512d10-ebf5-11e9-8763-c7987d104598</guid>
-	<pubDate>11 October 2019</pubDate>
 
 </item>
 
