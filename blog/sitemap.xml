@@ -6,7 +6,52 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2019 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 05 Feb 2020 17:06:47 +0000</pubdate>
+	<pubdate>Wed, 04 Mar 2020 20:00:42 +0000</pubdate>
+<item>
+	<title>OData - the fine print</title>
+	<description>&lt;p&gt;For an &lt;a href="https://stwissel.github.io/presentations/engage2020/index.html"&gt;upcoming event&lt;/a&gt; I had to dig a little deeper into &lt;a href="https://www.odata.org/"&gt;OData&lt;/a&gt; and learned a few things along the lines.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#same-but-different" id="same-but-different"&gt;Same but different&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;OData's current version is &lt;a href="http://docs.oasis-open.org/odata/odata/v4.0/odata-v4.0-part1-protocol.html"&gt;4.0&lt;/a&gt; and that's the only version I will focus on in this article.&lt;/p&gt; 
+&lt;p&gt;OData is the love child of an effort that joined Microsoft and SAP &lt;a href="https://www.frankensteins-laboratory.com/home-page"&gt;at the hip&lt;/a&gt; to create an universal internet data access standard, that on first sight has a lot of &lt;a href="https://en.wikipedia.org/wiki/Not_invented_here"&gt;NIH&lt;/a&gt; issues to sort out. But I'm sure on a second (or third or forth) look it will all make sense.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#key-components-of-odata" id="key-components-of-odata"&gt;Key components of OData&lt;/a&gt;&lt;/h3&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;a service document in &lt;code&gt;JSON&lt;/code&gt; format. It describes what data endpoints are available and where. Depending on the requested scope (more on that later) that JSON contains different levels of details&lt;/li&gt; 
+ &lt;li&gt;a meta data document. That document is referenced in the service document. The format is &lt;code&gt;XML&lt;/code&gt;. It describes the data format found in each record, relations to other record and actions that can be taken. Looks like &lt;a href="https://en.wikipedia.org/wiki/XML_schema"&gt;XML Schema&lt;/a&gt;, but not quite. &lt;em&gt;Record&lt;/em&gt; is used loosely here, data can be hierarchical and nested&lt;/li&gt; 
+ &lt;li&gt;a query language squeezed into an URL, so data can be fetched using &lt;code&gt;HTTP GET&lt;/code&gt; without using a body submitted. Query allows data selections, filtering, output size and sorting to be specified&lt;/li&gt; 
+ &lt;li&gt;Query results in JSON format enhanced with &lt;a href="http://docs.oasis-open.org/odata/odata-json-format/v4.01/odata-json-format-v4.01.html"&gt;OData specific Metadata&lt;/a&gt;&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;What I liked a lot: &lt;a href="https://www.odata.org/"&gt;OData.org&lt;/a&gt; offers a rich set of documentation and tutorials, including a &lt;a href="https://www.postman.com/"&gt;Postman&lt;/a&gt; collection to learn&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#happy-soup" id="happy-soup"&gt;Happy soup&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;So dealing with OData you can enjoy a mix of technologies:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;JSON for service document and payloads&lt;/li&gt; 
+ &lt;li&gt;XML for meta data&lt;/li&gt; 
+ &lt;li&gt;a dot notation (like dotNet or Java) for property values like data types (go &lt;a href="https://www.odata.org/getting-started/understand-odata-in-6-steps/"&gt;learn about it&lt;/a&gt;). E.g. &lt;code&gt;Edm.String&lt;/code&gt; defines a String value or &lt;code&gt;Org.OData.Core.V1.ResourcePath&lt;/code&gt; the path to data&lt;/li&gt; 
+ &lt;li&gt;another query language&lt;/li&gt; 
+ &lt;li&gt;individual items by default get addressed in an uncommon format: &lt;code&gt;serviceurl/People('johndoe')&lt;/code&gt;. Luckily this is optional and you can use the more common format for a route: &lt;code&gt;serviceurl/People/johndoe&lt;/code&gt;. This seems to be born out of squezing the &lt;em&gt;square pin&lt;/em&gt; URL into the &lt;em&gt;round hole&lt;/em&gt; of database schemas and flexible primary keys&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;On the upside: Your Salesforce and Excel users will love it. Import and CRUD operations are well supported.&lt;/p&gt; 
+&lt;p&gt;Initially I was looking at &lt;a href="http://olingo.apache.org/"&gt;Apache Olingo&lt;/a&gt; to implement my needs. Unfortunately the library is too close to the Java servlet model and static defined data models (like your one application, not your data platform), so I disected my needs the hard way.&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#lessons-learned-along-the-way" id="lessons-learned-along-the-way"&gt;Lessons learned along the way&lt;/a&gt;&lt;/h3&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;A OData client (think Excel, Tableau, Salesforce) will initially connect to the service document url. It sends a &lt;code&gt;GET&lt;/code&gt; request. To specify what level of detail is required the &lt;code&gt;ACCEPT&lt;/code&gt; header is used. So when testing your provider implementation you need to take that into account&lt;/li&gt; 
+ &lt;li&gt;Excel sends &lt;code&gt;ACCEPT application/json;odata.metadata=minimal&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;Salesforce sends &lt;code&gt;ACCEPT application/json;odata.metadata=full&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;OpenAPI can specify the top level &lt;code&gt;application/json&lt;/code&gt; or the full qualified content type in the response. If you fully qualify it, you might end up with a &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/406"&gt;406&lt;/a&gt; and wonder what happens&lt;/li&gt; 
+ &lt;li&gt;The meta data url gets specified in your service document and is usually the service document url extended by &lt;code&gt;/$metadata&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;I ran into a potential Salesforce bug, where the meta data URL was ignored and the service document URL extended by &lt;code&gt;$metadata&lt;/code&gt;. Note the missing &lt;code&gt;/&lt;/code&gt;. Caused a bit of grief since Excel does &lt;code&gt;/$metadata&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;Everything is case sensitive, which makes sense, but is fun in Domino that treats item names case insensitive&lt;/li&gt; 
+ &lt;li&gt;I couldn't get Salesforce to play nice until I added a field &lt;code&gt;ExternalId&lt;/code&gt; to my form. Might be my lack of understanding how to change the primary key Salesforce will play nice with or something missing in my Metadata&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;&lt;a href="#same-same-but-different" id="same-same-but-different"&gt;Same, same, but different&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;Swap out the GET for a POST and the XML for something not-quite-JSON and you get &lt;a href="https://graphql.org/"&gt;GraphQL&lt;/a&gt; that tries to address a similar set of functionalities. We really love wheels reinvented&lt;/p&gt; 
+&lt;p&gt;More lessons to be learned, stay tuned!&lt;/p&gt;</description>
+	<link>2020/03/odata-the-fine-print.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>3f7c2eb0-5920-11ea-bc53-e13ee52fcb38</guid>
+	<pubDate>04 March 2020</pubDate>
+
+</item>
 <item>
 	<title>Domino Administration Back to Basics (Part 2) - Networking</title>
 	<description>&lt;p&gt;In &lt;a href="/blog/2020/02/domino-administration-back-to-basics-part-1.html"&gt;Part 1&lt;/a&gt; we learned about the marvelous world of Notes Names, &lt;a href="https://en.wikipedia.org/wiki/X.400"&gt;X400&lt;/a&gt; and the perils of messing with certificates. One big difference to &lt;a href="https://en.wikipedia.org/wiki/X.509"&gt;X509&lt;/a&gt; is the (&lt;a href="https://github.com/IBM/domino-docker"&gt;almost&lt;/a&gt;) absence of certificate &lt;a href="https://www.openssl.org/"&gt;Command Line tools&lt;/a&gt; that can be &lt;a href="https://www.wissel.net/blog/2019/10/create-your-own-ca.html"&gt;so much fun&lt;/a&gt;.&lt;/p&gt; 
@@ -359,53 +404,6 @@ rm $CONFNAME
 	<author>Stephan H. Wissel</author>
 	<guid>89a1ef20-f903-11e9-8942-5bf721e7f1e1</guid>
 	<pubDate>26 October 2019</pubDate>
-
-</item>
-<item>
-	<title>Create your own Certificate Authority (CA)</title>
-	<description>&lt;p&gt;&lt;strong&gt;Warning&lt;/strong&gt; Do NOT, never, ever do that to a production system!&lt;/p&gt; 
-&lt;p&gt;Promised? OK! Here's the use case: you want to test your systems that have made up addresses like &lt;code&gt;awesomeserver.local&lt;/code&gt; and don't want to deal with certificate warnings or fancy errors that arise when you just use a self signed cert. This post is a self-reference for my convenience. There are &lt;a href="https://www.google.com/search?q=crrate+your+own+CA"&gt;ample other instructions&lt;/a&gt; out there.&lt;/p&gt; 
-&lt;p&gt;&lt;strong&gt;Disclaimer&lt;/strong&gt;: I mostly followed &lt;a href="https://jamielinux.com/docs/openssl-certificate-authority/introduction.html"&gt;this instructions&lt;/a&gt; short of updating some of the commands to use &lt;a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography"&gt;elliptic-curve&lt;/a&gt; cyphers.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#useful-with-a-side-of-work" id="useful-with-a-side-of-work"&gt;Useful with a side of work&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;The process requires a series of steps:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;Create the private key and root certificate&lt;/li&gt; 
- &lt;li&gt;Create an intermediate key and certificate&lt;/li&gt; 
- &lt;li&gt;Create certs for your servers&lt;/li&gt; 
- &lt;li&gt;Convert them if necessary (e.g. for import in Java Keystors JKS)&lt;/li&gt; 
- &lt;li&gt;Make the public key of the root and intermediate certs available&lt;/li&gt; 
- &lt;li&gt;Import these certs in all browsers and runtimes that you will use for testing&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;Normal mortal users, without these imports will get scary error messages. While this doesn't deter the determined, it's good for a laugh.&lt;br&gt; We don't want old school certs, so we aim at a modern &lt;a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography"&gt;Elliptic-curve&lt;/a&gt; cert (&lt;a href="https://www.erianna.com/ecdsa-certificate-authorities-and-certificates-with-openssl/"&gt;Details here&lt;/a&gt;). Here we go:&lt;/p&gt; 
-&lt;h4&gt;&lt;a href="#setting-up-the-directory-structure" id="setting-up-the-directory-structure"&gt;Setting up the directory structure&lt;/a&gt;&lt;/h4&gt; 
-&lt;pre class="brush: bash"&gt;mkdir -pv -m 600 /root/ca/intermediate
-cd /root/ca
-curl https://jamielinux.com/docs/openssl-certificate-authority/_downloads/root-config.txt -o openssl.cnf
-curl https://jamielinux.com/docs/openssl-certificate-authority/_downloads/intermediate-config.txt -o intermediate/openssl.cnf
-mkdir certs crl newcerts private
-chmod 700 private
-touch index.txt
-echo 1000 &amp;gt; serial
-cd intermediate
-mkdir certs crl csr newcerts private
-chmod 700 private
-touch index.txt
-echo 1000 &amp;gt; serial
-echo 1000 &amp;gt; crlnumber
-cd ..
-&lt;/pre&gt; 
-&lt;p&gt;You want to check the downloaded files and eventually change the path in case you have chosen to us a different one.&lt;/p&gt; 
-&lt;h4&gt;&lt;a href="#the-root-ca" id="the-root-ca"&gt;The Root CA&lt;/a&gt;&lt;/h4&gt; 
-&lt;pre class="brush: bash"&gt;export OPENSSL_CONF=./openssl.cnf
-openssl ecparam -genkey -name prime256v1 -outform PEM | openssl ec -aes256 -out private/ca.key.pem
-chmod 400 private/ca.key.pem
-openssl req -config openssl.cnf -key private/ca.key.pem -new -x509 -days 7300 -SHA384 -extensions v3_ca -out certs/ca.cert.pem
-&lt;/pre&gt; 
-&lt;p&gt;Keep them save - remember: its on my harddrive only isn't save!!!&lt;br&gt; You want to check the file using &lt;code&gt;openssl x509 -noout -text -in certs/ca.cert.pem&lt;/code&gt; or on macOS just hit the space key in finder.&lt;/p&gt;</description>
-	<link>2019/10/create-your-own-ca.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>38f93a70-efd9-11e9-a2e9-314ebf01b1fc</guid>
-	<pubDate>16 October 2019</pubDate>
 
 </item>
 

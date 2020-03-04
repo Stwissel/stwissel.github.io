@@ -110,6 +110,62 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2020/03/odata-the-fine-print.html">OData - the fine print</a></small></h1>
+					<hr />
+					<div><p>For an <a href="https://stwissel.github.io/presentations/engage2020/index.html">upcoming event</a> I had to dig a little deeper into <a href="https://www.odata.org/">OData</a> and learned a few things along the lines.</p> 
+<h3><a href="#same-but-different" id="same-but-different">Same but different</a></h3> 
+<p>OData's current version is <a href="http://docs.oasis-open.org/odata/odata/v4.0/odata-v4.0-part1-protocol.html">4.0</a> and that's the only version I will focus on in this article.</p> 
+<p>OData is the love child of an effort that joined Microsoft and SAP <a href="https://www.frankensteins-laboratory.com/home-page">at the hip</a> to create an universal internet data access standard, that on first sight has a lot of <a href="https://en.wikipedia.org/wiki/Not_invented_here">NIH</a> issues to sort out. But I'm sure on a second (or third or forth) look it will all make sense.</p> 
+<h3><a href="#key-components-of-odata" id="key-components-of-odata">Key components of OData</a></h3> 
+<ul> 
+ <li>a service document in <code>JSON</code> format. It describes what data endpoints are available and where. Depending on the requested scope (more on that later) that JSON contains different levels of details</li> 
+ <li>a meta data document. That document is referenced in the service document. The format is <code>XML</code>. It describes the data format found in each record, relations to other record and actions that can be taken. Looks like <a href="https://en.wikipedia.org/wiki/XML_schema">XML Schema</a>, but not quite. <em>Record</em> is used loosely here, data can be hierarchical and nested</li> 
+ <li>a query language squeezed into an URL, so data can be fetched using <code>HTTP GET</code> without using a body submitted. Query allows data selections, filtering, output size and sorting to be specified</li> 
+ <li>Query results in JSON format enhanced with <a href="http://docs.oasis-open.org/odata/odata-json-format/v4.01/odata-json-format-v4.01.html">OData specific Metadata</a></li> 
+</ul> 
+<p>What I liked a lot: <a href="https://www.odata.org/">OData.org</a> offers a rich set of documentation and tutorials, including a <a href="https://www.postman.com/">Postman</a> collection to learn</p> 
+<h3><a href="#happy-soup" id="happy-soup">Happy soup</a></h3> 
+<p>So dealing with OData you can enjoy a mix of technologies:</p> 
+<ul> 
+ <li>JSON for service document and payloads</li> 
+ <li>XML for meta data</li> 
+ <li>a dot notation (like dotNet or Java) for property values like data types (go <a href="https://www.odata.org/getting-started/understand-odata-in-6-steps/">learn about it</a>). E.g. <code>Edm.String</code> defines a String value or <code>Org.OData.Core.V1.ResourcePath</code> the path to data</li> 
+ <li>another query language</li> 
+ <li>individual items by default get addressed in an uncommon format: <code>serviceurl/People('johndoe')</code>. Luckily this is optional and you can use the more common format for a route: <code>serviceurl/People/johndoe</code>. This seems to be born out of squezing the <em>square pin</em> URL into the <em>round hole</em> of database schemas and flexible primary keys</li> 
+</ul> 
+<p>On the upside: Your Salesforce and Excel users will love it. Import and CRUD operations are well supported.</p> 
+<p>Initially I was looking at <a href="http://olingo.apache.org/">Apache Olingo</a> to implement my needs. Unfortunately the library is too close to the Java servlet model and static defined data models (like your one application, not your data platform), so I disected my needs the hard way.</p> 
+<h3><a href="#lessons-learned-along-the-way" id="lessons-learned-along-the-way">Lessons learned along the way</a></h3> 
+<ul> 
+ <li>A OData client (think Excel, Tableau, Salesforce) will initially connect to the service document url. It sends a <code>GET</code> request. To specify what level of detail is required the <code>ACCEPT</code> header is used. So when testing your provider implementation you need to take that into account</li> 
+ <li>Excel sends <code>ACCEPT application/json;odata.metadata=minimal</code></li> 
+ <li>Salesforce sends <code>ACCEPT application/json;odata.metadata=full</code></li> 
+ <li>OpenAPI can specify the top level <code>application/json</code> or the full qualified content type in the response. If you fully qualify it, you might end up with a <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/406">406</a> and wonder what happens</li> 
+ <li>The meta data url gets specified in your service document and is usually the service document url extended by <code>/$metadata</code></li> 
+ <li>I ran into a potential Salesforce bug, where the meta data URL was ignored and the service document URL extended by <code>$metadata</code>. Note the missing <code>/</code>. Caused a bit of grief since Excel does <code>/$metadata</code></li> 
+ <li>Everything is case sensitive, which makes sense, but is fun in Domino that treats item names case insensitive</li> 
+ <li>I couldn't get Salesforce to play nice until I added a field <code>ExternalId</code> to my form. Might be my lack of understanding how to change the primary key Salesforce will play nice with or something missing in my Metadata</li> 
+</ul> 
+<h3><a href="#same-same-but-different" id="same-same-but-different">Same, same, but different</a></h3> 
+<p>Swap out the GET for a POST and the XML for something not-quite-JSON and you get <a href="https://graphql.org/">GraphQL</a> that tries to address a similar set of functionalities. We really love wheels reinvented</p> 
+<p>More lessons to be learned, stay tuned!</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 04 March 2020
+<span class="divider">|</span>
+<a href="/blog/2020/03/odata-the-fine-print.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/opensource.html">OpenSource</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/03/odata-the-fine-print.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="OData - the fine print" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2020/03/odata-the-fine-print.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2020/02/domino-administration-back-to-basics-part-2.html">Domino Administration Back to Basics (Part 2) - Networking</a></small></h1>
 					<hr />
 					<div><p>In <a href="/blog/2020/02/domino-administration-back-to-basics-part-1.html">Part 1</a> we learned about the marvelous world of Notes Names, <a href="https://en.wikipedia.org/wiki/X.400">X400</a> and the perils of messing with certificates. One big difference to <a href="https://en.wikipedia.org/wiki/X.509">X509</a> is the (<a href="https://github.com/IBM/domino-docker">almost</a>) absence of certificate <a href="https://www.openssl.org/">Command Line tools</a> that can be <a href="https://www.wissel.net/blog/2019/10/create-your-own-ca.html">so much fun</a>.</p> 
@@ -563,65 +619,6 @@ categories:  <a href="/blog/categories/https.html">HTTP(S)</a>  <a href="/blog/c
 						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2019/10/a-certificate-wants-a-san.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="A certificate wants a SAN" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2019/10/a-certificate-wants-a-san.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2019/10/create-your-own-ca.html">Create your own Certificate Authority (CA)</a></small></h1>
-					<hr />
-					<div><p><strong>Warning</strong> Do NOT, never, ever do that to a production system!</p> 
-<p>Promised? OK! Here's the use case: you want to test your systems that have made up addresses like <code>awesomeserver.local</code> and don't want to deal with certificate warnings or fancy errors that arise when you just use a self signed cert. This post is a self-reference for my convenience. There are <a href="https://www.google.com/search?q=crrate+your+own+CA">ample other instructions</a> out there.</p> 
-<p><strong>Disclaimer</strong>: I mostly followed <a href="https://jamielinux.com/docs/openssl-certificate-authority/introduction.html">this instructions</a> short of updating some of the commands to use <a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography">elliptic-curve</a> cyphers.</p> 
-<h3><a href="#useful-with-a-side-of-work" id="useful-with-a-side-of-work">Useful with a side of work</a></h3> 
-<p>The process requires a series of steps:</p> 
-<ul> 
- <li>Create the private key and root certificate</li> 
- <li>Create an intermediate key and certificate</li> 
- <li>Create certs for your servers</li> 
- <li>Convert them if necessary (e.g. for import in Java Keystors JKS)</li> 
- <li>Make the public key of the root and intermediate certs available</li> 
- <li>Import these certs in all browsers and runtimes that you will use for testing</li> 
-</ul> 
-<p>Normal mortal users, without these imports will get scary error messages. While this doesn't deter the determined, it's good for a laugh.<br> We don't want old school certs, so we aim at a modern <a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography">Elliptic-curve</a> cert (<a href="https://www.erianna.com/ecdsa-certificate-authorities-and-certificates-with-openssl/">Details here</a>). Here we go:</p> 
-<h4><a href="#setting-up-the-directory-structure" id="setting-up-the-directory-structure">Setting up the directory structure</a></h4> 
-<pre class="brush: bash">mkdir -pv -m 600 /root/ca/intermediate
-cd /root/ca
-curl https://jamielinux.com/docs/openssl-certificate-authority/_downloads/root-config.txt -o openssl.cnf
-curl https://jamielinux.com/docs/openssl-certificate-authority/_downloads/intermediate-config.txt -o intermediate/openssl.cnf
-mkdir certs crl newcerts private
-chmod 700 private
-touch index.txt
-echo 1000 &gt; serial
-cd intermediate
-mkdir certs crl csr newcerts private
-chmod 700 private
-touch index.txt
-echo 1000 &gt; serial
-echo 1000 &gt; crlnumber
-cd ..
-</pre> 
-<p>You want to check the downloaded files and eventually change the path in case you have chosen to us a different one.</p> 
-<h4><a href="#the-root-ca" id="the-root-ca">The Root CA</a></h4> 
-<pre class="brush: bash">export OPENSSL_CONF=./openssl.cnf
-openssl ecparam -genkey -name prime256v1 -outform PEM | openssl ec -aes256 -out private/ca.key.pem
-chmod 400 private/ca.key.pem
-openssl req -config openssl.cnf -key private/ca.key.pem -new -x509 -days 7300 -SHA384 -extensions v3_ca -out certs/ca.cert.pem
-</pre> 
-<p>Keep them save - remember: its on my harddrive only isn't save!!!<br> You want to check the file using <code>openssl x509 -noout -text -in certs/ca.cert.pem</code> or on macOS just hit the space key in finder.</p></div>
-					<hr />
- <a href="/blog/2019/10/create-your-own-ca.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 16 October 2019
-<span class="divider">|</span>
-<a href="/blog/2019/10/create-your-own-ca.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/https.html">HTTP(S)</a>  <a href="/blog/categories/networking.html">Networking</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2019/10/create-your-own-ca.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Create your own Certificate Authority (CA)" data-twitter-via="@notessensei"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2019/10/create-your-own-ca.html";
 						</script>
 					</p>
 </p>

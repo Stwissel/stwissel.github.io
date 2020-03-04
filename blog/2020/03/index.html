@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>NotesSensei's Blog - Category: WebDevelopment</title>
+<title>NotesSensei's Blog by month: By Date: March 2020</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -52,7 +52,7 @@ ga('send', 'pageview');
 
 <link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="https://feeds.feedburner.com/Wisselnetfeed" />
 
-<meta name="Revisit-After" content="7 Days" />
+<meta name="Revisit-After" content="90 Days" />
 </head>
 <body>
 	<div class="navbar navbar-inverse navbar-fixed-top">
@@ -109,305 +109,84 @@ try {document.addEventListener("DOMContentLoaded", $buo_f,false)}
 catch(e){window.attachEvent("onload", $buo_f)}
 </script>
 
-
 		<div class="row-fluid">
 			<div class="span9">
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/categories/webcomponents.html"><i class="icon-hand-left"></i>WebComponents</a>
+					<li><a href="/blog/2020/02/index.html"><i class="icon-hand-left"></i>By Date: February 2020</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
 					<span class="divider">|</span>
-					<li><a href="/blog/categories/workflow.html">Workflow<i class="icon-hand-right"></i></a>
+					<li><a href="/blog/categories/afterhours.html">After hours<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 
 				<div class="well well-raised">
-					<h1>WebDevelopment</h1>
-				</div>
-				<div class="well">
-					<h1>
-						2020
-					</h1>
+					<h1>By Date: March 2020</h1>
 				</div>
 				<article class="well well-raised">
 					<h1>
 						<small><a href="/blog/2020/03/odata-the-fine-print.html">OData - the fine print</a></small>
 					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+					<hr />
+					<div><p>For an <a href="https://stwissel.github.io/presentations/engage2020/index.html">upcoming event</a> I had to dig a little deeper into <a href="https://www.odata.org/">OData</a> and learned a few things along the lines.</p> 
+<h3><a href="#same-but-different" id="same-but-different">Same but different</a></h3> 
+<p>OData's current version is <a href="http://docs.oasis-open.org/odata/odata/v4.0/odata-v4.0-part1-protocol.html">4.0</a> and that's the only version I will focus on in this article.</p> 
+<p>OData is the love child of an effort that joined Microsoft and SAP <a href="https://www.frankensteins-laboratory.com/home-page">at the hip</a> to create an universal internet data access standard, that on first sight has a lot of <a href="https://en.wikipedia.org/wiki/Not_invented_here">NIH</a> issues to sort out. But I'm sure on a second (or third or forth) look it will all make sense.</p> 
+<h3><a href="#key-components-of-odata" id="key-components-of-odata">Key components of OData</a></h3> 
+<ul> 
+ <li>a service document in <code>JSON</code> format. It describes what data endpoints are available and where. Depending on the requested scope (more on that later) that JSON contains different levels of details</li> 
+ <li>a meta data document. That document is referenced in the service document. The format is <code>XML</code>. It describes the data format found in each record, relations to other record and actions that can be taken. Looks like <a href="https://en.wikipedia.org/wiki/XML_schema">XML Schema</a>, but not quite. <em>Record</em> is used loosely here, data can be hierarchical and nested</li> 
+ <li>a query language squeezed into an URL, so data can be fetched using <code>HTTP GET</code> without using a body submitted. Query allows data selections, filtering, output size and sorting to be specified</li> 
+ <li>Query results in JSON format enhanced with <a href="http://docs.oasis-open.org/odata/odata-json-format/v4.01/odata-json-format-v4.01.html">OData specific Metadata</a></li> 
+</ul> 
+<p>What I liked a lot: <a href="https://www.odata.org/">OData.org</a> offers a rich set of documentation and tutorials, including a <a href="https://www.postman.com/">Postman</a> collection to learn</p> 
+<h3><a href="#happy-soup" id="happy-soup">Happy soup</a></h3> 
+<p>So dealing with OData you can enjoy a mix of technologies:</p> 
+<ul> 
+ <li>JSON for service document and payloads</li> 
+ <li>XML for meta data</li> 
+ <li>a dot notation (like dotNet or Java) for property values like data types (go <a href="https://www.odata.org/getting-started/understand-odata-in-6-steps/">learn about it</a>). E.g. <code>Edm.String</code> defines a String value or <code>Org.OData.Core.V1.ResourcePath</code> the path to data</li> 
+ <li>another query language</li> 
+ <li>individual items by default get addressed in an uncommon format: <code>serviceurl/People('johndoe')</code>. Luckily this is optional and you can use the more common format for a route: <code>serviceurl/People/johndoe</code>. This seems to be born out of squezing the <em>square pin</em> URL into the <em>round hole</em> of database schemas and flexible primary keys</li> 
+</ul> 
+<p>On the upside: Your Salesforce and Excel users will love it. Import and CRUD operations are well supported.</p> 
+<p>Initially I was looking at <a href="http://olingo.apache.org/">Apache Olingo</a> to implement my needs. Unfortunately the library is too close to the Java servlet model and static defined data models (like your one application, not your data platform), so I disected my needs the hard way.</p> 
+<h3><a href="#lessons-learned-along-the-way" id="lessons-learned-along-the-way">Lessons learned along the way</a></h3> 
+<ul> 
+ <li>A OData client (think Excel, Tableau, Salesforce) will initially connect to the service document url. It sends a <code>GET</code> request. To specify what level of detail is required the <code>ACCEPT</code> header is used. So when testing your provider implementation you need to take that into account</li> 
+ <li>Excel sends <code>ACCEPT application/json;odata.metadata=minimal</code></li> 
+ <li>Salesforce sends <code>ACCEPT application/json;odata.metadata=full</code></li> 
+ <li>OpenAPI can specify the top level <code>application/json</code> or the full qualified content type in the response. If you fully qualify it, you might end up with a <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/406">406</a> and wonder what happens</li> 
+ <li>The meta data url gets specified in your service document and is usually the service document url extended by <code>/$metadata</code></li> 
+ <li>I ran into a potential Salesforce bug, where the meta data URL was ignored and the service document URL extended by <code>$metadata</code>. Note the missing <code>/</code>. Caused a bit of grief since Excel does <code>/$metadata</code></li> 
+ <li>Everything is case sensitive, which makes sense, but is fun in Domino that treats item names case insensitive</li> 
+ <li>I couldn't get Salesforce to play nice until I added a field <code>ExternalId</code> to my form. Might be my lack of understanding how to change the primary key Salesforce will play nice with or something missing in my Metadata</li> 
+</ul> 
+<h3><a href="#same-same-but-different" id="same-same-but-different">Same, same, but different</a></h3> 
+<p>Swap out the GET for a POST and the XML for something not-quite-JSON and you get <a href="https://graphql.org/">GraphQL</a> that tries to address a similar set of functionalities. We really love wheels reinvented</p> 
+<p>More lessons to be learned, stay tuned!</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 04 March 2020
 <span class="divider">|</span>
 <a href="/blog/2020/03/odata-the-fine-print.html#comments">Comments (0)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/opensource.html">OpenSource</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2020/01/generating-jwt-tokens-for-tests.html">Generating JWT tokens for tests</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 01 February 2020
-<span class="divider">|</span>
-<a href="/blog/2020/01/generating-jwt-tokens-for-tests.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/03/odata-the-fine-print.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="OData - the fine print" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2020/03/odata-the-fine-print.html";
+						</script>
+					</p>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2020/01/running-a-caldav-server-on-ubuntu.html">Running a CalDAV server on Ubuntu (2020 edition)</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 01 February 2020
-<span class="divider">|</span>
-<a href="/blog/2020/01/running-a-caldav-server-on-ubuntu.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/caldav.html">calDAV</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						2019
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2019/12/http-debugging-cheat-sheet.html">http(s) debugging cheat sheet</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 30 December 2019
-<span class="divider">|</span>
-<a href="/blog/2019/12/http-debugging-cheat-sheet.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/https.html">HTTP(S)</a>  <a href="/blog/categories/networking.html">Networking</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2019/10/a-certificate-wants-a-san.html">A certificate wants a SAN</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 26 October 2019
-<span class="divider">|</span>
-<a href="/blog/2019/10/a-certificate-wants-a-san.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/https.html">HTTP(S)</a>  <a href="/blog/categories/networking.html">Networking</a>  <a href="/blog/categories/opensource.html">OpenSource</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2019/10/create-your-own-ca.html">Create your own Certificate Authority (CA)</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 16 October 2019
-<span class="divider">|</span>
-<a href="/blog/2019/10/create-your-own-ca.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/https.html">HTTP(S)</a>  <a href="/blog/categories/networking.html">Networking</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2019/10/whats-on-your-grpc-wire-protobuffer-or-json.html">What's on your gRPC wire, Protocol Buffers or JSON?</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 15 October 2019
-<span class="divider">|</span>
-<a href="/blog/2019/10/whats-on-your-grpc-wire-protobuffer-or-json.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/categories/grpc.html">gRPC</a>  <a href="/blog/categories/https.html">HTTP(S)</a>  <a href="/blog/categories/networking.html">Networking</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2019/09/vertx-and-openapi.html">Vert.x and OpenAPI</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 06 September 2019
-<span class="divider">|</span>
-<a href="/blog/2019/09/vertx-and-openapi.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/vertx.html">vert.x</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						2018
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/12/lwc-quick-overview.html">Lightning Web Components (LWC) quick overview</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 14 December 2018
-<span class="divider">|</span>
-<a href="/blog/2018/12/lwc-quick-overview.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/10/my-software-stack.html">My software stack</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 31 October 2018
-<span class="divider">|</span>
-<a href="/blog/2018/10/my-software-stack.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/07/postman-and-the-salesforce-rest-api.html">Postman and the Salesforce REST API</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 06 July 2018
-<span class="divider">|</span>
-<a href="/blog/2018/07/postman-and-the-salesforce-rest-api.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2018/06/what-really-happens-in-oauth.html">What really happens in OAuth</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 04 June 2018
-<span class="divider">|</span>
-<a href="/blog/2018/06/what-really-happens-in-oauth.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						2017
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2017/01/git-deploy-your-static-sites-part-1.html">GIT deploy your static sites - Part 1</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 12 January 2017
-<span class="divider">|</span>
-<a href="/blog/2017/01/git-deploy-your-static-sites-part-1.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/nginx.html">nginx</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						2016
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2016/02/designing-a-web-frontend-development-workflow.html">Designing a Web Frontend Development Workflow</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 19 February 2016
-<span class="divider">|</span>
-<a href="/blog/2016/02/designing-a-web-frontend-development-workflow.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						2015
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2015/08/let-there-be-a-light-angular-nodered-and-websockets.html">Let there be a light - Angular, nodeRED and Websockets</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 24 August 2015
-<span class="divider">|</span>
-<a href="/blog/2015/08/let-there-be-a-light-angular-nodered-and-websockets.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/bluemix.html">Bluemix</a>  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/nodered.html">NodeRED</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						2014
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2014/09/put-an-angular-face-on-your-inbox.html">Put an angular face on your inbox</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 30 September 2014
-<span class="divider">|</span>
-<a href="/blog/2014/09/put-an-angular-face-on-your-inbox.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						2012
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2012/12/hyperlinks-need-to-live-forever-blog-edition.html">Hyperlinks need to live forever - Blog edition</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 05 December 2012
-<span class="divider">|</span>
-<a href="/blog/2012/12/hyperlinks-need-to-live-forever-blog-edition.html#comments">Comments (4)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/blog.html">Blog</a>  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						2010
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2010/11/fun-with-lotuslive-curl-and-lotus-activities.html">Fun with LotusLive, cURL and Lotus Activities</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 10 November 2010
-<span class="divider">|</span>
-<a href="/blog/2010/11/fun-with-lotuslive-curl-and-lotus-activities.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibm.html">IBM</a>  <a href="/blog/categories/ibmlotus.html">IBM - Lotus</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						2005
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2005/04/you-really-wont-know-until-you-build-it.html">You Really Won't Know Until You Build It</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 10 April 2005
-<span class="divider">|</span>
-<a href="/blog/2005/04/you-really-wont-know-until-you-build-it.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
- 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/categories/webcomponents.html"><i class="icon-hand-left"></i>WebComponents</a>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2020/02/index.html"><i class="icon-hand-left"></i>By Date: February 2020</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
 					<span class="divider">|</span>
-					<li><a href="/blog/categories/workflow.html">Workflow<i class="icon-hand-right"></i></a>
+					<li><a href="/blog/categories/afterhours.html">After hours<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 
@@ -487,7 +266,7 @@ categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/bl
 						<li ><a href="/blog/categories/unittesting.html">UnitTesting</a></li>
 						<li ><a href="/blog/categories/vertx.html">vert.x</a></li>
 						<li ><a href="/blog/categories/webcomponents.html">WebComponents</a></li>
-						<li  class="active"><a href="/blog/categories/webdevelopment.html">WebDevelopment</a></li>
+						<li ><a href="/blog/categories/webdevelopment.html">WebDevelopment</a></li>
 						<li ><a href="/blog/categories/workflow.html">Workflow</a></li>
 						<li ><a href="/blog/categories/writingchinese.html">Writing Chinese</a></li>
 						<li ><a href="/blog/categories/xml.html">XML</a></li>
@@ -583,9 +362,6 @@ categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/bl
 		</div>
 	</footer>
 
-	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/categories/webdevelopment.html";
-	</script>
 		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
 	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
@@ -612,4 +388,3 @@ categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/bl
 
 </body>
 </html>
-
