@@ -6,7 +6,64 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2019 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Fri, 06 Mar 2020 22:11:57 +0000</pubdate>
+	<pubdate>Mon, 16 Mar 2020 17:40:12 +0000</pubdate>
+<item>
+	<title>Running Java applications with Notes on macOS</title>
+	<description>&lt;p&gt;My main work computer is a MacBook running macOS. Thank to &lt;a href="https://amzn.to/2QkhsA9"&gt;Logitech&lt;/a&gt;, they keyboard is just fine. As you know macOS neither features Domino Designer or Domino Admin. For &lt;a href="https://stwissel.github.io/presentations/engage2020/index.html"&gt;recent development&lt;/a&gt; I wanted to make sure that my applications can run on the client (I've done &lt;a href="/blog/2014/07/adventures-with-vertx-64bit-and-the-ibm-notes-client.html"&gt;that before&lt;/a&gt;).&lt;/p&gt; 
+&lt;h3&gt;&lt;a href="#java-java-on-the-wall-whats-the-right-path-of-them-all" id="java-java-on-the-wall-whats-the-right-path-of-them-all"&gt;Java, Java on the wall, what's the right path of them all?&lt;/a&gt;&lt;/h3&gt; 
+&lt;p&gt;(Sorry Schneewitchen)&lt;/p&gt; 
+&lt;p&gt;In Notes/Domino &lt;a href="https://www.ibm.com/support/knowledgecenter/SSKTMJ_9.0.1/admin/over_whats_new_in_fp8.html"&gt;R9.0.1FP8&lt;/a&gt; - (client FP10) the Java runtime was updated to Java8 and in &lt;a href="https://help.hcltechsw.com/domino/11.0.0/wn_new_java_runtime_environment.html"&gt;R11&lt;/a&gt; changed to AdoptOpenJDK.&lt;/p&gt; 
+&lt;p&gt;On macOS that led to a particular situation. The jvm packaged with the &lt;code&gt;HCL Notes.app&lt;/code&gt; can be found in the path&lt;br&gt; &lt;code&gt;HCL Notes.app/jre/Contents/Home&lt;/code&gt; with &lt;code&gt;bin&lt;/code&gt;, &lt;code&gt;lib&lt;/code&gt; and &lt;code&gt;lib/ext&lt;/code&gt; as we can expect from a JVM. Suspiciously absent are &lt;code&gt;Notes.jar&lt;/code&gt;, &lt;code&gt;websvc.jar&lt;/code&gt; and &lt;code&gt;njempcl.jar&lt;/code&gt;. They can be located at &lt;code&gt;HCL Notes.app/Contents/MacOS.jvm/lib/ext&lt;/code&gt;.&lt;/p&gt; 
+&lt;p&gt;While this isn't an issue for the Notes client, it is an obstacle when you try to run an external jar file. &lt;code&gt;java -jar somejar.jar&lt;/code&gt; ignores any classpath setting outside the JVM and only loads resources from the default JBM path (lib/ext).&lt;/p&gt; 
+&lt;p&gt;I suspect the separation was neccesary due to the &lt;a href="https://adoptopenjdk.net/"&gt;AdoptOpenJDK&lt;/a&gt; distribution rules.&lt;/p&gt; 
+&lt;p&gt;To solve this, we can use a start script that creates a &lt;a href="http://man7.org/linux/man-pages/man1/ln.1.html"&gt;symbolic link&lt;/a&gt; in the right place. Takeing the usual suspects like &lt;code&gt;DYLD_LIBRARY_PATH&lt;/code&gt; and &lt;code&gt;LD_LIBRARY_PATH&lt;/code&gt; into account we end with a script like this:&lt;/p&gt; 
+&lt;pre class="brush: bash"&gt;#!/bin/bash
+# MacOS Keep Starter file
+# Keep locations - update as needed - leave the TLS stuff empty if you don't have it
+export KEEPJAR=$HOME/keep/projectkeep.jar
+export LOG_DIR=$HOME/keep/logs
+export TLSFile=$HOME/keep/private/demoserver.projectkeep.io.pfx
+export TLSPassword=supersecret
+
+# Don't change anything below unless you are sure what you are doing
+# Java files places unfortunately troublesome, so we link some
+cd /Applications/HCL\ Notes.app/jre/Contents/Home/lib/ext
+export SRCDIR="../../../../../Contents/MacOS/jvm/lib/ext"
+if [ ! -f njempcl.jar ]; then
+	ln -s $SRCDIR/njempcl.jar .
+    echo "Linked njempcl.jar"
+fi
+if [ ! -f Notes.jar ]; then
+	ln -s $SRCDIR/Notes.jar .
+    echo "Linked Notes.jar"
+fi
+if [ ! -f websvc.jar ]; then
+	ln -s $SRCDIR/websvc.jar .
+    echo "Linked websvc.jar"
+fi
+
+# Local Keep Server
+export DEBUG=true
+export PATH=/Applications/HCL\ Notes.app/Contents/MacOS:$PATH
+export JAVA_HOME=/Applications/HCL\ Notes.app/jre/Contents/Home
+export GodMode=true
+export DYLD_LIBRARY_PATH=/Applications/HCL\ Notes.app/Contents/MacOS
+export LD_LIBRARY_PATH=/Applications/HCL\ Notes.app/Contents/MacOS
+echo $LD_LIBRARY_PATH ..
+cd $HOME/Library/Application\ Support/HCL\ Notes\ Data
+/Applications/HCL\ Notes.app/jre/Contents/Home/bin/java -jar $KEEPJAR
+cd ~
+echo Done!
+
+&lt;/pre&gt; 
+&lt;p&gt;This script presumes thay we have admin permissions. We could contemplate to check for existing symbolic links and remove the ones we did set. I decided, that smells too much like &lt;a href="https://martinfowler.com/bliki/Yagni.html"&gt;YAGNI&lt;/a&gt;.&lt;/p&gt; 
+&lt;p&gt;As usual: YMMV&lt;/p&gt;</description>
+	<link>2020/03/running-java-applications-with-notes-on-macos.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>f866de10-67a4-11ea-af28-77b6769d4987</guid>
+	<pubDate>17 March 2020</pubDate>
+
+</item>
 <item>
 	<title>OData - the fine print</title>
 	<description>&lt;p&gt;For an &lt;a href="https://stwissel.github.io/presentations/engage2020/index.html"&gt;upcoming event&lt;/a&gt; I had to dig a little deeper into &lt;a href="https://www.odata.org/"&gt;OData&lt;/a&gt; and learned a few things along the lines.&lt;/p&gt; 
@@ -357,53 +414,6 @@ public void initiateStreamResponse(final String dataAddress, final JsonObject re
 	<author>Stephan H. Wissel</author>
 	<guid>8aab8b60-f90d-11e9-976f-e1b615938bca</guid>
 	<pubDate>27 October 2019</pubDate>
-
-</item>
-<item>
-	<title>A certificate wants a SAN</title>
-	<description>&lt;p&gt;Following my recent blog about &lt;a href="/blog/2019/10/create-your-own-ca.html"&gt;creating you own CA&lt;/a&gt; you will find out, like I did, that the certs are quite wanting.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#the-subject-alternate-name-san" id="the-subject-alternate-name-san"&gt;The Subject Alternate Name (SAN)&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Even after importing the &lt;code&gt;ca-chain.cert.pem&lt;/code&gt; into your keyring / keystore Chrome will barf at the certificate, complaining about a missing &lt;a href="https://"&gt;SAN&lt;/a&gt;.&lt;/p&gt; 
-&lt;p&gt;The idea of a SAN is to allow additional name variations to be recognised for one given certificate, reducing the effort for multi-purpose servers. E.g.: &lt;code&gt;myawesomesite.com&lt;/code&gt;, &lt;code&gt;www.myawesomesite.com&lt;/code&gt;, &lt;code&gt;myawesomesite.io&lt;/code&gt;, &lt;code&gt;www.myawesomesite.com&lt;/code&gt;, &lt;code&gt;crazydata.com&lt;/code&gt;&lt;/p&gt; 
-&lt;p&gt;I tried really hard, but at the time of writing, it seems the only way to create SAN for your certs is to provide a configuration file. I didn't find a command line option (short of various attempts on redirection and pipeing).&lt;/p&gt; 
-&lt;p&gt;The hack I came up with:&lt;/p&gt; 
-&lt;p&gt;Edit the &lt;code&gt;intermediate\openssl.cnf&lt;/code&gt; and add to the &lt;code&gt;[ server_cert ]&lt;/code&gt; section one line: &lt;code&gt;subjectAltName = @alt_names&lt;/code&gt;. The &lt;code&gt;@&lt;/code&gt; sign tells OpenSSL to look for a section with that name and expand its content as the parameter.&lt;/p&gt; 
-&lt;p&gt;Using the following shell script generates a certificate that works for:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;www.domain (e.g. &lt;code&gt;www.awesome.io&lt;/code&gt;)&lt;/li&gt; 
- &lt;li&gt;domain (e.g. &lt;code&gt;awesome.io&lt;/code&gt;)&lt;/li&gt; 
- &lt;li&gt;domain.local (e.g. &lt;code&gt;awesome.io.local&lt;/code&gt;)&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;The last one is helpful when you want to try SSL on localhost and amend your &lt;code&gt;hosts&lt;/code&gt; file to contain &lt;code&gt;awesome.io.local&lt;/code&gt;&lt;/p&gt; 
-&lt;pre class="brush: bash"&gt;#!/bin/bash
-# Create new server certificates with the KEEP intermediate CA
-if [ -z "$1" ]
-  then
-    echo "Usage: ./makecert.sh domain_name (without www) e.g. ./makecert.sh funsite.com"
-    exit 1
-fi
-export SSL_DOMAIN_NAME=$1
-export CONFNAME=intermediate/$1.cnf
-cat intermediate/openssl.cnf &amp;gt; $CONFNAME
-echo [alt_names] &amp;gt;&amp;gt; $CONFNAME
-echo DNS.0 = $SSL_DOMAIN_NAME &amp;gt;&amp;gt; $CONFNAME
-echo DNS.1 = www.$SSL_DOMAIN_NAME  &amp;gt;&amp;gt; $CONFNAME
-echo DNS.2 = $SSL_DOMAIN_NAME.local  &amp;gt;&amp;gt; $CONFNAME
-openssl ecparam -genkey -name prime256v1 -outform PEM -out intermediate/private/$SSL_DOMAIN_NAME.key.pem
-chmod 400 intermediate/private/$SSL_DOMAIN_NAME.key.pem
-openssl req  -config $CONFNAME  -key intermediate/private/$SSL_DOMAIN_NAME.key.pem -new -sha256 -out intermediate/csr/$SSL_DOMAIN_NAME.csr.pem
-openssl ca -config $CONFNAME -extensions server_cert -days 375 -notext -md sha256 -in intermediate/csr/$SSL_DOMAIN_NAME.csr.pem -out intermediate/certs/$SSL_DOMAIN_NAME.cert.pem
-chmod 444 intermediate/certs/$SSL_DOMAIN_NAME.cert.pem
-openssl pkcs12 -export -in intermediate/certs/$SSL_DOMAIN_NAME.cert.pem -inkey intermediate/private/$SSL_DOMAIN_NAME.key.pem -out intermediate/private/$SSL_DOMAIN_NAME.pfx -certfile intermediate/certs/ca-chain.cert.pem
-rm $CONFNAME
-&lt;/pre&gt; 
-&lt;p&gt;This will settle the &lt;em&gt;Subject Alternate Name&lt;/em&gt; challenge. There are a more challenges to be had. Depending on what application you use, you need to import your intermediate keychain &lt;code&gt;ca-chain.cert.pem&lt;/code&gt; in multiple places in different formats (Remember, I urged you not to do that in production!).&lt;/p&gt; 
-&lt;p&gt;On Mac and Linux you have a keychain, but NodeJS and Java don't recognize them. Edge (and its older sibling) have their own key store, as has Firefox. Python, depending on version and library, has its own ideas about keys too. So manual management is a PITA.&lt;/p&gt; 
-&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
-	<link>2019/10/a-certificate-wants-a-san.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>89a1ef20-f903-11e9-8942-5bf721e7f1e1</guid>
-	<pubDate>26 October 2019</pubDate>
 
 </item>
 
