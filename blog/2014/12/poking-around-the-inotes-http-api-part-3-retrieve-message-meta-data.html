@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Poking around the iNotes HTTP API (Part 3) - retrieve message meta data" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2014,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -155,14 +156,10 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>iNotes allows to retrieve the message fields as (kind-of) JSON using <code>l_JSVars</code> or retrieve the MIME headers using <code>l_MailMessageHeader</code></li> 
  <li>The content of the message is accessible via <code>s_MailMemoReadBodyContent</code> or <code>UNID/Body?OpenField</code> or <code>l_MailMessageHeader&amp;PresetFields=FullMessage;1</code> (as raw Mime)</li> 
  <li>The MIME parts retrieved come infested with &lt;br /&gt; tags, since iNotes renders them in a display window (I would have used &lt;pre&gt;, but that's a different story. So they need cleanup</li> 
-</ul> To begin I'll use the result of 
-<code>l_JSVars</code> to learn about the document. Since, again, it is JavaScript, not JSON, I'll take the Rhino approach to extract a Java object. 
-<br> The parts I'm interested in is in the variable named 
-<code>DXX</code> which contains 
-<code>item</code> that is a representation of NotesItems. True to the nature of an item, the JSON is quite elaborate, which you can see on the example of the form item: 
+</ul> To begin I'll use the result of <code>l_JSVars</code> to learn about the document. Since, again, it is JavaScript, not JSON, I'll take the Rhino approach to extract a Java object. 
+<br> The parts I'm interested in is in the variable named <code>DXX</code> which contains <code>item</code> that is a representation of NotesItems. True to the nature of an item, the JSON is quite elaborate, which you can see on the example of the form item: 
 <br> 
-<pre class="brush : js">
-{ "@name": "Form",
+<pre class="brush : js">{ "@name": "Form",
   "textlist": {
     "text": [
         {"0": "Memo"}
@@ -172,8 +169,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 </pre> 
 <br> For our purposes this will be flattened into a Map that has the item name as key. The Java code is quite similar to the retrieval of the Outline, the magic is in the JavaScript: 
 <br> 
-<pre class="brush : java">
-public MessageObject(String code, String rawMsg) {
+<pre class="brush : java">public MessageObject(String code, String rawMsg) {
     long start = System.currentTimeMillis();
     ScriptEngine engine = new ScriptEngineManager().getEngineByExtension("js");
     engine.eval(code);
@@ -186,17 +182,9 @@ public MessageObject(String code, String rawMsg) {
     return msg;
 }
 </pre> 
-<br> A little detail to stumble over is the item structure. It can be 
-<code>textlist/text</code> or only 
-<code>text</code> (feels like MIME Headers) and 
-<code>datetimelist/datetimepair/datetime</code> or 
-<code>datetimelist/datetime</code>.I haven't seen any item other than the name 
-<code>"0"</code>, so JSON arrays and multi-values got a little in each other's way. 
-<code>text</code> as an array could have multiple values eliminating the need for an enclosing 
-<code>textlist</code>, but probably I'm overlooking something, smarter people that me, who designed this, did envision. 
+<br> A little detail to stumble over is the item structure. It can be <code>textlist/text</code> or only <code>text</code> (feels like MIME Headers) and <code>datetimelist/datetimepair/datetime</code> or <code>datetimelist/datetime</code>.I haven't seen any item other than the name <code>"0"</code>, so JSON arrays and multi-values got a little in each other's way. <code>text</code> as an array could have multiple values eliminating the need for an enclosing <code>textlist</code>, but probably I'm overlooking something, smarter people that me, who designed this, did envision. 
 <br> 
-<pre class="brush : js">
-function getMessageObject(raw) {
+<pre class="brush : js">function getMessageObject(raw) {
 	importPackage(com.notessensei.demo);
 	var msg;
 	eval("msg = " + raw);
@@ -278,13 +266,7 @@ function getMessageObject(raw) {
 	return result;
 }
 </pre> 
-<br> When you use a Map instead of a specialized object, you need to change 
-<code>var result = new MessageObject(msg.sUnid);</code> to 
-<code>var result = new java.util.HashMap;</code> and 
-<code>result.addItem(curName, curValue);</code> to 
-<code>result.put(curName, curValue);</code>. To avoid empty fields (caveat: there's a difference between "empty field" and "field not there"), change 
-<code>if (curName != "") {</code> to 
-<code>if (curName != "" &amp;&amp; curValue != "") {</code> 
+<br> When you use a Map instead of a specialized object, you need to change <code>var result = new MessageObject(msg.sUnid);</code> to <code>var result = new java.util.HashMap;</code> and <code>result.addItem(curName, curValue);</code> to <code>result.put(curName, curValue);</code>. To avoid empty fields (caveat: there's a difference between "empty field" and "field not there"), change <code>if (curName != "") {</code> to <code>if (curName != "" &amp;&amp; curValue != "") {</code> 
 <br> An interesting question to contemplate: while all values in the JSON come across as String, the structure clearly specifies the data type. Should therefore the object you create contain these data types instead of String? 
 <br> As usual YMMV</div>
 					<hr />
@@ -412,6 +394,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

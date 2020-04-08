@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Round-Trip editing experience in web browsers" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2013,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -132,235 +133,75 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Round-Trip editing experience in web browsers</small></h1>
 					<hr />
-					<div>Our applications are increasingly moving to http(s) based interfaces, that is 
-<a href="http://en.wikipedia.org/wiki/HTML5">HTML(5)</a> or 
-<a href="http://play.google.com/">apps</a>. Besides the irony, that we abandon client applications on desktops to reintroduce them on mobile devices (is ObjectiveC the VB of the 21st century?), 
-<i>that's a good thing</i>??? 
-<br> However from time to time, unless you 
-<a href="https://www.ibm.com/cloud-computing/social/us/en/">live in the cloud</a>, we need to integrate into extisting standing desktop applications, mostly but not limited to Office applications. The emerging standard for this is clearly 
-<a href="http://en.wikipedia.org/wiki/CMIS">CMIS</a>. Most office packages do support CMIS in one way or the other today. However it does not integrate into file managers like Finder, Explorer or Nautilus (at least not to my best knowledge at time of writing). One could sidestep that shortcoming by using 
-<a href="http://cmissync.com/">CmisSync</a>, but that only works as long as you have enough local storage and corporate security lets you do so. 
+					<div>Our applications are increasingly moving to http(s) based interfaces, that is <a href="http://en.wikipedia.org/wiki/HTML5">HTML(5)</a> or <a href="http://play.google.com/">apps</a>. Besides the irony, that we abandon client applications on desktops to reintroduce them on mobile devices (is ObjectiveC the VB of the 21st century?), <i>that's a good thing</i>??? 
+<br> However from time to time, unless you <a href="https://www.ibm.com/cloud-computing/social/us/en/">live in the cloud</a>, we need to integrate into extisting standing desktop applications, mostly but not limited to Office applications. The emerging standard for this is clearly <a href="http://en.wikipedia.org/wiki/CMIS">CMIS</a>. Most office packages do support CMIS in one way or the other today. However it does not integrate into file managers like Finder, Explorer or Nautilus (at least not to my best knowledge at time of writing). One could sidestep that shortcoming by using <a href="http://cmissync.com/">CmisSync</a>, but that only works as long as you have enough local storage and corporate security lets you do so. 
 <br> Another challenge to sort out: once applications that "surround" Office documents are all HTML based, one should be able to commence editing directly from clicking something in the web based business application. So the criteria are: 
 <ol> 
  <li>Ability to interact with documents using File-Open in applications (ironically the <a href="http://en.wikipedia.org/wiki/ODMA">ODMA</a> standard got that working more than 15 years ago, but died due to vendor negligence)</li> 
  <li>Ability to interact with documents using the default file navigator (Finder, Nautilus, Explorer, mobile devices)</li> 
  <li>Ability to have a full roundtrip editing experience in the browser. A user clicks on a button or link (or icon), the document opens, editing commences. When hitting the save button the original document is updated, so when someone else clicks on that link the latest updates can be seen there</li> 
-</ol> Once you want to support non-Windows platforms (and work in multiple browsers) ActiveX (the approach Microsoft choose) is ruled out. Enter 
-<a href="http://en.wikipedia.org/wiki/Webdav">webDAV</a>. It covers #1 and #2, with 
-<a href="/blog/2011/06/it-isnt-a-standard-if-it-isnt-broken-today-webdav.html">some difficulties</a> to a point that the 
-<a href="http://www.lialis.com/">commercial package</a> for webDAV on IBM platforms (Connections, Domino, Quickr) doesn't support Explorer on Windows 7, a flaw it coincidentally shares with a much 
-<a href="http://sourceforge.net/projects/dominodav/">older package</a>, but not with 
-<a href="http://www.openntf.org/internal/home.nsf/project.xsp?action=openDocument&amp;name=WebDAV%20for%20IBM%20Domino">the current project</a>. 
-<br> The challenge for #3: Whenever a browser encounters an URL with http(s) it will try to handle that target. If the mime type is not directly handled by the browser it will trigger the download of the file and hand it over to the application (with or without a dialog, depending on your settings). When the user then interacts with that document, it is the downloaded version in a temp directory. Changes are 
-<b>not</b> send back! 
-<br> On the other hand: if a user opens a file directly in the office application by selecting a 
-<a href="http://answers.microsoft.com/en-us/windows/forum/windows_7-networking/how-to-open-web-folder-in-windows-7/0552a422-9e7d-41e6-8971-200d2bd14621">webfolder</a>, a mounted 
-<a href="http://manpages.ubuntu.com/manpages/dapper/man8/mount.davfs.8.html">file system</a> or directly specifying the URL, then roundtrip editing happens since the office applications check the URL for webDAV capabilities (I had some fun with 
-<a href="http://ws.apache.org/commons/tcpmon/">Apache's TCPMon</a> figuring that out). 
-<br> The solution for this puzzle is to use a different protocol. Protocols are simply indicators for the operating system what application is in charge. The commonly known are 
-<a href="http://en.wikipedia.org/wiki/Http">http(s)</a>, 
-<a href="http://en.wikipedia.org/wiki/Ftp">ftp</a>, 
-<a href="http://en.wikipedia.org/wiki/Secure_Shell">ssh</a>, 
-<a href="http://en.wikipedia.org/wiki/Mailto">mailto</a> (and 
-<a href="http://en.wikipedia.org/wiki/Gopher_%28protocol%29">gopher</a> for the old generation), but also 
-<a href="http://en.wikipedia.org/wiki/IBM_Lotus_Notes">notes</a> or 
-<a href="http://www.sap.com">sap</a> (and 
-<a href="http://en.wikipedia.org/wiki/Internet_protocol_suite">others</a>). 
+</ol> Once you want to support non-Windows platforms (and work in multiple browsers) ActiveX (the approach Microsoft choose) is ruled out. Enter <a href="http://en.wikipedia.org/wiki/Webdav">webDAV</a>. It covers #1 and #2, with <a href="/blog/2011/06/it-isnt-a-standard-if-it-isnt-broken-today-webdav.html">some difficulties</a> to a point that the <a href="http://www.lialis.com/">commercial package</a> for webDAV on IBM platforms (Connections, Domino, Quickr) doesn't support Explorer on Windows 7, a flaw it coincidentally shares with a much <a href="http://sourceforge.net/projects/dominodav/">older package</a>, but not with <a href="http://www.openntf.org/internal/home.nsf/project.xsp?action=openDocument&amp;name=WebDAV%20for%20IBM%20Domino">the current project</a>. 
+<br> The challenge for #3: Whenever a browser encounters an URL with http(s) it will try to handle that target. If the mime type is not directly handled by the browser it will trigger the download of the file and hand it over to the application (with or without a dialog, depending on your settings). When the user then interacts with that document, it is the downloaded version in a temp directory. Changes are <b>not</b> send back! 
+<br> On the other hand: if a user opens a file directly in the office application by selecting a <a href="http://answers.microsoft.com/en-us/windows/forum/windows_7-networking/how-to-open-web-folder-in-windows-7/0552a422-9e7d-41e6-8971-200d2bd14621">webfolder</a>, a mounted <a href="http://manpages.ubuntu.com/manpages/dapper/man8/mount.davfs.8.html">file system</a> or directly specifying the URL, then roundtrip editing happens since the office applications check the URL for webDAV capabilities (I had some fun with <a href="http://ws.apache.org/commons/tcpmon/">Apache's TCPMon</a> figuring that out). 
+<br> The solution for this puzzle is to use a different protocol. Protocols are simply indicators for the operating system what application is in charge. The commonly known are <a href="http://en.wikipedia.org/wiki/Http">http(s)</a>, <a href="http://en.wikipedia.org/wiki/Ftp">ftp</a>, <a href="http://en.wikipedia.org/wiki/Secure_Shell">ssh</a>, <a href="http://en.wikipedia.org/wiki/Mailto">mailto</a> (and <a href="http://en.wikipedia.org/wiki/Gopher_%28protocol%29">gopher</a> for the old generation), but also <a href="http://en.wikipedia.org/wiki/IBM_Lotus_Notes">notes</a> or <a href="http://www.sap.com">sap</a> (and <a href="http://en.wikipedia.org/wiki/Internet_protocol_suite">others</a>). 
 <br> For my approach I used webdav(s) as protocol name. On Windows protocols live in the registry, on other operating system in configuration files. 
-<br> Once configured correctly a little 
-<a href="https://github.com/OpenNTF/WebDAVForDomino/tree/master/com.ibm.xsp.webdav/webDAVHelper">helper application</a> would pick up the webdav(s) URL from the browser, check for the default application and launch it with the URL converted to http(s) on the command line - and voila roundtrip editing happens (check out the 
-<a href="https://github.com/OpenNTF/WebDAVForDomino">project</a>). 
+<br> Once configured correctly a little <a href="https://github.com/OpenNTF/WebDAVForDomino/tree/master/com.ibm.xsp.webdav/webDAVHelper">helper application</a> would pick up the webdav(s) URL from the browser, check for the default application and launch it with the URL converted to http(s) on the command line - and voila roundtrip editing happens (check out the <a href="https://github.com/OpenNTF/WebDAVForDomino">project</a>). 
 <br> Of course some stuff needs handling: the office application doesn't share credentials with the browser, so SSO or other means need to be in place to ensure smooth user experience. Also MS-Office not only probes for webDAV capability of that URL, but also if that server behaves like SharePoint by probing an extra URL (some enlightenment what it is looking for would be nice). 
-<br> On Linux (and probably OS/X) one doesn't need a C++ program to figure out the right application, a shell script does the trick.<div class="bash"> 
- <span class="co0">#!/bin/bash</span> 
+<br> On Linux (and probably OS/X) one doesn't need a C++ program to figure out the right application, a shell script does the trick.<div class="bash"> <span class="co0">#!/bin/bash</span> 
+ <br> <span class="co0">#Launches a URL with the application it was made with rather than the browser</span> 
+ <br> <span class="co0">#Good for webDAV servers</span> 
+ <br> <span class="co0">#What do we support - adjust to your needs</span> 
+ <br> <span class="re2">supported_extensions</span>= <span class="st0">"odp odt ods xls doc ppt txt pdf"</span> 
  <br> 
- <span class="co0">#Launches a URL with the application it was made with rather than the browser</span> 
+ <br> <span class="co0">#Get the http(s) url from webdav(s)</span> 
+ <br> <span class="re2">FULLURL1</span>= <span class="co1">${1/webdav:/http:}</span> 
+ <br> <span class="re2">FULLURL</span>= <span class="co1">${FULLURL1/webdavs:/https:}</span> 
  <br> 
- <span class="co0">#Good for webDAV servers</span> 
+ <br> <span class="co0">#Get the extension</span> 
+ <br> <span class="re2">EXTENSION</span>= <span class="co1">${FULLURL/*./}</span> 
  <br> 
- <span class="co0">#What do we support - adjust to your needs</span> 
+ <br> <span class="co0">#check if the extension is a supported file type</span> 
+ <br> <span class="re2">SUPPORTED</span>=NO 
+ <br> <span class="kw1">for</span> check <span class="kw1">in</span> <span class="re1">$supported_extensions</span> 
+ <br> <span class="kw1">do</span> 
+ <br> &nbsp; &nbsp; <span class="br0">[</span> <span class="st0">"<span class="es2">$check</span>"</span> = <span class="st0">"<span class="es2">$EXTENSION</span>"</span> <span class="br0">]</span> <span class="sy0">&amp;&amp;</span> <span class="re2">SUPPORTED</span>=YES <span class="sy0">&amp;&amp;</span> <span class="kw3">break</span> 
+ <br> <span class="kw1">done</span> 
+ <br> <span class="kw1">if</span> <span class="br0">[</span> <span class="st0">"<span class="es2">$SUPPORTED</span>"</span> = <span class="st0">"NO"</span> <span class="br0">]</span>; <span class="kw1">then</span> 
+ <br> &nbsp; <span class="kw3">echo</span> <span class="st0">"Sorry, we don't allow <span class="es2">$EXTENSION</span> on webDAV urls"</span> 
+ <br> &nbsp; <span class="kw3">exit</span> <span class="nu0">1</span> 
+ <br> <span class="kw1">fi</span> 
  <br> 
- <span class="re2">supported_extensions</span>= 
- <span class="st0">"odp odt ods xls doc ppt txt pdf"</span> 
+ <br> <span class="co0"># Make a sample file (temp only)</span> 
+ <br> <span class="re2">SAMPLENAME</span>= <span class="re1">$HOME</span> <span class="sy0">/</span>~webdavhelpersample. <span class="re1">$EXTENSION</span> 
+ <br> <span class="kw2">touch</span> <span class="re1">$SAMPLENAME</span> 
  <br> 
+ <br> <span class="co0">#Get the mime type</span> 
+ <br> <span class="re2">CURMINE</span>=$ <span class="br0">(</span>xdg-mime query filetype <span class="re1">$SAMPLENAME</span> <span class="br0">)</span> 
  <br> 
- <span class="co0">#Get the http(s) url from webdav(s)</span> 
+ <br> <span class="co0">#Remove the temp file</span> 
+ <br> <span class="kw2">rm</span> <span class="re1">$SAMPLENAME</span> 
  <br> 
- <span class="re2">FULLURL1</span>= 
- <span class="co1">${1/webdav:/http:}</span> 
+ <br> <span class="co0"># Retrieve the desktop file from mime type</span> 
+ <br> <span class="re2">CURDSK</span>=$ <span class="br0">(</span>xdg-mime query default <span class="re1">$CURMINE</span> <span class="br0">)</span> 
  <br> 
- <span class="re2">FULLURL</span>= 
- <span class="co1">${FULLURL1/webdavs:/https:}</span> 
+ <br> <span class="co0">#Find the desktop file</span> 
+ <br> <span class="kw1">if</span> <span class="br0">[</span> <span class="re5">-f</span> <span class="sy0">/</span>.local <span class="sy0">/</span>share <span class="sy0">/</span>applications <span class="sy0">/</span> <span class="re1">$CURDSK</span> <span class="br0">]</span>; <span class="kw1">then</span> 
+ <br> &nbsp; &nbsp; &nbsp; <span class="re2">TRUEDSK</span>= <span class="sy0">/</span>.local <span class="sy0">/</span>share <span class="sy0">/</span>applications <span class="sy0">/</span> <span class="re1">$CURDSK</span> 
+ <br> <span class="kw1">elif</span> <span class="br0">[</span> <span class="re5">-f</span> <span class="sy0">/</span>usr <span class="sy0">/</span>local <span class="sy0">/</span>share <span class="sy0">/</span>applications <span class="sy0">/</span> <span class="re1">$CURDSK</span> <span class="br0">]</span>; <span class="kw1">then</span> 
+ <br> &nbsp; &nbsp; &nbsp; <span class="re2">TRUEDSK</span>= <span class="sy0">/</span>usr <span class="sy0">/</span>local <span class="sy0">/</span>share <span class="sy0">/</span>applications <span class="sy0">/</span> <span class="re1">$CURDSK</span> 
+ <br> <span class="kw1">elif</span> <span class="br0">[</span> <span class="re5">-f</span> &nbsp; <span class="sy0">/</span>usr <span class="sy0">/</span>share <span class="sy0">/</span>applications <span class="sy0">/</span> <span class="re1">$CURDSK</span> <span class="br0">]</span>; <span class="kw1">then</span> 
+ <br> &nbsp; &nbsp; &nbsp; <span class="re2">TRUEDSK</span>= <span class="sy0">/</span>usr <span class="sy0">/</span>share <span class="sy0">/</span>applications <span class="sy0">/</span> <span class="re1">$CURDSK</span> 
+ <br> <span class="kw1">else</span> 
+ <br> &nbsp; &nbsp; <span class="kw3">echo</span> <span class="st0">"Sorry no executable found for $1"</span> 
+ <br> &nbsp; &nbsp; <span class="kw3">exit</span> <span class="nu0">1</span> 
+ <br> <span class="kw1">fi</span> 
  <br> 
+ <br> <span class="co0">#Grab the executable and add the URL</span> 
+ <br> <span class="re2">WHATTODO</span>=$ <span class="br0">(</span> <span class="kw2">grep</span> <span class="st0">"^Exec"</span> <span class="re1">$TRUEDSK</span> <span class="sy0">|</span> <span class="kw2">head</span> <span class="re5">-1</span> <span class="sy0">|</span> <span class="kw2">sed</span> <span class="st0">"s/Exec=//; s^\%U^<span class="es2">$FULLURL</span>^;"</span> <span class="br0">)</span> 
  <br> 
- <span class="co0">#Get the extension</span> 
- <br> 
- <span class="re2">EXTENSION</span>= 
- <span class="co1">${FULLURL/*./}</span> 
- <br> 
- <br> 
- <span class="co0">#check if the extension is a supported file type</span> 
- <br> 
- <span class="re2">SUPPORTED</span>=NO 
- <br> 
- <span class="kw1">for</span> check 
- <span class="kw1">in</span> 
- <span class="re1">$supported_extensions</span> 
- <br> 
- <span class="kw1">do</span> 
- <br> &nbsp; &nbsp; 
- <span class="br0">[</span> 
- <span class="st0">"<span class="es2">$check</span>"</span> = 
- <span class="st0">"<span class="es2">$EXTENSION</span>"</span> 
- <span class="br0">]</span> 
- <span class="sy0">&amp;&amp;</span> 
- <span class="re2">SUPPORTED</span>=YES 
- <span class="sy0">&amp;&amp;</span> 
- <span class="kw3">break</span> 
- <br> 
- <span class="kw1">done</span> 
- <br> 
- <span class="kw1">if</span> 
- <span class="br0">[</span> 
- <span class="st0">"<span class="es2">$SUPPORTED</span>"</span> = 
- <span class="st0">"NO"</span> 
- <span class="br0">]</span>; 
- <span class="kw1">then</span> 
- <br> &nbsp; 
- <span class="kw3">echo</span> 
- <span class="st0">"Sorry, we don't allow <span class="es2">$EXTENSION</span> on webDAV urls"</span> 
- <br> &nbsp; 
- <span class="kw3">exit</span> 
- <span class="nu0">1</span> 
- <br> 
- <span class="kw1">fi</span> 
- <br> 
- <br> 
- <span class="co0"># Make a sample file (temp only)</span> 
- <br> 
- <span class="re2">SAMPLENAME</span>= 
- <span class="re1">$HOME</span> 
- <span class="sy0">/</span>~webdavhelpersample. 
- <span class="re1">$EXTENSION</span> 
- <br> 
- <span class="kw2">touch</span> 
- <span class="re1">$SAMPLENAME</span> 
- <br> 
- <br> 
- <span class="co0">#Get the mime type</span> 
- <br> 
- <span class="re2">CURMINE</span>=$ 
- <span class="br0">(</span>xdg-mime query filetype 
- <span class="re1">$SAMPLENAME</span> 
- <span class="br0">)</span> 
- <br> 
- <br> 
- <span class="co0">#Remove the temp file</span> 
- <br> 
- <span class="kw2">rm</span> 
- <span class="re1">$SAMPLENAME</span> 
- <br> 
- <br> 
- <span class="co0"># Retrieve the desktop file from mime type</span> 
- <br> 
- <span class="re2">CURDSK</span>=$ 
- <span class="br0">(</span>xdg-mime query default 
- <span class="re1">$CURMINE</span> 
- <span class="br0">)</span> 
- <br> 
- <br> 
- <span class="co0">#Find the desktop file</span> 
- <br> 
- <span class="kw1">if</span> 
- <span class="br0">[</span> 
- <span class="re5">-f</span> 
- <span class="sy0">/</span>.local 
- <span class="sy0">/</span>share 
- <span class="sy0">/</span>applications 
- <span class="sy0">/</span> 
- <span class="re1">$CURDSK</span> 
- <span class="br0">]</span>; 
- <span class="kw1">then</span> 
- <br> &nbsp; &nbsp; &nbsp; 
- <span class="re2">TRUEDSK</span>= 
- <span class="sy0">/</span>.local 
- <span class="sy0">/</span>share 
- <span class="sy0">/</span>applications 
- <span class="sy0">/</span> 
- <span class="re1">$CURDSK</span> 
- <br> 
- <span class="kw1">elif</span> 
- <span class="br0">[</span> 
- <span class="re5">-f</span> 
- <span class="sy0">/</span>usr 
- <span class="sy0">/</span>local 
- <span class="sy0">/</span>share 
- <span class="sy0">/</span>applications 
- <span class="sy0">/</span> 
- <span class="re1">$CURDSK</span> 
- <span class="br0">]</span>; 
- <span class="kw1">then</span> 
- <br> &nbsp; &nbsp; &nbsp; 
- <span class="re2">TRUEDSK</span>= 
- <span class="sy0">/</span>usr 
- <span class="sy0">/</span>local 
- <span class="sy0">/</span>share 
- <span class="sy0">/</span>applications 
- <span class="sy0">/</span> 
- <span class="re1">$CURDSK</span> 
- <br> 
- <span class="kw1">elif</span> 
- <span class="br0">[</span> 
- <span class="re5">-f</span> &nbsp; 
- <span class="sy0">/</span>usr 
- <span class="sy0">/</span>share 
- <span class="sy0">/</span>applications 
- <span class="sy0">/</span> 
- <span class="re1">$CURDSK</span> 
- <span class="br0">]</span>; 
- <span class="kw1">then</span> 
- <br> &nbsp; &nbsp; &nbsp; 
- <span class="re2">TRUEDSK</span>= 
- <span class="sy0">/</span>usr 
- <span class="sy0">/</span>share 
- <span class="sy0">/</span>applications 
- <span class="sy0">/</span> 
- <span class="re1">$CURDSK</span> 
- <br> 
- <span class="kw1">else</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw3">echo</span> 
- <span class="st0">"Sorry no executable found for $1"</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw3">exit</span> 
- <span class="nu0">1</span> 
- <br> 
- <span class="kw1">fi</span> 
- <br> 
- <br> 
- <span class="co0">#Grab the executable and add the URL</span> 
- <br> 
- <span class="re2">WHATTODO</span>=$ 
- <span class="br0">(</span> 
- <span class="kw2">grep</span> 
- <span class="st0">"^Exec"</span> 
- <span class="re1">$TRUEDSK</span> 
- <span class="sy0">|</span> 
- <span class="kw2">head</span> 
- <span class="re5">-1</span> 
- <span class="sy0">|</span> 
- <span class="kw2">sed</span> 
- <span class="st0">"s/Exec=//; s^\%U^<span class="es2">$FULLURL</span>^;"</span> 
- <span class="br0">)</span> 
- <br> 
- <br> 
- <span class="co0">#Run it</span> 
- <br> 
- <span class="re1">$WHATTODO</span> 
- <span class="sy0">&amp;</span> 
- <br> 
- <span class="kw3">exit</span> 
- <span class="nu0">0</span> 
+ <br> <span class="co0">#Run it</span> 
+ <br> <span class="re1">$WHATTODO</span> <span class="sy0">&amp;</span> 
+ <br> <span class="kw3">exit</span> <span class="nu0">0</span> 
 </div> As usual YMMV!</div>
 					<hr />
 					<p>
@@ -490,6 +331,7 @@ categories:  <a href="/blog/categories/linux.html">Linux</a>  <a href="/blog/cat
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

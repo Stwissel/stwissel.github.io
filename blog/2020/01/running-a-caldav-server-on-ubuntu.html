@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Running a CalDAV server on Ubuntu (2020 edition)" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2020,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -143,9 +144,9 @@ catch(e){window.attachEvent("onload", $buo_f)}
 					<hr />
 					<div><p>When playing with <a href="https://en.wikipedia.org/wiki/CalDAV">calDAV</a> it makes sense to have a reference implementation to refer to. The <em>GOLD</em> standard ist <a href="https://www.calendarserver.org/">Apple's CalendarServer</a> with its lovely <a href="https://github.com/apple/ccs-calendarserver">Open Source Repository</a>.</p> 
 <p>Getting it to work on Linux (Ubuntu in my case), isn't for the faint of heart. Here is what you need to do.</p> 
-<h2><a href="#file-system-preparation" id="file-system-preparation">File system preparation</a></h2> 
+<h2>File system preparation</h2> 
 <p>Calendar server needs extended attributes. The default <a href="https://en.wikipedia.org/wiki/Ext4">Ext4</a> file system does support them out of the box, but you want to check first (you might have a different file system after all):</p> 
-<h3><a href="#check-if-file-system-supports-extended-attributes" id="check-if-file-system-supports-extended-attributes">Check if file system supports extended attributes</a></h3> 
+<h3>Check if file system supports extended attributes</h3> 
 <p>Check using this command:</p> 
 <pre class="brush: bash">touch test.txt
 setfattr -n user.test -v "hello" test.txt
@@ -153,26 +154,26 @@ getfattr test.txt
 </pre> 
 <p>Expected output: <strong>user.test</strong></p> 
 <p>If the command <code>setfattr</code> is not available, install with <code>sudo install attr</code></p> 
-<h3><a href="#enable-extended-atttributes-if-required" id="enable-extended-atttributes-if-required">Enable extended atttributes if required</a></h3> 
+<h3>Enable extended atttributes if required</h3> 
 <p><strong>Important</strong> if the previous command worked, skip this step. Don't mess with fstab! Make a backup copy if required and have your emergency boot stick ready. A messed up <strong>fstab</strong> will prevent your machine from booting!</p> 
 <p>Edit <code>/etc/fstab</code>. In the 4th colum of the file system add <code>user_xattr</code>. There might be values like <code>noatime</code> or <code>defaults</code>. Add <code>user_xattr</code> separated by a comma. <strong>Reboot</strong>.</p> 
-<h2><a href="#install-calendar-server" id="install-calendar-server">Install calendar server</a></h2> 
+<h2>Install calendar server</h2> 
 <p>Execute <code>sudo apt install calendarserver postgresql</code>.</p> 
-<p>The server wants a <strong>postgresql</strong> database, so you need to be sure to have that installed too. Apple loves Python, so there ill be quite some phython packages installed, as well as a new user <strong>caldavd</strong> Since this is a system user, its home directory is <code>/var/spool/caldav</code></p><h3><a href="#configure-the-calendar-server" id="configure-the-calendar-server">Configure the calendar server</a></h3> 
+<p>The server wants a <strong>postgresql</strong> database, so you need to be sure to have that installed too. Apple loves Python, so there ill be quite some phython packages installed, as well as a new user <strong>caldavd</strong> Since this is a system user, its home directory is <code>/var/spool/caldav</code></p><h3>Configure the calendar server</h3> 
 <p>Execute <code>sudo nano /etc/caldavd/caldavd.plist</code> (if you don't have <code>nano</code> install it or use vi)</p> 
 <ul> 
  <li>Set the server host name</li> 
  <li>Optional: Switch on SSL and look for the SSL / TLS section for keys</li> 
 </ul> 
 <p>Edit <code>/etc/default/calendarserver</code> uncomment <code>start_calendar_server=yes</code></p> 
-<h3><a href="#configure-the-database" id="configure-the-database">Configure the database</a></h3> 
+<h3>Configure the database</h3> 
 <p>There <a href="https://help.apple.com/advancedserveradmin/mac/10.7/#apd708AF27C-256D-4F8C-AA1F-2C854F5FA348">used to be</a> a script <code>calendarserver_bootstrap_database</code> which is missing from the current installation, so we do it the hard way:</p> 
 <pre class="brush: bash">sudo -u postgres createuser caldavd --no-createdb --no-createrole --no-superuser
 sudo -u postgres createdb --owner=caldavd caldav
 sudo -u caldavd psql -f /usr/lib/python2.7/dist-packages/txdav/common/datastore/sql_schema/current.sql caldav
 </pre> 
 <p>Check with <code>sudo service calendarserver status</code> and then start with <code>sudo service calendarserver start</code> - it also will restart on reboot</p> 
-<h3><a href="#obsolete-information-found-in-other-instructions" id="obsolete-information-found-in-other-instructions">Obsolete information (found in other instructions)</a></h3> 
+<h3>Obsolete information (found in other instructions)</h3> 
 <p>When <a href="https://www.lmgtfy.com/">poking around</a> (see also the links below), one comes across a <a href="https://askubuntu.com/questions/879513/how-do-i-use-calendarserver">lot of frustration</a>, fine <a href="https://groups.google.com/forum/#!topic/linux.debian.bugs.dist/arh1b3aA7sc">geeki-speak</a> and quite some <a href="https://www.mail-archive.com/calendarserver-dev@lists.macosforge.org/msg01451.html">outdated information</a>.</p> 
 <p>Some of the things you <strong>don't need to try</strong> (or do for that matter):</p> 
 <ul> 
@@ -185,14 +186,14 @@ sudo -u caldavd psql -f /usr/lib/python2.7/dist-packages/txdav/common/datastore/
  <li>mess with permissions</li> 
  <li>install <a href="https://wiki.ubuntu.com/CalendarServer/GutsyRecipe">extra packages</a> (YMMV here!)</li> 
 </ul> 
-<h2><a href="#the-result" id="the-result">The result</a></h2> 
+<h2>The result</h2> 
 <p>You will have a calendar server listening on <a href="http://localhost:8008">localhost:8008</a> with 2 users:</p> 
 <ul> 
  <li>admin / admin</li> 
  <li>test / test</li> 
 </ul> 
-<h2><a href="#do-not-use-such-a-system-in-production" id="do-not-use-such-a-system-in-production">DO NOT USE SUCH A SYSTEM IN PRODUCTION</a></h2> 
-<h3><a href="#next-steps" id="next-steps">Next steps</a></h3> 
+<h2>DO NOT USE SUCH A SYSTEM IN PRODUCTION</h2> 
+<h3>Next steps</h3> 
 <ul> 
  <li>Configure HTTPS</li> 
  <li>Use a different user directory</li> 
@@ -200,7 +201,7 @@ sudo -u caldavd psql -f /usr/lib/python2.7/dist-packages/txdav/common/datastore/
  <li>Install the <a href="https://www.calendarserver.org/CalDAVTester.html">Test suite</a> and run it</li> 
 </ul> 
 <p>Check <a href="https://www.calendarserver.org/Documentation.html">the documentation</a> for details!</p> 
-<h3><a href="#sources" id="sources">Sources:</a></h3> 
+<h3>Sources:</h3> 
 <ul> 
  <li>The <a href="http://metadata.ftp-master.debian.org/changelogs/main/c/calendarserver/testing_calendarserver.README.Debian">best hints to get it to work</a></li> 
  <li><a href="https://www.deanspot.org/alex/2009/03/23/installing-apples-calendarserver-ubuntu.html">Dean's blog for starters</a></li> 
@@ -339,6 +340,7 @@ categories:  <a href="/blog/categories/caldav.html">calDAV</a>  <a href="/blog/c
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

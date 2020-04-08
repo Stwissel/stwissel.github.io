@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Poking around the iNotes HTTP API (Part 1)" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2014,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -146,27 +147,11 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Poking around the iNotes HTTP API (Part 1)</small></h1>
 					<hr />
-					<div>With the rise of web applications, something interesting happened: applications gained an 
-<i>observable API</i>. Delivered over HTTP(s) with a few commands (GET, POST etc.) it became easier to find out " 
-<i>what is going on</i>". Tools like 
-<a href="https://www.wireshark.org/">Wireshark</a>, 
-<a href="http://www.telerik.com/fiddler">Fiddler</a>, 
-<a href="http://www.charlesproxy.com/">Charlesproxy</a> or 
-<a href="https://code.google.com/p/tcpmon/">TCPMon</a> sit between your HTTP consuming client and the HTTP generating server. In browser applications the build in 
-<a href="https://developer.mozilla.org/en-US/docs/Tools">developer tools</a> (Ctrl-Shift-I) provide the same level of access. 
-<br> So anything flowing over HTTP is 
-<a href="https://twitter.com/notessensei/status/535980806108233728">effectively an API</a>. This led to the idea of the 
-<a href="http://www.forbes.com/sites/ciocentral/2012/08/29/welcome-to-the-api-economy/">API economy</a> (but that's a story for another time). Intercepting 
-<a href="/blog/2014/11/custom-experience-for-ibm-connections-cloud-project-muse.html">HTTP(s) traffic</a> can be easier and more fun, than trying to customise 
-<a href="http://www-10.lotus.com/ldd/dominowiki.nsf/xpViewCategories.xsp?lookupName=Lotus%20iNotes%20customization">customise</a> a backend you might not have access to. (Of course there is 
-<a href="http://www.dslreports.com/shownews/Concern-Arises-Over-Verizons-New-Sneaky-Stealth-Cookie-131034">evil interception</a> too). Point is case, iNotes is quite a stack: 
+					<div>With the rise of web applications, something interesting happened: applications gained an <i>observable API</i>. Delivered over HTTP(s) with a few commands (GET, POST etc.) it became easier to find out " <i>what is going on</i>". Tools like <a href="https://www.wireshark.org/">Wireshark</a>, <a href="http://www.telerik.com/fiddler">Fiddler</a>, <a href="http://www.charlesproxy.com/">Charlesproxy</a> or <a href="https://code.google.com/p/tcpmon/">TCPMon</a> sit between your HTTP consuming client and the HTTP generating server. In browser applications the build in <a href="https://developer.mozilla.org/en-US/docs/Tools">developer tools</a> (Ctrl-Shift-I) provide the same level of access. 
+<br> So anything flowing over HTTP is <a href="https://twitter.com/notessensei/status/535980806108233728">effectively an API</a>. This led to the idea of the <a href="http://www.forbes.com/sites/ciocentral/2012/08/29/welcome-to-the-api-economy/">API economy</a> (but that's a story for another time). Intercepting <a href="/blog/2014/11/custom-experience-for-ibm-connections-cloud-project-muse.html">HTTP(s) traffic</a> can be easier and more fun, than trying to customise <a href="http://www-10.lotus.com/ldd/dominowiki.nsf/xpViewCategories.xsp?lookupName=Lotus%20iNotes%20customization">customise</a> a backend you might not have access to. (Of course there is <a href="http://www.dslreports.com/shownews/Concern-Arises-Over-Verizons-New-Sneaky-Stealth-Cookie-131034">evil interception</a> too). Point is case, iNotes is quite a stack: 
+<br> <a href="/blog/images/2014/iNotesIn3d.png"> <img src="/blog/images/2014/iNotesIn3d2.png" border="0" alt="3d view of the iNotes client"></a> 
 <br> 
-<a href="/blog/images/2014/iNotesIn3d.png"> <img src="/blog/images/2014/iNotesIn3d2.png" border="0" alt="3d view of the iNotes client"></a> 
-<br> 
-<br>So I poked around the iNotes API, this is what I found:All URLs mentioned need to be prefixed with 
-<code>https://yourserver/path-to-your-mail.nsf</code>. There are 
-<code>GET</code> and 
-<code>POST</code> methods used. I haven't seen any OPTIONS, PUT or DELETE operations. 
+<br>So I poked around the iNotes API, this is what I found:All URLs mentioned need to be prefixed with <code>https://yourserver/path-to-your-mail.nsf</code>. There are <code>GET</code> and <code>POST</code> methods used. I haven't seen any OPTIONS, PUT or DELETE operations. 
 <ul> 
  <li>All interactions need to provide the cookies, so your <code><a href="https://docs.oracle.com/javase/7/docs/api/java/net/HttpURLConnection.html">HTTPUrlConnection</a></code> won't cut it. You want use use at least the <a href="http://hc.apache.org/">Apache HTTP client</a>. When SAML is your access authorization of choice, you want to check the insights on <a href="http://cxf.apache.org/docs/jax-rs-saml.html">Apache CXF</a> and SAML, as well as make yourself familiar with <a href="http://shiro.apache.org/">Apache Shiro</a> and <a href="https://github.com/bujiio/buji-pac4j">pac4j</a></li> 
  <li>The general syntax for reading document related information is <code>viewname/unid?OpenDocument</code>. The interesting part is the <code>&amp;Form=</code> parameter. This is what I found so far: 
@@ -396,6 +381,7 @@ Ich habe eine Mail aus Bulgarien, mit teilw. kyrillischen Zeichen. ??ffne ich di
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

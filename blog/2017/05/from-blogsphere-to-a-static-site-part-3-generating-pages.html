@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - From Blogsphere to a Static Site (Part 3) - Generating pages" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2017,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -141,10 +142,9 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>From Blogsphere to a Static Site (Part 3) - Generating pages</small></h1>
 					<hr />
-					<div><p>The rendering engine I choose is <a href="mustache.github.com/mustache.5.html">mustache</a> which describes itself as "<i>logic-less templating engine</i>". My main criteria was the availability on multiple platforms including <a href="https://github.com/spullara/mustache.java">Java</a> and <a href="https://github.com/janl/mustache.js">JavaScript</a> (I might port the rendering part to NodeJS at some time in the future).<br> The only logic mustache supports is conditional rendering based on the presence or absence of an element. When an element is present and is an array (or a collection in Java) the body of the template gets repeated for each element in the array. A scalar value hence is treated as an array with one value only.</p> 
+					<div><p>The rendering engine I choose is <a href="https://mustache.github.com/mustache.5.html">mustache</a> which describes itself as "<i>logic-less templating engine</i>". My main criteria was the availability on multiple platforms including <a href="https://github.com/spullara/mustache.java">Java</a> and <a href="https://github.com/janl/mustache.js">JavaScript</a> (I might port the rendering part to NodeJS at some time in the future).<br> The only logic mustache supports is conditional rendering based on the presence or absence of an element. When an element is present and is an array (or a collection in Java) the body of the template gets repeated for each element in the array. A scalar value hence is treated as an array with one value only.</p> 
 <p>Mustache is simple to use. All you need is a data bean (in Java, a JSON structure for JavaScript) and a text file containing placeholders with the property names. E.g. <code>&lt;h1&gt;{{title}}&lt;/h1&gt;</code> will render a headline with the title property of you data object. In Java that would be either a public variable or a call to <code>getTitle</code> according to the bean specification. The blog rendering code therefore is quite simple:</p> 
-<pre class="brush: java">
-private void renderOneEntry(BlogEntry be, Mustache mustache) throws IOException {
+<pre class="brush: java">private void renderOneEntry(BlogEntry be, Mustache mustache) throws IOException {
 
         String location = this.config.destinationDirectory + be.getNewURL();
         String outDirs = location.substring(0, location.lastIndexOf("/"));
@@ -191,8 +191,7 @@ private void renderOneEntry(BlogEntry be, Mustache mustache) throws IOException 
         }
     }
 </pre> 
-<p>The actual rendering is just the line <code>mustache.execute(pw, be);</code> The code around it prepares and resets the collections that might render on a page like categories, series or month and year. Also of interest is <code>this.saveIfChanged(out.toByteArray(), location);</code> which only saves results back to disk if it actually has changed. Don't be mistaken: any change in layout will lead to a newly rendered page, so this is quite important to save as needed and not more (you don't want to have tons of identical files that only differ in their time stamp)</p><pre class="brush: java">
-    private void saveIfChanged(byte[] newData, String targetName) {
+<p>The actual rendering is just the line <code>mustache.execute(pw, be);</code> The code around it prepares and resets the collections that might render on a page like categories, series or month and year. Also of interest is <code>this.saveIfChanged(out.toByteArray(), location);</code> which only saves results back to disk if it actually has changed. Don't be mistaken: any change in layout will lead to a newly rendered page, so this is quite important to save as needed and not more (you don't want to have tons of identical files that only differ in their time stamp)</p><pre class="brush: java">    private void saveIfChanged(byte[] newData, String targetName) {
 
         boolean saveThis = false;
 
@@ -254,8 +253,7 @@ private void renderOneEntry(BlogEntry be, Mustache mustache) throws IOException 
 </ul> 
 <p>With these the actual template becomes rather short and quite maintainable. Adding or removing a side block is just adding or removing a single statement in the main mustache file. As a result the mustache template for a blog entry is less than 70 lines, the home page less than 50</p> 
 <h3>index.mustache</h3> 
-<pre class="brush: html">
-&lt;!DOCTYPE html&gt;
+<pre class="brush: html">&lt;!DOCTYPE html&gt;
 &lt;html lang="en"&gt;
 &lt;head&gt;
 &lt;title&gt;NotesSensei's Blog&lt;/title&gt;
@@ -305,8 +303,7 @@ private void renderOneEntry(BlogEntry be, Mustache mustache) throws IOException 
 &lt;/html&gt;
 </pre> 
 <h3>blogentry.mustache</h3> 
-<pre class="brush: html">
-&lt;!DOCTYPE html&gt;
+<pre class="brush: html">&lt;!DOCTYPE html&gt;
 &lt;html lang="en"&gt;
 &lt;head&gt;
 &lt;title&gt;NotesSensei's Blog - {{title}}&lt;/title&gt;
@@ -499,6 +496,7 @@ categories:  <a href="/blog/categories/blog.html">Blog</a>
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

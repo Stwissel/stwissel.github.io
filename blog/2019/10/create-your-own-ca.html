@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Create your own Certificate Authority (CA)" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2019,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -138,7 +139,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 					<div><p><strong>Warning</strong> Do NOT, never, ever do that to a production system!</p> 
 <p>Promised? OK! Here's the use case: you want to test your systems that have made up addresses like <code>awesomeserver.local</code> and don't want to deal with certificate warnings or fancy errors that arise when you just use a self signed cert. This post is a self-reference for my convenience. There are <a href="https://www.google.com/search?q=crrate+your+own+CA">ample other instructions</a> out there.</p> 
 <p><strong>Disclaimer</strong>: I mostly followed <a href="https://jamielinux.com/docs/openssl-certificate-authority/introduction.html">this instructions</a> short of updating some of the commands to use <a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography">elliptic-curve</a> cyphers.</p> 
-<h3><a href="#useful-with-a-side-of-work" id="useful-with-a-side-of-work">Useful with a side of work</a></h3> 
+<h3>Useful with a side of work</h3> 
 <p>The process requires a series of steps:</p> 
 <ul> 
  <li>Create the private key and root certificate</li> 
@@ -149,7 +150,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Import these certs in all browsers and runtimes that you will use for testing</li> 
 </ul> 
 <p>Normal mortal users, without these imports will get scary error messages. While this doesn't deter the determined, it's good for a laugh.<br> We don't want old school certs, so we aim at a modern <a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography">Elliptic-curve</a> cert (<a href="https://www.erianna.com/ecdsa-certificate-authorities-and-certificates-with-openssl/">Details here</a>). Here we go:</p> 
-<h4><a href="#setting-up-the-directory-structure" id="setting-up-the-directory-structure">Setting up the directory structure</a></h4> 
+<h4>Setting up the directory structure</h4> 
 <pre class="brush: bash">mkdir -pv -m 600 /root/ca/intermediate
 cd /root/ca
 curl https://jamielinux.com/docs/openssl-certificate-authority/_downloads/root-config.txt -o openssl.cnf
@@ -167,13 +168,13 @@ echo 1000 &gt; crlnumber
 cd ..
 </pre> 
 <p>You want to check the downloaded files and eventually change the path in case you have chosen to us a different one.</p> 
-<h4><a href="#the-root-ca" id="the-root-ca">The Root CA</a></h4> 
+<h4>The Root CA</h4> 
 <pre class="brush: bash">export OPENSSL_CONF=./openssl.cnf
 openssl ecparam -genkey -name prime256v1 -outform PEM | openssl ec -aes256 -out private/ca.key.pem
 chmod 400 private/ca.key.pem
 openssl req -config openssl.cnf -key private/ca.key.pem -new -x509 -days 7300 -SHA384 -extensions v3_ca -out certs/ca.cert.pem
 </pre> 
-<p>Keep them save - remember: its on my harddrive only isn't save!!!<br> You want to check the file using <code>openssl x509 -noout -text -in certs/ca.cert.pem</code> or on macOS just hit the space key in finder.</p><h4><a href="#the-intermediate-ca-one-or-more" id="the-intermediate-ca-one-or-more">The intermediate CA (one or more)</a></h4> 
+<p>Keep them save - remember: its on my harddrive only isn't save!!!<br> You want to check the file using <code>openssl x509 -noout -text -in certs/ca.cert.pem</code> or on macOS just hit the space key in finder.</p><h4>The intermediate CA (one or more)</h4> 
 <p>Good practise is to keep the root keys save and only use them for one or more intermediate certificate(s).<br> This allows to delegate cert creation to multiple players and also allows to invalidate an intermediate cert if needed.</p> 
 <pre class="brush: bash">openssl ecparam -genkey -name prime256v1 -outform PEM | openssl ec -aes256 -out intermediate/private/intermediate.key.pem
 chmod 400 intermediate/private/intermediate.key.pem
@@ -187,7 +188,7 @@ openssl verify -CAfile certs/ca.cert.pem intermediate/certs/intermediate.cert.pe
 chmod 444 intermediate/certs/ca-chain.cert.pem
 </pre> 
 <p>That was a lot of command line. For a production system, save yourself the headache and use <a href="https://letsencrypt.org/">LetsEncrypt</a> with <a href="https://www.midpoints.de/de-solutions-LE4D">LE4D</a> for Domino</p> 
-<h4><a href="#actual-server-certificates" id="actual-server-certificates">Actual server certificates</a></h4> 
+<h4>Actual server certificates</h4> 
 <p>With all the prerequisites in place we now can create server certificates. You could, to save time, create a wildcard certificate (like <code>*.theprojectthatshallnotbenamed.com</code>), but that might bite you once you want to enable mutual TLS authentication. So stick to individual certs.</p> 
 <pre class="brush: bash">export SSL_DOMAIN_NAME=www.example.com
 openssl ecparam -genkey -name prime256v1 -outform PEM -out intermediate/private/$SSL_DOMAIN_NAME.key.pem
@@ -199,8 +200,8 @@ chmod 444 intermediate/certs/$SSL_DOMAIN_NAME.cert.pem
 <p>You need 3 files on your server system:</p> 
 <ul> 
  <li>ca-chain.cert.pem</li> 
- <li><a href="http://www.example.com.key.pem">www.example.com.key.pem</a></li> 
- <li><a href="http://www.example.com.cert.pem">www.example.com.cert.pem</a></li> 
+ <li>www.example.com.key.pem</li> 
+ <li>www.example.com.cert.pem</li> 
 </ul> 
 <p>As usual: YMMV - make sure you read the <a href="https://jamielinux.com/docs/openssl-certificate-authority/index-full.html">detailed instructions</a></p></div>
 					<hr />
@@ -334,6 +335,7 @@ categories:  <a href="/blog/categories/https.html">HTTP(S)</a>  <a href="/blog/c
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

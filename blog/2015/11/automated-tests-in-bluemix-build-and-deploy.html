@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Automated Tests in Bluemix Build and Deploy" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2015,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -129,35 +130,22 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Automated Tests in Bluemix Build and Deploy</small></h1>
 					<hr />
-					<div>Bluemix is a beautiful environment for 
-<a href="http://www.agilemanifesto.org/">agile software development</a>. Its 
-<a href="https://hub.jazz.net/docs/deploy/">build and deploy</a> capability ensure continious delivery, so you can focus on code. A well run project requires automatic 
-<a href="https://en.wikipedia.org/wiki/Software_testing">testing</a> (starting with 
-<a href="https://en.wikipedia.org/wiki/Unit_testing">unit tests</a> up to 
-<a href="https://en.wikipedia.org/wiki/Integration_testing">integration testing</a>). 
-<br> You can configure this in the 
-<i>Build and Deploy</i> pipeline, so your project looks like this: 
+					<div>Bluemix is a beautiful environment for <a href="http://www.agilemanifesto.org/">agile software development</a>. Its <a href="https://hub.jazz.net/docs/deploy/">build and deploy</a> capability ensure continious delivery, so you can focus on code. A well run project requires automatic <a href="https://en.wikipedia.org/wiki/Software_testing">testing</a> (starting with <a href="https://en.wikipedia.org/wiki/Unit_testing">unit tests</a> up to <a href="https://en.wikipedia.org/wiki/Integration_testing">integration testing</a>). 
+<br> You can configure this in the <i>Build and Deploy</i> pipeline, so your project looks like this: 
 <br> 
 <img src="/blog/images/2015/FullSuccessFullPipe.png" border="0" alt="A fully working pipeline"> 
-<br> While you could argue: " 
-<i>I run my tests local</i>", you might encounter the situation where you use the online editor and you then depend on the tests running in Bluemix. Setting up build and deploy is 
-<a href="https://hub.jazz.net/docs/deploy/">well documented</a> and straight forward. 
-<p style="margin : 5px; padding : 5px; border : 1px solid red"><b>Tip</b>: For Java projects you should use Maven or Gradle build, so your library dependencies are properly resolved. For Node.js projects a "simple" build would suffice, however using <code>npm install</code> would make the stage fail if your <code>package.json</code> has an issue, so you don't run later stages and fail there</p> However the documentation for the test stage simply states: " 
-<i>If you want to require that certain conditions are met, include test jobs before or after your build and deploy jobs. Test jobs are highly customizable. For example, you might run tests on your project code and a deployed instance of your app. </i>". That's a little " 
-<i>thin</i>". 
+<br> While you could argue: " <i>I run my tests local</i>", you might encounter the situation where you use the online editor and you then depend on the tests running in Bluemix. Setting up build and deploy is <a href="https://hub.jazz.net/docs/deploy/">well documented</a> and straight forward. 
+<p style="margin : 5px; padding : 5px; border : 1px solid red"><b>Tip</b>: For Java projects you should use Maven or Gradle build, so your library dependencies are properly resolved. For Node.js projects a "simple" build would suffice, however using <code>npm install</code> would make the stage fail if your <code>package.json</code> has an issue, so you don't run later stages and fail there</p> However the documentation for the test stage simply states: " <i>If you want to require that certain conditions are met, include test jobs before or after your build and deploy jobs. Test jobs are highly customizable. For example, you might run tests on your project code and a deployed instance of your app. </i>". That's a little " <i>thin</i>". 
 <br> Inspecting the test job screen itself, we can learn that we have different testing options 
 <br> 
 <img src="/blog/images/2015/TestOptions.png" border="0" alt="Choices for testing"> 
-<br> I specifically like the 
-<a href="https://saucelabs.com/">Sauce labs</a> integration and the ability to run a code, security and vulnerability scan (So a real pipeline might have up to 4 distinct test stages). However the screen for "simple" tests, where unit tests go, isn't particularily helpful: 
+<br> I specifically like the <a href="https://saucelabs.com/">Sauce labs</a> integration and the ability to run a code, security and vulnerability scan (So a real pipeline might have up to 4 distinct test stages). However the screen for "simple" tests, where unit tests go, isn't particularily helpful: 
 <br> 
 <img src="/blog/images/2015/EmptyTestOptions.png" border="0" alt="The helpful test screen"> 
-<br> So lets shed some light on the inner workings.A test job can include a test report (including notifying SLACK, but that's a story for another time). This report needs to be in XML format, indicated in the default test results pattern. Old dogs will smell rat and conclude: ahhhh 
-<a href="http://junit.org/">JUnit</a>. And as a fact of the matter, JUnit report format is what Build &amp; Deploy will process into a nice test result: 
+<br> So lets shed some light on the inner workings.A test job can include a test report (including notifying SLACK, but that's a story for another time). This report needs to be in XML format, indicated in the default test results pattern. Old dogs will smell rat and conclude: ahhhh <a href="http://junit.org/">JUnit</a>. And as a fact of the matter, JUnit report format is what Build &amp; Deploy will process into a nice test result: 
 <br> 
 <img src="/blog/images/2015/TestReports.png" border="0" alt="Test Reports"> 
-<br> Running a JUnit test when you have a Java application is therefore quite simple. For front-end or Node.js applications its a little trickier, since you have 
-<a href="http://unitjs.com/">plenty of choices</a>. 
+<br> Running a JUnit test when you have a Java application is therefore quite simple. For front-end or Node.js applications its a little trickier, since you have <a href="http://unitjs.com/">plenty of choices</a>. 
 <br> Here is what I found when creating a test for an Ionic/Angular based front-end with an Node.js based backend: 
 <ul> 
  <li>The test stage uses the artifacts from build (or the version control). So anything in <code>node_modules</code> or <code>bower_components</code> won't be available yet. Hence you need to run <code>npm install</code> and if you used <a href="http://bower.io/">bower</a>, <code>bower install</code> (for full syntax see below). Bower would need to be listed as dev-dependency in the package.json file. Only with those steps you will be able to run any tests</li> 
@@ -171,8 +159,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Testing a front-end application requires a browser. On a desktop machine or in <a href="https://saucelabs.com/">Sauce labs</a>, the tool of choice is <a href="http://www.seleniumhq.org/">Selenium</a>, which launches clean instances of Chrome, IE or Safari (even <a href="https://msdn.microsoft.com/en-us/library/mt188085%28v=vs.85%29.aspx">MS Edge</a>). Your build server has none of them installed (or even a gui shell where they would run), so you need to specify <a href="http://phantomjs.org/">phantom.js</a> as your browser. Test results hence might vary</li> 
 </ul> A sample test script as entered into the test job: 
 <br> 
-<pre class="brush: bash">
-#!/bin/bash
+<pre class="brush: bash">#!/bin/bash
 npm install
 ./node_modules/.bin/bower install
 mkdir tests
@@ -305,6 +292,7 @@ categories:  <a href="/blog/categories/bluemix.html">Bluemix</a>
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

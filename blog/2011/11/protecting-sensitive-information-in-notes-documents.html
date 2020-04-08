@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Protecting sensitive information in Notes documents" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2011,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -136,352 +137,96 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Store the sensitive data in a second document that is protected by reader names that are different (more restrictive) than the main document. This approach also keeps (given you have security set) curious admins out, a capability RDBMS is lacking</li> 
  <li>Change the process and remove the need for the fine grained access control</li> 
 </ol> Let's have a closer look at option 3. Notes allows to pull in values from a different document using @GetDocField. So once we have the secret document, we can pull in these values. If a user can't see that document no value is retrieved. The formula for such a computed for display field would look like this: 
-<div class="lotusformulas"> 
- <span class="kw2">@If</span> 
- <span class="br0">(</span>RiskAssessmentID= 
- <span class="st0">""</span>;@Return 
- <span class="br0">(</span> 
- <span class="st0">"n/a"</span> 
- <span class="br0">)</span>; 
- <span class="st0">""</span> 
- <span class="br0">)</span>; 
- <br> tmp := 
- <span class="kw2">@GetDocField</span> 
- <span class="br0">(</span>RiskAssessmentID; 
- <span class="st0">"RiskAssessment"</span> 
- <span class="br0">)</span>; 
- <br> 
- <span class="kw2">@If</span> 
- <span class="br0">(</span> 
- <span class="kw2">@IsError</span> 
- <span class="br0">(</span>tmp 
- <span class="br0">)</span>; 
- <span class="st0">"nothing to retrieve"</span>;tmp 
- <span class="br0">)</span> 
+<div class="lotusformulas"> <span class="kw2">@If</span> <span class="br0">(</span>RiskAssessmentID= <span class="st0">""</span>;@Return <span class="br0">(</span> <span class="st0">"n/a"</span> <span class="br0">)</span>; <span class="st0">""</span> <span class="br0">)</span>; 
+ <br> tmp := <span class="kw2">@GetDocField</span> <span class="br0">(</span>RiskAssessmentID; <span class="st0">"RiskAssessment"</span> <span class="br0">)</span>; 
+ <br> <span class="kw2">@If</span> <span class="br0">(</span> <span class="kw2">@IsError</span> <span class="br0">(</span>tmp <span class="br0">)</span>; <span class="st0">"nothing to retrieve"</span>;tmp <span class="br0">)</span> 
 </div> To create such a "secondary document" a few lines of LotusScript in a button make it a seamless experience: 
-<div class="lotusscript"> 
- <span class="kw1">Sub</span> Click 
- <span class="br0">(</span>Source 
- <span class="kw1">As</span> 
- <span class="kw2">Button</span> 
- <span class="br0">)</span> 
+<div class="lotusscript"> <span class="kw1">Sub</span> Click <span class="br0">(</span>Source <span class="kw1">As</span> <span class="kw2">Button</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> doc <span class="kw1">As</span> <span class="kw2">NotesDocument</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> riskDoc <span class="kw1">As</span> <span class="kw2">NotesDocument</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> uiDoc <span class="kw1">As</span> <span class="kw2">NotesUIDocument</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> db <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> doc 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDocument</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> w <span class="kw1">As</span> <span class="kw1">New</span> <span class="kw2">NotesUIWorkspace</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> uidoc = w. <span class="me1">CurrentDocument</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> doc = uidoc. <span class="me1">Document</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">If</span> doc. <span class="me1">IsNewNote</span> <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> doc. <span class="me1">Save</span> <span class="br0">(</span> <span class="kw1">True</span>, <span class="kw1">True</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> db = doc. <span class="me1">ParentDatabase</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">If</span> doc. <span class="me1">RiskAssessmentID</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> = <span class="st0">""</span> <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> riskDoc = db. <span class="me1">CreateDocument</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> riskDoc. <span class="me1">ReplaceItemValue</span> <span class="br0">(</span> <span class="st0">"Form"</span>, <span class="st0">"RAF"</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Else</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> riskDoc = db. <span class="me1">GetDocumentByUNID</span> <span class="br0">(</span>doc. <span class="me1">RiskAssessmentID</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> riskDoc <span class="kw1">Is</span> <span class="kw1">Nothing</span> <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> riskDoc = db. <span class="me1">CreateDocument</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> riskDoc. <span class="me1">ReplaceItemValue</span> <span class="br0">(</span> <span class="st0">"Form"</span>, <span class="st0">"RAF"</span> <span class="br0">)</span> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> riskDoc 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDocument</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Call</span> riskDoc. <span class="me1">MakeResponse</span> <span class="br0">(</span>doc <span class="br0">)</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> uiDoc 
- <span class="kw1">As</span> 
- <span class="kw2">NotesUIDocument</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">If</span> &nbsp;w. <span class="me1">DialogBox</span> <span class="br0">(</span> <span class="st0">"RAF"</span>, <span class="kw1">True</span>, <span class="kw1">True</span>, <span class="kw1">False</span>, <span class="kw1">False</span>, <span class="kw1">False</span>, <span class="kw1">False</span>, <span class="st0">"Please provide your Risk Assessment"</span>,riskDoc, <span class="kw1">True</span> <span class="br0">)</span> <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> riskDoc. <span class="me1">Save</span> <span class="br0">(</span> <span class="kw1">True</span>, <span class="kw1">True</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> doc. <span class="me1">ReplaceItemValue</span> <span class="br0">(</span> <span class="st0">"RiskAssessmentID"</span>,riskDoc. <span class="me1">UniversalID</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> doc. <span class="me1">Save</span> <span class="br0">(</span> <span class="kw1">True</span>, <span class="kw1">True</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> db 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Call</span> uidoc. <span class="me1">Refresh</span> 
  <br> &nbsp; &nbsp; 
+ <br> <span class="kw1">End</span> <span class="kw1">Sub</span> 
+</div> To keep the 2 documents in sync we add some code into the <b>PostSave</b> event of the main form: 
+<div class="lotusscript"> <span class="kw1">Sub</span> Postsave <span class="br0">(</span>Source <span class="kw1">As</span> <span class="kw2">Notesuidocument</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> doc <span class="kw1">As</span> <span class="kw2">NotesDocument</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> riskDoc <span class="kw1">As</span> <span class="kw2">NotesDocument</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> db <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> w 
- <span class="kw1">As</span> 
- <span class="kw1">New</span> 
- <span class="kw2">NotesUIWorkspace</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> doc = source. <span class="me1">Document</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> uidoc = w. 
- <span class="me1">CurrentDocument</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">If</span> doc. <span class="me1">RiskAssessmentID</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> = <span class="st0">""</span> <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Return</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> doc = uidoc. 
- <span class="me1">Document</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> db = doc. <span class="me1">ParentDatabase</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> riskDoc = db. <span class="me1">GetDocumentByUNID</span> <span class="br0">(</span>doc. <span class="me1">RiskAssessmentID</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> <span class="br0">)</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">If</span> doc. 
- <span class="me1">IsNewNote</span> 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Call</span> doc. 
- <span class="me1">Save</span> 
- <span class="br0">(</span> 
- <span class="kw1">True</span>, 
- <span class="kw1">True</span> 
- <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Call</span> riskDoc. <span class="me1">ReplaceItemValue</span> <span class="br0">(</span> <span class="st0">"Subject"</span>,doc. <span class="me1">subject</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="co1">'Repeat with other fields needed in views, for workflow and access control</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Call</span> riskDoc. <span class="me1">Save</span> <span class="br0">(</span> <span class="kw1">True</span>, <span class="kw1">True</span> <span class="br0">)</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> db = doc. 
- <span class="me1">ParentDatabase</span> 
+ <br> <span class="kw1">End</span> <span class="kw1">Sub</span> 
+</div> We are almost done. The response documents need some handling when we try to open them.Ideally instead of opening the response we would open the main document. The code in the view's <b>QueryOpenDocument</b> event takes care of that: 
+<div class="lotusscript"> <span class="kw1">Sub</span> Queryopendocument <span class="br0">(</span>Source <span class="kw1">As</span> <span class="kw2">Notesuiview</span>, Continue <span class="kw1">As</span> <span class="kw1">Variant</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> id <span class="kw1">As</span> <span class="kw1">String</span>&nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> Doc <span class="kw1">As</span> <span class="kw2">NotesDocument</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> parentDoc <span class="kw1">As</span> <span class="kw2">NotesDocument</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> db <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> ws <span class="kw1">As</span> <span class="kw1">New</span> <span class="kw2">NotesUIWorkspace</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> s <span class="kw1">As</span> <span class="kw1">New</span> <span class="kw2">NotesSession</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">If</span> doc. 
- <span class="me1">RiskAssessmentID</span> 
- <span class="br0">(</span> 
- <span class="nu0">0</span> 
- <span class="br0">)</span> = 
- <span class="st0">""</span> 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Set</span> riskDoc = db. 
- <span class="me1">CreateDocument</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Call</span> riskDoc. 
- <span class="me1">ReplaceItemValue</span> 
- <span class="br0">(</span> 
- <span class="st0">"Form"</span>, 
- <span class="st0">"RAF"</span> 
- <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; id = Source. <span class="me1">CaretNoteID</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Else</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Set</span> riskDoc = db. 
- <span class="me1">GetDocumentByUNID</span> 
- <span class="br0">(</span>doc. 
- <span class="me1">RiskAssessmentID</span> 
- <span class="br0">(</span> 
- <span class="nu0">0</span> 
- <span class="br0">)</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">If</span> riskDoc 
- <span class="kw1">Is</span> 
- <span class="kw1">Nothing</span> 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Set</span> riskDoc = db. 
- <span class="me1">CreateDocument</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Call</span> riskDoc. 
- <span class="me1">ReplaceItemValue</span> 
- <span class="br0">(</span> 
- <span class="st0">"Form"</span>, 
- <span class="st0">"RAF"</span> 
- <span class="br0">)</span> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">If</span> id = <span class="st0">""</span> <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; Continue = <span class="kw1">True</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">Sub</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> db = s. <span class="me1">CurrentDatabase</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> doc = db. <span class="me1">GetDocumentByID</span> <span class="br0">(</span>id <span class="br0">)</span> 
  <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> doc. <span class="me1">IsResponse</span> &nbsp; <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; continue = <span class="kw1">True</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">Sub</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Call</span> riskDoc. 
- <span class="me1">MakeResponse</span> 
- <span class="br0">(</span>doc 
- <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; continue = <span class="kw1">False</span> 
  <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> parentDoc = db. <span class="me1">GetDocumentByUNID</span> <span class="br0">(</span>doc. <span class="me1">ParentDocumentUNID</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Call</span> ws. <span class="me1">EditDocument</span> <span class="br0">(</span> <span class="kw1">False</span>,parentDoc <span class="br0">)</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">If</span> &nbsp;w. 
- <span class="me1">DialogBox</span> 
- <span class="br0">(</span> 
- <span class="st0">"RAF"</span>, 
- <span class="kw1">True</span>, 
- <span class="kw1">True</span>, 
- <span class="kw1">False</span>, 
- <span class="kw1">False</span>, 
- <span class="kw1">False</span>, 
- <span class="kw1">False</span>, 
- <span class="st0">"Please provide your Risk Assessment"</span>,riskDoc, 
- <span class="kw1">True</span> 
- <span class="br0">)</span> 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Call</span> riskDoc. 
- <span class="me1">Save</span> 
- <span class="br0">(</span> 
- <span class="kw1">True</span>, 
- <span class="kw1">True</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Call</span> doc. 
- <span class="me1">ReplaceItemValue</span> 
- <span class="br0">(</span> 
- <span class="st0">"RiskAssessmentID"</span>,riskDoc. 
- <span class="me1">UniversalID</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Call</span> doc. 
- <span class="me1">Save</span> 
- <span class="br0">(</span> 
- <span class="kw1">True</span>, 
- <span class="kw1">True</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Call</span> uidoc. 
- <span class="me1">Refresh</span> 
- <br> &nbsp; &nbsp; 
- <br> 
- <span class="kw1">End</span> 
- <span class="kw1">Sub</span> 
-</div> To keep the 2 documents in sync we add some code into the 
-<b>PostSave</b> event of the main form: 
-<div class="lotusscript"> 
- <span class="kw1">Sub</span> Postsave 
- <span class="br0">(</span>Source 
- <span class="kw1">As</span> 
- <span class="kw2">Notesuidocument</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> doc 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDocument</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> riskDoc 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDocument</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> db 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> doc = source. 
- <span class="me1">Document</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">If</span> doc. 
- <span class="me1">RiskAssessmentID</span> 
- <span class="br0">(</span> 
- <span class="nu0">0</span> 
- <span class="br0">)</span> = 
- <span class="st0">""</span> 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Return</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> db = doc. 
- <span class="me1">ParentDatabase</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> riskDoc = db. 
- <span class="me1">GetDocumentByUNID</span> 
- <span class="br0">(</span>doc. 
- <span class="me1">RiskAssessmentID</span> 
- <span class="br0">(</span> 
- <span class="nu0">0</span> 
- <span class="br0">)</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Call</span> riskDoc. 
- <span class="me1">ReplaceItemValue</span> 
- <span class="br0">(</span> 
- <span class="st0">"Subject"</span>,doc. 
- <span class="me1">subject</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="co1">'Repeat with other fields needed in views, for workflow and access control</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Call</span> riskDoc. 
- <span class="me1">Save</span> 
- <span class="br0">(</span> 
- <span class="kw1">True</span>, 
- <span class="kw1">True</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <br> 
- <span class="kw1">End</span> 
- <span class="kw1">Sub</span> 
-</div> We are almost done. The response documents need some handling when we try to open them.Ideally instead of opening the response we would open the main document. The code in the view's 
-<b>QueryOpenDocument</b> event takes care of that: 
-<div class="lotusscript"> 
- <span class="kw1">Sub</span> Queryopendocument 
- <span class="br0">(</span>Source 
- <span class="kw1">As</span> 
- <span class="kw2">Notesuiview</span>, Continue 
- <span class="kw1">As</span> 
- <span class="kw1">Variant</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> id 
- <span class="kw1">As</span> 
- <span class="kw1">String</span>&nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> Doc 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDocument</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> parentDoc 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDocument</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> db 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> ws 
- <span class="kw1">As</span> 
- <span class="kw1">New</span> 
- <span class="kw2">NotesUIWorkspace</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> s 
- <span class="kw1">As</span> 
- <span class="kw1">New</span> 
- <span class="kw2">NotesSession</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; id = Source. 
- <span class="me1">CaretNoteID</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">If</span> id = 
- <span class="st0">""</span> 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; Continue = 
- <span class="kw1">True</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Exit</span> 
- <span class="kw1">Sub</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> db = s. 
- <span class="me1">CurrentDatabase</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> doc = db. 
- <span class="me1">GetDocumentByID</span> 
- <span class="br0">(</span>id 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">If</span> 
- <span class="kw1">Not</span> doc. 
- <span class="me1">IsResponse</span> &nbsp; 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; continue = 
- <span class="kw1">True</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Exit</span> 
- <span class="kw1">Sub</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; continue = 
- <span class="kw1">False</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> parentDoc = db. 
- <span class="me1">GetDocumentByUNID</span> 
- <span class="br0">(</span>doc. 
- <span class="me1">ParentDocumentUNID</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Call</span> ws. 
- <span class="me1">EditDocument</span> 
- <span class="br0">(</span> 
- <span class="kw1">False</span>,parentDoc 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <br> 
- <span class="kw1">End</span> 
- <span class="kw1">Sub</span> 
+ <br> <span class="kw1">End</span> <span class="kw1">Sub</span> 
 </div> You also need to take care of deletion of documents. Only a user who can see both should be allowed to delete them (or you "flag" them for deletion and let a background agent do the actual deletion). I leave this to you as an exercise. In a real world application you would of course pack all these code into LotusScript objects that live in a ScriptLibrary. 
 <br> XPages simply woud use 2 data sources and save us the trouble of building a dialog box. 
 <br> As usual YMMV</div>
@@ -614,6 +359,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

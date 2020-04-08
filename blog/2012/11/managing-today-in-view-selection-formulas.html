@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Managing @Today in view selection formulas" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2012,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -129,686 +130,200 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Managing @Today in view selection formulas</small></h1>
 					<hr />
-					<div>Using 
-<code>@Yesterday, @Today, @Now, @Tomorrow</code> in Notes view selection formulas is 
-<a href="http://www-10.lotus.com/ldd/bpmpblog.nsf/dx/Indexing-options-and-Today">a bad idea</a> (but you 
-<a href="http://www.ibm.com/developerworks/lotus/library/notes7-application-performance2/">know that</a>). But if your application depends on such a selection? The solution is to update your database design automatically with a static date. There are a few caveats: 
+					<div>Using <code>@Yesterday, @Today, @Now, @Tomorrow</code> in Notes view selection formulas is <a href="http://www-10.lotus.com/ldd/bpmpblog.nsf/dx/Indexing-options-and-Today">a bad idea</a> (but you <a href="http://www.ibm.com/developerworks/lotus/library/notes7-application-performance2/">know that</a>). But if your application depends on such a selection? The solution is to update your database design automatically with a static date. There are a few caveats: 
 <ul> 
  <li>You must be careful about date formats, since you don't want code to depend on a locale setting. So <code>@Date(2012;12;31)</code> is your save option</li> 
  <li>After updating a view you want to replicate it across all servers to be sure you don't get design conflicts</li> 
  <li>When users use a local replica of your database you want to check the validity of your selection formula in the queryViewOpen event and eventually adjust it there. This would require you control database be available locally (code not shown here)</li> 
  <li>Extra care is needed if you have views with duplicate names in your database </li> 
-</ul> I designed a solution that uses a control database with one form, one view and a bit of LotusScript. First create a form with the following fields: Server, Database, ViewName, SelectionFormula (all text, data input), lastRun (computedWhenComposed with formula 
-<code>lastRun</code> and finally CurrentSelectionFormula, Text, Computed. Use this formula: 
-<br> 
-<code>ReplaceStringToday := "@Date("+@Text(@Year(@Today))+";"+@Text(@Month(@Today))+";"+@Text(@Day(@Today))+")";<br> ReplaceStringYesterday := "@Date("+@Text(@Year(@Yesterday))+";"+@Text(@Month(@Yesterday))+";"+@Text(@Day(@Yesterday))+")";<br> ReplaceStringTomorrow := "@Date("+@Text(@Year(@Tomorrow))+";"+@Text(@Month(@Tomorrow))+";"+@Text(@Day(@Tomorrow))+")";<br> @ReplaceSubstring(SelectionFormula; "@Today":"@Now":"@Yesterday":"@Tomorrow"; ReplaceStringToday:ReplaceStringToday:ReplaceStringYesterday:ReplaceStringTomorrow)</code> 
-<br> Everytime that document gets refreshed the field will reflect how the selection formula currently should look like. Then create a view with Server, Database, ViewName -&gt; all 3 columns sorted (ViewName sorting is optional). I called mine 
-<code>ViewsToAdjust</code>. Next step is to populate the documents with views that actually have time related selection formulas. I use this agent for it: 
-<div class="lotusscript"> 
- <span class="kw1">Option</span> 
- <span class="kw1">Public</span> 
+</ul> I designed a solution that uses a control database with one form, one view and a bit of LotusScript. First create a form with the following fields: Server, Database, ViewName, SelectionFormula (all text, data input), lastRun (computedWhenComposed with formula <code>lastRun</code> and finally CurrentSelectionFormula, Text, Computed. Use this formula: 
+<br> <code>ReplaceStringToday := "@Date("+@Text(@Year(@Today))+";"+@Text(@Month(@Today))+";"+@Text(@Day(@Today))+")";<br> ReplaceStringYesterday := "@Date("+@Text(@Year(@Yesterday))+";"+@Text(@Month(@Yesterday))+";"+@Text(@Day(@Yesterday))+")";<br> ReplaceStringTomorrow := "@Date("+@Text(@Year(@Tomorrow))+";"+@Text(@Month(@Tomorrow))+";"+@Text(@Day(@Tomorrow))+")";<br> @ReplaceSubstring(SelectionFormula; "@Today":"@Now":"@Yesterday":"@Tomorrow"; ReplaceStringToday:ReplaceStringToday:ReplaceStringYesterday:ReplaceStringTomorrow)</code> 
+<br> Everytime that document gets refreshed the field will reflect how the selection formula currently should look like. Then create a view with Server, Database, ViewName -&gt; all 3 columns sorted (ViewName sorting is optional). I called mine <code>ViewsToAdjust</code>. Next step is to populate the documents with views that actually have time related selection formulas. I use this agent for it: 
+<div class="lotusscript"> <span class="kw1">Option</span> <span class="kw1">Public</span> 
+ <br> <span class="kw1">Option</span> <span class="kw1">Declare</span> 
  <br> 
- <span class="kw1">Option</span> 
- <span class="kw1">Declare</span> 
+ <br> <span class="kw1">Sub</span> Initialize 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> s <span class="kw1">As</span> <span class="kw1">New</span> <span class="kw2">NotesSession</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> server <span class="kw1">As</span> <span class="kw1">String</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> dbDir <span class="kw1">As</span> <span class="kw2">NotesDbDirectory</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> reportDB <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> db <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> reportDB = s. <span class="me1">Currentdatabase</span> 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; server = reportDB. <span class="me1">Server</span> 
+ <br> &nbsp; &nbsp; server = <span class="kw1">InputBox$</span> <span class="br0">(</span> <span class="st0">"Select Server to scan"</span>, <span class="st0">"Server selection"</span>, server <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Trim</span> <span class="br0">(</span>server <span class="br0">)</span> = <span class="st0">""</span> <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">sub</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> dbDir = s. <span class="me1">Getdbdirectory</span> <span class="br0">(</span>Server <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> db = dbDir. <span class="me1">Getfirstdatabase</span> <span class="br0">(</span>TEMPLATE_CANDIDATE <span class="br0">)</span> 
  <br> 
+ <br> &nbsp; &nbsp; <span class="kw1">Do</span> <span class="kw1">Until</span> db <span class="kw1">Is</span> <span class="kw1">Nothing</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> ProcessDB <span class="br0">(</span>reportDB, db <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> db = dbDir. <span class="me1">Getnextdatabase</span> <span class="br0">(</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Loop</span> 
+ <br> <span class="kw1">End</span> <span class="kw1">Sub</span> 
  <br> 
- <span class="kw1">Sub</span> Initialize 
+ <br> <span class="kw1">Sub</span> ProcessDB <span class="br0">(</span>reportDB <span class="kw1">As</span> <span class="kw2">NotesDatabase</span>, db <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> <span class="br0">)</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> s 
- <span class="kw1">As</span> 
- <span class="kw1">New</span> 
- <span class="kw2">NotesSession</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">On</span> <span class="kw1">Error</span> <span class="kw1">GoTo</span> err_ProcessDB 
+ <br> &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> db. <span class="me1">Isopen</span> <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> db. <span class="kw1">Open</span> <span class="br0">(</span> <span class="st0">""</span>, <span class="st0">""</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> db. <span class="me1">Isopen</span> <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Print</span> <span class="st0">"Can't open "</span> &amp; db. <span class="me1">Title</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">sub</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> server 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> dbDir 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDbDirectory</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> reportDB 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> db 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> reportDB = s. 
- <span class="me1">Currentdatabase</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; server = reportDB. 
- <span class="me1">Server</span> 
- <br> &nbsp; &nbsp; server = 
- <span class="kw1">InputBox$</span> 
- <span class="br0">(</span> 
- <span class="st0">"Select Server to scan"</span>, 
- <span class="st0">"Server selection"</span>, server 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">If</span> 
- <span class="kw1">Trim</span> 
- <span class="br0">(</span>server 
- <span class="br0">)</span> = 
- <span class="st0">""</span> 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Exit</span> 
- <span class="kw1">sub</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> dbDir = s. 
- <span class="me1">Getdbdirectory</span> 
- <span class="br0">(</span>Server 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> db = dbDir. 
- <span class="me1">Getfirstdatabase</span> 
- <span class="br0">(</span>TEMPLATE_CANDIDATE 
- <span class="br0">)</span> 
- <br> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Do</span> 
- <span class="kw1">Until</span> db 
- <span class="kw1">Is</span> 
- <span class="kw1">Nothing</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Call</span> ProcessDB 
- <span class="br0">(</span>reportDB, db 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Set</span> db = dbDir. 
- <span class="me1">Getnextdatabase</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Loop</span> 
- <br> 
- <span class="kw1">End</span> 
- <span class="kw1">Sub</span> 
- <br> 
- <br> 
- <span class="kw1">Sub</span> ProcessDB 
- <span class="br0">(</span>reportDB 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span>, db 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">On</span> 
- <span class="kw1">Error</span> 
- <span class="kw1">GoTo</span> err_ProcessDB 
- <br> &nbsp; &nbsp; 
- <span class="kw1">If</span> 
- <span class="kw1">Not</span> db. 
- <span class="me1">Isopen</span> 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Call</span> db. 
- <span class="kw1">Open</span> 
- <span class="br0">(</span> 
- <span class="st0">""</span>, 
- <span class="st0">""</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">If</span> 
- <span class="kw1">Not</span> db. 
- <span class="me1">Isopen</span> 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Print</span> 
- <span class="st0">"Can't open "</span> &amp; db. 
- <span class="me1">Title</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Exit</span> 
- <span class="kw1">sub</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Print</span> 
- <span class="st0">"Processing "</span> &amp; db. 
- <span class="me1">Title</span>&nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Call</span> CreateViewAdjusterForms 
- <span class="br0">(</span>reportDB, db 
- <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Print</span> <span class="st0">"Processing "</span> &amp; db. <span class="me1">Title</span>&nbsp; 
+ <br> &nbsp; &nbsp; <span class="kw1">Call</span> CreateViewAdjusterForms <span class="br0">(</span>reportDB, db <span class="br0">)</span> 
  <br> exit_ProcessDB: 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Exit</span> 
- <span class="kw1">sub</span>&nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">sub</span>&nbsp; &nbsp; 
  <br> err_ProcessDB: 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Print</span> 
- <span class="kw1">Error$</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Resume</span> exit_ProcessDB &nbsp; 
+ <br> &nbsp; &nbsp; <span class="kw1">Print</span> <span class="kw1">Error$</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Resume</span> exit_ProcessDB &nbsp; 
+ <br> <span class="kw1">End</span> <span class="kw1">Sub</span> 
  <br> 
- <span class="kw1">End</span> 
- <span class="kw1">Sub</span> 
+ <br> <span class="kw1">Sub</span> CreateViewAdjusterForms <span class="br0">(</span>reportDB <span class="kw1">As</span> <span class="kw2">NotesDatabase</span>, db <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> doc <span class="kw1">As</span> <span class="kw2">NotesDocument</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> v <span class="kw1">As</span> <span class="kw2">NotesView</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> selectionFormula <span class="kw1">As</span> <span class="kw1">String</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">ForAll</span> curView <span class="kw1">In</span> db. <span class="me1">Views</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> v = curView 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; SelectionFormula = v. <span class="me1">SelectionFormula</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> isCriticalProblem <span class="br0">(</span>Formula <span class="br0">)</span> <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> doc = reportDB. <span class="me1">Createdocument</span> <span class="br0">(</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. <span class="me1">form</span> = <span class="st0">"ViewAdjuster"</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. <span class="me1">server</span> = db. <span class="me1">Server</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. <span class="me1">database</span> = db. <span class="me1">Filepath</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. <span class="me1">viewname</span> = v. <span class="kw1">Name</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. <span class="me1">SelectionFormula</span> = selectionFormula 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> doc. <span class="me1">Computewithform</span> <span class="br0">(</span> <span class="kw1">true</span>, <span class="kw1">false</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> doc. <span class="me1">Save</span> <span class="br0">(</span> <span class="kw1">true</span>, <span class="kw1">True</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span>&nbsp; 
+ <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">ForAll</span> 
+ <br> <span class="kw1">End</span> <span class="kw1">Sub</span> 
  <br> 
- <br> 
- <span class="kw1">Sub</span> CreateViewAdjusterForms 
- <span class="br0">(</span>reportDB 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span>, db 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> doc 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDocument</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> v 
- <span class="kw1">As</span> 
- <span class="kw2">NotesView</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> selectionFormula 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">ForAll</span> curView 
- <span class="kw1">In</span> db. 
- <span class="me1">Views</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Set</span> v = curView 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; SelectionFormula = v. 
- <span class="me1">SelectionFormula</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">If</span> isCriticalProblem 
- <span class="br0">(</span>Formula 
- <span class="br0">)</span> 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Set</span> doc = reportDB. 
- <span class="me1">Createdocument</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
- <span class="me1">form</span> = 
- <span class="st0">"ViewAdjuster"</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
- <span class="me1">server</span> = db. 
- <span class="me1">Server</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
- <span class="me1">database</span> = db. 
- <span class="me1">Filepath</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
- <span class="me1">viewname</span> = v. 
- <span class="kw1">Name</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. 
- <span class="me1">SelectionFormula</span> = selectionFormula 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Call</span> doc. 
- <span class="me1">Computewithform</span> 
- <span class="br0">(</span> 
- <span class="kw1">true</span>, 
- <span class="kw1">false</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Call</span> doc. 
- <span class="me1">Save</span> 
- <span class="br0">(</span> 
- <span class="kw1">true</span>, 
- <span class="kw1">True</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span>&nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">ForAll</span> 
- <br> 
- <span class="kw1">End</span> 
- <span class="kw1">Sub</span> 
- <br> 
- <br> 
- <span class="kw1">Function</span> isCriticalProblem 
- <span class="br0">(</span>Formula 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <span class="br0">)</span> 
- <span class="kw1">As</span> 
- <span class="kw1">Boolean</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> work 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <br> &nbsp; &nbsp; work = 
- <span class="kw1">LCase$</span> 
- <span class="br0">(</span>Formula 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; isCriticalProblem = 
- <span class="kw1">InStr</span> 
- <span class="br0">(</span>work, 
- <span class="st0">"now"</span> 
- <span class="br0">)</span> &lt;&gt; 
- <span class="nu0">0</span> 
- <span class="kw1">Or</span> _ 
- <br> &nbsp; &nbsp; 
- <span class="kw1">InStr</span> 
- <span class="br0">(</span>work, 
- <span class="st0">"today"</span> 
- <span class="br0">)</span> &lt;&gt; 
- <span class="nu0">0</span> 
- <span class="kw1">Or</span> _ 
- <br> &nbsp; &nbsp; 
- <span class="kw1">InStr</span> 
- <span class="br0">(</span>work, 
- <span class="st0">"tomorrow"</span> 
- <span class="br0">)</span> &lt;&gt; 
- <span class="nu0">0</span> 
- <span class="kw1">Or</span> _ 
- <br> &nbsp; &nbsp; 
- <span class="kw1">InStr</span> 
- <span class="br0">(</span>work, 
- <span class="st0">"yesterday"</span> 
- <span class="br0">)</span> &lt;&gt; 
- <span class="nu0">0</span> 
- <br> 
- <span class="kw1">End</span> 
- <span class="kw1">Function</span> 
+ <br> <span class="kw1">Function</span> isCriticalProblem <span class="br0">(</span>Formula <span class="kw1">As</span> <span class="kw1">String</span> <span class="br0">)</span> <span class="kw1">As</span> <span class="kw1">Boolean</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> work <span class="kw1">As</span> <span class="kw1">String</span> 
+ <br> &nbsp; &nbsp; work = <span class="kw1">LCase$</span> <span class="br0">(</span>Formula <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; isCriticalProblem = <span class="kw1">InStr</span> <span class="br0">(</span>work, <span class="st0">"now"</span> <span class="br0">)</span> &lt;&gt; <span class="nu0">0</span> <span class="kw1">Or</span> _ 
+ <br> &nbsp; &nbsp; <span class="kw1">InStr</span> <span class="br0">(</span>work, <span class="st0">"today"</span> <span class="br0">)</span> &lt;&gt; <span class="nu0">0</span> <span class="kw1">Or</span> _ 
+ <br> &nbsp; &nbsp; <span class="kw1">InStr</span> <span class="br0">(</span>work, <span class="st0">"tomorrow"</span> <span class="br0">)</span> &lt;&gt; <span class="nu0">0</span> <span class="kw1">Or</span> _ 
+ <br> &nbsp; &nbsp; <span class="kw1">InStr</span> <span class="br0">(</span>work, <span class="st0">"yesterday"</span> <span class="br0">)</span> &lt;&gt; <span class="nu0">0</span> 
+ <br> <span class="kw1">End</span> <span class="kw1">Function</span> 
 </div> Once you have the formulas you want to review them if the are really critical and that the revised formula actually will work. Then design a scheduled agent that checks those views. I run it hourly and on all servers (you could use the lastRun date to only check databases that haven't been processed today.To replicate the changed databases I use the catalog.nsf, so you need to make sure that your catalog task is running properly. 
-<div class="lotusscript"> 
- <span class="kw1">Option</span> 
- <span class="kw1">Public</span> 
+<div class="lotusscript"> <span class="kw1">Option</span> <span class="kw1">Public</span> 
+ <br> <span class="kw1">Option</span> <span class="kw1">Declare</span> 
  <br> 
- <span class="kw1">Option</span> 
- <span class="kw1">Declare</span> 
+ <br> <span class="kw1">Sub</span> Initialize 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> s <span class="kw1">As</span> <span class="kw1">New</span> <span class="kw2">NotesSession</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> db <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> catalog <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> v <span class="kw1">As</span> <span class="kw2">NotesView</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> dcol <span class="kw1">As</span> <span class="kw2">NotesDocumentCollection</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> serverName <span class="kw1">As</span> <span class="kw1">String</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> targetDB <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> doc <span class="kw1">As</span> <span class="kw2">NotesDocument</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> dbName <span class="kw1">As</span> <span class="kw1">String</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> dbChanged <span class="kw1">As</span> <span class="kw1">Boolean</span> 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> db = s. <span class="me1">Currentdatabase</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> catalog = s. <span class="me1">getDatabase</span> <span class="br0">(</span>db. <span class="me1">server</span>, <span class="st0">"catalog.nsf"</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> v = db. <span class="me1">Getview</span> <span class="br0">(</span> <span class="st0">"ViewsToAdjust"</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; servername = db. <span class="me1">Server</span> 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> dcol = v. <span class="me1">Getalldocumentsbykey</span> <span class="br0">(</span>servername, <span class="kw1">true</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> doc = dcol. <span class="me1">Getfirstdocument</span> <span class="br0">(</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; dbChanged = <span class="kw1">false</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Do</span> <span class="kw1">Until</span> doc <span class="kw1">Is</span> <span class="kw1">Nothing</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Get the database if we don't have it already</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> dbname &lt;&gt; doc. <span class="me1">Getitemvalue</span> <span class="br0">(</span> <span class="st0">"database"</span> <span class="br0">)</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> targetDB <span class="kw1">Is</span> <span class="kw1">Nothing</span> <span class="kw1">And</span> dbChanged <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> ReplicateWithAllServers <span class="br0">(</span>s, targetDB, catalog <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dbname = doc. <span class="me1">Getitemvalue</span> <span class="br0">(</span> <span class="st0">"database"</span> <span class="br0">)</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> targetDB = s. <span class="me1">Getdatabase</span> <span class="br0">(</span>serverName, dbname <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dbChanged = <span class="kw1">false</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Open if closed</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> targetDB. <span class="me1">Isopen</span> <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> targetDB. <span class="kw1">Open</span> <span class="br0">(</span> <span class="st0">""</span>, <span class="st0">""</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Only process if open worked</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> targetDB. <span class="me1">Isopen</span> <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dbChanged = updateOneView <span class="br0">(</span>doc,targetDB, dbChanged <span class="br0">)</span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> doc = dcol. <span class="me1">Getnextdocument</span> <span class="br0">(</span>doc <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Loop</span> 
+ <br> &nbsp; &nbsp; 
+ <br> <span class="kw1">End</span> <span class="kw1">Sub</span> 
  <br> 
- <br> 
- <span class="kw1">Sub</span> Initialize 
+ <br> <span class="kw1">Function</span> updateOneView <span class="br0">(</span>doc <span class="kw1">As</span> <span class="kw2">NotesDocument</span>,targetDB <span class="kw1">As</span> <span class="kw2">NotesDatabase</span>, previousChange <span class="kw1">As</span> <span class="kw1">Boolean</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> viewName <span class="kw1">As</span> <span class="kw1">String</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> v <span class="kw1">As</span> <span class="kw2">NotesView</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> newFormula <span class="kw1">As</span> <span class="kw1">String</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> formulaInView <span class="kw1">As</span> <span class="kw1">String</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> s 
- <span class="kw1">As</span> 
- <span class="kw1">New</span> 
- <span class="kw2">NotesSession</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">On</span> <span class="kw1">Error</span> <span class="kw1">GoTo</span> Err_updateOneView 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> db 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> catalog 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> v 
- <span class="kw1">As</span> 
- <span class="kw2">NotesView</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> dcol 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDocumentCollection</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> serverName 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> targetDB 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> doc 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDocument</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> dbName 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> dbChanged 
- <span class="kw1">As</span> 
- <span class="kw1">Boolean</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> db = s. 
- <span class="me1">Currentdatabase</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> catalog = s. 
- <span class="me1">getDatabase</span> 
- <span class="br0">(</span>db. 
- <span class="me1">server</span>, 
- <span class="st0">"catalog.nsf"</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> v = db. 
- <span class="me1">Getview</span> 
- <span class="br0">(</span> 
- <span class="st0">"ViewsToAdjust"</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; servername = db. 
- <span class="me1">Server</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> dcol = v. 
- <span class="me1">Getalldocumentsbykey</span> 
- <span class="br0">(</span>servername, 
- <span class="kw1">true</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> doc = dcol. 
- <span class="me1">Getfirstdocument</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; dbChanged = 
- <span class="kw1">false</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Do</span> 
- <span class="kw1">Until</span> doc 
- <span class="kw1">Is</span> 
- <span class="kw1">Nothing</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="co1">'Get the database if we don't have it already</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">If</span> dbname &lt;&gt; doc. 
- <span class="me1">Getitemvalue</span> 
- <span class="br0">(</span> 
- <span class="st0">"database"</span> 
- <span class="br0">)</span> 
- <span class="br0">(</span> 
- <span class="nu0">0</span> 
- <span class="br0">)</span> 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">If</span> 
- <span class="kw1">Not</span> targetDB 
- <span class="kw1">Is</span> 
- <span class="kw1">Nothing</span> 
- <span class="kw1">And</span> dbChanged 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Call</span> ReplicateWithAllServers 
- <span class="br0">(</span>s, targetDB, catalog 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dbname = doc. 
- <span class="me1">Getitemvalue</span> 
- <span class="br0">(</span> 
- <span class="st0">"database"</span> 
- <span class="br0">)</span> 
- <span class="br0">(</span> 
- <span class="nu0">0</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Set</span> targetDB = s. 
- <span class="me1">Getdatabase</span> 
- <span class="br0">(</span>serverName, dbname 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dbChanged = 
- <span class="kw1">false</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="co1">'Open if closed</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">If</span> 
- <span class="kw1">Not</span> targetDB. 
- <span class="me1">Isopen</span> 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Call</span> targetDB. 
- <span class="kw1">Open</span> 
- <span class="br0">(</span> 
- <span class="st0">""</span>, 
- <span class="st0">""</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="co1">'Only process if open worked</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">If</span> targetDB. 
- <span class="me1">Isopen</span> 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dbChanged = updateOneView 
- <span class="br0">(</span>doc,targetDB, dbChanged 
- <span class="br0">)</span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Set</span> doc = dcol. 
- <span class="me1">Getnextdocument</span> 
- <span class="br0">(</span>doc 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Loop</span> 
- <br> &nbsp; &nbsp; 
- <br> 
- <span class="kw1">End</span> 
- <span class="kw1">Sub</span> 
- <br> 
- <br> 
- <span class="kw1">Function</span> updateOneView 
- <span class="br0">(</span>doc 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDocument</span>,targetDB 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span>, previousChange 
- <span class="kw1">As</span> 
- <span class="kw1">Boolean</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> viewName 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> v 
- <span class="kw1">As</span> 
- <span class="kw2">NotesView</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> newFormula 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> formulaInView 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">On</span> 
- <span class="kw1">Error</span> 
- <span class="kw1">GoTo</span> Err_updateOneView 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="co1">'We start with the change status from before</span> 
+ <br> &nbsp; &nbsp; <span class="co1">'We start with the change status from before</span> 
  <br> &nbsp; &nbsp; updateOneView = previousChange 
  <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; viewName = doc. 
- <span class="me1">getItemValue</span> 
- <span class="br0">(</span> 
- <span class="st0">"ViewName"</span> 
- <span class="br0">)</span> 
- <span class="br0">(</span> 
- <span class="nu0">0</span> 
- <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; viewName = doc. <span class="me1">getItemValue</span> <span class="br0">(</span> <span class="st0">"ViewName"</span> <span class="br0">)</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> v = targetDB. <span class="me1">getView</span> <span class="br0">(</span>viewName <span class="br0">)</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> v = targetDB. 
- <span class="me1">getView</span> 
- <span class="br0">(</span>viewName 
- <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; formulaInView = v. <span class="me1">Selectionformula</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Call</span> doc. <span class="me1">Computewithform</span> <span class="br0">(</span> <span class="kw1">true</span>, <span class="kw1">true</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; newFormula = doc. <span class="me1">Getitemvalue</span> <span class="br0">(</span> <span class="st0">"CurrentSelectionFormula"</span> <span class="br0">)</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> 
  <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; formulaInView = v. 
- <span class="me1">Selectionformula</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Call</span> doc. 
- <span class="me1">Computewithform</span> 
- <span class="br0">(</span> 
- <span class="kw1">true</span>, 
- <span class="kw1">true</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; newFormula = doc. 
- <span class="me1">Getitemvalue</span> 
- <span class="br0">(</span> 
- <span class="st0">"CurrentSelectionFormula"</span> 
- <span class="br0">)</span> 
- <span class="br0">(</span> 
- <span class="nu0">0</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="co1">'Now check if update is needed</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">If</span> formulaInView &lt;&gt; newFormula 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; updateOneView = 
- <span class="kw1">true</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; v. 
- <span class="me1">Selectionformula</span> = newFormula 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Call</span> doc. 
- <span class="me1">Replaceitemvalue</span> 
- <span class="br0">(</span> 
- <span class="st0">"LastRun"</span>, 
- <span class="kw1">date</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Call</span> doc. 
- <span class="me1">Save</span> 
- <span class="br0">(</span> 
- <span class="kw1">true</span>, 
- <span class="kw1">true</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; <span class="co1">'Now check if update is needed</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">If</span> formulaInView &lt;&gt; newFormula <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; updateOneView = <span class="kw1">true</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; v. <span class="me1">Selectionformula</span> = newFormula 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> doc. <span class="me1">Replaceitemvalue</span> <span class="br0">(</span> <span class="st0">"LastRun"</span>, <span class="kw1">date</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> doc. <span class="me1">Save</span> <span class="br0">(</span> <span class="kw1">true</span>, <span class="kw1">true</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <br> Exit_updateOneView: 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Exit</span> 
- <span class="kw1">Function</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">Function</span> 
  <br> &nbsp; &nbsp; 
  <br> Err_updateOneView: 
+ <br> &nbsp; &nbsp; <span class="co1">'TODO: add error reporting here!</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Resume</span> Exit_updateOneView 
  <br> &nbsp; &nbsp; 
- <span class="co1">'TODO: add error reporting here!</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Resume</span> Exit_updateOneView 
- <br> &nbsp; &nbsp; 
+ <br> <span class="kw1">End</span> <span class="kw1">Function</span> 
  <br> 
- <span class="kw1">End</span> 
- <span class="kw1">Function</span> 
- <br> 
- <br> 
- <span class="kw1">Sub</span> ReplicateWithAllServers 
- <span class="br0">(</span>s 
- <span class="kw1">As</span> 
- <span class="kw2">NotesSession</span>, targetDB 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span>, catalog 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span> 
- <span class="br0">)</span> 
+ <br> <span class="kw1">Sub</span> ReplicateWithAllServers <span class="br0">(</span>s <span class="kw1">As</span> <span class="kw2">NotesSession</span>, targetDB <span class="kw1">As</span> <span class="kw2">NotesDatabase</span>, catalog <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> v <span class="kw1">As</span> <span class="kw2">NotesView</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> vec <span class="kw1">As</span> <span class="kw2">NotesViewEntryCollection</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> ve <span class="kw1">As</span> <span class="kw2">NotesViewEntry</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> TargetServer <span class="kw1">As</span> <span class="kw1">String</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> sourceName <span class="kw1">As</span> <span class="kw2">NotesName</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Dim</span> commandString <span class="kw1">As</span> <span class="kw1">String</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> v 
- <span class="kw1">As</span> 
- <span class="kw2">NotesView</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> sourceName = <span class="kw1">New</span> <span class="kw2">NotesName</span> <span class="br0">(</span>targetDB. <span class="me1">Server</span> <span class="br0">)</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> vec 
- <span class="kw1">As</span> 
- <span class="kw2">NotesViewEntryCollection</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> v = catalog. <span class="me1">Getview</span> <span class="br0">(</span> <span class="st0">"($ReplicaID)"</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> vec = v. <span class="me1">Getallentriesbykey</span> <span class="br0">(</span>targetDB. <span class="me1">Replicaid</span>, <span class="kw1">true</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Set</span> ve = vec. <span class="me1">Getfirstentry</span> <span class="br0">(</span> <span class="br0">)</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> ve 
- <span class="kw1">As</span> 
- <span class="kw2">NotesViewEntry</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> TargetServer 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> sourceName 
- <span class="kw1">As</span> 
- <span class="kw2">NotesName</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Dim</span> commandString 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> sourceName = 
- <span class="kw1">New</span> 
- <span class="kw2">NotesName</span> 
- <span class="br0">(</span>targetDB. 
- <span class="me1">Server</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> v = catalog. 
- <span class="me1">Getview</span> 
- <span class="br0">(</span> 
- <span class="st0">"($ReplicaID)"</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> vec = v. 
- <span class="me1">Getallentriesbykey</span> 
- <span class="br0">(</span>targetDB. 
- <span class="me1">Replicaid</span>, 
- <span class="kw1">true</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Set</span> ve = vec. 
- <span class="me1">Getfirstentry</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Do</span> 
- <span class="kw1">Until</span> ve 
- <span class="kw1">Is</span> 
- <span class="kw1">Nothing</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; targetServer = ve. 
- <span class="me1">Columnvalues</span> 
- <span class="br0">(</span> 
- <span class="nu0">1</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">If</span> targetServer &lt;&gt; sourceName. 
- <span class="me1">Common</span> 
- <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; commandString = 
- <span class="st0">"Replicate "</span> &amp; targetServer &amp; 
- <span class="st0">" "</span> &amp; targetDB. 
- <span class="me1">Filepath</span> &amp; 
- <span class="st0">" UPDATE_COLL"</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Call</span> s. 
- <span class="me1">Sendconsolecommand</span> 
- <span class="br0">(</span>targetDB. 
- <span class="me1">Server</span>, commandString 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">End</span> 
- <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw1">Set</span> ve = vec. 
- <span class="me1">Getnextentry</span> 
- <span class="br0">(</span>ve 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Loop</span>&nbsp; &nbsp; 
- <br> 
- <span class="kw1">End</span> 
- <span class="kw1">Sub</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Do</span> <span class="kw1">Until</span> ve <span class="kw1">Is</span> <span class="kw1">Nothing</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; targetServer = ve. <span class="me1">Columnvalues</span> <span class="br0">(</span> <span class="nu0">1</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> targetServer &lt;&gt; sourceName. <span class="me1">Common</span> <span class="kw1">Then</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; commandString = <span class="st0">"Replicate "</span> &amp; targetServer &amp; <span class="st0">" "</span> &amp; targetDB. <span class="me1">Filepath</span> &amp; <span class="st0">" UPDATE_COLL"</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> s. <span class="me1">Sendconsolecommand</span> <span class="br0">(</span>targetDB. <span class="me1">Server</span>, commandString <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> ve = vec. <span class="me1">Getnextentry</span> <span class="br0">(</span>ve <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Loop</span>&nbsp; &nbsp; 
+ <br> <span class="kw1">End</span> <span class="kw1">Sub</span> 
 </div> 
 <br>As usual YMMV</div>
 					<hr />
@@ -936,6 +451,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

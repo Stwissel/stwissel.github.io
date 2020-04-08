@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Extracting data from Domino into PDF using XSLT and XSL:FO (Part 4)" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2012,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -143,196 +144,42 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Extracting data from Domino into PDF using XSLT and XSL:FO (Part 4)</small></h1>
 					<hr />
-					<div>This entry is part of the series 
-<a href="/blog/htdocs/DominoXSLT">Domino, XSL:FO and XSLT</a> that dives into the use of 
-<a href="http://www.w3.org/TR/xslt/">XSLT</a> and 
-<a href="http://www.w3.org/TR/xsl/">XSL:FO</a> in 
-<a href="http://www-01.ibm.com/software/lotus/products/domino/">IBM Lotus Domino</a>. 
+					<div>This entry is part of the series <a href="/blog/htdocs/DominoXSLT">Domino, XSL:FO and XSLT</a> that dives into the use of <a href="http://www.w3.org/TR/xslt/">XSLT</a> and <a href="http://www.w3.org/TR/xsl/">XSL:FO</a> in <a href="http://www-01.ibm.com/software/lotus/products/domino/">IBM Lotus Domino</a>. 
 <br> 
-<br> So far we had a look at 
-<a href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-1.html">the all over process</a>, 
-<a href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-2.html">some Java to convert FO into PDF</a> and 
-<a href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-3.html">FO Basics</a>. Time to get some Notes data exported. To make the task easier I created a little helper that allows convenient export into XML. Currently it works on a NotesDocument(Collection) basis, but it would be a small step to add a method that uses a view navigator for speed. 
-<br> The most complete rendering of a NotesDocument is done using the 
-<code>.renderXML</code> method. For a collection you use a 
-<code>NotesDxlExporter</code>. Unfortunatelty both methods are comparable slow. So I added an alternate approach (works only if you don't have RichText for the moment) and export lean XML. 
-<br> A 
-<code>Form2XMLDefinition</code> class (optional) allows to pick which fields need to be picked in the XML file. It also allows to group those fields (more on that another time - or look at the source). So the methods are: 
-<div class="java"> 
- <span class="kw1">package</span> 
- <span class="co2">com.notessensei.fop</span> 
- <span class="sy0">;</span> 
+<br> So far we had a look at <a href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-1.html">the all over process</a>, <a href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-2.html">some Java to convert FO into PDF</a> and <a href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-3.html">FO Basics</a>. Time to get some Notes data exported. To make the task easier I created a little helper that allows convenient export into XML. Currently it works on a NotesDocument(Collection) basis, but it would be a small step to add a method that uses a view navigator for speed. 
+<br> The most complete rendering of a NotesDocument is done using the <code>.renderXML</code> method. For a collection you use a <code>NotesDxlExporter</code>. Unfortunatelty both methods are comparable slow. So I added an alternate approach (works only if you don't have RichText for the moment) and export lean XML. 
+<br> A <code>Form2XMLDefinition</code> class (optional) allows to pick which fields need to be picked in the XML file. It also allows to group those fields (more on that another time - or look at the source). So the methods are: 
+<div class="java"> <span class="kw1">package</span> <span class="co2">com.notessensei.fop</span> <span class="sy0">;</span> 
  <br> 
+ <br> <span class="kw1">import</span> <span class="co2">java.io.ByteArrayOutputStream</span> <span class="sy0">;</span> 
+ <br> <span class="kw1">import</span> <span class="co2">lotus.domino.DocumentCollection</span> <span class="sy0">;</span> 
+ <br> <span class="kw1">import</span> <span class="co2">lotus.domino.Session</span> <span class="sy0">;</span> 
  <br> 
- <span class="kw1">import</span> 
- <span class="co2">java.io.ByteArrayOutputStream</span> 
- <span class="sy0">;</span> 
- <br> 
- <span class="kw1">import</span> 
- <span class="co2">lotus.domino.DocumentCollection</span> 
- <span class="sy0">;</span> 
- <br> 
- <span class="kw1">import</span> 
- <span class="co2">lotus.domino.Session</span> 
- <span class="sy0">;</span> 
- <br> 
- <br> 
- <span class="kw1">public</span> 
- <span class="kw1">interface</span> Notes2XML 
- <span class="br0">{</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">public</span> 
- <span class="kw1">abstract</span> 
- <span class="kw4">void</span> addForm 
- <span class="br0">(</span>Form2XMLDefinition newForm 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">public</span> 
- <span class="kw1">abstract</span> 
- <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Abytearrayoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">ByteArrayOutputStream</span></a> renderDocument2DXL 
- <span class="br0">(</span>lotus. 
- <span class="me1">domino</span>. 
- <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Adocument+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Document</span></a> doc 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">public</span> 
- <span class="kw1">abstract</span> 
- <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Abytearrayoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">ByteArrayOutputStream</span></a> renderDocument2XML 
- <span class="br0">(</span>lotus. 
- <span class="me1">domino</span>. 
- <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Adocument+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Document</span></a> doc 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">public</span> 
- <span class="kw1">abstract</span> 
- <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Abytearrayoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">ByteArrayOutputStream</span></a> renderDocumentCollection2DXL 
- <span class="br0">(</span>Session s, DocumentCollection dc 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">public</span> 
- <span class="kw1">abstract</span> 
- <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Abytearrayoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">ByteArrayOutputStream</span></a> renderDocumentCollection2XML 
- <span class="br0">(</span>DocumentCollection dc, 
- <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> rootName 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> 
- <span class="br0">}</span> 
-</div> I expanded the 
-<code>PDFReport</code> class with a convenience method: 
-<code>getNotesXMLExporter()</code> to be able to reuse my managed bean (beginnings of a 
-<a href="http://en.wikipedia.org/wiki/Facade_pattern">Facade pattern</a>).To render all documents of a database these few lines in an 
-<a href="/blog/2008/12/xagents-web-agents-xpages-style.html">XAgent</a> are sufficient: 
-<div class="javascript"> 
- <span class="kw2">var</span> exCon 
- <span class="sy0">=</span> facesContext. 
- <span class="me1">getExternalContext</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> 
- <span class="kw2">var</span> response 
- <span class="sy0">=</span> exCon. 
- <span class="me1">getResponse</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> 
- <span class="kw2">var</span> out 
- <span class="sy0">=</span> response. 
- <span class="me1">getOutputStream</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> response. 
- <span class="me1">setContentType</span> 
- <span class="br0">(</span> 
- <span class="st0">"application/pdf"</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> response. 
- <span class="me1">setHeader</span> 
- <span class="br0">(</span> 
- <span class="st0">"Content-disposition"</span> 
- <span class="sy0">,</span> 
- <span class="st0">"inline; filename=fruits.pdf"</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> response. 
- <span class="me1">setHeader</span> 
- <span class="br0">(</span> 
- <span class="st0">"Cache-Control"</span> 
- <span class="sy0">,</span> 
- <span class="st0">"no-cache"</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> 
- <span class="kw2">var</span> dc 
- <span class="sy0">=</span> database. 
- <span class="me1">getAllDocuments</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">; // &lt;-- Here is your document selection!</span> 
- <br> 
- <span class="kw2">var</span> extractor 
- <span class="sy0">=</span> PDF. 
- <span class="me1">getNotesXMLExporter</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> 
- <span class="kw1">try</span> 
- <span class="br0">{</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw2">var</span> raw 
- <span class="sy0">=</span> extractor. 
- <span class="me1">renderDocumentCollection2DXL</span> 
- <span class="br0">(</span>session 
- <span class="sy0">,</span>dc 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> &nbsp; &nbsp;PDF. 
- <span class="me1">fopReportFromString</span> 
- <span class="br0">(</span>out 
- <span class="sy0">,</span>raw. 
- <span class="me1">toString</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">,</span> 
- <span class="kw2">null</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> 
- <span class="br0">}</span> 
- <span class="kw1">catch</span> 
- <span class="br0">(</span>e 
- <span class="br0">)</span> 
- <span class="br0">{</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw3">print</span> 
- <span class="br0">(</span>e. 
- <span class="me1">message</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> 
- <span class="br0">}</span> 
- <br> facesContext. 
- <span class="me1">responseComplete</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> out. 
- <span class="kw3">close</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
-</div> Since I don't provide a stylesheet the 
-<a href="/blog/downloads/2012/DefaultFo.xslt">Default transformation</a> I coded into the class kicks in and renders a simple table with name and values. In a production like application you need to provide a stylesheet and a document collection based on the user action - the later shouldn't be difficult, it is standard XPages development. For the former you might consider a FO editor to make your life easier, but that's a story for another time. Feel free to experiment with 
-<a href="/blog/downloads/SHWL-8TQQ2G">the sources</a> and stay tuned.</div>
+ <br> <span class="kw1">public</span> <span class="kw1">interface</span> Notes2XML <span class="br0">{</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">public</span> <span class="kw1">abstract</span> <span class="kw4">void</span> addForm <span class="br0">(</span>Form2XMLDefinition newForm <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">public</span> <span class="kw1">abstract</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Abytearrayoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">ByteArrayOutputStream</span></a> renderDocument2DXL <span class="br0">(</span>lotus. <span class="me1">domino</span>. <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Adocument+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Document</span></a> doc <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">public</span> <span class="kw1">abstract</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Abytearrayoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">ByteArrayOutputStream</span></a> renderDocument2XML <span class="br0">(</span>lotus. <span class="me1">domino</span>. <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Adocument+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Document</span></a> doc <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">public</span> <span class="kw1">abstract</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Abytearrayoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">ByteArrayOutputStream</span></a> renderDocumentCollection2DXL <span class="br0">(</span>Session s, DocumentCollection dc <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">public</span> <span class="kw1">abstract</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Abytearrayoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">ByteArrayOutputStream</span></a> renderDocumentCollection2XML <span class="br0">(</span>DocumentCollection dc, <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> rootName <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> <span class="br0">}</span> 
+</div> I expanded the <code>PDFReport</code> class with a convenience method: <code>getNotesXMLExporter()</code> to be able to reuse my managed bean (beginnings of a <a href="http://en.wikipedia.org/wiki/Facade_pattern">Facade pattern</a>).To render all documents of a database these few lines in an <a href="/blog/2008/12/xagents-web-agents-xpages-style.html">XAgent</a> are sufficient: 
+<div class="javascript"> <span class="kw2">var</span> exCon <span class="sy0">=</span> facesContext. <span class="me1">getExternalContext</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> <span class="kw2">var</span> response <span class="sy0">=</span> exCon. <span class="me1">getResponse</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> <span class="kw2">var</span> out <span class="sy0">=</span> response. <span class="me1">getOutputStream</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> response. <span class="me1">setContentType</span> <span class="br0">(</span> <span class="st0">"application/pdf"</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> response. <span class="me1">setHeader</span> <span class="br0">(</span> <span class="st0">"Content-disposition"</span> <span class="sy0">,</span> <span class="st0">"inline; filename=fruits.pdf"</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> response. <span class="me1">setHeader</span> <span class="br0">(</span> <span class="st0">"Cache-Control"</span> <span class="sy0">,</span> <span class="st0">"no-cache"</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> <span class="kw2">var</span> dc <span class="sy0">=</span> database. <span class="me1">getAllDocuments</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">; // &lt;-- Here is your document selection!</span> 
+ <br> <span class="kw2">var</span> extractor <span class="sy0">=</span> PDF. <span class="me1">getNotesXMLExporter</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> <span class="kw1">try</span> <span class="br0">{</span> 
+ <br> &nbsp; &nbsp; <span class="kw2">var</span> raw <span class="sy0">=</span> extractor. <span class="me1">renderDocumentCollection2DXL</span> <span class="br0">(</span>session <span class="sy0">,</span>dc <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> &nbsp; &nbsp;PDF. <span class="me1">fopReportFromString</span> <span class="br0">(</span>out <span class="sy0">,</span>raw. <span class="me1">toString</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">,</span> <span class="kw2">null</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> <span class="br0">}</span> <span class="kw1">catch</span> <span class="br0">(</span>e <span class="br0">)</span> <span class="br0">{</span> 
+ <br> &nbsp; &nbsp; <span class="kw3">print</span> <span class="br0">(</span>e. <span class="me1">message</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> <span class="br0">}</span> 
+ <br> facesContext. <span class="me1">responseComplete</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> out. <span class="kw3">close</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
+</div> Since I don't provide a stylesheet the <a href="/blog/downloads/2012/DefaultFo.xslt">Default transformation</a> I coded into the class kicks in and renders a simple table with name and values. In a production like application you need to provide a stylesheet and a document collection based on the user action - the later shouldn't be difficult, it is standard XPages development. For the former you might consider a FO editor to make your life easier, but that's a story for another time. Feel free to experiment with <a href="/blog/downloads/SHWL-8TQQ2G">the sources</a> and stay tuned.</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -463,6 +310,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

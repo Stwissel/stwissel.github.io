@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - email Dashboard for the rest of us - Part 2" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2015,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -140,8 +141,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>email Dashboard for the rest of us - Part 2</small></h1>
 					<hr />
-					<div>In 
-<a href="/blog/2015/04/email-dashboard-for-the-rest-of-us-part-1.html">Part 1</a> I introduced a potential set of Java interfaces for the dashboard. In this installment I'll have a look on how to extract this data from a mail database. There are several considerations to be taken into account: 
+					<div>In <a href="/blog/2015/04/email-dashboard-for-the-rest-of-us-part-1.html">Part 1</a> I introduced a potential set of Java interfaces for the dashboard. In this installment I'll have a look on how to extract this data from a mail database. There are several considerations to be taken into account: 
 <ul> 
  <li>The source needs to supply data only from a defined range of dates - I will use 14 as an example</li> 
  <li>The type of entries needed are: 
@@ -154,18 +154,15 @@ catch(e){window.attachEvent("onload", $buo_f)}
   </ul></li> 
  <li>Data needs to be in details and in summary (counts)</li> 
  <li>People involved come in Notes addresses, groups and internet addresses, they need to be dealt with</li> 
-</ul> Since I have 
-<a href="http://en.wiktionary.org/wiki/if_all_you_have_is_a_hammer,_everything_looks_like_a_nail">more than a hammer</a>, I can split the data retrieval into different tooling. Dealing with names vs. groups is something best done with LDAP code or lookups into an address book. So I leave that to Java later on. Also running a counter when reading individual entries works quite well in Java. 
+</ul> Since I have <a href="http://en.wiktionary.org/wiki/if_all_you_have_is_a_hammer,_everything_looks_like_a_nail">more than a hammer</a>, I can split the data retrieval into different tooling. Dealing with names vs. groups is something best done with LDAP code or lookups into an address book. So I leave that to Java later on. Also running a counter when reading individual entries works quite well in Java. 
 <br> Everything else, short of the icons for the people, can be supplied by a classis Notes view (your knowledge of formula language finally pays off).To make this really fast, two things need to be taken care of: 
 <ol> 
  <li>All information needed has to be in the view, so a <code>ViewNavigator</code> is sufficient in providing the data. ViewNavigators are fast</li> 
  <li>The view should only contain relevant data: in my example 14 days. Now the tempation would be big to use @Today in the view selection formula - which is a bad idea for performance. I will use a static value, that is replaced by Java code on an as-needed basis</li> 
-</ol> So here we go. My view called 
-<code>($DashboardProvider)</code> consists of one view selection formula and 5 columns: 
+</ol> So here we go. My view called <code>($DashboardProvider)</code> consists of one view selection formula and 5 columns: 
 <br> 
 <h4>View Selection Formula</h4> 
-<pre class="brush : text">
-ExcludedForms := "Group":"Mailrule":"Person":"(GroupCalendar)":"STMeeting":
+<pre class="brush : text">ExcludedForms := "Group":"Mailrule":"Person":"(GroupCalendar)":"STMeeting":
                  "Personal Stationery":"NonDelivery Report":"eProductivityShadowEmail";
 StartDay := 20150328;
 EndDay   := 20150413;
@@ -181,8 +178,7 @@ SELECT @IsNotMember(Form;ExcludedForms)
 </pre> 
 <br> One little catch here: repeating entries and multi-day events carry all date values, so this needs to be taken care of in the Java class 
 <h4>Column 1: Date as number (categorized)</h4> 
-<pre class="brush : text">
-FullDate := @If(FollowUpDate != ""; @Date(FollowUpDate);
+<pre class="brush : text">FullDate := @If(FollowUpDate != ""; @Date(FollowUpDate);
                 CalendarDateTime!="";CalendarDateTime;
                 DeliveredDate != ""; DeliveredDate;
                 PostedDate != ""; PostedDate;
@@ -190,15 +186,13 @@ FullDate := @If(FollowUpDate != ""; @Date(FollowUpDate);
 @Year(FullDate)*10000+@Month(FullDate)*100+@Day(FullDate)
 </pre> 
 <h4>Column 2: The form (almost)</h4> 
-<pre class="brush : text">
-@If(FollowUpDate != "";
+<pre class="brush : text">@If(FollowUpDate != "";
     @If(From=@UserName;"FollowupWaiting";
         "FollowupAction");
     Form)
 </pre> 
 <h4>Column 3: The person</h4> 
-<pre class="brush : text">
-eMailNames := @If(From=@UserName;SendTo;From);
+<pre class="brush : text">eMailNames := @If(From=@UserName;SendTo;From);
 allNames   := @If(@IsAvailable(Chair);Chair;eMailNames);
 candidates := @Name([Abbreviate];@Trim(@Unique(@Replace(allNames;@UserName;""))));
 result     := "";
@@ -213,12 +207,10 @@ elements   := @Elements(candidates)+1;
 @If(result="";@Name([Abbreviate];@UserName);result)
 </pre> 
 <h4>Column 4: Start time (mostly needed for calendar)</h4> 
-<pre class="brush : text">
-@If(@IsAvailable(StartDateTime);@Time(StartDateTime);"")
+<pre class="brush : text">@If(@IsAvailable(StartDateTime);@Time(StartDateTime);"")
 </pre> 
 <h4>Column 5: the subject</h4> 
-<pre class="brush : text">
-Subject
+<pre class="brush : text">Subject
 </pre> 
 <br> Using this view, all information that will form the data for the email dashbaord can be retrieved easily. The next task at hand, for the next installment: build a Java implementation that checks the view, the selection formula and implements our interfaces defined in the first article. 
 <br> Stay tuned!</div>
@@ -356,6 +348,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

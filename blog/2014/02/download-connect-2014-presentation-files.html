@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Download Connect 2014 presentation files" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2014,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -129,11 +130,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Download Connect 2014 presentation files</small></h1>
 					<hr />
-					<div>The 
-<a href="https://connections.connect2014.com">show</a> is over and the 
-<a href="/blog/2008/01/lotussphere-presentation-batch-download.html">annual question</a> arises: how do I download all the presentations? To do that, you will need a valid username and password for the Connect 2014 site, no anonymous access here. The 2014 site is build on IBM Portal and IBM Connections. IBM Connections has a 
-<a href="http://www-10.lotus.com/ldd/appdevwiki.nsf/xpDocViewer.xsp?lookupName=IBM+Connections+4.5+API+Documentation#action=openDocument&amp;content=catcontent&amp;ct=prodDoc">ATOM REST API</a>, that opens interesting possibilities. With a few steps you can get hands on all files. I will use 
-<a href="http://curl.haxx.se/">CURL</a> to do this. 
+					<div>The <a href="https://connections.connect2014.com">show</a> is over and the <a href="/blog/2008/01/lotussphere-presentation-batch-download.html">annual question</a> arises: how do I download all the presentations? To do that, you will need a valid username and password for the Connect 2014 site, no anonymous access here. The 2014 site is build on IBM Portal and IBM Connections. IBM Connections has a <a href="http://www-10.lotus.com/ldd/appdevwiki.nsf/xpDocViewer.xsp?lookupName=IBM+Connections+4.5+API+Documentation#action=openDocument&amp;content=catcontent&amp;ct=prodDoc">ATOM REST API</a>, that opens interesting possibilities. With a few steps you can get hands on all files. I will use <a href="http://curl.haxx.se/">CURL</a> to do this. 
 <ol> 
  <li>Create or edit your <b>.netrc</b> file to add your Connect 2014 credentials (in one line)<br> <code>machine connections.connect2014.com login [YourNumericID] password [YourNumericPassword]</code> (Note [ and ] are NOT part of the line in the .netrc file)</li> 
  <li>Download the feed. Checking this morning, I found a little more than 500 files. The Connections API allows for max 500 entries per "page", so 2 calls will be sufficient for now. You can check the number of files in the <code>&lt;snx:rank&gt;</code> element in the resulting XML:<br> <code>curl --netrc -G --basic -L 'https://connections.connect2014.com/files/basic/anonymous/api/documents/feed?sK=created&amp;sO=dsc&amp;visibility=public&amp;page=1&amp;ps=500' &gt; page1.xml</code><br> <code>curl --netrc -G --basic -L 'https://connections.connect2014.com/files/basic/anonymous/api/documents/feed?sK=created&amp;sO=dsc&amp;visibility=public&amp;page=2&amp;ps=500' &gt; page2.xml</code><br> (explanation of parameters below)</li> 
@@ -160,8 +157,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
   </ul> </li> 
 </ul> As usual: YMMV<br>The XSLT used: 
 <br> 
-<pre class="brush: xml">
-&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;xsl:stylesheet version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"  xmlns:snx="http://www.ibm.com/xmlns/prod/sn"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"&gt;
     &lt;xsl:output indent="no" method="text" /&gt;
@@ -173,16 +169,12 @@ catch(e){window.attachEvent("onload", $buo_f)}
     &lt;xsl:template match="atom:link"&gt;curl --netrc -G --basic -C - -L "&lt;xsl:value-of select="@href"&gt;&lt;/xsl:value-of&gt;"    -o "&lt;xsl:value-of select="@title" /&gt;"    
 &lt;/xsl:template&gt;
 &lt;/xsl:stylesheet&gt;
-</pre> Of course, you simply could scout 
-<a href="http://www.slideshare.net/search/slideshow?q=Connect2014">Slideshare</a>. 
+</pre> Of course, you simply could scout <a href="http://www.slideshare.net/search/slideshow?q=Connect2014">Slideshare</a>. 
+<br> 
+<br> <b>Update</b>: <a href="http://www.bajic.ch/">Stevan Baji??</a> tuned the XSLT to check for the existence of the file with the right size. This makes it a Linux native script. Enjoy! The following script is ? 2014 Stevan Baji?? 
 <br> 
 <br> 
-<b>Update</b>: 
-<a href="http://www.bajic.ch/">Stevan Baji??</a> tuned the XSLT to check for the existence of the file with the right size. This makes it a Linux native script. Enjoy! The following script is ? 2014 Stevan Baji?? 
-<br> 
-<br> 
-<pre class="brush: xml">
-&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;xsl:stylesheet version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:snx="http://www.ibm.com/xmlns/prod/sn" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"&gt;
 	&lt;xsl:output indent="no" method="text" /&gt;
 	&lt;xsl:template match="/"&gt;#!/bin/bash
@@ -399,6 +391,7 @@ categories:  <a href="/blog/categories/ibm.html">IBM</a>
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

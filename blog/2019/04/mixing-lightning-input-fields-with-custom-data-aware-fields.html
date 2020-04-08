@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Mixing lightning-input-fields with custom data aware fields" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2019,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -136,12 +137,12 @@ catch(e){window.attachEvent("onload", $buo_f)}
 					<h1><small>Mixing lightning-input-fields with custom data aware fields</small></h1>
 					<hr />
 					<div><p>Salesforce lightning offers a developer various ways to design custom forms when page layouts are not enough. The <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-record-edit-form/documentation">record-edit-form</a> strikes a nice balance: it uses Lightning data service and allows one to design your own layout and field selection.</p> 
-<h3><a href="#beyond-lightning-input-fields" id="beyond-lightning-input-fields">Beyond lightning-input-fields</a></h3> 
+<h3>Beyond lightning-input-fields</h3> 
 <p>Most of the time <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-input-field/documentation">lightning-input-field</a> is all you need for this forms. They auto-magically talk to the <a href="https://developer.salesforce.com/docs/atlas.en-us.uiapi.meta/uiapi/ui_api_get_started.htm">UI API</a> and display the right input type.</p> 
 <p>However there are cases, where that's not what your users want. A recent example from a project: Phone numbers are stored as text field in Salesforce, but the users wanted a guided input: a country picker, then showing the area code picker (if the country has those) and an checker for field length for the main number (which varies greatly by country) and an eventual extension field (popular in the US, but not elsewhere).</p> 
 <p>So I started digging. Shouldn't it be possible to have something like <code>&lt;c-phone-helper field-name="Phone" /&gt;</code> and the same data magic as for <code>lightning-input-field</code> would happen? Turns out: not so fast. With events and a little code it would be possible, but that glue code needed to be applied to any custom field.</p> 
 <p>This got me thinking. The solution, it turns out, was to "extend" the <code>record-edit-form</code> to handle "rough" input components. You can give the result a try in <a href="https://github.com/Stwissel/lwcaura/tree/master/experiments/experiment8/main/default/lwc">experiment 8</a></p> 
-<h3><a href="#design-goals" id="design-goals">Design goals</a></h3> 
+<h3>Design goals</h3> 
 <ul> 
  <li>The component should be a drop-in "replacement" for <code>record-edit-form</code></li> 
  <li>Structure of a page should be similar to they way one builds <code>record-edit-form</code> based forms</li> 
@@ -150,14 +151,14 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Custom input field types should be easy to build. Once I figure out extensions, based on a base component</li> 
  <li>Opinionated: form layout is using a <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-layout/example">lightning-layout</a></li> 
 </ul> 
-<h3><a href="#results" id="results">Results</a></h3> 
+<h3>Results</h3> 
 <p>The replacement for <code>lightning-record-form</code> is <a href="https://github.com/Stwissel/lwcaura/tree/master/experiments/experiment8/main/default/lwc/extendedForm">c-extended-form</a> (from experiment 8).<br> "Replacement" is a mouth-full, since the component just wraps around a <code>lightning-record-form</code>. A few components are ready to be used for it:</p> 
 <ul> 
  <li><a href="https://github.com/Stwissel/lwcaura/tree/master/experiments/experiment8/main/default/lwc/specialInput">specialInput</a> a little test component. It just returns the input in upper case. Not very useful other than studying the boiler plate</li> 
  <li><a href="https://github.com/Stwissel/lwcaura/tree/master/experiments/experiment5/main/default/lwc/uxDebouncedInput">uxDebouncedInput</a> returns changed values after a debounce period. Default is 300ms, the attribute <code>delay</code> allows to specify duration. The component shows different behavior depending on the attribute <code>field-name</code> being present with a value. The original purpose of the field is to be used in <a href="https://github.com/Stwissel/lwcaura/tree/master/experiments/experiment5/main/default/lwc/uxQuickLookup">uxQuickLookup</a>, now you can use it standalone</li> 
  <li><a href="https://github.com/Stwissel/lwcaura/tree/master/experiments/experiment5/main/default/lwc/uxQuickLookup">uxQickLookup</a> which allows you to lookup an object. It works in lightning apps, mobile and communities and can serve as a stop-gap for the missing lookup on mobile. I <a href="/blog/2019/04/dynamic-lookup-for-lwc-update.html">recently updated it</a> to show additional fields beside the object name</li> 
 </ul> 
-<h3><a href="#how-it-works" id="how-it-works">How it works</a></h3><p>A sample form looks like this:</p> 
+<h3>How it works</h3><p>A sample form looks like this:</p> 
 <pre class="brush: xml">&lt;template&gt;
     &lt;lightning-card title="Form Sample"&gt;
         &lt;div class="slds-p-horizontal_small"&gt;
@@ -224,7 +225,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li><a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-button/example">lightning-button</a> to submit the form</li> 
  <li><a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/slot">slot</a> The place holder for the component content. In Aura that has been <code>{!v.body}</code>. A component can have multiple slots, which then need to be named and their content need to be tagged with a <code>slot</code> attribute. In the case of one unnamed slot, it is the destination of anything inside the component. <code>&lt;slot&gt;&lt;/slot&gt;</code> is part of the official <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components">Web Components</a> standard</li> 
 </ul> 
-<h3><a href="#building-custom-input-fields" id="building-custom-input-fields">Building custom input fields</a></h3> 
+<h3>Building custom input fields</h3> 
 <p>When you want to build a custom input field, there are only a few requirements</p> 
 <ul> 
  <li>Have a <code>@api fieldName</code> property for the field name you want to update</li> 
@@ -240,7 +241,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
                    label="Pick an account"
                    fields="Industry,Type,AccountNumber"&gt;&lt;/c-ux-quick-lookup&gt;
 </pre> 
-<h3><a href="#loading-data" id="loading-data">Loading Data</a></h3> 
+<h3>Loading Data</h3> 
 <p>This is handled in the <code>formLoadHandler</code>. Lightning data service provides all information we might need. In this component we pull the field values. Those values are either the current value of the field, for an existing record or the default for a new record.</p> 
 <p>Thereafter we grab all fields with the <code>data-field</code> attribute and provide a value if we have one in the record for that <code>field-name</code> (called as <code>node.fieldName</code>). It takes a while to get used to the permanent switch between <a href="http://wiki.c2.com/?KebabCase">kebab-case</a> and <a href="http://wiki.c2.com/?CamelCase">CamelCase</a>.</p> 
 <pre class="brush: js">    formLoadHandler(event) {
@@ -266,7 +267,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
         }
     }
 </pre> 
-<h3><a href="#handling-changes" id="handling-changes">Handling Changes</a></h3> 
+<h3>Handling Changes</h3> 
 <p>Handling changes has 2 components. First we need to attach a event listener watching out for the <code>valueChanged</code> event. This is done in the constructor. Since events bubble, we don't need to bind one to each of our special input fields.</p> 
 <pre class="brush: js">    constructor() {
         super();
@@ -283,7 +284,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
     };
 </pre> 
 <p>The syntax is something to get used to, especially when you have function that don't take input parameters and you see <code>let x = () =&gt; { return Math.random()}</code> - which just returns a random when you call <code>x()</code></p> 
-<h3><a href="#saving-back" id="saving-back">Saving back</a></h3> 
+<h3>Saving back</h3> 
 <p>The final piece is saving data back to Salesforce. The <code>onsubmit</code> event provides access to the whole form and we can easily mix in the values we have collected from the fields' <code>valueChanged</code> event. The beauty: no special server code required. We operate in the context of the lightning data service.</p> 
 <pre class="brush: js">formSubmitHandler = event =&gt; {
         event.preventDefault();
@@ -457,6 +458,7 @@ Any thoughts?</p>
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

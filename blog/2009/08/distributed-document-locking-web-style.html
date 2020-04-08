@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Distributed Document Locking Web Style" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2009,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -129,9 +130,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Distributed Document Locking Web Style</small></h1>
 					<hr />
-					<div>Notes and Domino applications often revolve around documents and approvals. When editing a document the application must ensure that nobody else can edit it. In Lotus Notes applications we have the 
-<a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.help.domino.designer85.doc/DOC/H_LOCKING_DOCUMENTS_AND_DESIGN_ELEMENTS_JAVA.html">Document locking functions</a> which can even do a distributed locking. Looks good works well, if it wouldn't be for the last sentence in the developer help: 
-<i>Locks are not supported in Web applications</i>. So you need to roll your own. Distributed operation can be tricky. The solution is to use an XPage (or servlet for older versions of Domino) on each server that runs a locking service. This service figures out what's the master lock server and tries to use it. If succesful it issues a lock, on failure to reach it it provides a provisional lock. The master server registers which server has asked for a lock status and notifies them when a lock is removed or renewed. Lock information is locally cached to minimize user delays. The flow would look like this: 
+					<div>Notes and Domino applications often revolve around documents and approvals. When editing a document the application must ensure that nobody else can edit it. In Lotus Notes applications we have the <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.help.domino.designer85.doc/DOC/H_LOCKING_DOCUMENTS_AND_DESIGN_ELEMENTS_JAVA.html">Document locking functions</a> which can even do a distributed locking. Looks good works well, if it wouldn't be for the last sentence in the developer help: <i>Locks are not supported in Web applications</i>. So you need to roll your own. Distributed operation can be tricky. The solution is to use an XPage (or servlet for older versions of Domino) on each server that runs a locking service. This service figures out what's the master lock server and tries to use it. If succesful it issues a lock, on failure to reach it it provides a provisional lock. The master server registers which server has asked for a lock status and notifies them when a lock is removed or renewed. Lock information is locally cached to minimize user delays. The flow would look like this: 
 <br> 
 <img src="/blog/images/2009/DistributedLocking.jpg" border="0" alt="Distributed document locking on the web"> 
 <br> There are a number of considerations when designing the detailed functionality: 
@@ -145,14 +144,12 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>What would a syntax look like both for requests and responses?</li> 
 </ul> This is what I came up with: 
 <br> 
-<pre>
-http://one.ofmy.servers.com/lockmaster.nsf/service.xsp?action=lock&amp;db=databasereplicaid&amp;doc=documentuniqueid
+<pre>http://one.ofmy.servers.com/lockmaster.nsf/service.xsp?action=lock&amp;db=databasereplicaid&amp;doc=documentuniqueid
 http://one.ofmy.servers.com/lockmaster.nsf/service.xsp?action=status&amp;db=databasereplicaid&amp;doc=documentuniqueid
 http://one.ofmy.servers.com/lockmaster.nsf/service.xsp?action=unlock&amp;id=locktokenid
 http://one.ofmy.servers.com/lockmaster.nsf/service.xsp?action=relock&amp;id=locktokenid
 </pre> Since a user "talks" to their own server the lockmaster has access to session.username. So a relock or unlock request can be verified against the user who made the original reqest and ignore/reject invalid username/token combinations. The response from the lockmaster would be in JSON and rather lean: 
-<pre>
-{ "status" : "ok|fail",
+<pre>{ "status" : "ok|fail",
    "db":"databasereplicaid",
    "doc":"documentuniqueid",
     "owner":"Full name of the Owner"
@@ -296,6 +293,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

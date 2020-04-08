@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Now that the client is gone - what to do with all that notes:// links?" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2015,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -129,50 +130,33 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Now that the client is gone - what to do with all that notes:// links?</small></h1>
 					<hr />
-					<div>In your mind you drank the cool-aid and got onto 
-<a href="http://www.ibm.com/social-business/us/en/newway/">IBM Verse</a> or went to 
-<a href="http://rice.co.nz/thewhiteboard/wp-content/uploads/2013/08/keep-calm-and-join-the-dark-side-42-4.png">the dark side</a>. You web enabled all of your applications ( 
-<a href="http://redpilldevelopment.com/life-after-the-notes-client/">smartly</a>) and you are ready to turn off the Notes clients. 
+					<div>In your mind you drank the cool-aid and got onto <a href="http://www.ibm.com/social-business/us/en/newway/">IBM Verse</a> or went to <a href="http://rice.co.nz/thewhiteboard/wp-content/uploads/2013/08/keep-calm-and-join-the-dark-side-42-4.png">the dark side</a>. You web enabled all of your applications ( <a href="http://redpilldevelopment.com/life-after-the-notes-client/">smartly</a>) and you are ready to turn off the Notes clients. 
 <br> But then you realize: there are notes:// URLs (or their file equivalents ndl files) and doclinks spread all over your organisation: in eMails, in office documents, in applications in personal information vaults. 
 <br> So you wake up and go back to the drawing board. 
-<h3>What is the issue at hand?</h3> Lotus Notes was one of the first applications (as I recall, the first commercial) that made 
-<b>large scale</b> use of 
-<a href="http://en.wikipedia.org/wiki/Hyperlink">Hyperlinks</a> (Yep, hyperlink doesn't mean it starts with http). 
-<br> Creating, storing and exchanging links to information was one of the key success components of groupware and later the world wide web (which Notes predates). A hyperlink is 
-<b>unidirectional</b>, so the link 
-<b>target</b> has no knowledge where hyperlinks are located pointing to it. So inspecting a target gives no indication of a potential 
-<b>source</b>. 
-<br> When you move a target, e.g. change or decomission the server, then you create 
-<a href="http://en.wikipedia.org/wiki/Link_rot">Link Rot</a>, the digital equivalent of Alzheimer's disease. 
+<h3>What is the issue at hand?</h3> Lotus Notes was one of the first applications (as I recall, the first commercial) that made <b>large scale</b> use of <a href="http://en.wikipedia.org/wiki/Hyperlink">Hyperlinks</a> (Yep, hyperlink doesn't mean it starts with http). 
+<br> Creating, storing and exchanging links to information was one of the key success components of groupware and later the world wide web (which Notes predates). A hyperlink is <b>unidirectional</b>, so the link <b>target</b> has no knowledge where hyperlinks are located pointing to it. So inspecting a target gives no indication of a potential <b>source</b>. 
+<br> When you move a target, e.g. change or decomission the server, then you create <a href="http://en.wikipedia.org/wiki/Link_rot">Link Rot</a>, the digital equivalent of Alzheimer's disease. 
 <br> Removing the Notes client adds a second problem. Each Hyperlink not only has a target, but also a protocol. That is the part in front of the colon. 
 <br> Most of the time you think you deal only with http or https, but there are many more: mailto (for eMail), ftp (for file transfer), cifs (for file servers), ssh (for secure shell connections), call (for VoiP), chat (for chat), sap (to call the SAP client). 
 <br> Each protocol has a handler application. When you don't have a handler application for a specific protocol installed, your operating system will throw and error when you try to use it. 
-<br> Like a Demo? 
-<a href="fictiousprotocol://doesn't.get.you.anywhere">Try it for youself</a>! 
+<br> Like a Demo? <a href="fictiousprotocol://doesn't.get.you.anywhere">Try it for youself</a>! 
 <br> So to replace a protocol handler application (in our case the Notes client) 
 <h3>Solution</h3>You need to do 2 things: 
 <ol> 
  <li>In your web enablement / data migration project capture all source and target mappings. For some stuff simple formulas (<a href="http://en.wikipedia.org/wiki/Regular_expression">regex</a>) might do, but in most cases a key value store is required. Playing with different web technologies on <a href="https://www.wissel.net/">wissel.net</a> and <a href="https://www.notessensei.com">notessensei.com</a>, but rendering the same content, I tested the hypothesis and found key value stores suitable.<br> In a nutshell: links <a href="http://www.nngroup.com/articles/web-pages-must-live-forever/">need to live forever</a>, come <a href="https://www.youtube.com/watch?v=_Jtpf8N5IDE">sing along</a></li> 
  <li>Create a replacement for the <code>notes://</code> URL handler (and the ndl file type), so any link starting with <code>notes://</code> will then be looked up in your key value store and rendered by the appropriate application.<br> The little special challenge here: when you web enable applications over a period of time, you still might have a Notes client, but that specific URL is gone. When you keep your NSF and just add the webUI, this won't be an issue. But it is a problem you will face when switching the platform</li> 
 </ol> 
-<h3>Denial</h3> Alternatively you can claim 
-<a href="http://www.urbandictionary.com/define.php?term=ignorance+is+bliss">ignorance is bliss</a> and succumb to digital dementia. The usual aguments 
-<b>not</b> to act: 
+<h3>Denial</h3> Alternatively you can claim <a href="http://www.urbandictionary.com/define.php?term=ignorance+is+bliss">ignorance is bliss</a> and succumb to digital dementia. The usual aguments <b>not</b> to act: 
 <ul> 
  <li>the information is old, nobody needs it</li> 
  <li>we have great search in the new application, so users will find it</li> 
  <li>it is a waste of money and time</li> 
  <li>We have it archived, so what's the problem</li> 
  <li>We keep one machine with a client around, so users can look it up</li> 
-</ul> If that's the prevalent line of thought in the organisation, wecome to binary 
-<a href="http://en.wikipedia.org/wiki/Lobotomy">lobodomy</a>, if not, read on.<h3>Implementation</h3> On Windows file extensions and protocols are stored in the Windows Registry. After properly uninstalling IBM (or Lotus) Notes, there are no entries for 
-<code>notes://</code> and the Notes file extensions. For links to work, we don't need to look at nsf or ntf, since you would need a Notes client to open those. We only need to look at the notes:// protocol and the ndl extension. 
-<br> The easiest way is a small helper application that posts the original URL to a web server which then would process it. To get Windows to recognise the protocol, you need to add it to the registry. The following snippet defines the protocol 
-<code>tango://</code> which you can adjust to 
-<code>notes://</code> or whatever need you have: 
+</ul> If that's the prevalent line of thought in the organisation, wecome to binary <a href="http://en.wikipedia.org/wiki/Lobotomy">lobodomy</a>, if not, read on.<h3>Implementation</h3> On Windows file extensions and protocols are stored in the Windows Registry. After properly uninstalling IBM (or Lotus) Notes, there are no entries for <code>notes://</code> and the Notes file extensions. For links to work, we don't need to look at nsf or ntf, since you would need a Notes client to open those. We only need to look at the notes:// protocol and the ndl extension. 
+<br> The easiest way is a small helper application that posts the original URL to a web server which then would process it. To get Windows to recognise the protocol, you need to add it to the registry. The following snippet defines the protocol <code>tango://</code> which you can adjust to <code>notes://</code> or whatever need you have: 
 <br> 
-<pre class="brush: text">
-Windows Registry Editor Version 5.00
+<pre class="brush: text">Windows Registry Editor Version 5.00
 
 [HKEY_CLASSES_ROOT\tango]
 @="URL:Tango Protocol"
@@ -186,19 +170,13 @@ Windows Registry Editor Version 5.00
 [HKEY_CLASSES_ROOT\tango\shell\open\command]
 @="\"C:\\bat\\test.cmd\" \"%1\""
 </pre> 
-<br> There is a 
-<a href="https://github.com/OpenNTF/WebDAVForDomino/blob/master/com.ibm.xsp.webdav/webDAVHelper/WebDocOpenSetup.nsi">sample</a> how to use the 
-<a href="http://nsis.sourceforge.net/">NSIS installer</a> to deploy such a registry setting. Now all that is needed is a mechanism that launches your lookup to retrieve the new location. Presuming your new application would be web based, it makes sense to have the retrieval web based too. Details of such an application are subject to another time, I'll only consider how to call it for now. Your command file (in my case 
-<code>C:\bat\test.cmd</code>) only needs 2 lines: 
+<br> There is a <a href="https://github.com/OpenNTF/WebDAVForDomino/blob/master/com.ibm.xsp.webdav/webDAVHelper/WebDocOpenSetup.nsi">sample</a> how to use the <a href="http://nsis.sourceforge.net/">NSIS installer</a> to deploy such a registry setting. Now all that is needed is a mechanism that launches your lookup to retrieve the new location. Presuming your new application would be web based, it makes sense to have the retrieval web based too. Details of such an application are subject to another time, I'll only consider how to call it for now. Your command file (in my case <code>C:\bat\test.cmd</code>) only needs 2 lines: 
 <br> 
-<pre class="brush: bash">
-@echo off
+<pre class="brush: bash">@echo off
 start https://urlmapper.yourcompany.com/map?source=%1
 </pre> 
-<br> The application would then lookup the source in the key value store and either display an 404 error page (with the option to investigate), when you didn't find that link or use a 
-<a href="http://en.wikipedia.org/wiki/HTTP_301">301 redirect</a> to open the new destination. Such a mapper application is useful not only for decommissioning a client based protocol (notes, sap, chat), but also for web revamps where URLs change in large numbers. It is important that the application reacts on http GET, since the launching of a browser only can take an URL, but not a payload for a POST command. 
-<br> You might wonder why I muse removing the Notes client? Well, I'm a Domino fan and like 
-<a href="/blog/2014/09/put-an-angular-face-on-your-inbox.html">local browser access</a>, so I might get to the point fast where I want notes:// to point to an http(s):// URL instead 
+<br> The application would then lookup the source in the key value store and either display an 404 error page (with the option to investigate), when you didn't find that link or use a <a href="http://en.wikipedia.org/wiki/HTTP_301">301 redirect</a> to open the new destination. Such a mapper application is useful not only for decommissioning a client based protocol (notes, sap, chat), but also for web revamps where URLs change in large numbers. It is important that the application reacts on http GET, since the launching of a browser only can take an URL, but not a payload for a POST command. 
+<br> You might wonder why I muse removing the Notes client? Well, I'm a Domino fan and like <a href="/blog/2014/09/put-an-angular-face-on-your-inbox.html">local browser access</a>, so I might get to the point fast where I want notes:// to point to an http(s):// URL instead 
 <br> As usual YMMV.</div>
 					<hr />
 					<p>
@@ -353,6 +331,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

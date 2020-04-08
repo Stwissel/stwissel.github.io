@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Building a shared approval frontend in XPages" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2014,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -129,8 +130,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Building a shared approval frontend in XPages</small></h1>
 					<hr />
-					<div>The saying goes: " 
-<i>God would not have been able to create the world in 7 days, if there would have been an installed base to take care of</i>". As much as we wish to have divine powers, we need to make with less and look after an installed base. Point in case: You have a set of approval applications in classic Notes client code, like: Travel, Leave, Expenses, Gifts, Training, BoM changes etc. You are challenged to provide a web and/or mobile interface for them. 
+					<div>The saying goes: " <i>God would not have been able to create the world in 7 days, if there would have been an installed base to take care of</i>". As much as we wish to have divine powers, we need to make with less and look after an installed base. Point in case: You have a set of approval applications in classic Notes client code, like: Travel, Leave, Expenses, Gifts, Training, BoM changes etc. You are challenged to provide a web and/or mobile interface for them. 
 <br> Considering your options you have to decide between options: 
 <ol> 
  <li>Dump the applications and rebuild them on a new platform. Hope that it will take long enough, so nobody will ask you to migrate any of the existing data</li> 
@@ -145,26 +145,20 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>The flow logic (how many approvers per level etc.) is determined on submission by the original application</li> 
  <li>Someone from a different department indicated interest to use the approval screen from a complete different system (that is the "scope creep" that happens in any project)</li> 
 </ul> When you look at workflow systems, while planning your application, you will notice, that there are 2 types of data: the flow state/sequence and the specific request data. The flow state is stuff like: what's the current status, what are the potential decisions (usually: Yes, No, More info please), who are the past, current, future approvers. The specific request data is stuff like: duration and type of leave, price of items to purchase, customer involved etc. 
-<br> In your existing applications the two are stored together (and will stay like that), but you need to extract the flow data to your new 
-<i>approvalCentral</i> application. On the back of a napkin you draw this sequence: 
-<br> 
-<a href="/blog/images/2014/ApprovalFlow.svg" title="Click here for a SVG version"> <img src="/blog/images/2014/ApprovalFlow.png" border="0" alt="Your approval workflow"></a> 
-<br> (Image created with 
-<a href="http://bramp.github.io/js-sequence-diagrams/">JS Sequence Diagrams</a> and postprocessed with 
-<a href="https://inkscape.org/en/">InkScape</a>) 
+<br> In your existing applications the two are stored together (and will stay like that), but you need to extract the flow data to your new <i>approvalCentral</i> application. On the back of a napkin you draw this sequence: 
+<br> <a href="/blog/images/2014/ApprovalFlow.svg" title="Click here for a SVG version"> <img src="/blog/images/2014/ApprovalFlow.png" border="0" alt="Your approval workflow"></a> 
+<br> (Image created with <a href="http://bramp.github.io/js-sequence-diagrams/">JS Sequence Diagrams</a> and postprocessed with <a href="https://inkscape.org/en/">InkScape</a>) 
 <br> 
 <br> The green part of the application exists, the first question is: how to design the submission. There are a number of options you could choose from: 
 <ul> 
- <li>Have the Approval Central application poll participating applications on schedule. That option is least efficient, but might be your only choice if you can't touch the existing apps at all (happens more often than you think, when 
-  <strike>
+ <li>Have the Approval Central application poll participating applications on schedule. That option is least efficient, but might be your only choice if you can't touch the existing apps at all (happens more often than you think, when <strike>
     admins are paranoid 
   </strike> policies are set very cautious</li> 
  <li>Have each application create a flow document directly in the workflow central application. You could use a inherited LotusScript library for that. While that might have been the prefered choice a decade ago, it has two problems: first you limit your participating applications to Notes only (and there are other applications with decision requirements) and you would expose the inner workings of your application prematurely</li> 
  <li>Use a web service interface to implement <a href="http://en.wikipedia.org/wiki/Design_by_contract">Contract first</a> development. While REST is the current IT fashion, you pick SOAP. The simple reason: LotusScript can talk SOAP quite well via the Webservice consumer design element, while REST would require your notification code being written in Java. So a SOAP service it is</li> 
 </ul>To get started two classes in LotusScript provide the interface the WebService provider needs to generate the WSDL file for submission. In a production environment you need to add validation and sanity checks to the code (and probably more fields): 
 <br> 
-<pre class="brush: vb">
-Option Public
+<pre class="brush: vb">Option Public
 Option Declare
 
 Public Class ApprovalRequest	
@@ -193,12 +187,9 @@ Public Class ApprovalSubmission
 	End Function	
 End Class
 </pre> 
-<br> Using this class you can generate the WSDL by pointing to 
-<code>ApprovalSubmission</code> as 
-<i>PortType</i> class. The resulting WSDL looks like this: 
+<br> Using this class you can generate the WSDL by pointing to <code>ApprovalSubmission</code> as <i>PortType</i> class. The resulting WSDL looks like this: 
 <br> 
-<pre class="brush: xml">
-&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;definitions targetNamespace="urn:DefaultNamespace"
      xmlns="http://schemas.xmlsoap.org/wsdl/"
      xmlns:apachesoap="http://xml.apache.org/xml-soap"
@@ -252,14 +243,10 @@ End Class
  &lt;/service&gt;
 &lt;/definitions&gt;
 </pre> 
-<br> Using a 
-<a href="https://addons.mozilla.org/en-US/firefox/addon/soa-client">SOAP client</a>, you can start testing that interface. When you look at the skeleton API you will see a notable absence of specific data for that request. I was thinking quite hard if the specific data should be included and if yes in what format. In conclusion I opted against it to keep the interface lean. Also the set of potential decisions (Yes,No,Try again etc.) is something I'd rather delegate to a configuration document. This will allow to gradually move the whole flow into the approval application. 
-<br> The callback location would, for a Notes application, contain the notes://... URL, so 
-<code>session.resolve(CallbackLocation)</code> will give us a handle on the document. Using our 
-<a href="/blog/2014/11/mustache-helper-for-domino.html">newly acquired</a> {{Mustache}} skills, we can call back and pull information out as HTML blob as needed. You might want to pull different information based on the (size) capabilities of your target device. 
+<br> Using a <a href="https://addons.mozilla.org/en-US/firefox/addon/soa-client">SOAP client</a>, you can start testing that interface. When you look at the skeleton API you will see a notable absence of specific data for that request. I was thinking quite hard if the specific data should be included and if yes in what format. In conclusion I opted against it to keep the interface lean. Also the set of potential decisions (Yes,No,Try again etc.) is something I'd rather delegate to a configuration document. This will allow to gradually move the whole flow into the approval application. 
+<br> The callback location would, for a Notes application, contain the notes://... URL, so <code>session.resolve(CallbackLocation)</code> will give us a handle on the document. Using our <a href="/blog/2014/11/mustache-helper-for-domino.html">newly acquired</a> {{Mustache}} skills, we can call back and pull information out as HTML blob as needed. You might want to pull different information based on the (size) capabilities of your target device. 
 <br> The callback can later be used to write back values into the application document. Some planning to get that right (and some facade and factories) is required. Another consideration, once your code is working, is caching. Should you pull the data from the applications live on request or pull them when you get the request. Until your application is running well I'd opt for live pulling - unless the access to the servers is slow. 
-<br> Your next step: pick a 
-<a href="http://192.241.236.31/themes/preview/smartadmin/1.5/angularjs">UI layout</a></div>
+<br> Your next step: pick a <a href="http://192.241.236.31/themes/preview/smartadmin/1.5/angularjs">UI layout</a></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -391,6 +378,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";
