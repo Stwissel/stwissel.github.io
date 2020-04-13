@@ -6,7 +6,49 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2019 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 08 Apr 2020 20:26:35 +0000</pubdate>
+	<pubdate>Mon, 13 Apr 2020 15:29:20 +0000</pubdate>
+<item>
+	<title>SimpleXMLDoc revisited</title>
+	<description>&lt;p&gt;It is 2020, &lt;a href="https://www.json.org/json-en.html"&gt;JSON&lt;/a&gt; is supposed to have won, with a &lt;a href="https://en.wikipedia.org/wiki/Protocol_Buffers"&gt;challenger in sight&lt;/a&gt;. &lt;a href="https://en.wikipedia.org/wiki/XML"&gt;XML&lt;/a&gt; with its fine distinction between Elements, Attributes and clear ownership demarked by name spaces, was supposed to be gone. But &lt;a href="https://www.odata.org/"&gt;OData&lt;/a&gt; made it &lt;a href="http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html"&gt;necessary&lt;/a&gt; to look again, as did &lt;a href="https://en.wikipedia.org/wiki/CalDAV"&gt;CalDAV&lt;/a&gt;&lt;/p&gt; 
+&lt;h3&gt;Out into the OutputStream&lt;/h3&gt; 
+&lt;p&gt;The &lt;a href="https://www.wissel.net/blog/downloads/2011/SimpleXMLDoc.java"&gt;initial version&lt;/a&gt; was introduced in the &lt;a href="https://wissel.net/blog/2011/10/xml-helper-class-for-xagents.html"&gt;context of XAgents&lt;/a&gt; which mandated an &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/io/OutputStream.html"&gt;OutputStream&lt;/a&gt;. I find that adequate and useful, so I kept that. If you just want a String, a &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/io/ByteArrayOutputStream.html"&gt;ByteArrayOutputStream&lt;/a&gt; will do quite nicely&lt;/p&gt; 
+&lt;h3&gt;Fluent methods&lt;/h3&gt; 
+&lt;p&gt;The big change to the &lt;a href="https://gist.github.com/Stwissel/ff2dca14074058e80c374bf6cfd0897e"&gt;revamped version&lt;/a&gt; is the addition of a fluent API. Each method call returns the object instance itself, so you can chain your document creation to look modern (and type less)&lt;/p&gt; 
+&lt;h3&gt;Namespace and attributes&lt;/h3&gt; 
+&lt;p&gt;Originally I though "simple" would be sufficient to create &lt;code&gt;Elements&lt;/code&gt; only. But as time goes by one starts to appreciate name spaces and &lt;code&gt;Attributes&lt;/code&gt;, so I added support for these too. To keep things simple: once we specify the namespace at the beginning of the document, we can simply refer to it by its alias name.&lt;/p&gt; 
+&lt;p&gt;A sample:&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;    final ByteArrayOutputStream out = new ByteArrayOutputStream();
+    final SimpleXMLDoc doc = new SimpleXMLDoc(out);
+    doc.addNamespace("X", "https://xmen.org")
+    .addNamespace("", "https://whyOhWhy.com/xml")
+    .setXmlStyleSheet("somestle.xslt")
+    .openElement("Endpoints")
+    .openElement(doc.element("X:Endpoint")
+          .addAttribute("name", "A Name")
+          .addAttribute("url", "http://anywhere/")
+          .addAttribute("meta", "meta not metta"))
+     .closeElement(1)
+     .addSimpleElement("description", "Something useful")
+     .closeDocument();
+    System.out.println(out.toString());
+&lt;/pre&gt; 
+&lt;h3&gt;Key methods&lt;/h3&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;&lt;code&gt;addNamespace&lt;/code&gt;: adds one name space and establishes the alias. To keep it simple, namespaces are defined &lt;strong&gt;only&lt;/strong&gt; at the beginning fo the document&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;setXmlStyleSheet&lt;/code&gt;: Same here, needs to be defined at the beginning - after all this class streams the result and stylesheets only start at the beginning&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;OpenElement&lt;/code&gt; starts a new XML Element. When provided with a string, it is an attribute free element, that can include the namespace abbreviation. When using a doc.element, we can add attributes&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;addSimpleElement&lt;/code&gt;: add an element, its String content and close it&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;closeElement&lt;/code&gt;: write out a number of closing tags. It deliberately uses number of tags and not tag names, so you don't need to track the names you have opened. Ensures that XML stays valid&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;closeDocument&lt;/code&gt;: closes all remaining Elements in the correct sequence and closes the document. Can be called once only&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;Check the &lt;a href="https://gist.github.com/Stwissel/ff2dca14074058e80c374bf6cfd0897e"&gt;full source code&lt;/a&gt; for details&lt;/p&gt; 
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2020/04/simplexmldoc-revisited.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>0bf96660-7d93-11ea-96f1-bbdc839f73d4</guid>
+	<pubDate>13 April 2020</pubDate>
+
+</item>
 <item>
 	<title>vert.x and CORS</title>
 	<description>&lt;p&gt;One of the security mechanism for &lt;a href="https://en.wikipedia.org/wiki/Ajax_(programming)"&gt;AJAX&lt;/a&gt; calls is &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS"&gt;CORS&lt;/a&gt; (Cross-Origin Resource sharing), where a server advice a browser if it can request resources from it, coming from a different domain.&lt;/p&gt; 
@@ -283,44 +325,6 @@ getfattr test.txt
 	<author>Stephan H. Wissel</author>
 	<guid>b30bbb10-4459-11ea-95b7-c1696d82d3ca</guid>
 	<pubDate>01 February 2020</pubDate>
-
-</item>
-<item>
-	<title>Unit Tests and Singletons</title>
-	<description>&lt;p&gt;Good developers &lt;a href="https://apiumhub.com/tech-blog-barcelona/top-benefits-of-unit-testing/"&gt;test their code&lt;/a&gt;. There are plenty of frameworks and tools around to make it less painful. Not every code is testable, so you &lt;a href="https://en.wikipedia.org/wiki/Test-driven_development"&gt;write test first&lt;/a&gt;, to avoid getting stuck with untestable code. However there are situations where &lt;a href="https://en.wikipedia.org/wiki/Unit_testing"&gt;Unit Testing&lt;/a&gt; and pattern get into each other's way&lt;/p&gt; 
-&lt;h3&gt;The singleton and test isolation&lt;/h3&gt; 
-&lt;p&gt;I'm a big fan of &lt;a href="https://www.javatpoint.com/design-patterns-in-java"&gt;design patterns&lt;/a&gt;, after all they are &lt;strong&gt;a well-proven solutions&lt;/strong&gt; for specific known problems. E.g. the &lt;a href="https://en.wikipedia.org/wiki/Observer_pattern"&gt;observer pattern&lt;/a&gt; is the foundation of &lt;a href="http://reactivex.io/"&gt;reactive programming&lt;/a&gt;.&lt;/p&gt; 
-&lt;p&gt;A common approach to implementing cache is the &lt;a href="https://en.wikipedia.org/wiki/Singleton_pattern"&gt;singleton pattern&lt;/a&gt;, that ensures all your code talks to the same cache instance ,independent of what cache you actually use: &lt;a href="https://www.aerospike.com/"&gt;Aerospike&lt;/a&gt;, &lt;a href="https://redis.io/"&gt;Redis&lt;/a&gt;, &lt;a href="https://github.com/google/guava/wiki/CachesExplained"&gt;Guava&lt;/a&gt;, &lt;a href="https://commons.apache.org/proper/commons-jcs/"&gt;JCS&lt;/a&gt; or others.&lt;/p&gt; 
-&lt;p&gt;Your singleton would look like this:&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;public enum TicketCache {
-  INSTANCE;
-  
-  public Set&amp;lt;String&amp;gt; getTickets(final String systemId) {
-    Set&amp;lt;String&amp;gt; result = new HashSet&amp;lt;&amp;gt;();
-    // Your cache related code goes here
-    return result;
-  }
-  
-  public TicketCache addTicket(final String systemId, final String ticketId) {
-    // Your cache/persistence code goes here
-    return this;
-  }
-}
-&lt;/pre&gt; 
-&lt;p&gt;and a method in a class returning tickets (e.g. in a user object) for a user could look like this:&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;  public Set&amp;lt;String&amp;gt; getUserTickets() {
-    Set&amp;lt;String&amp;gt; result = new HashSet&amp;lt;&amp;gt;();
-    Set&amp;lt;String&amp;gt; systemsResponsibleFor = this.getSystems();
-    systemsResponsibleFor.forEach(systemId -&amp;gt; 
-      result.addAll(TicketCache.INSTANCE.getTickets(systemId)));
-    return result;
-  }
-&lt;/pre&gt; 
-&lt;p&gt;Now when you want to test this method, you have a dependency on &lt;code&gt;TicketCache&lt;/code&gt; and can't test the &lt;code&gt;getUserTickets()&lt;/code&gt; method in isolation. You are at &lt;a href="https://stackoverflow.com/questions/995340/is-implementing-a-cache-considered-a-difficult-problem"&gt;the mercy&lt;/a&gt; of your cache implementation. But there &lt;strong&gt;is a better way&lt;/strong&gt;&lt;/p&gt;</description>
-	<link>2020/01/unit-tests-and-singletons.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>254ad5b0-3390-11ea-81da-9f01f1d1b51b</guid>
-	<pubDate>10 January 2020</pubDate>
 
 </item>
 

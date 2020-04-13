@@ -111,6 +111,59 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2020/04/simplexmldoc-revisited.html">SimpleXMLDoc revisited</a></small></h1>
+					<hr />
+					<div><p>It is 2020, <a href="https://www.json.org/json-en.html">JSON</a> is supposed to have won, with a <a href="https://en.wikipedia.org/wiki/Protocol_Buffers">challenger in sight</a>. <a href="https://en.wikipedia.org/wiki/XML">XML</a> with its fine distinction between Elements, Attributes and clear ownership demarked by name spaces, was supposed to be gone. But <a href="https://www.odata.org/">OData</a> made it <a href="http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html">necessary</a> to look again, as did <a href="https://en.wikipedia.org/wiki/CalDAV">CalDAV</a></p> 
+<h3>Out into the OutputStream</h3> 
+<p>The <a href="https://www.wissel.net/blog/downloads/2011/SimpleXMLDoc.java">initial version</a> was introduced in the <a href="https://wissel.net/blog/2011/10/xml-helper-class-for-xagents.html">context of XAgents</a> which mandated an <a href="https://docs.oracle.com/javase/8/docs/api/java/io/OutputStream.html">OutputStream</a>. I find that adequate and useful, so I kept that. If you just want a String, a <a href="https://docs.oracle.com/javase/8/docs/api/java/io/ByteArrayOutputStream.html">ByteArrayOutputStream</a> will do quite nicely</p> 
+<h3>Fluent methods</h3> 
+<p>The big change to the <a href="https://gist.github.com/Stwissel/ff2dca14074058e80c374bf6cfd0897e">revamped version</a> is the addition of a fluent API. Each method call returns the object instance itself, so you can chain your document creation to look modern (and type less)</p> 
+<h3>Namespace and attributes</h3> 
+<p>Originally I though "simple" would be sufficient to create <code>Elements</code> only. But as time goes by one starts to appreciate name spaces and <code>Attributes</code>, so I added support for these too. To keep things simple: once we specify the namespace at the beginning of the document, we can simply refer to it by its alias name.</p> 
+<p>A sample:</p> 
+<pre class="brush: java">    final ByteArrayOutputStream out = new ByteArrayOutputStream();
+    final SimpleXMLDoc doc = new SimpleXMLDoc(out);
+    doc.addNamespace("X", "https://xmen.org")
+    .addNamespace("", "https://whyOhWhy.com/xml")
+    .setXmlStyleSheet("somestle.xslt")
+    .openElement("Endpoints")
+    .openElement(doc.element("X:Endpoint")
+          .addAttribute("name", "A Name")
+          .addAttribute("url", "http://anywhere/")
+          .addAttribute("meta", "meta not metta"))
+     .closeElement(1)
+     .addSimpleElement("description", "Something useful")
+     .closeDocument();
+    System.out.println(out.toString());
+</pre> 
+<h3>Key methods</h3> 
+<ul> 
+ <li><code>addNamespace</code>: adds one name space and establishes the alias. To keep it simple, namespaces are defined <strong>only</strong> at the beginning fo the document</li> 
+ <li><code>setXmlStyleSheet</code>: Same here, needs to be defined at the beginning - after all this class streams the result and stylesheets only start at the beginning</li> 
+ <li><code>OpenElement</code> starts a new XML Element. When provided with a string, it is an attribute free element, that can include the namespace abbreviation. When using a doc.element, we can add attributes</li> 
+ <li><code>addSimpleElement</code>: add an element, its String content and close it</li> 
+ <li><code>closeElement</code>: write out a number of closing tags. It deliberately uses number of tags and not tag names, so you don't need to track the names you have opened. Ensures that XML stays valid</li> 
+ <li><code>closeDocument</code>: closes all remaining Elements in the correct sequence and closes the document. Can be called once only</li> 
+</ul> 
+<p>Check the <a href="https://gist.github.com/Stwissel/ff2dca14074058e80c374bf6cfd0897e">full source code</a> for details</p> 
+<p>As usual YMMV</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 13 April 2020
+<span class="divider">|</span>
+<a href="/blog/2020/04/simplexmldoc-revisited.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/singapore.html">Singapore</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/04/simplexmldoc-revisited.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="SimpleXMLDoc revisited" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2020/04/simplexmldoc-revisited.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2020/04/vertx-and-cors.html">vert.x and CORS</a></small></h1>
 					<hr />
 					<div><p>One of the security mechanism for <a href="https://en.wikipedia.org/wiki/Ajax_(programming)">AJAX</a> calls is <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS">CORS</a> (Cross-Origin Resource sharing), where a server advice a browser if it can request resources from it, coming from a different domain.</p> 
@@ -489,56 +542,6 @@ categories:  <a href="/blog/categories/caldav.html">calDAV</a>  <a href="/blog/c
 						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/01/running-a-caldav-server-on-ubuntu.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Running a CalDAV server on Ubuntu (2020 edition)" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2020/01/running-a-caldav-server-on-ubuntu.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2020/01/unit-tests-and-singletons.html">Unit Tests and Singletons</a></small></h1>
-					<hr />
-					<div><p>Good developers <a href="https://apiumhub.com/tech-blog-barcelona/top-benefits-of-unit-testing/">test their code</a>. There are plenty of frameworks and tools around to make it less painful. Not every code is testable, so you <a href="https://en.wikipedia.org/wiki/Test-driven_development">write test first</a>, to avoid getting stuck with untestable code. However there are situations where <a href="https://en.wikipedia.org/wiki/Unit_testing">Unit Testing</a> and pattern get into each other's way</p> 
-<h3>The singleton and test isolation</h3> 
-<p>I'm a big fan of <a href="https://www.javatpoint.com/design-patterns-in-java">design patterns</a>, after all they are <strong>a well-proven solutions</strong> for specific known problems. E.g. the <a href="https://en.wikipedia.org/wiki/Observer_pattern">observer pattern</a> is the foundation of <a href="http://reactivex.io/">reactive programming</a>.</p> 
-<p>A common approach to implementing cache is the <a href="https://en.wikipedia.org/wiki/Singleton_pattern">singleton pattern</a>, that ensures all your code talks to the same cache instance ,independent of what cache you actually use: <a href="https://www.aerospike.com/">Aerospike</a>, <a href="https://redis.io/">Redis</a>, <a href="https://github.com/google/guava/wiki/CachesExplained">Guava</a>, <a href="https://commons.apache.org/proper/commons-jcs/">JCS</a> or others.</p> 
-<p>Your singleton would look like this:</p> 
-<pre class="brush: java">public enum TicketCache {
-  INSTANCE;
-  
-  public Set&lt;String&gt; getTickets(final String systemId) {
-    Set&lt;String&gt; result = new HashSet&lt;&gt;();
-    // Your cache related code goes here
-    return result;
-  }
-  
-  public TicketCache addTicket(final String systemId, final String ticketId) {
-    // Your cache/persistence code goes here
-    return this;
-  }
-}
-</pre> 
-<p>and a method in a class returning tickets (e.g. in a user object) for a user could look like this:</p> 
-<pre class="brush: java">  public Set&lt;String&gt; getUserTickets() {
-    Set&lt;String&gt; result = new HashSet&lt;&gt;();
-    Set&lt;String&gt; systemsResponsibleFor = this.getSystems();
-    systemsResponsibleFor.forEach(systemId -&gt; 
-      result.addAll(TicketCache.INSTANCE.getTickets(systemId)));
-    return result;
-  }
-</pre> 
-<p>Now when you want to test this method, you have a dependency on <code>TicketCache</code> and can't test the <code>getUserTickets()</code> method in isolation. You are at <a href="https://stackoverflow.com/questions/995340/is-implementing-a-cache-considered-a-difficult-problem">the mercy</a> of your cache implementation. But there <strong>is a better way</strong></p></div>
-					<hr />
- <a href="/blog/2020/01/unit-tests-and-singletons.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 10 January 2020
-<span class="divider">|</span>
-<a href="/blog/2020/01/unit-tests-and-singletons.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/unittesting.html">UnitTesting</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/01/unit-tests-and-singletons.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Unit Tests and Singletons" data-twitter-via="@notessensei"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2020/01/unit-tests-and-singletons.html";
 						</script>
 					</p>
 </p>
