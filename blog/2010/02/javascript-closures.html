@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - JavaScript Closures" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2010,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -129,14 +130,10 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>JavaScript Closures</small></h1>
 					<hr />
-					<div>XPages allow you to use JavaScript closures in both client and server side code. There are 
-<a href="http://www.google.com/search?q=What+are+Javascript+closures">plenty explanations</a> available, which seem to make them rather more mysterious. After looking at a lot of them I conclude: " 
-<i>JavaScript closures are like riding a bicycle: nearly impossible to explain, but obvious and natural once you get it</i>". So here is my try, from a LotusScript perspective. 
+					<div>XPages allow you to use JavaScript closures in both client and server side code. There are <a href="http://www.google.com/search?q=What+are+Javascript+closures">plenty explanations</a> available, which seem to make them rather more mysterious. After looking at a lot of them I conclude: " <i>JavaScript closures are like riding a bicycle: nearly impossible to explain, but obvious and natural once you get it</i>". So here is my try, from a LotusScript perspective. 
 <br> First step in the puzzle is the fact, that there is no difference in JavaScript between a function and a class. To get an instance of a class/function you simply call the function with new: 
-<br> 
-<code> var myInstance = new MyFunction(); </code> 
-<br> The second piece is the fact that calling a function is the equivalent of calling the default method of a class instance. Default methods are absent from Java, dotNet or LotusScript, but were available in VB (typically .text). So myInstance() actually is myInstance.defaultMethod(). The third piece is to understand the functions that return a function/object as sort of 
-<a href="http://en.wikipedia.org/wiki/Factory_method_pattern">factory pattern</a> with an abbreviated syntax. In LotusScript you would write something like: 
+<br> <code> var myInstance = new MyFunction(); </code> 
+<br> The second piece is the fact that calling a function is the equivalent of calling the default method of a class instance. Default methods are absent from Java, dotNet or LotusScript, but were available in VB (typically .text). So myInstance() actually is myInstance.defaultMethod(). The third piece is to understand the functions that return a function/object as sort of <a href="http://en.wikipedia.org/wiki/Factory_method_pattern">factory pattern</a> with an abbreviated syntax. In LotusScript you would write something like: 
 <style>.lotusscript { font-family: sans-serif; font-size: 9pt; color: black; }
 .ls-comment { color: green; }
 .ls-quote { color: gray; }
@@ -152,354 +149,182 @@ catch(e){window.attachEvent("onload", $buo_f)}
   
   
   <div class="lotusscript"> 
-   
    <font class="ls-keyword">Option</font> 
-   
    <font class="ls-keyword">Public</font> 
-   
    <font class="ls-keyword">Option</font> 
-   
    <font class="ls-keyword">Declare</font> 
-   
    <font class="ls-comment">%REM Class BaloonFactory Description: Creates all sort of Ballons %END REM</font> 
-   
    <font class="ls-keyword">Public</font> 
-   
    <font class="ls-statement">Class</font> BaloonFactory 
-   
    <font class="ls-keyword">Private</font> currentGas 
-   
    <font class="ls-keyword">As</font> 
-   
    <font class="ls-keyword">String</font> 
-   
    <font class="ls-keyword">Private</font> currentColor 
-   
    <font class="ls-keyword">As</font> 
-   
    <font class="ls-keyword">String</font> 
-   
    <font class="ls-keyword">Public</font> 
-   
    <font class="ls-statement">Sub</font> 
-   
    <font class="ls-keyword">New</font> 
-   
    <font class="ls-keyword">me</font> 
-   
    <font class="ls-operator">.</font>color 
-   
    <font class="ls-operator">=</font> 
-   
    <font class="ls-quote">"Red"</font> 
-   
    <font class="ls-keyword">me</font> 
-   
    <font class="ls-operator">.</font>gas 
-   
    <font class="ls-operator">=</font> 
-   
    <font class="ls-quote">"Helium"</font> 
-   
    <font class="ls-statement">End</font> 
-   
    <font class="ls-statement">Sub</font> 
-   
    <font class="ls-keyword">Public</font> 
-   
    <font class="ls-statement">Property</font> 
-   
    <font class="ls-statement">Set</font> Color 
-   
    <font class="ls-keyword">As</font> 
-   
    <font class="ls-keyword">String</font> 
-   
    <font class="ls-keyword">me</font> 
-   
    <font class="ls-operator">.</font>currentColor 
-   
    <font class="ls-operator">=</font> Color 
-   
    <font class="ls-statement">End</font> 
-   
    <font class="ls-statement">Property</font> 
-   
    <font class="ls-keyword">Public</font> 
-   
    <font class="ls-statement">Property</font> 
-   
    <font class="ls-statement">Set</font> Gas 
-   
    <font class="ls-keyword">As</font> 
-   
    <font class="ls-keyword">String</font> 
-   
    <font class="ls-statement">If</font> Gas 
-   
    <font class="ls-operator">&lt;</font> 
-   
    <font class="ls-operator">&gt;</font> 
-   
    <font class="ls-quote">"Helium"</font> 
-   
    <font class="ls-operator">And</font> Gas 
-   
    <font class="ls-operator">&lt;</font> 
-   
    <font class="ls-operator">&gt;</font> 
-   
    <font class="ls-quote">"Hydrogen"</font> 
-   
    <font class="ls-statement">Then</font> 
-   
    <font class="ls-keyword">me</font> 
-   
    <font class="ls-operator">.</font>currentGas 
-   
    <font class="ls-operator">=</font> 
-   
    <font class="ls-quote">"Helium"</font> 
-   
    <font class="ls-comment">'Let us play save</font> 
-   
    <font class="ls-statement">Else</font> 
-   
    <font class="ls-keyword">me</font> 
-   
    <font class="ls-operator">.</font>currentGas 
-   
    <font class="ls-operator">=</font> Gas 
-   
    <font class="ls-statement">End</font> 
-   
    <font class="ls-statement">If</font> 
-   
    <font class="ls-statement">End</font> 
-   
    <font class="ls-statement">Property</font> 
-   
    <font class="ls-keyword">Public</font> 
-   
    <font class="ls-statement">Function</font> makeBaloon 
-   
    <font class="ls-keyword">As</font> Baloon 
-   
    <font class="ls-statement">Set</font> makeBaloon 
-   
    <font class="ls-operator">=</font> 
-   
    <font class="ls-keyword">New</font> Baloon 
-   
    <font class="ls-operator">(</font> 
-   
    <font class="ls-keyword">me</font> 
-   
    <font class="ls-operator">.</font>currentColor 
-   
    <font class="ls-operator">,</font> 
-   
    <font class="ls-keyword">me</font> 
-   
    <font class="ls-operator">.</font>currentGas 
-   
    <font class="ls-operator">)</font> 
-   
    <font class="ls-statement">End</font> 
-   
    <font class="ls-statement">Function</font> 
-   
    <font class="ls-statement">End</font> 
-   
    <font class="ls-statement">Class</font> 
-   
    <font class="ls-comment">%REM Class Baloon Description: We like them in a lot of colors %END REM</font> 
-   
    <font class="ls-keyword">Public</font> 
-   
    <font class="ls-statement">Class</font> Baloon 
-   
    <font class="ls-keyword">Private</font> currentGas 
-   
    <font class="ls-keyword">As</font> 
-   
    <font class="ls-keyword">String</font> 
-   
    <font class="ls-keyword">Private</font> currentColor 
-   
    <font class="ls-keyword">As</font> 
-   
    <font class="ls-keyword">String</font> 
-   
    <font class="ls-keyword">Public</font> 
-   
    <font class="ls-statement">Sub</font> 
-   
    <font class="ls-keyword">New</font> 
-   
    <font class="ls-operator">(</font>Color 
-   
    <font class="ls-keyword">As</font> 
-   
    <font class="ls-keyword">String</font> 
-   
    <font class="ls-operator">,</font> Gas 
-   
    <font class="ls-keyword">As</font> 
-   
    <font class="ls-keyword">String</font> 
-   
    <font class="ls-operator">)</font> 
-   
    <font class="ls-keyword">me</font> 
-   
    <font class="ls-operator">.</font>currentColor 
-   
    <font class="ls-operator">=</font> Color 
-   
    <font class="ls-keyword">me</font> 
-   
    <font class="ls-operator">.</font>currentGas 
-   
    <font class="ls-operator">=</font> Gas 
-   
    <font class="ls-statement">End</font> 
-   
    <font class="ls-statement">Sub</font> 
-   
    <font class="ls-keyword">Public</font> 
-   
    <font class="ls-statement">Sub</font> POP 
-   
    <font class="ls-function">MsgBox</font> 
-   
    <font class="ls-quote">"You popped a "</font> 
-   
    <font class="ls-operator">+</font> 
-   
    <font class="ls-keyword">me</font> 
-   
    <font class="ls-operator">.</font>currentColor 
-   
    <font class="ls-operator">+</font> 
-   
    <font class="ls-quote">" baloon filled With "</font> 
-   
    <font class="ls-operator">+</font> 
-   
    <font class="ls-keyword">me</font> 
-   
    <font class="ls-operator">.</font>currentGas 
-   
    <font class="ls-statement">End</font> 
-   
    <font class="ls-statement">Sub</font> 
-   
    <font class="ls-statement">End</font> 
-   
    <font class="ls-statement">Class</font> 
-   
    <font class="ls-comment">%REM Sub Demo Description: Comments for Sub %END REM</font> 
-   
    <font class="ls-keyword">Public</font> 
-   
    <font class="ls-statement">Sub</font> Demo 
-   
    <font class="ls-statement">Dim</font> factory 
-   
    <font class="ls-keyword">As</font> 
-   
    <font class="ls-keyword">New</font> BaloonFactory 
-   
    <font class="ls-statement">Dim</font> b 
-   
    <font class="ls-keyword">As</font> Baloon 
-   
    <font class="ls-statement">Dim</font> r 
-   
    <font class="ls-keyword">As</font> Baloon 
-   
    <font class="ls-statement">Dim</font> g 
-   
    <font class="ls-keyword">As</font> Baloon 
-   
    <font class="ls-statement">Set</font> r 
-   
    <font class="ls-operator">=</font> factory 
-   
    <font class="ls-operator">.</font>makeBaloon 
-   
    <font class="ls-operator">(</font> 
-   
    <font class="ls-operator">)</font> factory 
-   
    <font class="ls-operator">.</font>Color 
-   
    <font class="ls-operator">=</font> 
-   
    <font class="ls-quote">"Blue"</font> 
-   
    <font class="ls-statement">Set</font> b 
-   
    <font class="ls-operator">=</font> factory 
-   
    <font class="ls-operator">.</font>makeBaloon 
-   
    <font class="ls-operator">(</font> 
-   
    <font class="ls-operator">)</font> factory 
-   
    <font class="ls-operator">.</font>Color 
-   
    <font class="ls-operator">=</font> 
-   
    <font class="ls-quote">"Green"</font> 
-   
    <font class="ls-statement">Set</font> g 
-   
    <font class="ls-operator">=</font> factory 
-   
    <font class="ls-operator">.</font>makeBaloon 
-   
    <font class="ls-operator">(</font> 
-   
    <font class="ls-operator">)</font> 
-   
    <font class="ls-function">Call</font> r 
-   
    <font class="ls-operator">.</font>POP 
-   
    <font class="ls-operator">(</font> 
-   
    <font class="ls-operator">)</font> 
-   
    <font class="ls-function">Call</font> b 
-   
    <font class="ls-operator">.</font>POP 
-   
    <font class="ls-operator">(</font> 
-   
    <font class="ls-operator">)</font> 
-   
    <font class="ls-function">Call</font> g 
-   
    <font class="ls-operator">.</font>POP 
-   
    <font class="ls-operator">(</font> 
-   
    <font class="ls-operator">)</font> 
-   
    <font class="ls-statement">End</font> 
-   
    <font class="ls-statement">Sub</font> 
   
   </div></code></pre> 
 <div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;"> 
  <center>
-   This LotusScript was converted to HTML using the 
-  <b><i>ls2html</i></b> routine, 
-  <br>provided by Julian Robichaux at 
-  <a href="http://www.nsftools.com" target="_blank">nsftools.com</a>. 
+   This LotusScript was converted to HTML using the <b><i>ls2html</i></b> routine, 
+  <br>provided by Julian Robichaux at <a href="http://www.nsftools.com" target="_blank">nsftools.com</a>. 
  </center> 
 </div>In JavaScript you would write something like: 
 <br> 
@@ -716,6 +541,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

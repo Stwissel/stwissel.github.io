@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Domino Application - ZEN style - Part 2" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2007,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -129,8 +130,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Domino Application - ZEN style - Part 2</small></h1>
 					<hr />
-					<div>Continued from 
-<a href="/blog/2007/07/domino-application-zen-style.html">Part1</a>. 
+					<div>Continued from <a href="/blog/2007/07/domino-application-zen-style.html">Part1</a>. 
 <br> Our application should start with a screen showing me only my documents and the option to switch to documents where I'm the approver. To do that I create a view based on the ($All) view and Just drag the Requestor column to the front. I also sort the view descending by date, so at some time older entries will disappear 
 <br> 
 <img src="/blog/images/2014/StyleCopy.gif" border="0" width="571" height="489" alt="Create a new view based on an existing one" title="Create a new view based on an existing one"> 
@@ -138,8 +138,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <br> 
 <br> 
 <img src="/blog/images/2014/ColumnProperty.gif" border="0" width="465" height="384" alt="Categorized by requestor" title="Categorized by requestor"> 
-<br> We have the formula 
-<code>@Name([Abbreviate];Requestor</code>) in the column. We could replace that with Requestor or leave it. It doesn't really matter. What matters is to use the same style later in the page when we embed the view. We will come back to the view in an instant to refine it. Now it is time to insert it into the page. I copy the content from the $$ViewTemplate for ($All) into a new page MyRequests. Doing that you will realize, that the field $$Viewbody doesn't get copied. A page can't hold fields. 
+<br> We have the formula <code>@Name([Abbreviate];Requestor</code>) in the column. We could replace that with Requestor or leave it. It doesn't really matter. What matters is to use the same style later in the page when we embed the view. We will come back to the view in an instant to refine it. Now it is time to insert it into the page. I copy the content from the $$ViewTemplate for ($All) into a new page MyRequests. Doing that you will realize, that the field $$Viewbody doesn't get copied. A page can't hold fields. 
 <br> To insert the view I select Create - Embedded Element - View: 
 <br> 
 <img src="/blog/images/2014/EmbedView.gif" border="0" width="370" height="511" alt="Inserting a view" title="Inserting a view"> 
@@ -160,13 +159,11 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <br> 
 <br> 
 <img src="/blog/images/2014/formaction.gif" border="0" width="457" height="299" alt="Add a custom form to the page" title="Add a custom form to the page"> 
-<br> To add fields to the form I first add 2 submit buttons with a name below the view. One to delete un-approved requests, one to submit for approval. One important aspect here: Both buttons 
-<b>must</b> have the same name: 
+<br> To add fields to the form I first add 2 submit buttons with a name below the view. One to delete un-approved requests, one to submit for approval. One important aspect here: Both buttons <b>must</b> have the same name: 
 <br> &lt;input type="submit" name="NextAction" value="Remove Request" /&gt; 
 <br> &lt;input type="submit" name="NextAction" value="Submit for Approval" /&gt; 
 <br> Now we need to be able to select documents. To do that I edit the # column in the view and put in the following formula. It uses the internal primary key for document, the DocumentUniqueID to indicate what documents have been selected. Of course I only want to allow action if the status matches, so the formula has a @if statement: 
-<br> 
-<code>@If(Status="New":"Draft":"Pending Approval";"&lt;input type="\"checkbox\"" name="\"SelectedDocuments\"" value="\""+@Text(@DocumentUniqueID)+"\"" /&gt;";" ")</code> 
+<br> <code>@If(Status="New":"Draft":"Pending Approval";"&lt;input type="\"checkbox\"" name="\"SelectedDocuments\"" value="\""+@Text(@DocumentUniqueID)+"\"" /&gt;";" ")</code> 
 <br> This will put a checkbox in front of every document where I still can make a decision. 
 <br> 
 <br> The result looks like this: 
@@ -197,8 +194,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
     @SetDocField(tID;"DocAuthors";tmpAuthor))
  </pre> 
 <br> The other formulas don't have the second last line, since all author access will be removed. And voila we have an almost working system. At least we can: create requests, submit request, revoke request. The only thing left is to be able to approve or reject them. By now you should have an idea how that will work. Our mechanism is in place (the FormAction Form), we just need to make copies of the view MyRequestList as MyApprovalList and the page MyRequests to MyApprovals and change a few things: Swap the column formulas for the categorized column and change the value of the two submit buttons to "Approve" and "Reject" and last not least change the name of the embedded view. So a little cut and paste will do. 
-<br> Also you want to adjust the view formula, so the approver will only see documents that (s)he needs or did act on: 
-<code>SELECT Status = "Pending Approval":"Approved":"Rejected"</code>; 
+<br> Also you want to adjust the view formula, so the approver will only see documents that (s)he needs or did act on: <code>SELECT Status = "Pending Approval":"Approved":"Rejected"</code>; 
 <br> 
 <br> Now we have a fully functional mini approval application. It only lacks 2 things: a archival function (try an agent with a simple action) and "the looks". Luckily my web designer friend comes to the rescue with some graphics and a css file. Both can be added in the resource section of Domino designer: 
 <br> 
@@ -212,9 +208,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <br> The result is not too bad isn't it (OK, the CSS does need some work) 
 <br> 
 <img src="/blog/images/2014/WebResult.gif" border="0" width="653" height="324" alt="The final application" title="The final application"> 
-<br> You can 
-<a href="/blog/downloads">download </a>the database and play with your 
-<a href="http://www.csszengarden.com/">own CSS</a>!</div>
+<br> You can <a href="/blog/downloads">download </a>the database and play with your <a href="http://www.csszengarden.com/">own CSS</a>!</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -347,6 +341,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

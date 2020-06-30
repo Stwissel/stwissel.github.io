@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Comparing document changes" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2011,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -135,118 +136,26 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>We suspect data was altered by a rookie user. Using a backup copy all the changes made need to be highlighted</li> 
  <li>Suspecting that a replication went awry I want to compare two instances of one database on different servers</li> 
 </ul> For these use cases I wrote a class that allows me to blend out certain fields or documents based on certain forms. The code is a rough cut and you might need to adjust it to specific needs. Anyway enjoy: 
-<div class="lotusscript"> 
- <span class="kw1">Public</span> 
- <span class="kw1">Class</span> CompareEnging 
+<div class="lotusscript"> <span class="kw1">Public</span> <span class="kw1">Class</span> CompareEnging 
  <br> &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; <span class="kw1">Sub</span> <span class="kw1">New</span> <span class="br0">(</span>sServer <span class="kw1">As</span> <span class="kw1">String</span>, sDB <span class="kw1">As</span> <span class="kw1">String</span>, tServer <span class="kw1">As</span> <span class="kw1">String</span>, tDB <span class="kw1">As</span> <span class="kw1">String</span> <span class="br0">)</span> 
  <br> &nbsp; &nbsp; 
- <span class="kw1">Sub</span> 
- <span class="kw1">New</span> 
- <span class="br0">(</span>sServer 
- <span class="kw1">As</span> 
- <span class="kw1">String</span>, sDB 
- <span class="kw1">As</span> 
- <span class="kw1">String</span>, tServer 
- <span class="kw1">As</span> 
- <span class="kw1">String</span>, tDB 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Public</span> 
- <span class="kw1">Property</span> 
- <span class="kw1">Set</span> reportOnlyChangedFields 
- <span class="kw1">As</span> 
- <span class="kw1">Boolean</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Public</span> 
- <span class="kw1">Property</span> 
- <span class="kw1">Set</span> eMailResults 
- <span class="kw1">As</span> 
- <span class="kw1">Boolean</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Public</span> 
- <span class="kw1">Sub</span> addExcludedForm 
- <span class="br0">(</span>formName 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Public</span> 
- <span class="kw1">Sub</span> addExcludedField 
- <span class="br0">(</span>fieldName 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Private</span> 
- <span class="kw1">Function</span> fixTextforHTML 
- <span class="br0">(</span>orgText 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <span class="br0">)</span> 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Public</span> 
- <span class="kw1">Function</span> report 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Sub</span> reportNewDocuments 
- <span class="br0">(</span>targetDB 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Sub</span> compareTargetDoc 
- <span class="br0">(</span>tDoc 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDocument</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Sub</span> compareSourceDoc 
- <span class="br0">(</span>sDoc 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDocument</span>, tDB 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDatabase</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Function</span> documentSingleDoc 
- <span class="br0">(</span>doc 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDocument</span>, txtStatus 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <span class="br0">)</span> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">Public</span> 
- <span class="kw1">Sub</span> compareTwoDocuments 
- <span class="br0">(</span>sDoc 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDocument</span>, tDoc 
- <span class="kw1">As</span> 
- <span class="kw2">NotesDocument</span> 
- <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Property</span> <span class="kw1">Set</span> reportOnlyChangedFields <span class="kw1">As</span> <span class="kw1">Boolean</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Property</span> <span class="kw1">Set</span> eMailResults <span class="kw1">As</span> <span class="kw1">Boolean</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Sub</span> addExcludedForm <span class="br0">(</span>formName <span class="kw1">As</span> <span class="kw1">String</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Sub</span> addExcludedField <span class="br0">(</span>fieldName <span class="kw1">As</span> <span class="kw1">String</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Private</span> <span class="kw1">Function</span> fixTextforHTML <span class="br0">(</span>orgText <span class="kw1">As</span> <span class="kw1">String</span> <span class="br0">)</span> <span class="kw1">As</span> <span class="kw1">String</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Function</span> report 
+ <br> &nbsp; &nbsp; <span class="kw1">Sub</span> reportNewDocuments <span class="br0">(</span>targetDB <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Sub</span> compareTargetDoc <span class="br0">(</span>tDoc <span class="kw1">As</span> <span class="kw2">NotesDocument</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Sub</span> compareSourceDoc <span class="br0">(</span>sDoc <span class="kw1">As</span> <span class="kw2">NotesDocument</span>, tDB <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Function</span> documentSingleDoc <span class="br0">(</span>doc <span class="kw1">As</span> <span class="kw2">NotesDocument</span>, txtStatus <span class="kw1">As</span> <span class="kw1">String</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Sub</span> compareTwoDocuments <span class="br0">(</span>sDoc <span class="kw1">As</span> <span class="kw2">NotesDocument</span>, tDoc <span class="kw1">As</span> <span class="kw2">NotesDocument</span> <span class="br0">)</span> 
  <br> 
+ <br> <span class="kw1">End</span> <span class="kw1">Class</span> 
  <br> 
- <span class="kw1">End</span> 
- <span class="kw1">Class</span> 
- <br> 
- <br> 
- <span class="kw1">Function</span> ReplaceSubstring 
- <span class="br0">(</span>sourcestr 
- <span class="kw1">As</span> 
- <span class="kw1">String</span>, fromstr 
- <span class="kw1">As</span> 
- <span class="kw1">String</span>, tostr 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
- <span class="br0">)</span> 
- <span class="kw1">As</span> 
- <span class="kw1">String</span> 
-</div> Download the 
-<a href="/blog/downloads/2011/CompareDatabases.lss">Full Source code</a>. As usual - YMMV</div>
+ <br> <span class="kw1">Function</span> ReplaceSubstring <span class="br0">(</span>sourcestr <span class="kw1">As</span> <span class="kw1">String</span>, fromstr <span class="kw1">As</span> <span class="kw1">String</span>, tostr <span class="kw1">As</span> <span class="kw1">String</span> <span class="br0">)</span> <span class="kw1">As</span> <span class="kw1">String</span> 
+</div> Download the <a href="/blog/downloads/2011/CompareDatabases.lss">Full Source code</a>. As usual - YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -382,6 +291,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

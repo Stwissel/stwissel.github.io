@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - The calDAV Standard - navigating the RFC jungle" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2019,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -146,7 +147,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 					<hr />
 					<div><p>Application interoperability is key to wide spread adoption. Luckily there are <a href="https://xkcd.com/927/">so many open standards</a> that one can claim to be open without being interoperable. On a protocol level <a href="https://tools.ietf.org/html/rfc7230">HTTP</a> and <a href="https://tools.ietf.org/html/rfc5321">SMTP</a> were huge successes, as well as <a href="https://tools.ietf.org/html/rfc2045">HTML/MIME</a> for message content. Beyond that it gets murky. None of the big vendors (outside the OpenSource space) has adopted an open protocol for chat and presence.</p> 
 <p>For other standards, most notably <a href="https://en.wikipedia.org/wiki/CalDAV">Calendaring</a>, support is murkey. On key contributor might be the <a href="https://en.wikipedia.org/wiki/Request_for_Comments">RFC</a> process that produces documents that are hard to follow and lack sample implementations. They are work outcomes of a <a href="https://en.wikipedia.org/wiki/Design_by_committee">committee</a> after all. In this series of blog entries I will (try to) highlight the moving parts of a <strong>calendar server</strong> implementation. The non-moving parts here are the calendar clients to target: Apple calendar on iOS and <a href="https://support.apple.com/en-us/guide/calendar/welcome/mac">macOS</a>, <a href="https://www.thunderbird.net/">Thurnderbird</a> and a few others.</p> 
-<h3><a href="#involved-standards" id="involved-standards">Involved standards</a></h3> 
+<h3>Involved standards</h3> 
 <p>There is a series of RFC that cover calendar operation, with various degrees of relevance:</p> 
 <ul> 
  <li><a href="http://tools.ietf.org/html/rfc4918">RFC 4918</a>: webDAV. Defines additional HTTP verbs and XML formats</li> 
@@ -158,14 +159,14 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li><a href="https://tools.ietf.org/html/rfc8607">RFC 8607</a>: Managed attachments in calendar entries</li> 
  <li><a href="https://tools.ietf.org/html/rfc8144">RFC 8144</a>: Use of Prefer Header field in webDAV</li> 
  <li><a href="https://tools.ietf.org/html/rfc5785">RFC 5785</a>: Definitions for the <code>/.well-known/</code> URL</li> 
-</ul><h3><a href="#technologies" id="technologies">Technologies</a></h3> 
+</ul><h3>Technologies</h3> 
 <p>Based on the RFC we can see what are the moving parts that constitute the calendar API:</p> 
 <ul> 
  <li>HTTP extensions: With the introduction of new HTTP keywords (e.g. <a href="https://tools.ietf.org/html/rfc8144#appendix-B.2">REPORT</a> or <a href="http://www.webdav.org/specs/rfc4918.html#METHOD_PROPFIND">PRPOPFIND</a>), the basic <a href="https://en.wikipedia.org/wiki/Representational_state_transfer">REST</a> idea gets turned upside down by having verbs with specific meanings instead of the ususal <a href="https://en.wikipedia.org/wiki/Create,_read,_update_and_delete">CRUD</a> logic. In a more contemporary approach the actual actions would be represented by the URL, but that would be too easy.</li> 
  <li>iCalendar: a text based key/value format for calendar information, with little goodies like identifying multi-line entries just by some indentation</li> 
  <li>XML: inherited from webDAV: angle bracked infested data structure that <strong>does not</strong> care about white space or indentation. This gets juicy when it contains an iCalendar as payload, that is very well sensitive to indents.</li> 
 </ul> 
-<h3><a href="#vendor-and-consortium-documentation" id="vendor-and-consortium-documentation">Vendor and consortium documentation</a></h3> 
+<h3>Vendor and consortium documentation</h3> 
 <p>There are plenty of trees in the woods, so the task is <a href="https://dictionary.cambridge.org/us/dictionary/english/scavenge">scavenging</a>, not planting. Besides the RFC, this is what I found:</p> 
 <ul> 
  <li><a href="https://developers.google.com/calendar/caldav/v2/guide">Google</a> has a partial calDAV implementation. Their approach seem to be: only what's needed for a typical client</li> 
@@ -175,7 +176,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Joomla's <a href="https://icalendar.org/">iCalendar.org</a> provides a <a href="https://icalendar.org/validator.html">validator</a></li> 
  <li>Most notably <strong>absent</strong>: <a href="https://www.google.com/search?q=Microsoft+calendar+sync">Microsoft</a>. They do support calDAV, but only if you are on the <a href="https://www.ctrl.blog/entry/windows-pim-sync-partnersonly.html">nice list</a> (which is basically US based cloud vendors). There are <a href="https://www.ctrl.blog/entry/how-to-win10-webdav-syncengine.html">solutions</a> and <a href="https://www.webdavsystem.com/server/access/caldav/ms_outlook_caldav_synchronizer/">AddOns</a>. It seems that in the Microsoft world calendaring is best served with <a href="https://docs.microsoft.com/en-us/exchange/client-developer/exchange-web-services/explore-the-ews-managed-api-ews-and-web-services-in-exchange">SOAP / EWS</a> or the shiny new <a href="https://docs.microsoft.com/en-us/graph/api/resources/calendar?view=graph-rest-1.0">Microsoft Graph API</a></li> 
 </ul> 
-<h3><a href="#the-tools" id="the-tools">The tools</a></h3> 
+<h3>The tools</h3> 
 <p>Gearing up to battle with an API mandates to be armed with the right toolset. This skilled craftsman suggests:</p> 
 <ul> 
  <li><a href="https://www.getpostman.com/">Postman</a>: We want to test different HTTP commands, Postman makes that easy</li> 
@@ -315,6 +316,7 @@ categories:  <a href="/blog/categories/caldav.html">calDAV</a>  <a href="/blog/c
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

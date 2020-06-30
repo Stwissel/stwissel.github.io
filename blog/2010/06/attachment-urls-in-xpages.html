@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Attachment URLs in XPages" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2010,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -130,11 +131,9 @@ catch(e){window.attachEvent("onload", $buo_f)}
 					<h1><small>Attachment URLs in XPages</small></h1>
 					<hr />
 					<div>In classic Domino applications directly addressing attachments is well known and simple. Your URL has the format: 
-<br> 
-<code>http(s)://[yourserver]/[application.nsf]/[viewname|0]/[UNID| ViewKey]/$File/[AttachmentName]?Open</code> 
+<br> <code>http(s)://[yourserver]/[application.nsf]/[viewname|0]/[UNID| ViewKey]/$File/[AttachmentName]?Open</code> 
 <br> While this will continue to work on the Domino server for the forseeable future you want to learn about the XPages syntax. The very obvious reason: the classic Domino URL doesn't work in the Notes client (XPiNC) and you want to make your applications work cross-platform don't you? Also we don't know what additional options handling attachments via XPages might bring in the future. the syntax is a litte more complex.: 
-<br> 
-<code>http(s)://[yourserver]/[application.nsf]<b> /xsp/.ibmmodres/domino/OpenAttachment/ [application.nsf]</b>/[UNID|/$File/[AttachmentName]?Open</code> 
+<br> <code>http(s)://[yourserver]/[application.nsf]<b> /xsp/.ibmmodres/domino/OpenAttachment/ [application.nsf]</b>/[UNID|/$File/[AttachmentName]?Open</code> 
 <br> A few remarks: 
 <ul> 
  <li>The URL contains the application location twice. From my tests it looks like the <code>/__[ReplicaID].nsf/</code> doesn't work for here. I haven't tested what happens when you specify 2 different applications in the front and the back</li> 
@@ -143,161 +142,69 @@ catch(e){window.attachEvent("onload", $buo_f)}
 </ul> To make my life easier I use 2 functions so I get an attachment URL with a single call:<div class="javascript"> 
  <ol> 
   <li class="li1"> 
-   <div class="de1"> 
-    <span class="kw2">function</span> getAttachmentURL 
-    <span class="br0">(</span>docID 
-    <span class="sy0">:</span>java. 
-    <span class="me1">lang</span>. 
-    <span class="me1">String</span> 
-    <span class="sy0">,</span> attachmentName 
-    <span class="sy0">:</span>java. 
-    <span class="me1">lang</span>. 
-    <span class="me1">String</span> 
-    <span class="br0">)</span> 
-    <span class="br0">{</span> 
+   <div class="de1"> <span class="kw2">function</span> getAttachmentURL <span class="br0">(</span>docID <span class="sy0">:</span>java. <span class="me1">lang</span>. <span class="me1">String</span> <span class="sy0">,</span> attachmentName <span class="sy0">:</span>java. <span class="me1">lang</span>. <span class="me1">String</span> <span class="br0">)</span> <span class="br0">{</span> 
    </div></li> 
   <li class="li1"> 
    <div class="de1">
-     &nbsp; &nbsp; 
-    <span class="kw2">var</span> base 
-    <span class="sy0">=</span> getBaseURL 
-    <span class="br0">(</span> 
-    <span class="br0">)</span> 
-    <span class="sy0">;</span> 
+     &nbsp; &nbsp; <span class="kw2">var</span> base <span class="sy0">=</span> getBaseURL <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
    </div></li> 
   <li class="li1"> 
    <div class="de1">
-     &nbsp; &nbsp; 
-    <span class="kw2">var</span> middle 
-    <span class="sy0">=</span> 
-    <span class="st0">"/xsp/.ibmmodres/domino/OpenAttachment"</span> 
-    <span class="sy0">;</span> 
+     &nbsp; &nbsp; <span class="kw2">var</span> middle <span class="sy0">=</span> <span class="st0">"/xsp/.ibmmodres/domino/OpenAttachment"</span> <span class="sy0">;</span> 
    </div></li> 
   <li class="li1"> 
    <div class="de1">
-     &nbsp; &nbsp; 
-    <span class="kw1">if</span> 
-    <span class="br0">(</span>base. 
-    <span class="me1">substr</span> 
-    <span class="br0">(</span> 
-    <span class="nu0">0</span> 
-    <span class="sy0">,</span> 
-    <span class="nu0">4</span> 
-    <span class="br0">)</span> 
-    <span class="sy0">==</span> 
-    <span class="st0">"/xsp"</span> 
-    <span class="br0">)</span> 
-    <span class="br0">{</span> 
+     &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span>base. <span class="me1">substr</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="sy0">,</span> <span class="nu0">4</span> <span class="br0">)</span> <span class="sy0">==</span> <span class="st0">"/xsp"</span> <span class="br0">)</span> <span class="br0">{</span> 
    </div></li> 
   <li class="li2"> 
    <div class="de2">
-     &nbsp; &nbsp; &nbsp; &nbsp; middle 
-    <span class="sy0">+=</span> base. 
-    <span class="me1">substr</span> 
-    <span class="br0">(</span> 
-    <span class="nu0">4</span> 
-    <span class="br0">)</span> 
-    <span class="sy0">;</span> 
+     &nbsp; &nbsp; &nbsp; &nbsp; middle <span class="sy0">+=</span> base. <span class="me1">substr</span> <span class="br0">(</span> <span class="nu0">4</span> <span class="br0">)</span> <span class="sy0">;</span> 
    </div></li> 
   <li class="li1"> 
    <div class="de1">
-     &nbsp; &nbsp; 
-    <span class="br0">}</span> 
-    <span class="kw1">else</span> 
-    <span class="br0">{</span> 
+     &nbsp; &nbsp; <span class="br0">}</span> <span class="kw1">else</span> <span class="br0">{</span> 
    </div></li> 
   <li class="li1"> 
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; middle 
-    <span class="sy0">+=</span> base 
-    <span class="sy0">;</span> 
+     &nbsp; &nbsp; &nbsp; &nbsp; middle <span class="sy0">+=</span> base <span class="sy0">;</span> 
    </div></li> 
   <li class="li1"> 
    <div class="de1">
-     &nbsp; &nbsp; 
-    <span class="br0">}</span> 
+     &nbsp; &nbsp; <span class="br0">}</span> 
    </div></li> 
   <li class="li1"> 
    <div class="de1">
-     &nbsp; &nbsp; 
-    <span class="kw2">var</span> result 
-    <span class="sy0">=</span> base 
-    <span class="sy0">+</span> middle 
-    <span class="sy0">+</span> 
-    <span class="st0">"/"</span> 
-    <span class="sy0">+</span> docID 
-    <span class="sy0">+</span> 
-    <span class="st0">"/$File/"</span> 
-    <span class="sy0">+</span> attachmentName 
-    <span class="sy0">+</span> 
-    <span class="st0">"?Open"</span> 
-    <span class="sy0">;</span> 
+     &nbsp; &nbsp; <span class="kw2">var</span> result <span class="sy0">=</span> base <span class="sy0">+</span> middle <span class="sy0">+</span> <span class="st0">"/"</span> <span class="sy0">+</span> docID <span class="sy0">+</span> <span class="st0">"/$File/"</span> <span class="sy0">+</span> attachmentName <span class="sy0">+</span> <span class="st0">"?Open"</span> <span class="sy0">;</span> 
    </div></li> 
   <li class="li2"> 
    <div class="de2">
-     &nbsp; &nbsp; 
-    <span class="kw1">return</span> result 
-    <span class="sy0">;</span> 
+     &nbsp; &nbsp; <span class="kw1">return</span> result <span class="sy0">;</span> 
    </div></li> 
   <li class="li1"> 
-   <div class="de1"> 
-    <span class="br0">}</span> 
+   <div class="de1"> <span class="br0">}</span> 
    </div></li> 
   <li class="li1"> 
    <div class="de1">
      &nbsp; 
    </div></li> 
   <li class="li1"> 
-   <div class="de1"> 
-    <span class="kw2">function</span> getBaseURL 
-    <span class="br0">(</span> 
-    <span class="br0">)</span> 
-    <span class="br0">{</span> 
+   <div class="de1"> <span class="kw2">function</span> getBaseURL <span class="br0">(</span> <span class="br0">)</span> <span class="br0">{</span> 
    </div></li> 
   <li class="li1"> 
    <div class="de1">
-     &nbsp; &nbsp; 
-    <span class="kw2">var</span> curURL 
-    <span class="sy0">=</span> context. 
-    <span class="me1">getUrl</span> 
-    <span class="br0">(</span> 
-    <span class="br0">)</span> 
-    <span class="sy0">;</span> 
+     &nbsp; &nbsp; <span class="kw2">var</span> curURL <span class="sy0">=</span> context. <span class="me1">getUrl</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
    </div></li> 
   <li class="li2"> 
    <div class="de2">
-     &nbsp; &nbsp; 
-    <span class="kw2">var</span> curAdr 
-    <span class="sy0">=</span> curURL. 
-    <span class="me1">getAddress</span> 
-    <span class="br0">(</span> 
-    <span class="br0">)</span> 
-    <span class="sy0">;</span> 
+     &nbsp; &nbsp; <span class="kw2">var</span> curAdr <span class="sy0">=</span> curURL. <span class="me1">getAddress</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
    </div></li> 
   <li class="li1"> 
    <div class="de1">
-     &nbsp; &nbsp; 
-    <span class="kw2">var</span> rel 
-    <span class="sy0">=</span> curURL. 
-    <span class="me1">getSiteRelativeAddress</span> 
-    <span class="br0">(</span>context 
-    <span class="br0">)</span> 
-    <span class="sy0">;</span> 
+     &nbsp; &nbsp; <span class="kw2">var</span> rel <span class="sy0">=</span> curURL. <span class="me1">getSiteRelativeAddress</span> <span class="br0">(</span>context <span class="br0">)</span> <span class="sy0">;</span> 
    </div></li> 
   <li class="li1"> 
    <div class="de1">
-     &nbsp; &nbsp; 
-    <span class="kw2">var</span> step1 
-    <span class="sy0">=</span> curAdr. 
-    <span class="me1">substr</span> 
-    <span class="br0">(</span> 
-    <span class="nu0">0</span> 
-    <span class="sy0">,</span>curAdr. 
-    <span class="me1">indexOf</span> 
-    <span class="br0">(</span>rel 
-    <span class="br0">)</span> 
-    <span class="br0">)</span> 
-    <span class="sy0">;</span> 
+     &nbsp; &nbsp; <span class="kw2">var</span> step1 <span class="sy0">=</span> curAdr. <span class="me1">substr</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="sy0">,</span>curAdr. <span class="me1">indexOf</span> <span class="br0">(</span>rel <span class="br0">)</span> <span class="br0">)</span> <span class="sy0">;</span> 
    </div></li> 
   <li class="li1"> 
    <div class="de1">
@@ -305,44 +212,19 @@ catch(e){window.attachEvent("onload", $buo_f)}
    </div></li> 
   <li class="li1"> 
    <div class="de1">
-     &nbsp; &nbsp; 
-    <span class="co1">// Now cut off the http</span> 
+     &nbsp; &nbsp; <span class="co1">// Now cut off the http</span> 
    </div></li> 
   <li class="li2"> 
    <div class="de2">
-     &nbsp; &nbsp; 
-    <span class="kw2">var</span> step2 
-    <span class="sy0">=</span> step1. 
-    <span class="me1">substr</span> 
-    <span class="br0">(</span>step1. 
-    <span class="me1">indexOf</span> 
-    <span class="br0">(</span> 
-    <span class="st0">"//"</span> 
-    <span class="br0">)</span> 
-    <span class="sy0">+</span> 
-    <span class="nu0">2</span> 
-    <span class="br0">)</span> 
-    <span class="sy0">;</span> 
+     &nbsp; &nbsp; <span class="kw2">var</span> step2 <span class="sy0">=</span> step1. <span class="me1">substr</span> <span class="br0">(</span>step1. <span class="me1">indexOf</span> <span class="br0">(</span> <span class="st0">"//"</span> <span class="br0">)</span> <span class="sy0">+</span> <span class="nu0">2</span> <span class="br0">)</span> <span class="sy0">;</span> 
    </div></li> 
   <li class="li1"> 
    <div class="de1">
-     &nbsp; &nbsp; 
-    <span class="kw2">var</span> result 
-    <span class="sy0">=</span> step2. 
-    <span class="me1">substr</span> 
-    <span class="br0">(</span>step2. 
-    <span class="me1">indexOf</span> 
-    <span class="br0">(</span> 
-    <span class="st0">"/"</span> 
-    <span class="br0">)</span> 
-    <span class="br0">)</span> 
-    <span class="sy0">;</span> 
+     &nbsp; &nbsp; <span class="kw2">var</span> result <span class="sy0">=</span> step2. <span class="me1">substr</span> <span class="br0">(</span>step2. <span class="me1">indexOf</span> <span class="br0">(</span> <span class="st0">"/"</span> <span class="br0">)</span> <span class="br0">)</span> <span class="sy0">;</span> 
    </div></li> 
   <li class="li1"> 
    <div class="de1">
-     &nbsp; &nbsp; 
-    <span class="kw1">return</span> result 
-    <span class="sy0">;</span> 
+     &nbsp; &nbsp; <span class="kw1">return</span> result <span class="sy0">;</span> 
    </div></li> 
   <li class="li1"> 
    <div class="de1">
@@ -350,8 +232,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
    </div></li> 
   <li class="li1"> 
    <div class="de1">
-     &nbsp; &nbsp; 
-    <span class="br0">}</span> 
+     &nbsp; &nbsp; <span class="br0">}</span> 
    </div></li> 
  </ol> 
 </div> As usual YMMV</div>
@@ -747,6 +628,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

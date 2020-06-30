@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - From Blogsphere to a Static Site (Part 4) - Comment backend" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2017,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -151,8 +152,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Initially also update Domino using a web service - so during transition no comments would get lost</li> 
 </ul> 
 <p>In its initial incarnation the Comment servlet is a OSGi plugin that listens to the <code>/comments</code> URL implemented as Wink servlet. So the class of interest is the one defining the service. We have one method for post, one for get and a helper function</p> 
-<pre class="brush: java">
-/**
+<pre class="brush: java">/**
  * Wink implementation of Comment service
  */
 @Workspace(workspaceTitle = "Blog Comments", collectionTitle = "Create or display comments")
@@ -263,8 +263,7 @@ public class CommentService extends CommentResponse {
 }
 </pre><p>The two interesting lines in the class above are <code>CommentManager.INSTANCE.saveComment(comment, true);</code> and <code> CommentManager.INSTANCE.loadComments(parentid);</code>, with the former saving a new comment and the later loading the list of comments. Both use the CommentsManager Singleton to access comments. The key component is a <a href="https://github.com/google/guava">Google Guava</a> cache and the <a href="http://www.ikea.com/sg/en/catalog/categories/series/07488/" title="Hope you don't mind this practical joke">Ektorp</a> CouchDB library</p> 
 <h3>Setting up the cache</h3> 
-<pre class="brush: java">
- class CommentLoader extends CacheLoader&lt;String, Collection&lt;BlogComment&gt;&gt; {
+<pre class="brush: java"> class CommentLoader extends CacheLoader&lt;String, Collection&lt;BlogComment&gt;&gt; {
 
         private final Logger logger = Logger.getLogger(this.getClass().getName());
 
@@ -299,8 +298,7 @@ public class CommentService extends CommentResponse {
                 .build(loader);
 </pre> 
 <h3>Save a comment</h3> 
-<pre class="brush: java">
-public String saveComment(BlogComment bc, boolean validate) {
+<pre class="brush: java">public String saveComment(BlogComment bc, boolean validate) {
         String key = this.config.CHECKCAPTCHA ? this.config.RECAPTCHAKEY : null;
         boolean isValid = bc.isValid(key);
         String result = bc.getValidationResult();
@@ -329,8 +327,7 @@ public String saveComment(BlogComment bc, boolean validate) {
     }
 </pre> 
 <h3>Load comments</h3> 
-<pre class="brush: java">
-public Collection&lt;BlogComment&gt; loadComments(final String parentId) {
+<pre class="brush: java">public Collection&lt;BlogComment&gt; loadComments(final String parentId) {
         Collection&lt;BlogComment&gt; result = null;
         if (parentId != null) {
             try {
@@ -343,8 +340,7 @@ public Collection&lt;BlogComment&gt; loadComments(final String parentId) {
     }
 </pre> 
 <h3>Getting a gravatar image</h3> 
-<pre class="brush: java">
-public String getGravatarURL() {
+<pre class="brush: java">public String getGravatarURL() {
 
         if ((this.gravatarURL == null) || this.gravatarURL.trim().equals("")) {
             if (this.eMail != null) {
@@ -357,15 +353,13 @@ public String getGravatarURL() {
     }
 </pre> 
 <h3>Create HTML from Markdown</h3> 
-<pre class="brush: java">
-private void createHtmlBody(String markdownBody) {
+<pre class="brush: java">private void createHtmlBody(String markdownBody) {
         PegDownProcessor p = new PegDownProcessor();
         this.htmlBody = p.markdownToHtml(HTMLFilter.filter(markdownBody));
     }
 </pre> 
 <h3>Check for valid Captcha</h3> 
-<pre class="brush: java">
-public static boolean isValidCaptcha(String captchaKey, String remoteAddress, String challenge, String response) {
+<pre class="brush: java">public static boolean isValidCaptcha(String captchaKey, String remoteAddress, String challenge, String response) {
 		boolean result = true;
 		// We only test if we have a remote address and the captcha switch is on
 		if (remoteAddress != null &amp;&amp; captchaKey != null) {
@@ -511,6 +505,7 @@ categories:  <a href="/blog/categories/blog.html">Blog</a>
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

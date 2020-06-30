@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Domino Development - Back to Basics - Part 5: Finding data - Collections and Search" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2014,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -146,31 +147,12 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Domino Development - Back to Basics - Part 5: Finding data - Collections and Search</small></h1>
 					<hr />
-					<div>Continuing from 
-<a href="/blog/2013/12/domino-development-back-to-basics-part-4-domino-views-are-different.html">Part 4</a>, this installment will clarify finding data. It, again, is different from other database concepts. Read on: 
-<br> In a RDBMS your data retrieval queries are formulated in 
-<a href="http://en.wikipedia.org/wiki/SQL">SQL</a>, while XML, RDF or 
-<a href="http://en.wikipedia.org/wiki/Graph_database">Graph databases</a> might use 
-<a href="http://en.wikipedia.org/wiki/Sparql">sparQL</a>, 
-<a href="http://en.wikipedia.org/wiki/Gremlin_%28programming_language%29">Gremlin</a>, 
-<a href="http://www.neo4j.org/learn/cypher">Cypher</a> or 
-<a href="http://docs.couchdb.org/en/latest/couchapp/views/intro.html">JavaScript</a>. There is no shortage of 
-<a href="http://en.wikipedia.org/wiki/Query_languages">Query languages</a> (one you should master in any case is 
-<a href="http://en.wikipedia.org/wiki/XPath">XPath</a>, get 
-<a href="http://www.amazon.com/gp/product/0470192747/ref=as_li_ss_tl?ie=UTF8&amp;camp=1789&amp;creative=390957&amp;creativeASIN=0470192747&amp;linkCode=as2&amp;tag=wissenetblog-20">the full reference</a> 
-<img src="http://ir-na.amazon-adsystem.com/e/ir?t=wissenetblog-20&amp;l=as2&amp;o=1&amp;a=0470192747" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;"> from 
-<a href="http://dev.saxonica.com/blog/mike/">the inventor</a> himself). 
+					<div>Continuing from <a href="/blog/2013/12/domino-development-back-to-basics-part-4-domino-views-are-different.html">Part 4</a>, this installment will clarify finding data. It, again, is different from other database concepts. Read on: 
+<br> In a RDBMS your data retrieval queries are formulated in <a href="http://en.wikipedia.org/wiki/SQL">SQL</a>, while XML, RDF or <a href="http://en.wikipedia.org/wiki/Graph_database">Graph databases</a> might use <a href="http://en.wikipedia.org/wiki/Sparql">sparQL</a>, <a href="http://en.wikipedia.org/wiki/Gremlin_%28programming_language%29">Gremlin</a>, <a href="http://www.neo4j.org/learn/cypher">Cypher</a> or <a href="http://docs.couchdb.org/en/latest/couchapp/views/intro.html">JavaScript</a>. There is no shortage of <a href="http://en.wikipedia.org/wiki/Query_languages">Query languages</a> (one you should master in any case is <a href="http://en.wikipedia.org/wiki/XPath">XPath</a>, get <a href="http://www.amazon.com/gp/product/0470192747/ref=as_li_ss_tl?ie=UTF8&amp;camp=1789&amp;creative=390957&amp;creativeASIN=0470192747&amp;linkCode=as2&amp;tag=wissenetblog-20">the full reference</a> 
+<img src="http://ir-na.amazon-adsystem.com/e/ir?t=wissenetblog-20&amp;l=as2&amp;o=1&amp;a=0470192747" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;"> from <a href="http://dev.saxonica.com/blog/mike/">the inventor</a> himself). 
 <br> On a first look a Query Language seems absent from IBM Notes. On a second look, there are two. 
-<h3>The IBM Notes Query Languages</h3> Access to Notes data mostly happens 
-<a href="/blog/2013/12/domino-development-back-to-basics-part-4-domino-views-are-different.html">using a view</a>, so the pre-selection happens using the 
-<code>SELECT</code> statement and the 
-<a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/index.jsp?topic=%2Fcom.ibm.designer.domino.main.doc%2FH_NOTES_FORMULA_LANGUAGE.html"><code>@Formula</code></a> language. We will see how to narrow results down, just below. But you are not limited to creating a view first, a database can be queried directly using 
-<code>@Formula</code> when executing 
-<a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_SEARCH_METHOD_JAVA.html"><code>Database.search("some @Formula expression")</code></a>. This works like any other query language around. This flexibility comes with a price: speed. 
-<code>Database.search</code> is the slowest way to retrieve data from a NSF and you shouldn't use that for your default access path (that is: the actions most users will use in a regular manner). 
-<br> The second query language is the composition of a fulltext query. In its simplest form it is just some text you want to find, but it can be extended to specify the fields to look into and construct 
-<a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/index.jsp?topic=%2Fcom.ibm.notes85.help.doc%2Fsch_refine_query_r.html">additional constraints</a>. It takes a little to get used to it, but it is quite powerful, just one example: 
-<code>fish SENTENCE chips</code> finds documents where fish &amp; chips are mentioned in the same sentence. Important note here: make sure the FullText index is configured, so it isn't crawling slow. 
+<h3>The IBM Notes Query Languages</h3> Access to Notes data mostly happens <a href="/blog/2013/12/domino-development-back-to-basics-part-4-domino-views-are-different.html">using a view</a>, so the pre-selection happens using the <code>SELECT</code> statement and the <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/index.jsp?topic=%2Fcom.ibm.designer.domino.main.doc%2FH_NOTES_FORMULA_LANGUAGE.html"><code>@Formula</code></a> language. We will see how to narrow results down, just below. But you are not limited to creating a view first, a database can be queried directly using <code>@Formula</code> when executing <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_SEARCH_METHOD_JAVA.html"><code>Database.search("some @Formula expression")</code></a>. This works like any other query language around. This flexibility comes with a price: speed. <code>Database.search</code> is the slowest way to retrieve data from a NSF and you shouldn't use that for your default access path (that is: the actions most users will use in a regular manner). 
+<br> The second query language is the composition of a fulltext query. In its simplest form it is just some text you want to find, but it can be extended to specify the fields to look into and construct <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/index.jsp?topic=%2Fcom.ibm.notes85.help.doc%2Fsch_refine_query_r.html">additional constraints</a>. It takes a little to get used to it, but it is quite powerful, just one example: <code>fish SENTENCE chips</code> finds documents where fish &amp; chips are mentioned in the same sentence. Important note here: make sure the FullText index is configured, so it isn't crawling slow. 
 <h3>Finding data</h3> There are several ways data retrieval happens in IBM Notes: 
 <ol> 
  <li><b>Direct access</b><br> Notes documents can be addressed using a <a href="http://www.ibm.com/developerworks/lotus/library/ls-Domino_URL_cheat_sheet/">notes://</a> address. The session class has a <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_RESOLVE_METHOD_JAVA.html">resolve(notesurl)</a> method (not the fastest) and the database class has <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_GETDOCUMENTBYUNID_METHOD_JAVA.html"><code>Database.getDocumentByUNID(id)</code></a>. Don't confuse it with <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_GETDOCUMENTBYURL_METHOD_JAVA.html"><code>Database.getDocumentByURL(...)</code></a> which created a document based on HTML content at the specified URL. Internally the byUNID is used whenever you click on a Notes document link. It is one of the fastest access methods. There is also byID, which you should avoid, since it isn't save across replicas or copy style compaction </li> 
@@ -179,19 +161,14 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li><a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_FTSEARCH_METHOD_DB_JAVA.html">FullText search</a><br> Make sure you actually have a FTIndex on the database, otherwise that will be slow. The syntax takes a while to get used to. There is one FTIndex per database, even while you can limit the <a href="/blog/2009/07/notesdatabaseftsearch-vs-notesviewftsearch.html">search to one view</a></li> 
  <li><code>Database.Search(...)</code><br> The most flexible search, with the price of speed and sort order: slow and you have to sort it yourself. Don't use unless unavoidable </li> 
 </ol> Depending on your needs pick one or the other 
-<h3>Collections</h3> Depending on your access route choosen above, you might get one of the 4 result collections. Those are no proper 
-<a href="http://docs.oracle.com/javase/tutorial/collections/intro/">Java Collections</a>, but come in their own little API implementation, unless you use a 
-<a href="https://github.com/OpenNTF/org.openntf.domino">well designed</a> Notes API. You will find 
-<code>getFirst</code> and 
-<code>getNext(currentOne)</code> methods 
+<h3>Collections</h3> Depending on your access route choosen above, you might get one of the 4 result collections. Those are no proper <a href="http://docs.oracle.com/javase/tutorial/collections/intro/">Java Collections</a>, but come in their own little API implementation, unless you use a <a href="https://github.com/OpenNTF/org.openntf.domino">well designed</a> Notes API. You will find <code>getFirst</code> and <code>getNext(currentOne)</code> methods 
 <ul> 
  <li><a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_NOTESDOCUMENTCOLLECTION_CLASS_JAVA.html">DocumentCollection</a><br> The oldest and most flexible collection. Can originate from a database, a view, a search. Since you have full access to all documents in it, it is the slowest collection. It was also the first collection available in the API and is a good candidate for being replaced by a ViewEntryCollection when tuning your database. A DocumentCollection contains only data documents. Is has fancy <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_SUBTRACT_METHOD_COLLECTION_JAVA.html">set</a> operations </li> 
  <li><a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_NOTESNOTECOLLECTION_CLASS_JAVA.html">NoteCollection</a><br> The NoteCollection can contain data and design Note elements and is slightly faster to build than the DocumentCollection, since it initializes a Note class only on access. So the total time "creation + access" is similar to the DocumentCollection. The main use case is access to design elements and some fancy <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_INTERSECT_METHOD_NC_JAVA.html">set</a> operations </li> 
  <li><a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_NOTESVIEWENTRYCOLLECTION_CLASS_JAVA.html">ViewEntryCollection</a><br> This collection provides all (or selected) documents from a view. Instead of opening each document it gives access to the column values in the ViewEntry object, as well as the same fancy <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_MERGE_METHOD_VEC_JAVA.html">set</a> operations you learned to love from the DocumentCollection and the NoteCollection. The ViewEntryCollection performs faster, given you have all values you need in a view column </li> 
  <li><a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_NOTESVIEWNAVIGATOR_CLASS_JAVA.html">ViewNavigator</a><br> Technically it isn't a collection, but the ability to point around in the view index. So you won't get any set operation to refine the result, but you get <b>speed</b>. You can jump from category to category (great for reading the <code>reduce()</code> values) and run through an entire view very very quickly. The ViewNavigator is a main reason to plan your views well </li> 
 </ul> 
-<br> Next up: 
-<az href="/blog/2014/02/domino-development-back-to-basics-part-6-better-safe-than-sorry-security.html">
+<br> Next up: <az href="/blog/2014/02/domino-development-back-to-basics-part-6-better-safe-than-sorry-security.html">
   Better save than sorry - Security 
 </az></div>
 					<hr />
@@ -322,6 +299,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Make Java code for XAgents easy to test" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2012,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -129,12 +130,8 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Make Java code for XAgents easy to test</small></h1>
 					<hr />
-					<div>One of the popular entries in this blog is my introduction into 
-<a href="/blog/2008/12/xagents-web-agents-xpages-style.html">XAgents</a> together with 
-<a href="/blog/2010/12/rendering-your-own-output-in-xpages-revisited.html">related considerations</a> and 
-<a href="/blog/2010/01/rendering-odf-documents-in-your-xpages.html">practial applications</a>. There are a few patterns, that make XAgents easier to develop and debug. 
-<br> Despite 
-<a href="http://www.openntf.org/p/XPage%20Debug%20Toolbar">outstanding tool contribution</a> debugging in XPages is still wanting, so any code that you can incorporate pre-debugged is a bonus. Here is what I do: 
+					<div>One of the popular entries in this blog is my introduction into <a href="/blog/2008/12/xagents-web-agents-xpages-style.html">XAgents</a> together with <a href="/blog/2010/12/rendering-your-own-output-in-xpages-revisited.html">related considerations</a> and <a href="/blog/2010/01/rendering-odf-documents-in-your-xpages.html">practial applications</a>. There are a few patterns, that make XAgents easier to develop and debug. 
+<br> Despite <a href="http://www.openntf.org/p/XPage%20Debug%20Toolbar">outstanding tool contribution</a> debugging in XPages is still wanting, so any code that you can incorporate pre-debugged is a bonus. Here is what I do: 
 <ul> 
  <li>I try to write my logic in Java. I use the SSJS only to fetch the values I need to call my Java function</li> 
  <li>The functions of the Java class take always the OutputStream (or the ResponseWriter) as a parameter. This is where the output goes</li> 
@@ -142,182 +139,43 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>I try to avoid using XPages specific (e.g. variable resolver) in my class containing the logic, but rather rely on <a href="http://en.wikipedia.org/wiki/Dependency_injection">Dependency Injection</a> to ease testing</li> 
  <li>I debug and test the Java parts outside of XPages</li> 
 </ul> A little sample. Imagine I have a class that renders a Notes document into a PDF (with a fixed style). In my XPages code (beforeRenderResponse) I would write: 
-<div class="javascript"> 
- <span class="co1">// The external context and the response object</span> 
+<div class="javascript"> <span class="co1">// The external context and the response object</span> 
+ <br> <span class="kw2">var</span> exCon <span class="sy0">=</span> facesContext. <span class="me1">getExternalContext</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> <span class="kw2">var</span> response <span class="sy0">=</span> exCon. <span class="me1">getResponse</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
  <br> 
- <span class="kw2">var</span> exCon 
- <span class="sy0">=</span> facesContext. 
- <span class="me1">getExternalContext</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
+ <br> <span class="co1">// Deliver uncached PDF</span> 
+ <br> response. <span class="me1">setContentType</span> <span class="br0">(</span> <span class="st0">"application/pdf"</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> response. <span class="me1">setHeader</span> <span class="br0">(</span> <span class="st0">"Cache-Control"</span> <span class="sy0">,</span> <span class="st0">"no-cache"</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> <span class="co1">// Force file name and save dialog</span> 
+ <br> response. <span class="me1">setHeader</span> <span class="br0">(</span> <span class="st0">"Content-Disposition"</span> <span class="sy0">,</span> <span class="st0">"attachment; filename=invoice.pdf"</span> <span class="br0">)</span> <span class="sy0">;</span> 
  <br> 
- <span class="kw2">var</span> response 
- <span class="sy0">=</span> exCon. 
- <span class="me1">getResponse</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
+ <br> <span class="co1">// The Output Stream for Binary Output</span> 
+ <br> <span class="kw2">var</span> out <span class="sy0">=</span>response. <span class="me1">getOutputStream</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> <span class="kw2">var</span> pdfProcessor <span class="sy0">=</span> <span class="kw2">new</span> com. <span class="me1">notessensei</span>. <span class="me1">tools</span>. <span class="me1">PDFFormatter</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
  <br> 
+ <br> <span class="co1">// Here the call where "document" is a Notes document</span> 
+ <br> pdfProcessor. <span class="me1">renderInvoice</span> <span class="br0">(</span>out <span class="sy0">,</span> document <span class="br0">)</span> <span class="sy0">;</span> 
  <br> 
- <span class="co1">// Deliver uncached PDF</span> 
- <br> response. 
- <span class="me1">setContentType</span> 
- <span class="br0">(</span> 
- <span class="st0">"application/pdf"</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> response. 
- <span class="me1">setHeader</span> 
- <span class="br0">(</span> 
- <span class="st0">"Cache-Control"</span> 
- <span class="sy0">,</span> 
- <span class="st0">"no-cache"</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> 
- <span class="co1">// Force file name and save dialog</span> 
- <br> response. 
- <span class="me1">setHeader</span> 
- <span class="br0">(</span> 
- <span class="st0">"Content-Disposition"</span> 
- <span class="sy0">,</span> 
- <span class="st0">"attachment; filename=invoice.pdf"</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> 
- <br> 
- <span class="co1">// The Output Stream for Binary Output</span> 
- <br> 
- <span class="kw2">var</span> out 
- <span class="sy0">=</span>response. 
- <span class="me1">getOutputStream</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> 
- <span class="kw2">var</span> pdfProcessor 
- <span class="sy0">=</span> 
- <span class="kw2">new</span> com. 
- <span class="me1">notessensei</span>. 
- <span class="me1">tools</span>. 
- <span class="me1">PDFFormatter</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> 
- <br> 
- <span class="co1">// Here the call where "document" is a Notes document</span> 
- <br> pdfProcessor. 
- <span class="me1">renderInvoice</span> 
- <span class="br0">(</span>out 
- <span class="sy0">,</span> document 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> 
- <br> 
- <span class="co1">// Done</span> 
- <br> facesContext. 
- <span class="me1">responseComplete</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> out. 
- <span class="kw3">close</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
+ <br> <span class="co1">// Done</span> 
+ <br> facesContext. <span class="me1">responseComplete</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> out. <span class="kw3">close</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
 </div> Not really rocket science. The beauty of this approach: I can have a standalone Java application to test my PDFFormatter class. I use Eclipse for that. In Eclipse I have configured the Notes client's JVM as the runtime for the project. This way all Notes Java classes are found. Most likely you need the Notes program directory on your system path (but you know that). A simple testing class can look like this: 
-<div class="java"> 
- <span class="kw1">public</span> 
- <span class="kw1">class</span> Tester 
- <span class="br0">{</span> 
+<div class="java"> <span class="kw1">public</span> <span class="kw1">class</span> Tester <span class="br0">{</span> 
  <br> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">public</span> 
- <span class="kw1">static</span> 
- <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> theURL 
- <span class="sy0">=</span> 
- <span class="st0">"Notes:///8525744100531C7D/F4B82FBB75E942A6852566AC0037F284/034DAEE1CEEE2FB58525744000719185"</span> 
- <span class="sy0">;</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">public</span> <span class="kw1">static</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> theURL <span class="sy0">=</span> <span class="st0">"Notes:///8525744100531C7D/F4B82FBB75E942A6852566AC0037F284/034DAEE1CEEE2FB58525744000719185"</span> <span class="sy0">;</span> 
  <br> 
- <br> &nbsp; &nbsp; 
- <span class="kw1">public</span> 
- <span class="kw1">static</span> 
- <span class="kw4">void</span> main 
- <span class="br0">(</span> 
- <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> 
- <span class="br0">[</span> 
- <span class="br0">]</span> args 
- <span class="br0">)</span> 
- <span class="kw1">throws</span> 
- <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Exception</span></a> 
- <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; NotesThread. 
- <span class="me1">sinitThread</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; Session s 
- <span class="sy0">=</span> NotesFactory. 
- <span class="me1">createSession</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <span class="kw3">Document</span> document 
- <span class="sy0">=</span> 
- <span class="br0">(</span> 
- <span class="kw3">Document</span> 
- <span class="br0">)</span>session. 
- <span class="me1">resolve</span> 
- <span class="br0">(</span>theURL 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; PDFFormatter pdfProcessor 
- <span class="sy0">=</span> 
- <span class="kw1">new</span> com. 
- <span class="me1">notessensei</span>. 
- <span class="me1">tools</span>. 
- <span class="me1">PDFFormatter</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afileoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">FileOutputStream</span></a> out 
- <span class="sy0">=</span> 
- <span class="kw1">new</span> 
- <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afileoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">FileOutputStream</span></a> 
- <span class="br0">(</span> 
- <span class="kw1">new</span> 
- <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afile+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">File</span></a> 
- <span class="br0">(</span> 
- <span class="st0">"invoice.pdf"</span> 
- <span class="br0">)</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; pdfProcessor. 
- <span class="me1">renderInvoice</span> 
- <span class="br0">(</span>out, document 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; out. 
- <span class="me1">close</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; NotesThread. 
- <span class="me1">stermThread</span> 
- <span class="br0">(</span> 
- <span class="br0">)</span> 
- <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; 
- <span class="br0">}</span> 
- <br> 
- <span class="br0">}</span> 
-</div> Of course that approach works too when you plan to use 
-<a href="http://www.junit.org/">JUnit</a> or a similar framework. Finally all can be glued together with 
-<a href="http://ant.apache.org/">ANT</a> for a full automated environment, but that's a story for another time. 
+ <br> &nbsp; &nbsp; <span class="kw1">public</span> <span class="kw1">static</span> <span class="kw4">void</span> main <span class="br0">(</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> <span class="br0">[</span> <span class="br0">]</span> args <span class="br0">)</span> <span class="kw1">throws</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Exception</span></a> <span class="br0">{</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; NotesThread. <span class="me1">sinitThread</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; Session s <span class="sy0">=</span> NotesFactory. <span class="me1">createSession</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw3">Document</span> document <span class="sy0">=</span> <span class="br0">(</span> <span class="kw3">Document</span> <span class="br0">)</span>session. <span class="me1">resolve</span> <span class="br0">(</span>theURL <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; PDFFormatter pdfProcessor <span class="sy0">=</span> <span class="kw1">new</span> com. <span class="me1">notessensei</span>. <span class="me1">tools</span>. <span class="me1">PDFFormatter</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afileoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">FileOutputStream</span></a> out <span class="sy0">=</span> <span class="kw1">new</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afileoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">FileOutputStream</span></a> <span class="br0">(</span> <span class="kw1">new</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afile+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">File</span></a> <span class="br0">(</span> <span class="st0">"invoice.pdf"</span> <span class="br0">)</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; pdfProcessor. <span class="me1">renderInvoice</span> <span class="br0">(</span>out, document <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; out. <span class="me1">close</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; NotesThread. <span class="me1">stermThread</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> &nbsp; &nbsp; <span class="br0">}</span> 
+ <br> <span class="br0">}</span> 
+</div> Of course that approach works too when you plan to use <a href="http://www.junit.org/">JUnit</a> or a similar framework. Finally all can be glued together with <a href="http://ant.apache.org/">ANT</a> for a full automated environment, but that's a story for another time. 
 <br> As usual: YMMV</div>
 					<hr />
 					<p>
@@ -497,6 +355,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

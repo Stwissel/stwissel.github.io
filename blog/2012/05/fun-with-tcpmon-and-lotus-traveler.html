@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Fun with TCPMon and Lotus Traveler" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2012,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -129,19 +130,13 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Fun with TCPMon and Lotus Traveler</small></h1>
 					<hr />
-					<div>Martin Luther (the 
-<a href="http://en.wikipedia.org/wiki/Martin_Luther">original</a>) famously stated " 
-<i>man muss dem Volk aufs Maul schauen</i>" (roughly translated: " 
-<i>you have to watch <b>how</b> people talk"</i>. What worked for a 
-<a href="http://en.wikipedia.org/wiki/Weimarer_Ausgabe#Contents_of_the_division_.22German_Bible.22">bible translation</a> also works in IT. 
-<br> While it is nice to have some documentation, quite often it is inaccurate, incomplete, outdated, factual wrong or simply missing. So listening to "how applications speak" is an essential skill, mentioned 
-<a href="/blog/2010/04/rpc-monitor-watch-your-wire.html">here before</a>. In this little weekend project these skills get applied to Lotus Traveler. These are our ingredients: 
+					<div>Martin Luther (the <a href="http://en.wikipedia.org/wiki/Martin_Luther">original</a>) famously stated " <i>man muss dem Volk aufs Maul schauen</i>" (roughly translated: " <i>you have to watch <b>how</b> people talk"</i>. What worked for a <a href="http://en.wikipedia.org/wiki/Weimarer_Ausgabe#Contents_of_the_division_.22German_Bible.22">bible translation</a> also works in IT. 
+<br> While it is nice to have some documentation, quite often it is inaccurate, incomplete, outdated, factual wrong or simply missing. So listening to "how applications speak" is an essential skill, mentioned <a href="/blog/2010/04/rpc-monitor-watch-your-wire.html">here before</a>. In this little weekend project these skills get applied to Lotus Traveler. These are our ingredients: 
 <ol> 
  <li>Domino server with installed Traveler listening on http Port 80 (https won't do). Also make sure that compression is switched off in the internet site document for traveler, it's no fun to watch gzip encoded data</li> 
  <li><a href="http://ws.apache.org/commons/tcpmon/">Apache TCPMon</a> installed and listening on port 8888 in proxy mode</li> 
  <li>The <a href="http://developer.android.com/sdk/index.html">Android SDK</a>, installed with an Android device emulator. Alternative: a physical Android device (and your ports open on your machine)</li> 
-</ol> We will configure the Android to use the PC as the proxy and then install Lotus Traveler and sync data. TCPMon will show us what's on the wire (Windows user could use 
-<a href="http://www.fiddler2.com/fiddler2/">Fiddler</a> as alternative to TCPMon. Let's get started: 
+</ol> We will configure the Android to use the PC as the proxy and then install Lotus Traveler and sync data. TCPMon will show us what's on the wire (Windows user could use <a href="http://www.fiddler2.com/fiddler2/">Fiddler</a> as alternative to TCPMon. Let's get started: 
 <ol> 
  <li>TCPMon needs to be configured in Proxy mode.<br> <img src="/blog/images/2012/SyncML01.png" border="0" alt="Setting up of TCPMon"><br> You can test if that is working by pointing your browser's proxy setting to <code>127.0.0.1:8888</code>. Note: you need the real IP in the Android phone or emulator. The TCPMon screen then nicely shows the outgoing requests and incoming responses:<br> <img src="/blog/images/2012/SyncML08.png" border="0" alt="TCPMon in action"> </li> 
  <li>Time to configure an Android emulator. After installing the Android SDK you can launch <code>tools/android</code> from the install directory to download and install the various versions of the Android OS Emulations from 1.0 all the way to 4.0.3. In the Tools menu you can manage your AVD (Android Virtual Devices) and configure different images. The emulator comes with the option of snapshots, quickstart, cold boot etc.<br> <img src="/blog/images/2012/SyncML03.png" border="0" alt="Various Android Virtual Devices"><br> I found the 4.0.3 devices substantially slower than the 2.3.x devices, which might be based on the higher default screen resolution. Once you have configured the AVD, you could start it directly from the menu</li> 
@@ -150,8 +145,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Make sure to have the proxy back in the HTTP stream to watch what is happening. It is quite enlightening</li> 
  <li>The first thing once the new device is ready is a request to fetch the configuration which against the current fashion is delivered as XML document that <b>very</b> closely resembles DXL. The request looks like this:<br> <span style="font-family : Courier, Monospace; font-size : smaller"> GET http://yourtravelerserver:80/servlet/traveler?action=getConfig&amp;deviceId=Android_somedeviceid HTTP/1.1<br> Content-Type: application/x-www-form-urlencoded<br> Host: yourtravelerserver:80<br> Connection: Keep-Alive<br> User-Agent: Lotus Traveler Android 8.5.2.1<br> Authorization: Basic Base64EncodedUserNamePassword=</span></li> 
  <li>Then you can go on and watch the initial sync happening. To understand what device and server are talking to each other, you need to ask <a href="http://www.openmobilealliance.org/tech/affiliates/syncml/syncmlindex.html">OMA</a>, there the best documentation is available - you might have guessed: Traveler on Android is using SyncML. You can learn how "push" actually works</li> 
-</ol> Next stop: repeat the above on a Mac. On the Mac Traveler uses 
-<a href="http://en.wikipedia.org/wiki/ActiveSync">ActiveSync</a>, so you need to look elsewhere for the documentation. I'll share more about the protocols and findings in future posts (just hope it is raining again on a weekend here).</div>
+</ol> Next stop: repeat the above on a Mac. On the Mac Traveler uses <a href="http://en.wikipedia.org/wiki/ActiveSync">ActiveSync</a>, so you need to look elsewhere for the documentation. I'll share more about the protocols and findings in future posts (just hope it is raining again on a weekend here).</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -277,6 +271,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

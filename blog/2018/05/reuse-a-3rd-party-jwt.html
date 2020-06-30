@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Reuse a 3rd Party Json Web Token (JWT) for Salesforce authentication" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2018,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -132,10 +133,10 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Reuse a 3rd Party Json Web Token (JWT) for Salesforce authentication</small></h1>
 					<hr />
-					<div><h3><a href="#the-scenario" id="the-scenario">The scenario</a></h3> 
+					<div><h3>The scenario</h3> 
 <p>You run an app, could be a mobile native, a <a href="https://en.wikipedia.org/wiki/Single-page_application">SPA</a>, a <a href="https://en.wikipedia.org/wiki/Progressive_Web_Apps">PWA</a> or just an application with JavaScript logic, in your domain that needs to incorporate data from your Salesforce instance or one of your Salesforce communities.</p> 
 <p>Users have authenticated with your website and the app is using a <a href="https://www.jsonwebtoken.io/">JWT</a> Bearer Token to establish identity. You don't want to bother users with an additional authentication.</p> 
-<h3><a href="#what-you-need" id="what-you-need">What you need</a></h3> 
+<h3>What you need</h3> 
 <p>Salesforce has <a href="https://help.salesforce.com/articleView?id=remoteaccess_oauth_jwt_flow.htm&amp;type=5">very specific</a> requirements how a JWT must be formed to qualify for authentication. For example the token can be valid only for 5 minutes. It is very unlikely that your token matches the requirements.</p> 
 <p>Therefore you will need to extract the user identity from existing token, while checking that it isn't spoofed and create a new token that you present to Salesforce to obtain the session token. So you need:</p> 
 <ol> 
@@ -144,7 +145,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>A configured <a href="https://help.salesforce.com/articleView?id=connected_app_overview.htm&amp;type=5">Connected App</a> in Salesforce where you upload they full certificate and obtain the Consumer Key</li> 
  <li>Some place to run the code, like <a href="https://wwww.heroku.com/">Heroku</a></li> 
 </ol> 
-<p><img src="/blog/images/2018/jwtFlow.png" alt="Authentication Flow for 3rd party JWT"></p><h3><a href="#create-your-certificate-for-salesforce" id="create-your-certificate-for-salesforce">Create your certificate for Salesforce</a></h3> 
+<p><img src="/blog/images/2018/jwtFlow.png" alt="Authentication Flow for 3rd party JWT"></p><h3>Create your certificate for Salesforce</h3> 
 <p>Salesforce uses a X509 certificate to validate the signatures. The various formats can be a little pain, since <a href="">PKCS</a> has many flavors. To save yourself some pain, here is the script to generate what you need. Please note the script prompts for input:</p> 
 <pre class="brush: bash">openssl genrsa -des3 -passout pass:somepass -out server.pass.key 2048
 openssl rsa -passin pass:somepass -in server.pass.key -out temp.key
@@ -154,20 +155,20 @@ openssl x509 -req -sha256 -days 365 -in server.csr -signkey temp.key -out server
 openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in temp.key -out server.key
 rm temp.key
 </pre> 
-<h3><a href="#configure-salesforce" id="configure-salesforce">Configure Salesforce</a></h3> 
+<h3>Configure Salesforce</h3> 
 <p>In Salesforce you use the <em>App Manager</em> to create a new <em>Connected App</em>:</p> 
 <ul> 
  <li>Fill in Connected App Name, API Name and Contact eMail</li> 
  <li>Check "Enable OAuth Settings"</li> 
- <li>Fill in a value for Callback URL, <a href="http://localhost/callback">http://localhost/callback</a> will do. We won't use that value</li> 
+ <li>Fill in a value for Callback URL, http://localhost/callback will do. We won't use that value</li> 
  <li>Check "Use digital signatures". Upload the certificate server.crt you created in the step before</li> 
  <li>for the "Selected OAuth Scopes" you probably need <strong>api id web</strong> and others, depending on your use case. What you <strong>must</strong> have is <strong>refresh_token offline_access</strong>, otherwise authentication will fail</li> 
  <li>Check "Require secret for Web Server Flow" (default setting anyway)</li> 
  <li>Save the entry. Note down the consumer key, you will need it in the code</li> 
 </ul> 
-<h3><a href="#the-code-java-edition" id="the-code-java-edition">The code (Java Edition)</a></h3> 
+<h3>The code (Java Edition)</h3> 
 <p>I will show you the essential functions, storing and retrieving variables securely and wrapping a web API around is left to the reader. I wrote the sample using <a href="http://vertx.io">Eclipse vert.x</a> in case you wonder where the <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">JsonObject</a> comes from.</p> 
-<h4><a href="#extracting-the-user-from-the-3rd-party-jwt" id="extracting-the-user-from-the-3rd-party-jwt">Extracting the user from the 3rd party JWT</a></h4> 
+<h4>Extracting the user from the 3rd party JWT</h4> 
 <p>Typically the user is stored in the <code>subject</code> property of the JWT Claim. Depending on the signature (symmetric encryption or public key), you need a different function to obtain the key, the extraction works the same:</p> 
 <pre class="brush: java">public String extractSubjectFromJWT(final String incomingJWT) throws SignatureException {
         // Depending on production or demo mode we work with different keys
@@ -186,7 +187,7 @@ rm temp.key
         }
     }
 </pre> 
-<h4><a href="#generate-the-salesforce-compliant-jwt-key" id="generate-the-salesforce-compliant-jwt-key">Generate the Salesforce compliant JWT key</a></h4> 
+<h4>Generate the Salesforce compliant JWT key</h4> 
 <p>The key requires the user as <code>subject</code>, the login URL as <code>audience</code> and the Consumer Key as <code>issuer</code>. The key must be the X509 private key. The validity needs to be 5 min into the future.</p> 
 <pre class="brush: java">public String createJwt(final String subject) throws Exception {
 
@@ -211,7 +212,7 @@ rm temp.key
         return compactJws;
     }
 </pre> 
-<h4><a href="#exchange-the-jwt-for-a-oauth-session-token" id="exchange-the-jwt-for-a-oauth-session-token">Exchange the JWT for a OAuth session token</a></h4> 
+<h4>Exchange the JWT for a OAuth session token</h4> 
 <p>Salesforce requires to POST a http form (yep, form not JSON) to the authentication endpoint <code>/services/oauth2/token</code> and returns JSON if when it is successful or fails:</p> 
 <pre class="brush: java">private void handleAuth(final Message&lt;JsonObject&gt; incoming) {
 
@@ -379,6 +380,7 @@ check it out and tell me what Ayou think of it.a feedback is always appreciated<
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

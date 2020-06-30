@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Rethinking the MimeDocument data source" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2014,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -129,14 +130,9 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Rethinking the MimeDocument data source</small></h1>
 					<hr />
-					<div>Tim (we miss you) and 
-<a href="https://www.linkedin.com/profile/view?id=16014400">Jesse</a> had the idea to store 
-<a href="https://frostillic.us/f.nsf/posts/an-extended-document-data-source-to-support-mimebeans">beans in Mime documents</a>, which became an 
-<a href="http://openntf.org/main.nsf/project.xsp?r=project/mimeDominoDocument%20Data%20Source/summary">OpenNTF project</a>. 
-<br> I love that idea and was musing how to make it more "domino like". In its binary format, a serialized bean can't be used for showing view data, nor can one be sure that it can be transported or deserialized other than through the same class version as the creator (this is why 
-<code>Serialized</code> wants to have a serialid). 
-<br> With a little extra work, that becomes actually quite easy: Enter 
-<a href="http://www.vogella.com/tutorials/JAXB/article.html">JAXB</a>. Serializing a bean to XML (I hear howling from the JSON camp) allows for a number of interesting options: 
+					<div>Tim (we miss you) and <a href="https://www.linkedin.com/profile/view?id=16014400">Jesse</a> had the idea to store <a href="https://frostillic.us/f.nsf/posts/an-extended-document-data-source-to-support-mimebeans">beans in Mime documents</a>, which became an <a href="http://openntf.org/main.nsf/project.xsp?r=project/mimeDominoDocument%20Data%20Source/summary">OpenNTF project</a>. 
+<br> I love that idea and was musing how to make it more "domino like". In its binary format, a serialized bean can't be used for showing view data, nor can one be sure that it can be transported or deserialized other than through the same class version as the creator (this is why <code>Serialized</code> wants to have a serialid). 
+<br> With a little extra work, that becomes actually quite easy: Enter <a href="http://www.vogella.com/tutorials/JAXB/article.html">JAXB</a>. Serializing a bean to XML (I hear howling from the JSON camp) allows for a number of interesting options: 
 <ul> 
  <li>The MIME data generated in the document becomes human readable</li> 
  <li>If the class changes a litte de-serialization will still work, if it changes a lot it can be deserialized to an <a href="http://docs.oracle.com/javase/7/docs/api/org/w3c/dom/Document.html">XML Document</a></li> 
@@ -145,8 +141,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Using a stylesheet a fully human readable version can be stored with the original MIME (good to eMail)</li> 
 </ul> I haven't sorted out the details, but lets look at some of the building blocks. Who ever has seen me demo XPages will recognize the fruit class. The difference here: I added the XML annotations for a successful serialization: 
 <br> 
-<pre class="brush: java">
-package test;
+<pre class="brush: java">package test;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -212,8 +207,7 @@ public class Fruit {
 </pre> 
 <br> The function (probably in a manager class or instance) to turn that into a Document is quite short. The serialization of JAXB would allow to directly serialize it into a Stream or String, but we need the XML Document step to be able to apply the XPath. 
 <br> 
-<pre class="brush: java">
-public org.w3c.dom.Document getDocument(Fruit fruit) throws ParserConfigurationException, JAXBException {
+<pre class="brush: java">public org.w3c.dom.Document getDocument(Fruit fruit) throws ParserConfigurationException, JAXBException {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		org.w3c.dom.Document doc = db.newDocument();
@@ -224,11 +218,8 @@ public org.w3c.dom.Document getDocument(Fruit fruit) throws ParserConfigurationE
 		return doc;
 	}
 </pre> 
-<br> The little catch here: There is a Document in the 
-<code>lotus.domino</code> package as well as in the 
-<code>org.w3c.dom</code> package. You need to take care not to confuse the two. Saving it into a document including the style sheet (to make it pretty) is short too. The function provides the stylesheet as a w3c Document and the list of fields to extract as a key (the field) - value (the XPath) map. Something like this: 
-<br><pre class="brush: java">
-       public boolean saveFruitXmlToDocument(lotus.domino.Session session s, lotus.domino.Document d, org.w3c.dom.Document xDoc, org.w3c.dom.Document style) {
+<br> The little catch here: There is a Document in the <code>lotus.domino</code> package as well as in the <code>org.w3c.dom</code> package. You need to take care not to confuse the two. Saving it into a document including the style sheet (to make it pretty) is short too. The function provides the stylesheet as a w3c Document and the list of fields to extract as a key (the field) - value (the XPath) map. Something like this: 
+<br><pre class="brush: java">       public boolean saveFruitXmlToDocument(lotus.domino.Session session s, lotus.domino.Document d, org.w3c.dom.Document xDoc, org.w3c.dom.Document style) {
 		public static final MIME_FIELD_NAME = "Body";
 		boolean success = true;
         Map&lt;String,String&gt; defs = new HashMap&lt;String,String&gt;();
@@ -349,8 +340,7 @@ public org.w3c.dom.Document getDocument(Fruit fruit) throws ParserConfigurationE
 </pre> 
 <br> The final missing ingredient is the MagicNamespace: 
 <br> 
-<pre class="brush: java">
-package test;
+<pre class="brush: java">package test;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -429,8 +419,7 @@ public class MagicNamespaceContext implements NamespaceContext {
 </pre> 
 <br> and of course a test: 
 <br> 
-<pre class="brush: java">
-package test;
+<pre class="brush: java">package test;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -610,6 +599,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

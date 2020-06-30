@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Finding Strings in recursively zipped files" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2019,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -133,14 +134,14 @@ catch(e){window.attachEvent("onload", $buo_f)}
 					<h1><small>Finding Strings in recursively zipped files</small></h1>
 					<hr />
 					<div><p>I had an itch to scratch. After using <a href="https://appexchange.salesforce.com/appxListingDetail?listingId=a0N30000003HSXEEA4">Field Trip</a> (which I like a lot) to determine unused fields, the team managing the external <a href="https://www.informatica.com/">Informatica</a> integration claimed they would need weeks to ensure none of the fields are used in any of their (hundreds) of pipelines.</p> 
-<h3><a href="#zip-inception" id="zip-inception">ZIP inception</a></h3> 
+<h3>ZIP inception</h3> 
 <p>My first reaction (OK, the second, first one isn't PC) was: Let's go after the source code and just use an <a href="https://www.sublimetext.com/">editor of choice</a> to do a find in files. Turns out: not so fast. The source export offered by the team was a zip file with an elaborate directory structure containing, tada, zip files. So each of the pipes would need multiple zip operations.</p> 
-<h3><a href="#itch-defined" id="itch-defined">Itch defined</a></h3> 
+<h3>Itch defined</h3> 
 <p>I needed a tool that would start in a directory with a bunch of zip files, unpack them all. Check for zip files in the unpacked result, unzip these and repeat. Once done, take a list of strings and search for occurrences of those and generate a report which shows the files containing these strings</p> 
-<h3><a href="#itch-scratched" id="itch-scratched">Itch scratched</a></h3> 
+<h3>Itch scratched</h3> 
 <p>I created <a href="https://github.com/Stwissel/findStrings">findstring</a>, a command line tool that takes a directory as starting point unzips what can be unzipped (optional) and searches for the occurrence of strings provided in a text file.</p> 
 <p>Initially I contemplated to render the output as XML, so the final report could be designed in whatever fashion using XSLT. However following <a href="https://en.wikipedia.org/wiki/KISS_principle">KISS</a>, I ended up using <a href="https://en.wikipedia.org/wiki/Markdown">Markdown</a>. I might add the XML option later on.</p> 
-<h3><a href="#recursion" id="recursion">Recursion</a></h3> 
+<h3>Recursion</h3> 
 <p>The key piece of the tool is recursion (until you stack overflow ;-) ). Reading a directory and dive into directories found. I could have avoided that using <a href="https://github.com/google/guava">Guava</a> and its <a href="https://google.github.io/guava/releases/snapshot/api/docs/com/google/common/io/Files.html#fileTraverser--">fileTraverser</a>, but I like some Inception style coding. The key piece is this:</p> 
 <pre class="brush: java">    private boolean expandSources(final File sourceDir) throws IOException {
         boolean result = false;
@@ -165,7 +166,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
     }
 </pre> 
 <p>The function will return true as long as there was a zip file to be unzipped. The string finding operation (case insensitive) follows the same approach</p> 
-<h3><a href="#use-cases" id="use-cases">Use cases</a></h3> 
+<h3>Use cases</h3> 
 <ul> 
  <li>Find field usage in ZIP files. Works with a package downloaded from the meta data api or what Informatica exports</li> 
  <li>Check a source directory (doesn't need to contain zips) for keywords like <code>TODO</code>, <code>FIXME</code>, <code>XXX</code></li> 
@@ -173,12 +174,12 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <p>The command line syntax is very simple:</p> 
 <p><code>java -jar findString.jar -d directory -s strings [-o output]</code></p> 
 <ul> 
- <li>-d,?dir &lt;arg&gt; directory with all zip files</li> 
- <li>-s,?stringfile &lt;arg&gt; Filename with Strings to search, one per line</li> 
- <li>-o,?output &lt;arg&gt; Output file name for report in MD format</li> 
- <li>-nz,?nz Rerun find operation on a ready unzipped structure - good for alternate finds</li> 
+ <li>-d,--dir &lt;arg&gt; directory with all zip files</li> 
+ <li>-s,--stringfile &lt;arg&gt; Filename with Strings to search, one per line</li> 
+ <li>-o,--output &lt;arg&gt; Output file name for report in MD format</li> 
+ <li>-nz,--nz Rerun find operation on a ready unzipped structure - good for alternate finds</li> 
 </ul> 
-<h3><a href="#limits" id="limits">Limits</a></h3> 
+<h3>Limits</h3> 
 <p>In its current form the utility will check for strings in any file short of zip. Zip gets unpacked and the result checked. When your directory contains binary files (e.g. images) it will still look for the string occurrence inside. File extension filters might be a future enhancement (<a href="https://github.com/Stwissel/findStrings/issues">share your opinion</a>).</p> 
 <p>Files are read into memory. So if your directory contains huge files, you will blow your heap. Source code files hardly pose an issue, so the approach worked for me. Alternatively a <a href="https://docs.oracle.com/javase/7/docs/api/java/util/Scanner.html">scanner</a> could be used, should the need arise.</p> 
 <p>Go <a href="https://github.com/Stwissel/findStrings/releases">give it a spin</a> and keep in mind: YMMV</p></div>
@@ -311,6 +312,7 @@ categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href=
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

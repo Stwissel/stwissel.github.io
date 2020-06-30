@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Summer diet for your Notes Forms" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2007,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -133,8 +134,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <br>One hallmark of Notes applications is their durability. It is quite common to find applications being in use, that root back into R3 or R4. Quite a number of these applications still look like that too. That's the flip-site of not needing to rip-and-replace. Sometimes you also will find, that older forms load slower and behave odd at times. Before you start beautifying your applications, it is a good idea to do some spring cleaning. To do so I use Domino's DXL to extract a form in XML, filter it through a XSLT transformation and reimport that into the database. 
 <br>The LotusScript code is very straight forward, has been well covered on developer works and the help file and looks like this: 
 <br> 
-<br> 
-<tt>&nbsp; Set importer = session.CreateDXLImporter(stream, dbCopy)<br> &nbsp;importer.ReplicaRequiredForReplaceOrUpdate = False<br> &nbsp;importer.DesignImportOption = DXLIMPORTOPTION_CREATE<br> &nbsp;Call importer.Process</tt> 
+<br> <tt>&nbsp; Set importer = session.CreateDXLImporter(stream, dbCopy)<br> &nbsp;importer.ReplicaRequiredForReplaceOrUpdate = False<br> &nbsp;importer.DesignImportOption = DXLIMPORTOPTION_CREATE<br> &nbsp;Call importer.Process</tt> 
 <p> <br>The "meat" is in the transformation. The XSLT file consist of 4 principal sections that contain templates. In section 1 we find the start of the output including the wrapper and calls to various templates. In section 2 design elements are filtered out, in section 3 design elements are tweaked, finally in section 4 the remaining DXL is copied 1:1 to the resulting document; . The sequence of the sections is not relevant, since XSLT uses priorities not sequence to determine what element to apply. What are the elements you can or should spring clean: <br> </p> 
 <ul> 
  <li>In DXL I found NotesItems between the &lt;/body&gt; and the &lt;/form&gt; tag. Removing this from the form makes the form smaller, load faster without any change in behavior. </li> 
@@ -144,55 +144,48 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Remove (all) LotusScript code and move it to libraries (see an upcoming SnTT post on "Classical Forms" about that).</li> 
 </ul> 
 <br>Let us look at some code....ont size=2 face="sans-serif"&gt;Section 1 starts the whole stylesheet. 
-<br>&nbsp; 
-<xsl:template< ont="">
-  match="/"&gt; 
+<br>&nbsp; <xsl:template>
+ &lt; ont=""&gt; match="/"&gt; 
  <br>&nbsp; &nbsp; &nbsp; &nbsp; 
  <database></database> 
- <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <!-- We get the
+ <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <!-- We get the
 attribute from the first element which might be a database or a form --> 
  <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <xsl:attribute< ont="">
-   name="replicaid"&gt; 
-  <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-  <!--
+ <xsl:attribute>
+  &lt; ont=""&gt; name="replicaid"&gt; 
+  <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <!--
 Get the replicaid --> 
   <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-  <xsl:value-of< ont="">
-    select="/child::node()[1]/@replicaid"/&gt; 
+  <xsl:value-of>
+   &lt; ont=""&gt; select="/child::node()[1]/@replicaid"/&gt; 
    <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
    <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-   <xsl:attribute< ont="">
-     name="version"&gt; 
-    <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-    <!--
+   <xsl:attribute>
+    &lt; ont=""&gt; name="version"&gt; 
+    <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <!--
 Get the designer version --> 
     <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-    <xsl:value-of< ont="">
-      select="/child::node()[1]/@version"/&gt; 
+    <xsl:value-of>
+     &lt; ont=""&gt; select="/child::node()[1]/@version"/&gt; 
      <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-     <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-     <!-- get all other
+     <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <!-- get all other
 attributes --> 
      <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-     <xsl:apply-templates< ont="">
-       &nbsp;select="@*"/&gt; 
-      <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-      <!-- apply the templates
+     <xsl:apply-templates>
+      &lt; ont=""&gt; &nbsp;select="@*"/&gt; 
+      <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <!-- apply the templates
 for regular forms --> 
       <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-      <xsl:apply-templates< ont="">
-        /&gt; 
-       <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-       <!-- apply the templates
+      <xsl:apply-templates>
+       &lt; ont=""&gt; /&gt; 
+       <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <!-- apply the templates
 for the additional generation like LotusScript and Suforms --> 
        <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-       <xsl:apply-templates< ont="">
-         mode="genSub" /&gt; 
+       <xsl:apply-templates>
+        &lt; ont=""&gt; mode="genSub" /&gt; 
         <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-        <xsl:apply-templates< ont="">
-          mode="genLS" /&gt; 
+        <xsl:apply-templates>
+         &lt; ont=""&gt; mode="genLS" /&gt; 
          <br>&nbsp; &nbsp; &nbsp; &nbsp; 
          <br>&nbsp; &nbsp; &nbsp; &nbsp; 
          <br>&nbsp; &nbsp; 
@@ -200,12 +193,11 @@ for the additional generation like LotusScript and Suforms -->
          <br> 
          <br>Section 2 features match clauses with no content inside the template. It is closed in the opening tag using /&gt;. If a tag should be filtered, but its content be processed you just have the 
          <xsl:apply-templates /> statement as the only content. 
-         <br>&nbsp; &nbsp; 
-         <!--
+         <br>&nbsp; &nbsp; <!--
 &nbsp;Filter out &nbsp;change of font if there is not content inside--> 
          <br>&nbsp; &nbsp; 
-         <xsl:template< ont="">
-           match="d:run[node()[last()=1][self::d:font" /&gt; 
+         <xsl:template>
+          &lt; ont=""&gt; match="d:run[node()[last()=1][self::d:font" /&gt; 
           <br> 
           <br>&nbsp; &nbsp; &lt;!-- Filter out items after the body tag --&gt; 
           <br>&nbsp; &nbsp; &lt;xsl:template match="d:form/d:item" /&gt; 
@@ -280,16 +272,16 @@ for the additional generation like LotusScript and Suforms -->
           <br>&nbsp; &nbsp; &lt;xsl:template mode="genLS" match="*"/&gt; 
           <br> 
           <br>Before you send back that DXL into a datbase you could scrub it further by removing pardef sections that have identical definitions. However this would require a second run with another stylesheet or some good old LotusScript code. 
-         </xsl:template<> 
-        </xsl:apply-templates<> 
-       </xsl:apply-templates<> 
-      </xsl:apply-templates<> 
-     </xsl:apply-templates<> 
-    </xsl:value-of<> 
-   </xsl:attribute<> 
-  </xsl:value-of<> 
- </xsl:attribute<> 
-</xsl:template<></div>
+         </xsl:template>&lt;&gt; 
+        </xsl:apply-templates>&lt;&gt; 
+       </xsl:apply-templates>&lt;&gt; 
+      </xsl:apply-templates>&lt;&gt; 
+     </xsl:apply-templates>&lt;&gt; 
+    </xsl:value-of>&lt;&gt; 
+   </xsl:attribute>&lt;&gt; 
+  </xsl:value-of>&lt;&gt; 
+ </xsl:attribute>&lt;&gt; 
+</xsl:template>&lt;&gt;</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -423,6 +415,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

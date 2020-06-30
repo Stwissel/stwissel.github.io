@@ -6,13 +6,72 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2019 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Tue, 07 Apr 2020 08:58:48 +0000</pubdate>
+	<pubdate>Wed, 17 Jun 2020 10:30:24 +0000</pubdate>
+<item>
+	<title>Watching the EventBus</title>
+	<description>&lt;p&gt;I'm quite fond of &lt;a href="https://en.wikipedia.org/wiki/Event-driven_architecture"&gt;Event-driven architecture&lt;/a&gt;, so to no surprise, I like vert.x's &lt;a href="https://vertx.io/docs/vertx-core/js/#event_bus"&gt;EventBus&lt;/a&gt; and its ability to enable &lt;a href="https://searchsoftwarequality.techtarget.com/definition/polyglot-programming"&gt;polyglot programming&lt;/a&gt;. So it is time to have a closer look&lt;/p&gt; 
+&lt;h3&gt;Dem Volk aufs Maul geschaut&lt;/h3&gt; 
+&lt;p&gt;(That's a word play on &lt;a href="https://www.eva-leipzig.de/product_info.php?info=p2961_Dem-Volk-aufs-Maul-geschaut.html"&gt;Martin Luther&lt;/a&gt; loosly translated as "Watch them how they talk")&lt;/p&gt; 
+&lt;p&gt;I wanted to know, what exactly is happening "on the wire", without disrupting the regular flow. Turns out, there is an easy way to do this. The vert.x EventBus provides the methods &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/EventBus.html#addOutboundInterceptor-io.vertx.core.Handler-"&gt;addOutboundInterceptor&lt;/a&gt; and &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/EventBus.html#addInboundInterceptor-io.vertx.core.Handler-"&gt;addInboundInterceptor&lt;/a&gt; that provide you with access to a Handler with a &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/DeliveryContext.html"&gt;DeliveryContext&lt;/a&gt;.&lt;/p&gt; 
+&lt;p&gt;From there you can get to the &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/Message.html"&gt;Message&lt;/a&gt; or directly the message's body. So I took it for a spin in conjunction with a Websocket. This allows me to watch as the messages flow through:&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;final HttpServer server = this.vertx.createHttpServer();
+server.websocketHandler(this::handlerWebsockets);
+
+&lt;/pre&gt;</description>
+	<link>2020/04/watching-the-eventbus.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>3c9fb2d0-891c-11ea-867f-b576e977aa02</guid>
+	<pubDate>28 April 2020</pubDate>
+
+</item>
+<item>
+	<title>SimpleXMLDoc revisited</title>
+	<description>&lt;p&gt;It is 2020, &lt;a href="https://www.json.org/json-en.html"&gt;JSON&lt;/a&gt; is supposed to have won, with a &lt;a href="https://en.wikipedia.org/wiki/Protocol_Buffers"&gt;challenger in sight&lt;/a&gt;. &lt;a href="https://en.wikipedia.org/wiki/XML"&gt;XML&lt;/a&gt; with its fine distinction between Elements, Attributes and clear ownership demarked by name spaces, was supposed to be gone. But &lt;a href="https://www.odata.org/"&gt;OData&lt;/a&gt; made it &lt;a href="http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html"&gt;necessary&lt;/a&gt; to look again, as did &lt;a href="https://en.wikipedia.org/wiki/CalDAV"&gt;CalDAV&lt;/a&gt;&lt;/p&gt; 
+&lt;h3&gt;Out into the OutputStream&lt;/h3&gt; 
+&lt;p&gt;The &lt;a href="https://www.wissel.net/blog/downloads/2011/SimpleXMLDoc.java"&gt;initial version&lt;/a&gt; was introduced in the &lt;a href="https://wissel.net/blog/2011/10/xml-helper-class-for-xagents.html"&gt;context of XAgents&lt;/a&gt; which mandated an &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/io/OutputStream.html"&gt;OutputStream&lt;/a&gt;. I find that adequate and useful, so I kept that. If you just want a String, a &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/io/ByteArrayOutputStream.html"&gt;ByteArrayOutputStream&lt;/a&gt; will do quite nicely&lt;/p&gt; 
+&lt;h3&gt;Fluent methods&lt;/h3&gt; 
+&lt;p&gt;The big change to the &lt;a href="https://gist.github.com/Stwissel/ff2dca14074058e80c374bf6cfd0897e"&gt;revamped version&lt;/a&gt; is the addition of a fluent API. Each method call returns the object instance itself, so you can chain your document creation to look modern (and type less)&lt;/p&gt; 
+&lt;h3&gt;Namespace and attributes&lt;/h3&gt; 
+&lt;p&gt;Originally I though "simple" would be sufficient to create &lt;code&gt;Elements&lt;/code&gt; only. But as time goes by one starts to appreciate name spaces and &lt;code&gt;Attributes&lt;/code&gt;, so I added support for these too. To keep things simple: once we specify the namespace at the beginning of the document, we can simply refer to it by its alias name.&lt;/p&gt; 
+&lt;p&gt;A sample:&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;    final ByteArrayOutputStream out = new ByteArrayOutputStream();
+    final SimpleXMLDoc doc = new SimpleXMLDoc(out);
+    doc.addNamespace("X", "https://xmen.org")
+    .addNamespace("", "https://whyOhWhy.com/xml")
+    .setXmlStyleSheet("somestle.xslt")
+    .openElement("Endpoints")
+    .openElement(doc.element("X:Endpoint")
+          .addAttribute("name", "A Name")
+          .addAttribute("url", "http://anywhere/")
+          .addAttribute("meta", "meta not metta"))
+     .closeElement(1)
+     .addSimpleElement("description", "Something useful")
+     .closeDocument();
+    System.out.println(out.toString());
+&lt;/pre&gt; 
+&lt;h3&gt;Key methods&lt;/h3&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;&lt;code&gt;addNamespace&lt;/code&gt;: adds one name space and establishes the alias. To keep it simple, namespaces are defined &lt;strong&gt;only&lt;/strong&gt; at the beginning fo the document&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;setXmlStyleSheet&lt;/code&gt;: Same here, needs to be defined at the beginning - after all this class streams the result and stylesheets only start at the beginning&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;OpenElement&lt;/code&gt; starts a new XML Element. When provided with a string, it is an attribute free element, that can include the namespace abbreviation. When using a doc.element, we can add attributes&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;addSimpleElement&lt;/code&gt;: add an element, its String content and close it&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;closeElement&lt;/code&gt;: write out a number of closing tags. It deliberately uses number of tags and not tag names, so you don't need to track the names you have opened. Ensures that XML stays valid&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;closeDocument&lt;/code&gt;: closes all remaining Elements in the correct sequence and closes the document. Can be called once only&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;Check the &lt;a href="https://gist.github.com/Stwissel/ff2dca14074058e80c374bf6cfd0897e"&gt;full source code&lt;/a&gt; for details&lt;/p&gt; 
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2020/04/simplexmldoc-revisited.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>0bf96660-7d93-11ea-96f1-bbdc839f73d4</guid>
+	<pubDate>13 April 2020</pubDate>
+
+</item>
 <item>
 	<title>vert.x and CORS</title>
 	<description>&lt;p&gt;One of the security mechanism for &lt;a href="https://en.wikipedia.org/wiki/Ajax_(programming)"&gt;AJAX&lt;/a&gt; calls is &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS"&gt;CORS&lt;/a&gt; (Cross-Origin Resource sharing), where a server advice a browser if it can request resources from it, coming from a different domain.&lt;/p&gt; 
 &lt;p&gt;It is then up to the browser to heed that advice. To complicate matters: when the browser wants to POST data (or other similar operations), it will go through a &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#Preflighted_requests"&gt;preflight request&lt;/a&gt; adding to site latency.&lt;/p&gt; 
 &lt;p&gt;I have to admit, I never fully understood the rationale, since only browsers adhere to &lt;a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing"&gt;CORS&lt;/a&gt;, any webserver, &lt;a href="https://www.postman.com/"&gt;Postman&lt;/a&gt; or &lt;a href="https://curl.haxx.se/"&gt;CURL&lt;/a&gt; ignore &lt;a href="https://www.html5rocks.com/en/tutorials/cors/"&gt;CORS&lt;/a&gt; happily.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#none-one-or-all-but-not-some" id="none-one-or-all-but-not-some"&gt;None, One or All, but not Some&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;None, One or All, but not Some&lt;/h3&gt; 
 &lt;p&gt;There's another trouble with &lt;a href="https://auth0.com/blog/cors-tutorial-a-guide-to-cross-origin-resource-sharing/"&gt;CORS&lt;/a&gt;: The specification only allows for no-access, all-access (using * as value for &lt;code&gt;Access-Control-Allow-Origin&lt;/code&gt;, with &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin"&gt;restrictions&lt;/a&gt;) or one specific domain, but not a list of domains.&lt;/p&gt; 
 &lt;p&gt;Mozilla &lt;a href=""&gt;writes&lt;/a&gt;&lt;/p&gt; 
 &lt;blockquote&gt; 
@@ -27,7 +86,7 @@
 <item>
 	<title>My Maven starter template</title>
 	<description>&lt;p&gt;&lt;a href="https://maven.apache.org/"&gt;Maven&lt;/a&gt; is to Java what &lt;a href="https://www.npmjs.com/"&gt;npm&lt;/a&gt; is to JavaScript. It can be a &lt;a href="https://en.wikipedia.org/wiki/The_Moon_Is_a_Harsh_Mistress"&gt;harsh mistress&lt;/a&gt; or your best companion. It depends&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#beyond-dependencies-and-builds" id="beyond-dependencies-and-builds"&gt;Beyond dependencies and builds&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;Beyond dependencies and builds&lt;/h3&gt; 
 &lt;p&gt;Maven removes the need to download and manages your dependencies. Unfortunately it doesn't come with &lt;code&gt;mvn install &amp;lt;packagename&amp;gt;&lt;/code&gt; like npm (or I haven't learned that yet), so keeping that &lt;code&gt;pom.xml&lt;/code&gt; current is a little &lt;strong&gt;PITA&lt;/strong&gt;. However once we make peace with it, the power of plugins makes development in auto-pilot a breeze. Some of the things you can do:&lt;/p&gt; 
 &lt;ul&gt; 
  &lt;li&gt;Generate a project site&lt;/li&gt; 
@@ -56,31 +115,31 @@
 <item>
 	<title>eMail etiquette - the 60ties are calling</title>
 	<description>&lt;p&gt;With &lt;a href="https://www.urbandictionary.com/define.php?term=WFH"&gt;WFH&lt;/a&gt; being en vogue these days, not only &lt;a href="https://jitsi.org/"&gt;video conferencing&lt;/a&gt; and &lt;a href="https://telegram.org/"&gt;chat&lt;/a&gt;, but also &lt;a href="https://en.wikipedia.org/wiki/Email"&gt;eMail&lt;/a&gt;.&lt;br&gt; Dating back to the &lt;a href="https://en.wikipedia.org/wiki/History_of_email"&gt;1960ties&lt;/a&gt;, we had 6 decades to develop etiquette, which seems tobe lost to current users, so here we go again&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#addressing" id="addressing"&gt;Addressing&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;Addressing&lt;/h3&gt; 
 &lt;p&gt;eMail has &lt;code&gt;To&lt;/code&gt;, &lt;code&gt;CopyTo&lt;/code&gt; (also called &lt;code&gt;CC&lt;/code&gt; for &lt;a href="https://en.wikipedia.org/wiki/Carbon_copy"&gt;Carbon Copy&lt;/a&gt;) and &lt;code&gt;BCC&lt;/code&gt; (Blind Carbon Copy) as a means of addressing people. They serve distinct purposes:&lt;/p&gt; 
 &lt;ul&gt; 
  &lt;li&gt;&lt;strong&gt;TO&lt;/strong&gt;: This is the person (or people) we want to &lt;strong&gt;act&lt;/strong&gt; on our message, do something, reply etc. A good email has only few names, ideally one. If we have an ongoing eMail thread that involves multiple actors, we most likely use the wrong channel and are better of using collaborative software like &lt;a href="https://www.hcltechsw.com/products/connections"&gt;HCL Connections&lt;/a&gt;, &lt;a href="https://www.hcltechsw.com/products/sametime"&gt;HCL Sametime&lt;/a&gt;, &lt;a href="https://slackhq.com/"&gt;Slack&lt;/a&gt;, &lt;a href="https://products.office.com/en-us/microsoft-teams/group-chat-software"&gt;Teams&lt;/a&gt; or &lt;a href="https://www.salesforce.com/ap/products/chatter/overview/"&gt;Chatter&lt;/a&gt;&lt;/li&gt; 
- &lt;li&gt;&lt;strong&gt;CC&lt;/strong&gt;: People, we think, who should be &lt;em&gt;keept in the loop&lt;/em&gt;. We don't expect any action or reaction of them. A lot of eMail veterans automatically route those messages to a low priority place&lt;br&gt; ? &lt;strong&gt;BCC&lt;/strong&gt;: all receipients here get the message and the rest of the addressies won't know. I used to call it the "mobbing copy". BCC is especially fun when someone there hits "reply all" and reveals the readership. There are few legitimate uses for this. One is distribution lists (see below), the other archive/record keeping. Our external readers don't need to know that your compliance archive has the eMail address &lt;a href="mailto:compliance@acme.com"&gt;compliance@acme.com&lt;/a&gt; If we really want someone outside the visible thread to take note - forward the message&lt;/li&gt; 
+ &lt;li&gt;&lt;strong&gt;CC&lt;/strong&gt;: People, we think, who should be &lt;em&gt;keept in the loop&lt;/em&gt;. We don't expect any action or reaction of them. A lot of eMail veterans automatically route those messages to a low priority place&lt;br&gt; -- &lt;strong&gt;BCC&lt;/strong&gt;: all receipients here get the message and the rest of the addressies won't know. I used to call it the "mobbing copy". BCC is especially fun when someone there hits "reply all" and reveals the readership. There are few legitimate uses for this. One is distribution lists (see below), the other archive/record keeping. Our external readers don't need to know that your compliance archive has the eMail address compliance@acme.com If we really want someone outside the visible thread to take note - forward the message&lt;/li&gt; 
 &lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#subject-line" id="subject-line"&gt;Subject line&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;Subject line&lt;/h3&gt; 
 &lt;p&gt;It is like &lt;em&gt;a tweet about our content&lt;/em&gt;. The subject needs to justify why it is worth the time and attention to open it. So "Status", "Report" or "Important" don't cut it. Common practise we can see are qualifiers, e.g Opportunity codes or project IDs at the beginning. Something like &lt;code&gt;[T3453]&lt;/code&gt; - makes it easier to filter.&lt;/p&gt; 
 &lt;p&gt;The biggest competitor to inbox attention by subject is the sender identity. We probably open a message one or two reporting managers up even with bad subject lines.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#content" id="content"&gt;Content&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;Content&lt;/h3&gt; 
 &lt;p&gt;Let's keep it &lt;a href="http://five.sentenc.es/"&gt;crisp and short&lt;/a&gt;, best below 5 sentences.&lt;/p&gt; 
 &lt;p&gt;We state:&lt;/p&gt; 
 &lt;ul&gt; 
  &lt;li&gt;the information we want to provide&lt;/li&gt; 
  &lt;li&gt;the exact ask what action we expect, from whom and when&lt;/li&gt; 
- &lt;li&gt;name the person "team please look into? " doesn't cut it and is an indicator of a broken process&lt;/li&gt; 
+ &lt;li&gt;name the person "team please look into... " doesn't cut it and is an indicator of a broken process&lt;/li&gt; 
 &lt;/ul&gt; 
 &lt;p&gt;If there is a lot of information, it might better live in a Wiki, a project place or even a file share. We then provide the news cast overview and a link - &lt;a href="https://knowyourmeme.com/photos/615323-intensifies"&gt;Would you like to know more?&lt;/a&gt;&lt;/p&gt; 
 &lt;p&gt;There are &lt;a href="https://blog.hubspot.com/sales/email-etiquette-tips-rules"&gt;some&lt;/a&gt; interesting &lt;a href="https://www.inc.com/business-insider/email-etiquette-rules.html"&gt;cultural differences&lt;/a&gt;. In Anglosaxon or Eastern culture we would politely address the person and add a whiff of smalltalk, something along the lines "hope that finds you well". Germans, Dutch and other Nordics consider this a waste of space and time and consider it as the ultimate courtesy to cut through the chase and get to the point.&lt;/p&gt; 
 &lt;p&gt;When we address close co-workers, who value efficiency, it even is OK to skip the greeting. We need to dread carefully here, it needs to be clarified otherwise it is seen ultra rude.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#replies" id="replies"&gt;Replies&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;Replies&lt;/h3&gt; 
 &lt;p&gt;Do we reply to the sender or all of the addressies together. It seems to be the default for many "replyToAll". This is especially hillarious when a distribution list sneaked on the addressies. The rationale here is: &lt;em&gt;the sender wanted to keep all these in the loop, so I won't break it&lt;/em&gt;. For a small group, I hit replyAll, for larger ones only reply.&lt;/p&gt; 
 &lt;p&gt;I would wish the eMail software would warn when you blast a reply. The guardian &lt;a href="https://www.theguardian.com/culture/2017/feb/03/when-is-it-appropriate-to-reply-all-mostly-never"&gt;agrees&lt;/a&gt;: don't replyAll.&lt;/p&gt; 
 &lt;p&gt;A special mention: cherry-picking replies. We hit reply all and remove the mailing lists - good. We just remove the project manager we compete with - bad. So we need to be careful of the ramifications. Other receipients might wonder: &lt;em&gt;why are Jane and Joe no longer in this conversation?&lt;/em&gt;&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#distribution-lists" id="distribution-lists"&gt;Distribution lists&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;Distribution lists&lt;/h3&gt; 
 &lt;p&gt;They firmly belong in BCC - avoids ReplyAll armageddon. When we use private distribution list, we need to make sure, they resolve before sending otherwise people can't reply. However - most likely - that group of people would be better served with a shared channel. A good strategy: we put it in BCC, write a two sencent summary and provide a link to the full info. Co-workers who are not into eMail will find in in their [insert the collaborative tool you use]&lt;/p&gt; 
 &lt;p&gt;As usual YMMV&lt;/p&gt;</description>
 	<link>2020/03/email-etiquette.html</link>
@@ -92,7 +151,7 @@
 <item>
 	<title>Running Java applications with Notes on macOS</title>
 	<description>&lt;p&gt;My main work computer is a MacBook running macOS. Thank to &lt;a href="https://amzn.to/2QkhsA9"&gt;Logitech&lt;/a&gt;, they keyboard is just fine. As you know macOS neither features Domino Designer or Domino Admin. For &lt;a href="https://stwissel.github.io/presentations/engage2020/index.html"&gt;recent development&lt;/a&gt; I wanted to make sure that my applications can run on the client (I've done &lt;a href="/blog/2014/07/adventures-with-vertx-64bit-and-the-ibm-notes-client.html"&gt;that before&lt;/a&gt;).&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#java-java-on-the-wall-whats-the-right-path-of-them-all" id="java-java-on-the-wall-whats-the-right-path-of-them-all"&gt;Java, Java on the wall, what's the right path of them all?&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;Java, Java on the wall, what's the right path of them all?&lt;/h3&gt; 
 &lt;p&gt;(Sorry Schneewitchen)&lt;/p&gt; 
 &lt;p&gt;In Notes/Domino &lt;a href="https://www.ibm.com/support/knowledgecenter/SSKTMJ_9.0.1/admin/over_whats_new_in_fp8.html"&gt;R9.0.1FP8&lt;/a&gt; - (client FP10) the Java runtime was updated to Java8 and in &lt;a href="https://help.hcltechsw.com/domino/11.0.0/wn_new_java_runtime_environment.html"&gt;R11&lt;/a&gt; changed to AdoptOpenJDK.&lt;/p&gt; 
 &lt;p&gt;On macOS that led to a particular situation. The jvm packaged with the &lt;code&gt;HCL Notes.app&lt;/code&gt; can be found in the path&lt;br&gt; &lt;code&gt;HCL Notes.app/jre/Contents/Home&lt;/code&gt; with &lt;code&gt;bin&lt;/code&gt;, &lt;code&gt;lib&lt;/code&gt; and &lt;code&gt;lib/ext&lt;/code&gt; as we can expect from a JVM. Suspiciously absent are &lt;code&gt;Notes.jar&lt;/code&gt;, &lt;code&gt;websvc.jar&lt;/code&gt; and &lt;code&gt;njempcl.jar&lt;/code&gt;. They can be located at &lt;code&gt;HCL Notes.app/Contents/MacOS.jvm/lib/ext&lt;/code&gt;.&lt;/p&gt; 
@@ -149,10 +208,10 @@ echo Done!
 <item>
 	<title>OData - the fine print</title>
 	<description>&lt;p&gt;For an &lt;a href="https://stwissel.github.io/presentations/engage2020/index.html"&gt;upcoming event&lt;/a&gt; I had to dig a little deeper into &lt;a href="https://www.odata.org/"&gt;OData&lt;/a&gt; and learned a few things along the lines.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#same-but-different" id="same-but-different"&gt;Same but different&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;Same but different&lt;/h3&gt; 
 &lt;p&gt;OData's current version is &lt;a href="http://docs.oasis-open.org/odata/odata/v4.0/odata-v4.0-part1-protocol.html"&gt;4.0&lt;/a&gt; and that's the only version I will focus on in this article.&lt;/p&gt; 
 &lt;p&gt;OData is the love child of an effort that joined Microsoft and SAP &lt;a href="https://www.frankensteins-laboratory.com/home-page"&gt;at the hip&lt;/a&gt; to create an universal internet data access standard, that on first sight has a lot of &lt;a href="https://en.wikipedia.org/wiki/Not_invented_here"&gt;NIH&lt;/a&gt; issues to sort out. But I'm sure on a second (or third or forth) look it will all make sense.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#key-components-of-odata" id="key-components-of-odata"&gt;Key components of OData&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;Key components of OData&lt;/h3&gt; 
 &lt;ul&gt; 
  &lt;li&gt;a service document in &lt;code&gt;JSON&lt;/code&gt; format. It describes what data endpoints are available and where. Depending on the requested scope (more on that later) that JSON contains different levels of details&lt;/li&gt; 
  &lt;li&gt;a meta data document. That document is referenced in the service document. The format is &lt;code&gt;XML&lt;/code&gt;. It describes the data format found in each record, relations to other record and actions that can be taken. Looks like &lt;a href="https://en.wikipedia.org/wiki/XML_schema"&gt;XML Schema&lt;/a&gt;, but not quite. &lt;em&gt;Record&lt;/em&gt; is used loosely here, data can be hierarchical and nested&lt;/li&gt; 
@@ -160,7 +219,7 @@ echo Done!
  &lt;li&gt;Query results in JSON format enhanced with &lt;a href="http://docs.oasis-open.org/odata/odata-json-format/v4.01/odata-json-format-v4.01.html"&gt;OData specific Metadata&lt;/a&gt;&lt;/li&gt; 
 &lt;/ul&gt; 
 &lt;p&gt;What I liked a lot: &lt;a href="https://www.odata.org/"&gt;OData.org&lt;/a&gt; offers a rich set of documentation and tutorials, including a &lt;a href="https://www.postman.com/"&gt;Postman&lt;/a&gt; collection to learn&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#happy-soup" id="happy-soup"&gt;Happy soup&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;Happy soup&lt;/h3&gt; 
 &lt;p&gt;So dealing with OData you can enjoy a mix of technologies:&lt;/p&gt; 
 &lt;ul&gt; 
  &lt;li&gt;JSON for service document and payloads&lt;/li&gt; 
@@ -171,7 +230,7 @@ echo Done!
 &lt;/ul&gt; 
 &lt;p&gt;On the upside: Your Salesforce and Excel users will love it. Import and CRUD operations are well supported.&lt;/p&gt; 
 &lt;p&gt;Initially I was looking at &lt;a href="http://olingo.apache.org/"&gt;Apache Olingo&lt;/a&gt; to implement my needs. Unfortunately the library is too close to the Java servlet model and static defined data models (like your one application, not your data platform), so I disected my needs the hard way.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#lessons-learned-along-the-way" id="lessons-learned-along-the-way"&gt;Lessons learned along the way&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;Lessons learned along the way&lt;/h3&gt; 
 &lt;ul&gt; 
  &lt;li&gt;A OData client (think Excel, Tableau, Salesforce) will initially connect to the service document url. It sends a &lt;code&gt;GET&lt;/code&gt; request. To specify what level of detail is required the &lt;code&gt;ACCEPT&lt;/code&gt; header is used. So when testing your provider implementation you need to take that into account&lt;/li&gt; 
  &lt;li&gt;Excel sends &lt;code&gt;ACCEPT application/json;odata.metadata=minimal&lt;/code&gt;&lt;/li&gt; 
@@ -182,7 +241,7 @@ echo Done!
  &lt;li&gt;Everything is case sensitive, which makes sense, but is fun in Domino that treats item names case insensitive&lt;/li&gt; 
  &lt;li&gt;I couldn't get Salesforce to play nice until I added a field &lt;code&gt;ExternalId&lt;/code&gt; to my form. Might be my lack of understanding how to change the primary key Salesforce will play nice with or something missing in my Metadata&lt;/li&gt; 
 &lt;/ul&gt; 
-&lt;h3&gt;&lt;a href="#same-same-but-different" id="same-same-but-different"&gt;Same, same, but different&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;Same, same, but different&lt;/h3&gt; 
 &lt;p&gt;Swap out the GET for a POST and the XML for something not-quite-JSON and you get &lt;a href="https://graphql.org/"&gt;GraphQL&lt;/a&gt; that tries to address a similar set of functionalities. We really love wheels reinvented&lt;/p&gt; 
 &lt;p&gt;More lessons to be learned, stay tuned!&lt;/p&gt;</description>
 	<link>2020/03/odata-the-fine-print.html</link>
@@ -194,7 +253,7 @@ echo Done!
 <item>
 	<title>Domino Administration Back to Basics (Part 2) - Networking</title>
 	<description>&lt;p&gt;In &lt;a href="/blog/2020/02/domino-administration-back-to-basics-part-1.html"&gt;Part 1&lt;/a&gt; we learned about the marvelous world of Notes Names, &lt;a href="https://en.wikipedia.org/wiki/X.400"&gt;X400&lt;/a&gt; and the perils of messing with certificates. One big difference to &lt;a href="https://en.wikipedia.org/wiki/X.509"&gt;X509&lt;/a&gt; is the (&lt;a href="https://github.com/IBM/domino-docker"&gt;almost&lt;/a&gt;) absence of certificate &lt;a href="https://www.openssl.org/"&gt;Command Line tools&lt;/a&gt; that can be &lt;a href="https://www.wissel.net/blog/2019/10/create-your-own-ca.html"&gt;so much fun&lt;/a&gt;.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#domino-networking-protocols-as-you-like-it" id="domino-networking-protocols-as-you-like-it"&gt;Domino Networking - protocols &lt;/a&gt;&lt;a href="https://en.wikipedia.org/wiki/As_You_Like_It"&gt;as you like it&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;Domino Networking - protocols &lt;a href="https://en.wikipedia.org/wiki/As_You_Like_It"&gt;as you like it&lt;/a&gt;&lt;/h3&gt; 
 &lt;p&gt;Domino predates the rise of &lt;a href="https://en.wikipedia.org/wiki/Internet_protocol_suite"&gt;TCP/IP&lt;/a&gt; and the internet. To no surprise it has its own idea about networking. Starting with protocol support:&lt;/p&gt; 
 &lt;ul&gt; 
  &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/NetBIOS_Frames"&gt;Netbios&lt;/a&gt; using &lt;a href="https://en.wikipedia.org/wiki/Network_Driver_Interface_Specification"&gt;NDIS&lt;/a&gt; (doesn't route) and&lt;/li&gt; 
@@ -204,7 +263,7 @@ echo Done!
  &lt;li&gt;last not least TCP/IP&lt;/li&gt; 
 &lt;/ul&gt; 
 &lt;p&gt;Having this zoo of protocols, Notes needs its own version of name resolution. That version is called &lt;a href="https://help.hcltechsw.com/domino/11.0.0/conf_settingupnotesnamednetworks_t.html"&gt;Notes Named Network&lt;/a&gt;&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#one-step-back-what-makes-a-notes-domain" id="one-step-back-what-makes-a-notes-domain"&gt;One step back: What makes a Notes Domain?&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;One step back: What makes a Notes Domain?&lt;/h3&gt; 
 &lt;p&gt;A &lt;strong&gt;Notes Domain&lt;/strong&gt; consists out of one or more server that use a Domino directory (a.k.a Public Name &amp;amp; Addressbook a.k.a &lt;code&gt;names.nsf&lt;/code&gt;) with the same replica id (a story for another time) as the other member servers &lt;strong&gt;and&lt;/strong&gt; have the same Domain name in their server document (that's where most of the server's setting are stored).&lt;/p&gt; 
 &lt;p&gt;A popular point of confusion: Notes Names (from Part1) and Notes Domains: It is quite common to name your Domain after your orgID, but not mandatory. SO you could have &lt;code&gt;HeavyRock/Acme@Acme&lt;/code&gt; or &lt;code&gt;Sandstone/Acme@ToonsInc&lt;/code&gt; or &lt;code&gt;Machine/Blowup@Acme&lt;/code&gt; The first and the last would be in the same Domain, while the first and second share the Org certifier. Anything goes, but to keep it simple, keep OrgId and Domain the same - unless you have 5 good reasons not to.&lt;/p&gt; 
 &lt;p&gt;Another one: &lt;strong&gt;NEVER&lt;/strong&gt; name your Notes Domain so it could be mistaken for an internet Domain. So no &lt;code&gt;.&lt;/code&gt; in the name. Spaces interestingly are OK!&lt;/p&gt;</description>
@@ -217,12 +276,12 @@ echo Done!
 <item>
 	<title>Domino Administration - Back to Basics (Part 1) - Certificates</title>
 	<description>&lt;p&gt;Domino is different, a lot of its concepts predate the internet and quite often inspired the standards. This is not an step-by-step instruction, but an introduction into concepts. The "step by step" approach is another story for another time.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#in-the-beginning-was-the-certificate" id="in-the-beginning-was-the-certificate"&gt;In the beginning was the Certificate&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;In the beginning was the Certificate&lt;/h3&gt; 
 &lt;p&gt;Notes and Domino run &lt;a href="https://help.hcltechsw.com/domino/11.0.0/plan_certifieridsandcertificates_c.html"&gt;using ID&lt;/a&gt; files. This are not merly files that can arbitrarily reconstructed, but cryptographically created &lt;a href="https://en.wikipedia.org/wiki/Public-key_cryptography"&gt;Public Private key pairs&lt;/a&gt;. To avoid naming collisions the key names are hierarchical (Since R2), so anyone can call their server &lt;strong&gt;Server1&lt;/strong&gt; without confusion (sort of). This hierarchy is achieved using &lt;a href="https://en.wikipedia.org/wiki/X.400"&gt;X400&lt;/a&gt; naming conventions, an early competitor to DNS naming. A X400 name can consist out of multiple parts, these are the ones Domino is using:&lt;/p&gt; 
 &lt;p&gt;&lt;img src="/blog/images/2020/X400Names.png" alt="X500 Name"&gt;&lt;/p&gt; 
 &lt;p&gt;So the minimum is a common name and an Org. The starting point of each Domino journey is the creation of the OrgID. All other parts depend on it. Note: there isn't a country ID, even if country mentioned after the Org. When you create your OrgID (while setting up the very first server), you can specify the country and it becomes part of the OrgID.&lt;/p&gt; 
 &lt;p&gt;In practise however I haven't seen many OrgIDs that would carry a country code in them. So you can skip that part.&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#signing-ids" id="signing-ids"&gt;Signing Ids&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;Signing Ids&lt;/h3&gt; 
 &lt;p&gt;Using the OrgID as signing certificat, one can go and create server and user certificates. E.g using the OrgID &lt;code&gt;/O=Acme&lt;/code&gt; one can create &lt;code&gt;/CN=Coyotee/O=Acme&lt;/code&gt;. For convenience the qualifiers are usually omitted, their meaning results from the position (and the fact that country is 2 letter if present and Orgs have 3 or more). So instead of &lt;code&gt;/CN=Coyotee/O=Acme&lt;/code&gt; one can write &lt;code&gt;Coyotee/Acme&lt;/code&gt;.&lt;/p&gt; 
 &lt;p&gt;In practise however more enlightened organisation use their OrgCert as cautiously as root certificates in the &lt;a href="https://en.wikipedia.org/wiki/X.509"&gt;X509&lt;/a&gt; world and only &lt;a href="https://help.hcltechsw.com/domino/11.0.0/othr_registeringanorganizationalunitcertifieriddialogbo_t.html"&gt;register/sign&lt;/a&gt; Organizational Unit (&lt;code&gt;/OU=&lt;/code&gt;) Ids which then can be used to sign server and user certificates.&lt;/p&gt; 
 &lt;p&gt;Trust between certificate is hierarchical, similar to Internet certificates, so IDs having the same root (/O) certifier recognizse each other. The hierachy can be used in Access Control (another story for another time) to grant access to all IDs at a given level e.g. &lt;code&gt;/OU=Management/O=Acme&lt;/code&gt;&lt;/p&gt;</description>
@@ -234,16 +293,16 @@ echo Done!
 </item>
 <item>
 	<title>Generating JWT tokens for tests</title>
-	<description>&lt;p&gt;There are many options for &lt;a href="https://auth0.com/docs/authorization/concepts/authz-and-authn"&gt;Authentication and Authorisation&lt;/a&gt;. I'm fond of &lt;a href="https://jwt.io/"&gt;Json Web Tokens&lt;/a&gt; (JWT), implementing &lt;a href="https://tools.ietf.org/html/rfc7519"&gt;RFC7519&lt;/a&gt;. Mostly because they are like &lt;a href="https://en.wikipedia.org/wiki/IBM_Lightweight_Third-Party_Authentication"&gt;LTPA&lt;/a&gt; &lt;del&gt;for grownups&lt;/del&gt;, but standard compliant&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#quis-custodiet-ipsos-custodes" id="quis-custodiet-ipsos-custodes"&gt;Quis custodiet ipsos custodes?&lt;/a&gt;&lt;/h3&gt; 
+	<description>&lt;p&gt;There are many options for &lt;a href="https://auth0.com/docs/authorization/concepts/authz-and-authn"&gt;Authentication and Authorisation&lt;/a&gt;. I'm fond of &lt;a href="https://jwt.io/"&gt;Json Web Tokens&lt;/a&gt; (JWT), implementing &lt;a href="https://tools.ietf.org/html/rfc7519"&gt;RFC7519&lt;/a&gt;. Mostly because they are like &lt;a href="https://en.wikipedia.org/wiki/IBM_Lightweight_Third-Party_Authentication"&gt;LTPA&lt;/a&gt; ~~for grownups~~, but standard compliant&lt;/p&gt; 
+&lt;h3&gt;Quis custodiet ipsos custodes?&lt;/h3&gt; 
 &lt;p&gt;JWT contains information that is digitally signed (and optional encrypted), so a receiving end can verify that the information is correct. The key elements here are:&lt;/p&gt; 
 &lt;ul&gt; 
  &lt;li&gt;the JWT contains a claim, at least the &lt;strong&gt;subject&lt;/strong&gt; that is tamper resistant by being digitally signed&lt;/li&gt; 
  &lt;li&gt;JWT issuer and JWT consumer trust each other, by either having a shared secret (bad idea) or using a public/private key pair. The issuer signs the information with a private key. The consumer (your application server) verifies the signature using the public key&lt;/li&gt; 
 &lt;/ul&gt; 
-&lt;p&gt;So besides protecting the private key of the issuer, you also want to be clear who's keys you trust. The one who &lt;a href="s://en.wikipedia.org/wiki/Quis_custodiet_ipsos_custodes%3F"&gt;holds your identity&lt;/a&gt; can impersonate you at any time (so you might rethink if "Login with Facebook" is such a brilliant idea after all).&lt;/p&gt; 
+&lt;p&gt;So besides protecting the private key of the issuer, you also want to be clear who's keys you trust. The one who &lt;a href="https://en.wikipedia.org/wiki/Quis_custodiet_ipsos_custodes"&gt;holds your identity&lt;/a&gt; can impersonate you at any time (so you might rethink if "Login with Facebook" is such a brilliant idea after all).&lt;/p&gt; 
 &lt;p&gt;However when &lt;strong&gt;testing&lt;/strong&gt; systems, you develop local, you want to be able to have any user at your disposal, so you can generate the claim that is the &lt;a href="https://en.wikipedia.org/wiki/Open_sesame"&gt;Open Sesame&lt;/a&gt; to your test regime&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#building-a-claim" id="building-a-claim"&gt;Building a claim&lt;/a&gt;&lt;/h3&gt; 
+&lt;h3&gt;Building a claim&lt;/h3&gt; 
 &lt;p&gt;We start by building the raw claim &lt;strong&gt;template.json&lt;/strong&gt; file:&lt;/p&gt; 
 &lt;pre class="brush: javascript"&gt;{
   "iss": "Alibaba Caves",
@@ -257,70 +316,6 @@ echo Done!
 	<author>Stephan H. Wissel</author>
 	<guid>955d04d0-445d-11ea-a785-85867ba0af46</guid>
 	<pubDate>01 February 2020</pubDate>
-
-</item>
-<item>
-	<title>Running a CalDAV server on Ubuntu (2020 edition)</title>
-	<description>&lt;p&gt;When playing with &lt;a href="https://en.wikipedia.org/wiki/CalDAV"&gt;calDAV&lt;/a&gt; it makes sense to have a reference implementation to refer to. The &lt;em&gt;GOLD&lt;/em&gt; standard ist &lt;a href="https://www.calendarserver.org/"&gt;Apple's CalendarServer&lt;/a&gt; with its lovely &lt;a href="https://github.com/apple/ccs-calendarserver"&gt;Open Source Repository&lt;/a&gt;.&lt;/p&gt; 
-&lt;p&gt;Getting it to work on Linux (Ubuntu in my case), isn't for the faint of heart. Here is what you need to do.&lt;/p&gt; 
-&lt;h2&gt;&lt;a href="#file-system-preparation" id="file-system-preparation"&gt;File system preparation&lt;/a&gt;&lt;/h2&gt; 
-&lt;p&gt;Calendar server needs extended attributes. The default &lt;a href="https://en.wikipedia.org/wiki/Ext4"&gt;Ext4&lt;/a&gt; file system does support them out of the box, but you want to check first (you might have a different file system after all):&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#check-if-file-system-supports-extended-attributes" id="check-if-file-system-supports-extended-attributes"&gt;Check if file system supports extended attributes&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;Check using this command:&lt;/p&gt; 
-&lt;pre class="brush: bash"&gt;touch test.txt
-setfattr -n user.test -v "hello" test.txt
-getfattr test.txt
-&lt;/pre&gt; 
-&lt;p&gt;Expected output: &lt;strong&gt;user.test&lt;/strong&gt;&lt;/p&gt; 
-&lt;p&gt;If the command &lt;code&gt;setfattr&lt;/code&gt; is not available, install with &lt;code&gt;sudo install attr&lt;/code&gt;&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#enable-extended-atttributes-if-required" id="enable-extended-atttributes-if-required"&gt;Enable extended atttributes if required&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;&lt;strong&gt;Important&lt;/strong&gt; if the previous command worked, skip this step. Don't mess with fstab! Make a backup copy if required and have your emergency boot stick ready. A messed up &lt;strong&gt;fstab&lt;/strong&gt; will prevent your machine from booting!&lt;/p&gt; 
-&lt;p&gt;Edit &lt;code&gt;/etc/fstab&lt;/code&gt;. In the 4th colum of the file system add &lt;code&gt;user_xattr&lt;/code&gt;. There might be values like &lt;code&gt;noatime&lt;/code&gt; or &lt;code&gt;defaults&lt;/code&gt;. Add &lt;code&gt;user_xattr&lt;/code&gt; separated by a comma. &lt;strong&gt;Reboot&lt;/strong&gt;.&lt;/p&gt; 
-&lt;h2&gt;&lt;a href="#install-calendar-server" id="install-calendar-server"&gt;Install calendar server&lt;/a&gt;&lt;/h2&gt; 
-&lt;p&gt;Execute &lt;code&gt;sudo apt install calendarserver postgresql&lt;/code&gt;.&lt;/p&gt; 
-&lt;p&gt;The server wants a &lt;strong&gt;postgresql&lt;/strong&gt; database, so you need to be sure to have that installed too. Apple loves Python, so there ill be quite some phython packages installed, as well as a new user &lt;strong&gt;caldavd&lt;/strong&gt; Since this is a system user, its home directory is &lt;code&gt;/var/spool/caldav&lt;/code&gt;&lt;/p&gt;</description>
-	<link>2020/01/running-a-caldav-server-on-ubuntu.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>b30bbb10-4459-11ea-95b7-c1696d82d3ca</guid>
-	<pubDate>01 February 2020</pubDate>
-
-</item>
-<item>
-	<title>Unit Tests and Singletons</title>
-	<description>&lt;p&gt;Good developers &lt;a href="https://apiumhub.com/tech-blog-barcelona/top-benefits-of-unit-testing/"&gt;test their code&lt;/a&gt;. There are plenty of frameworks and tools around to make it less painful. Not every code is testable, so you &lt;a href="https://en.wikipedia.org/wiki/Test-driven_development"&gt;write test first&lt;/a&gt;, to avoid getting stuck with untestable code. However there are situations where &lt;a href="https://en.wikipedia.org/wiki/Unit_testing"&gt;Unit Testing&lt;/a&gt; and pattern get into each other's way&lt;/p&gt; 
-&lt;h3&gt;&lt;a href="#the-singleton-and-test-isolation" id="the-singleton-and-test-isolation"&gt;The singleton and test isolation&lt;/a&gt;&lt;/h3&gt; 
-&lt;p&gt;I'm a big fan of &lt;a href="https://www.javatpoint.com/design-patterns-in-java"&gt;design patterns&lt;/a&gt;, after all they are &lt;strong&gt;a well-proven solutions&lt;/strong&gt; for specific known problems. E.g. the &lt;a href="https://en.wikipedia.org/wiki/Observer_pattern"&gt;observer pattern&lt;/a&gt; is the foundation of &lt;a href="http://reactivex.io/"&gt;reactive programming&lt;/a&gt;.&lt;/p&gt; 
-&lt;p&gt;A common approach to implementing cache is the &lt;a href="https://en.wikipedia.org/wiki/Singleton_pattern"&gt;singleton pattern&lt;/a&gt;, that ensures all your code talks to the same cache instance ,independent of what cache you actually use: &lt;a href="https://www.aerospike.com/"&gt;Aerospike&lt;/a&gt;, &lt;a href="https://redis.io/"&gt;Redis&lt;/a&gt;, &lt;a href="https://github.com/google/guava/wiki/CachesExplained"&gt;Guava&lt;/a&gt;, &lt;a href="https://commons.apache.org/proper/commons-jcs/"&gt;JCS&lt;/a&gt; or others.&lt;/p&gt; 
-&lt;p&gt;Your singleton would look like this:&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;public enum TicketCache {
-  INSTANCE;
-  
-  public Set&amp;lt;String&amp;gt; getTickets(final String systemId) {
-    Set&amp;lt;String&amp;gt; result = new HashSet&amp;lt;&amp;gt;();
-    // Your cache related code goes here
-    return result;
-  }
-  
-  public TicketCache addTicket(final String systemId, final String ticketId) {
-    // Your cache/persistence code goes here
-    return this;
-  }
-}
-&lt;/pre&gt; 
-&lt;p&gt;and a method in a class returning tickets (e.g. in a user object) for a user could look like this:&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;  public Set&amp;lt;String&amp;gt; getUserTickets() {
-    Set&amp;lt;String&amp;gt; result = new HashSet&amp;lt;&amp;gt;();
-    Set&amp;lt;String&amp;gt; systemsResponsibleFor = this.getSystems();
-    systemsResponsibleFor.forEach(systemId -&amp;gt; 
-      result.addAll(TicketCache.INSTANCE.getTickets(systemId)));
-    return result;
-  }
-&lt;/pre&gt; 
-&lt;p&gt;Now when you want to test this method, you have a dependency on &lt;code&gt;TicketCache&lt;/code&gt; and can't test the &lt;code&gt;getUserTickets()&lt;/code&gt; method in isolation. You are at &lt;a href="https://stackoverflow.com/questions/995340/is-implementing-a-cache-considered-a-difficult-problem"&gt;the mercy&lt;/a&gt; of your cache implementation. But there &lt;strong&gt;is a better way&lt;/strong&gt;&lt;/p&gt;</description>
-	<link>2020/01/unit-tests-and-singletons.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>254ad5b0-3390-11ea-81da-9f01f1d1b51b</guid>
-	<pubDate>10 January 2020</pubDate>
 
 </item>
 

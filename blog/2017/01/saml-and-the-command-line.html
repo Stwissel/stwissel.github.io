@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - SAML and the Command Line" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2017,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -132,18 +133,12 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>SAML and the Command Line</small></h1>
 					<hr />
-					<div>One of the best kept secrets of Connections Cloud S1 is the 
-<a href="https://www-10.lotus.com/ldd/dominowiki.nsf/dx/IBM_Notes_Traveler_Administration_API">Traveler API</a>. The API allows interactions that are missing from the Admin UI, like deleting a specific device or implementing an approval workflow. 
-<br> Unfortunately the API only offers authentication via SAML, OAuth or BasicAuth are missing. So any application interacting with the API needs to do 
-<a href="https://www.google.com.sg/search?q=SAML+Dance+Connections+Cloud">The SAML Dance</a>. That's annoying when you have an UI to use, and a formidable challenge when you have a command line application, like a cron Job running unsupervised at interval. 
+					<div>One of the best kept secrets of Connections Cloud S1 is the <a href="https://www-10.lotus.com/ldd/dominowiki.nsf/dx/IBM_Notes_Traveler_Administration_API">Traveler API</a>. The API allows interactions that are missing from the Admin UI, like deleting a specific device or implementing an approval workflow. 
+<br> Unfortunately the API only offers authentication via SAML, OAuth or BasicAuth are missing. So any application interacting with the API needs to do <a href="https://www.google.com.sg/search?q=SAML+Dance+Connections+Cloud">The SAML Dance</a>. That's annoying when you have an UI to use, and a formidable challenge when you have a command line application, like a cron Job running unsupervised at interval. 
 <br> One lovely step in the process: the IBM IdP returns a HTML page with a hidden form containing the SAML assertion result to be posted back to the application provider. Quite interesting, when your application provider is a command line app. Let's get to work. 
-<br> The script is written in 
-<a href="https://nodejs.org">node.js</a> and uses 
-<a href="https://www.npmjs.com/package/request">request</a> and 
-<a href="https://www.npmjs.com/package/fast-html-parser">fast-html-parser</a> npm package. The first step is to load the login form (which comes with a first set of cookies) 
+<br> The script is written in <a href="https://nodejs.org">node.js</a> and uses <a href="https://www.npmjs.com/package/request">request</a> and <a href="https://www.npmjs.com/package/fast-html-parser">fast-html-parser</a> npm package. The first step is to load the login form (which comes with a first set of cookies) 
 <br> 
-<pre class="brush: js">
-var requestOptionsTemplate = {
+<pre class="brush: js">var requestOptionsTemplate = {
     headers: {
         'Origin': 'https://api.notes.ap.collabserv.com/api/traveler/',
         'User-Agent': 'ancy CommandLine Script',
@@ -161,13 +156,9 @@ function scLoginPart1() {
     request(requestOptions, scLoginPart2);
 }
 </pre> 
-<br> The function calls the URL where the login form can be found. The result gets delivered to the function 
-<code>scLoginPart2</code>. That function makes use of a global configuration variable 
-<code>config</code> that was created through 
-<code>const config = require("./config.json")</code> and contains all the credentials we need. Step2 submits the form and hands over to Step3. 
+<br> The function calls the URL where the login form can be found. The result gets delivered to the function <code>scLoginPart2</code>. That function makes use of a global configuration variable <code>config</code> that was created through <code>const config = require("./config.json")</code> and contains all the credentials we need. Step2 submits the form and hands over to Step3. 
 <br> 
-<pre class="brush: js">
-function scLoginPart2(err, httpResponse, body) {
+<pre class="brush: js">function scLoginPart2(err, httpResponse, body) {
     if (err) {
         return console.error(err);
     }
@@ -202,8 +193,7 @@ function captureCookies(response) {
 </pre> 
 <br> Part 3 / 4 finally collect all the cookies we need, so to turn attention to getting the API token in step 5 
 <br> 
-<pre class="brush: js">
-function scLoginPart3(err, httpResponse, body) {
+<pre class="brush: js">function scLoginPart3(err, httpResponse, body) {
     if (err) {
         console.error('Login failed miserably');
         return console.error(err);
@@ -234,11 +224,8 @@ function scLoginPart4(err, httpResponse, body) {
     scLoginPart5(cookieHarvest)
 }
 </pre> 
-<br> In Part 5 we first request the URL with actual data (devices in our case), but get another SAML dance step, since we have 
-<code>apps.na</code> vs 
-<code>api.notes</code> in the URL<br> 
-<pre class="brush: js">
-function scLoginPart5(incomingCookies) {
+<br> In Part 5 we first request the URL with actual data (devices in our case), but get another SAML dance step, since we have <code>apps.na</code> vs <code>api.notes</code> in the URL<br> 
+<pre class="brush: js">function scLoginPart5(incomingCookies) {
     console.log("Executing SAML postback to SmartCloud");
     var requestOptions = Object.assign({}, requestOptionsTemplate);
     requestOptions.headers.Cookie = incomingCookies.join('; ');
@@ -247,11 +234,9 @@ function scLoginPart5(incomingCookies) {
     request(requestOptions, scLoginPart6);
 }
 </pre> 
-<br> Part 6 is the interesting one. If not authenticated against the 
-<code>api.notes</code> URL yet, the server will return an HTML form with a JavaScript action that posts that form, containing the SAML assertion to the api URL. Since we don't use a browser to handle that automatically, we need to grab the html, extract the form and post it ourselves 
+<br> Part 6 is the interesting one. If not authenticated against the <code>api.notes</code> URL yet, the server will return an HTML form with a JavaScript action that posts that form, containing the SAML assertion to the api URL. Since we don't use a browser to handle that automatically, we need to grab the html, extract the form and post it ourselves 
 <br> 
-<pre class="brush: js">
-function scLoginPart6(err, httpResponse, body) {
+<pre class="brush: js">function scLoginPart6(err, httpResponse, body) {
     if (err) {
         return console.error(err);
     }
@@ -293,8 +278,7 @@ function scLoginPart6(err, httpResponse, body) {
 </pre> 
 <br> Part 7 then processes an successful redirect to get our first actual payload. 
 <br> 
-<pre class="brush: js">
-function scLoginPart7(err, response, body) {
+<pre class="brush: js">function scLoginPart7(err, response, body) {
     if (err) {
         return console.error(err);
     }
@@ -312,8 +296,7 @@ function scLoginPart7(err, response, body) {
     });
 }
 </pre> 
-<br> The error path in the code isn't very well modeled, so there's work left to do. So there were just 
-<a href="https://www.youtube.com/watch?v=rP0vn9PZ3kU" title="That pun is only for old German bags">7 bridges to cross</a>. 
+<br> The error path in the code isn't very well modeled, so there's work left to do. So there were just <a href="https://www.youtube.com/watch?v=rP0vn9PZ3kU" title="That pun is only for old German bags">7 bridges to cross</a>. 
 <br> As usual YMMV.</div>
 					<hr />
 					<p>
@@ -446,6 +429,7 @@ categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href=
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

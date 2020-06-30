@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Document dependent inline forms" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2015,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -129,23 +130,17 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Document dependent inline forms</small></h1>
 					<hr />
-					<div>In Notes client applications we are used to opening any document from a view and get it redered with the form specified in the 
-<code>Form</code> (or the view's form formula). XPages behaves in a similar fashion when using the view control. However both approached open a new page (a tab in the Notes client, replaceing the current window in a browser). 
-<br> Modern applications however expect a 
-<a href="http://en.wikipedia.org/wiki/Single-page_application">Single page application</a> behavior, where only parts of the screen are replaced with new information. The XPages 
-<a href="http://extlib.openntf.org/">Extension library</a> makes this easy, by providing the 
-<a href="http://www.xpages.jp/demos/xpagesext.nsf/Core_InPlaceForm.xsp" title="Go and learn some Japanese!">InPlace Form</a> custom control. 
+					<div>In Notes client applications we are used to opening any document from a view and get it redered with the form specified in the <code>Form</code> (or the view's form formula). XPages behaves in a similar fashion when using the view control. However both approached open a new page (a tab in the Notes client, replaceing the current window in a browser). 
+<br> Modern applications however expect a <a href="http://en.wikipedia.org/wiki/Single-page_application">Single page application</a> behavior, where only parts of the screen are replaced with new information. The XPages <a href="http://extlib.openntf.org/">Extension library</a> makes this easy, by providing the <a href="http://www.xpages.jp/demos/xpagesext.nsf/Core_InPlaceForm.xsp" title="Go and learn some Japanese!">InPlace Form</a> custom control. 
 <br> Looking at the source code of the example page, it looks easy enough. However a real life application needs a few more considerations: 
 <ul> 
  <li>I want to open a (different) form depending on the current document</li> 
  <li>That form needs to be stored in its own control, so it can be reused</li> 
  <li>It is OK to enumerate the possible forms in the page (not fully flexible)</li> 
  <li>When saving an edit the form needs to disappear</li> 
-</ul> With the help of the devine 
-<a href="http://www.ibmpressbooks.com/authors/bio/d3c13991-44d6-4961-8cd2-d1d04014ed57">Maire Kehoe</a>, this is the solution I came up with: 
+</ul> With the help of the devine <a href="http://www.ibmpressbooks.com/authors/bio/d3c13991-44d6-4961-8cd2-d1d04014ed57">Maire Kehoe</a>, this is the solution I came up with: 
 <br> 
-<pre class="brush: xml">
-&lt;xp:eventHandler event="onclick"
+<pre class="brush: xml">&lt;xp:eventHandler event="onclick"
     submit="true" refreshMode="partial"
     refreshId="dynamicCell"&gt;
 	&lt;xp:this.action&gt;&lt;![CDATA[#{javascript:var formId = getSubform(aViewEntry);
@@ -155,8 +150,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 </pre> 
 <br> The code above is the event handler that goes into the link or button that triggers the edit action. In my case inside a repeat based on a view. The code to find the form is simple. 
 <br> 
-<pre class="brush: js">
-function getSubform(ve:NotesXspViewEntry) {
+<pre class="brush: js">function getSubform(ve:NotesXspViewEntry) {
 	// Put real logic here, like looking at the form
 	// var form = ve.getDocument().getItemValueString("Form");
 	// return "inPlace"+form;
@@ -165,12 +159,9 @@ function getSubform(ve:NotesXspViewEntry) {
 	return subform;
 }
 </pre> 
-<br>The snippet of code that determines what control to load lists all possible forms. To make this useful you should stick to the 
-<code>inPlace</code> and 
-<code>inLine</code> prefixes. The former lives only inside your page, but the later would be a distinct control. Also note, that I hand over the documentUniqueId, so my control can load the appropriate document. 
+<br>The snippet of code that determines what control to load lists all possible forms. To make this useful you should stick to the <code>inPlace</code> and <code>inLine</code> prefixes. The former lives only inside your page, but the later would be a distinct control. Also note, that I hand over the documentUniqueId, so my control can load the appropriate document. 
 <br> 
-<pre class="brush: xml">
-&lt;xp:td id="dynamicCell" colspan="3"&gt;
+<pre class="brush: xml">&lt;xp:td id="dynamicCell" colspan="3"&gt;
 	&lt;xe:inPlaceForm id="inPlaceFruit" partialEvents="true"&gt;
 		&lt;xc:inlineFruit fruitID="#{javascript:fruitList.getUniversalID();}"&gt;
 		&lt;/xc:inlineFruit&gt;
@@ -183,18 +174,15 @@ function getSubform(ve:NotesXspViewEntry) {
 </pre> 
 <br> The last 2 pieces in the puzzle are the save button and the mechanism that hides the inline form again. The button is simple: 
 <br> 
-<pre class="brush: xml">
-&lt;xp:button value="Save" id="button1"&gt;
+<pre class="brush: xml">&lt;xp:button value="Save" id="button1"&gt;
 	&lt;xp:eventHandler event="onclick" submit="true"
 		refreshMode="partial" refreshId="oneRecord"&gt;
 		&lt;xp:this.action&gt;&lt;![CDATA[#{javascript:saveAndClose(document1, this);}]]&gt;&lt;/xp:this.action&gt;
 	&lt;/xp:eventHandler&gt;
 &lt;/xp:button&gt;
 </pre> 
-<br> While the JS code is a little trickier. The control doesn't "know" that it is in a inline edit form, nor does it know the name, so a "getComponent" would be a wild guess. It might work for convention over code, but I opted for a different approach: travel up the component tree until I hit a 
-<code>com.ibm.xsp.extlib.component.dynamiccontent.UIInPlaceForm</code> and if I find it, toggle it: 
-<pre class="brush: js">
-function saveAndClose(doc:NotesXspDocument, uiControl) {
+<br> While the JS code is a little trickier. The control doesn't "know" that it is in a inline edit form, nor does it know the name, so a "getComponent" would be a wild guess. It might work for convention over code, but I opted for a different approach: travel up the component tree until I hit a <code>com.ibm.xsp.extlib.component.dynamiccontent.UIInPlaceForm</code> and if I find it, toggle it: 
+<pre class="brush: js">function saveAndClose(doc:NotesXspDocument, uiControl) {
 	doc.save();
 	var parent = uiControl.getParent();
 	while (parent != null &amp;&amp; parent.getClass().getName() !=
@@ -333,6 +321,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Domino Administration - Back to Basics (Part 1) - Certificates" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2020,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -138,12 +139,12 @@ catch(e){window.attachEvent("onload", $buo_f)}
 					<h1><small>Domino Administration - Back to Basics (Part 1) - Certificates</small></h1>
 					<hr />
 					<div><p>Domino is different, a lot of its concepts predate the internet and quite often inspired the standards. This is not an step-by-step instruction, but an introduction into concepts. The "step by step" approach is another story for another time.</p> 
-<h3><a href="#in-the-beginning-was-the-certificate" id="in-the-beginning-was-the-certificate">In the beginning was the Certificate</a></h3> 
+<h3>In the beginning was the Certificate</h3> 
 <p>Notes and Domino run <a href="https://help.hcltechsw.com/domino/11.0.0/plan_certifieridsandcertificates_c.html">using ID</a> files. This are not merly files that can arbitrarily reconstructed, but cryptographically created <a href="https://en.wikipedia.org/wiki/Public-key_cryptography">Public Private key pairs</a>. To avoid naming collisions the key names are hierarchical (Since R2), so anyone can call their server <strong>Server1</strong> without confusion (sort of). This hierarchy is achieved using <a href="https://en.wikipedia.org/wiki/X.400">X400</a> naming conventions, an early competitor to DNS naming. A X400 name can consist out of multiple parts, these are the ones Domino is using:</p> 
 <p><img src="/blog/images/2020/X400Names.png" alt="X500 Name"></p> 
 <p>So the minimum is a common name and an Org. The starting point of each Domino journey is the creation of the OrgID. All other parts depend on it. Note: there isn't a country ID, even if country mentioned after the Org. When you create your OrgID (while setting up the very first server), you can specify the country and it becomes part of the OrgID.</p> 
 <p>In practise however I haven't seen many OrgIDs that would carry a country code in them. So you can skip that part.</p> 
-<h3><a href="#signing-ids" id="signing-ids">Signing Ids</a></h3> 
+<h3>Signing Ids</h3> 
 <p>Using the OrgID as signing certificat, one can go and create server and user certificates. E.g using the OrgID <code>/O=Acme</code> one can create <code>/CN=Coyotee/O=Acme</code>. For convenience the qualifiers are usually omitted, their meaning results from the position (and the fact that country is 2 letter if present and Orgs have 3 or more). So instead of <code>/CN=Coyotee/O=Acme</code> one can write <code>Coyotee/Acme</code>.</p> 
 <p>In practise however more enlightened organisation use their OrgCert as cautiously as root certificates in the <a href="https://en.wikipedia.org/wiki/X.509">X509</a> world and only <a href="https://help.hcltechsw.com/domino/11.0.0/othr_registeringanorganizationalunitcertifieriddialogbo_t.html">register/sign</a> Organizational Unit (<code>/OU=</code>) Ids which then can be used to sign server and user certificates.</p> 
 <p>Trust between certificate is hierarchical, similar to Internet certificates, so IDs having the same root (/O) certifier recognizse each other. The hierachy can be used in Access Control (another story for another time) to grant access to all IDs at a given level e.g. <code>/OU=Management/O=Acme</code></p><p>### Types of ID files</p> 
@@ -156,9 +157,9 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <p>The distinction becomes relevant in <a href="/blog/2014/02/domino-development-back-to-basics-part-6-better-safe-than-sorry-security.html">access control</a> where access can be granted to users or servers only. Person and Server IDs can occur on any level. Typically we see servers either on the org level or in their own OU.</p> 
 <p><img src="/blog/images/2020/CertifiersandIDs.png" alt="Certifiers and IDs"></p> 
 <p>Selecting OU levels is not an easy decisions. We see models of organisations like <code>/OU=Sales</code>, <code>/OU=Board</code> but also geography like <code>/OU=Gernay</code> and <code>/OU=Singapore</code>. This can be very deliberate. Someone moving (department or location) would get the userid recertified with the new OU. What needs careful planning: what document access is won/lost with such a move (That's a business decision, Domino can handle all scenarios when planned properly).</p> 
-<h3><a href="#cross-certification" id="cross-certification">Cross Certification</a></h3> 
+<h3>Cross Certification</h3> 
 <p>To include certificates with a different root one uses <a href="https://help.hcltechsw.com/domino/11.0.0/conf_creatingacrosscertificatefromanotescertifier_t.html">Cross Certificates</a> which are captured in the directory (and/or local addressbook, the user's personal directory). When one creates a cross-certification for an <code>/O</code> id, all the decendants (<code>/OU/OU/O</code>) are recognized too.</p> 
-<h3><a href="#insights" id="insights">Insights</a></h3> 
+<h3>Insights</h3> 
 <p>In no specific order:</p> 
 <ul> 
  <li>In Notes/Domino the terms ID and certificate are loosely used interchangable</li> 
@@ -315,6 +316,7 @@ I just got started. Practical How-To are on the list once the core concepts are 
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

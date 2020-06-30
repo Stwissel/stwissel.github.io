@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - {{Mustache}} Helper for Domino and XPages" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2014,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -142,8 +143,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>{{Mustache}} Helper for Domino and XPages</small></h1>
 					<hr />
-					<div>Previously we had a look, how to use 
-<a href="/blog/2014/04/mustache-and-ckeditor-round-two.html">Mustache with the CKEditor</a> to have an editing environment for templates. I glossed over the part where to store and how to use these templates. Let me continue there. 
+					<div>Previously we had a look, how to use <a href="/blog/2014/04/mustache-and-ckeditor-round-two.html">Mustache with the CKEditor</a> to have an editing environment for templates. I glossed over the part where to store and how to use these templates. Let me continue there. 
 <br> I'll store the template in Notes documents and use an application managed bean to transform a document (and later other things) using these templates. 
 <br> I have 2 use cases in mind: one is to allow the configuration of HTML notification messages in applications and the other to configure the display of workflow details (more on Workflow in a later post). The approach has two parts: 
 <ol> 
@@ -151,10 +151,8 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>using the templates</li> 
 </ol> The first one should need to run only once in the application lifecycle. Since managed beans can't have constructors with parameters, I created a seperate load function, so inside the bean there is nothing that depends on the XPages runtime environment. You therefore can use that bean in an agent, application or a plug-in. 
 <br> I also opted to load all templates into memory at once, but only compile them when actually needed. If you plan to have lots of them, you want to look for a different solution. 
-<br> The class that does the work is the 
-<code>MustacheHelper.java</code>. To make it easy to use, I wrap it into a managed bean and a small SSJS Helper function: 
-<pre class="brush: xml">
-&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<br> The class that does the work is the <code>MustacheHelper.java</code>. To make it easy to use, I wrap it into a managed bean and a small SSJS Helper function: 
+<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;faces-config&gt;
   &lt;managed-bean&gt;
     &lt;managed-bean-name&gt;Mustache&lt;/managed-bean-name&gt;
@@ -167,8 +165,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 &lt;/faces-config&gt;
 </pre> 
 <br> 
-<pre class="brush: js">
-function applyTemplate(doc, templateName) {
+<pre class="brush: js">function applyTemplate(doc, templateName) {
 	try {
 		// Check for init
 		if (!Mustache.isInitialized()) {
@@ -182,19 +179,12 @@ function applyTemplate(doc, templateName) {
 	}
 }
 </pre> 
-<br> With this done transforming a document becomes a one liner in SSJS: 
-<code>return applyTemplate(document1.getDocument(),"Color");</code>. To demo how it works, I created a sample database.In 
-<a href="https://dl.dropboxusercontent.com/u/865725/Mustache.nsf.zip">that database</a> I use 2 computed fields to demo the transfomation of a document into plain text and HTML. You might ask: so what? Keep in mind, that this is only to demo the technique. Real use cases would be notification eMails or cnfigurable summaries from documents where you don't know the fields while you design the solution. 
-<br> There are some interesting details: Mustache has the capability to use partials (think subforms) using the syntax 
-<code>{{&gt; common/header}}</code>. By default Mustache would try to read a file from a file system for that partial. Since we don't have the partials in the file system, we need to provide our own resolver to the Mustache factory: 
+<br> With this done transforming a document becomes a one liner in SSJS: <code>return applyTemplate(document1.getDocument(),"Color");</code>. To demo how it works, I created a sample database.In <a href="https://dl.dropboxusercontent.com/u/865725/Mustache.nsf.zip">that database</a> I use 2 computed fields to demo the transfomation of a document into plain text and HTML. You might ask: so what? Keep in mind, that this is only to demo the technique. Real use cases would be notification eMails or cnfigurable summaries from documents where you don't know the fields while you design the solution. 
+<br> There are some interesting details: Mustache has the capability to use partials (think subforms) using the syntax <code>{{&gt; common/header}}</code>. By default Mustache would try to read a file from a file system for that partial. Since we don't have the partials in the file system, we need to provide our own resolver to the Mustache factory: 
+<br> <code>factory = new DefaultMustacheFactory(new MustacheNotesResolver(templateStrings));</code> 
+<br> The <code>templateStrings</code> are a <a href="https://docs.oracle.com/javase/7/docs/api/java/util/Map.html">Map</a> containing the uncompiled Mustache templates. The Resolver code is quite lean: 
 <br> 
-<code>factory = new DefaultMustacheFactory(new MustacheNotesResolver(templateStrings));</code> 
-<br> The 
-<code>templateStrings</code> are a 
-<a href="https://docs.oracle.com/javase/7/docs/api/java/util/Map.html">Map</a> containing the uncompiled Mustache templates. The Resolver code is quite lean: 
-<br> 
-<pre class="brush: java">
-public class MustacheNotesResolver implements MustacheResolver {
+<pre class="brush: java">public class MustacheNotesResolver implements MustacheResolver {
     
     private final Map&lt;String, String&gt; templates;
     
@@ -212,11 +202,9 @@ public class MustacheNotesResolver implements MustacheResolver {
 }
 </pre> 
 <br> You will notice that the first time the transformation runs, there's a delay before the page displays. That's the step when all templates are loaded and the managed bean gets initialized. 
-<br> Also have a look at the 
-<code>DocumentResolver</code> that turns a document into something that Mustache can process. 
+<br> Also have a look at the <code>DocumentResolver</code> that turns a document into something that Mustache can process. 
 <br> 
-<pre class="brush: java">
-public class DefaultDocumentResolver implements DocumentResolver {
+<pre class="brush: java">public class DefaultDocumentResolver implements DocumentResolver {
     @Override
     public Map&lt;String, Object&gt; resolve(Document doc) {
         Map&lt;String, Object&gt; result = new HashMap&lt;String, Object&gt;();
@@ -243,8 +231,7 @@ public class DefaultDocumentResolver implements DocumentResolver {
 </pre> 
 <br> Some documents might need special attention, e.g. when groups of field (multi-value or sequential named) form a table of values. You can provide your own resolver for them. 
 <br> For now the templates are managed in the Notes client interface. Adding a template edit UI is left to your pleasure. 
-<br> You can generate anything that can be expressed as ASCII stream: Plain Text, HTML, XML, JSON, XSL:FO, ODF, DOCX (the later two need to be zipped before delivery), PostScript, SVG etc. Get the 
-<a href="https://github.com/Stwissel/MustacheHelper">code on GitHub</a> 
+<br> You can generate anything that can be expressed as ASCII stream: Plain Text, HTML, XML, JSON, XSL:FO, ODF, DOCX (the later two need to be zipped before delivery), PostScript, SVG etc. Get the <a href="https://github.com/Stwissel/MustacheHelper">code on GitHub</a> 
 <br> As usual YMMV. Next stop: transforming other stuff like views and adding more examples.</div>
 					<hr />
 					<p>
@@ -371,6 +358,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

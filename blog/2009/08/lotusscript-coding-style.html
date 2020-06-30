@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - LotusScript Coding Style" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2009,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -129,8 +130,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>LotusScript Coding Style</small></h1>
 					<hr />
-					<div>I have currently the pleasure of introducing new developers to Lotus Domino. While it is old new to the 
-<a href="http://www.planetlotus.org/">Yellow Bubble</a> our new members wonder about code style and code smell for LotusScript programming. Looking at a lot of the existing code base they rather get a wrong impression. So we went through a few guidelines. Of course sticking to them becomes a lot easier with the new LotusScript editor in 8.5.1: 
+					<div>I have currently the pleasure of introducing new developers to Lotus Domino. While it is old new to the <a href="http://www.planetlotus.org/">Yellow Bubble</a> our new members wonder about code style and code smell for LotusScript programming. Looking at a lot of the existing code base they rather get a wrong impression. So we went through a few guidelines. Of course sticking to them becomes a lot easier with the new LotusScript editor in 8.5.1: 
 <ul> 
  <li>Every time you skip OPTION DECLARE an angel must die. So for the love of [insert-what-is-holy-to-you] configure your preferences to automatically insert it. I've submitted a request to parliament to cane serial DECLARE offenders &lt;vbg&gt;</li> 
  <li>Keep them short. Functions that carry on over hundreds of lines are a maintenance nightmare. A function does one thing at a time. So the routine that loops through your document collection doesn't process the individual documents, but calls a function with the document as parameter</li> 
@@ -146,384 +146,282 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Don't use document.all.[NameOfSomeButtonYouAddedHiddenly].click() to execute special functions. If you have back-end functions to call use a hidden field [NextAction] and a custom submit button (passthru HTML): &lt;input type="submit" value="Do something special" name="NextAction"&gt; The field NextAction will contain the value of the button. If you are smart you read the label from a config document, so you can change it without breaking your code.</li> 
  <li>While it is convenient rethink the use of the shorthand doc.[FieldName]. While it has (against common believe) no measurable impact on performance it has an impact on readability (if you see doc.something you need to think every time <i>is this a property or a field name</i>) and your ability to switch between languages since Java and JavaScript don't entertain this notion.</li> 
  <li>ViewEntries beat documents in speed any time. If you have to run through a long list of entries and only need to update a few, pack the criteria you need into view columns and run through the ViewEntries opening only the documents you need to change.</li> 
-</ul> Some code templates we looked at:<pre>
- 
+</ul> Some code templates we looked at:<pre> 
  
  <div class="lotusscript">
 
   
-  
   <font class="ls-comment">%REM Library ErrorhandlingDemo Created Aug 14, 2009 by Stephan H Wissel/Singapore/IBM Description: Demo Library to show common coding patterns %END REM</font>
 
   
-  
   <font class="ls-keyword">Option</font> 
-  
   
   <font class="ls-keyword">Public</font>
 
   
-  
   <font class="ls-keyword">Option</font> 
-  
   
   <font class="ls-keyword">Declare</font>
 
 
   
-  
   <font class="ls-statement">Use</font> 
-  
   
   <font class="ls-quote">"OpenLogFunctions"</font>
 
 
 
   
-  
   <font class="ls-comment">%REM Function someFunction Description: A sample function doing nothing, shows errorhandling function %END REM</font>
 
-  
   
   <font class="ls-statement">Function</font> someFunction
 	
 	
   
-  
   <font class="ls-statement">On</font> 
   
-  
   <font class="ls-function">Error</font> 
-  
   
   <font class="ls-keyword">GoTo</font> Err_someFunction
 	
 	
 Exit_someFunction
   
-  
   <font class="ls-operator">:</font>
 	
-  
   
   <font class="ls-comment">'Cleanup code if needed somethink like</font>
 	
   
-  
   <font class="ls-comment">'finally in JAVA goes here:</font>
 	
   
-  
   <font class="ls-statement">On</font> 
-  
   
   <font class="ls-function">Error</font> 
   
-  
   <font class="ls-statement">Resume</font> 
-  
   
   <font class="ls-statement">Next</font>
 	
 	
   
-  
   <font class="ls-statement">Exit</font> 
-  
   
   <font class="ls-statement">Function</font> 
 	
 Err_someFunction
   
-  
   <font class="ls-operator">:</font>
 	
 	
-  
   
   <font class="ls-function">Call</font> LogError
 	
 	
   
-  
   <font class="ls-statement">Resume</font> Exit_someFunction
 	
 
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Function</font>
 
 
 
   
-  
   <font class="ls-comment">%REM Sub howWeDoLooping Description: Sample function take a NotesDocumentCollection as agument and loops over all document calling a worker function per document. Must abort if one document wasn't processed properly %END REM</font>
 
   
-  
   <font class="ls-statement">Sub</font> howWeDoLooping
-  
   
   <font class="ls-operator">(</font>dc 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesDocumentCollection</font>
   
-  
   <font class="ls-operator">)</font>
 	
-  
   
   <font class="ls-statement">Dim</font> doc 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesDocument</font>
 	
-  
   
   <font class="ls-statement">Dim</font> nextDoc 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesDocument</font>
 	
 	
   
-  
   <font class="ls-statement">Set</font> doc 
-  
   
   <font class="ls-operator">=</font> dc
   
-  
   <font class="ls-operator">.</font>Getfirstdocument
   
-  
   <font class="ls-operator">(</font>
-  
   
   <font class="ls-operator">)</font>
 	
 	
   
-  
   <font class="ls-statement">Do</font> Until doc 
   
-  
   <font class="ls-operator">Is</font> 
-  
   
   <font class="ls-constant">Nothing</font>
 		
   
-  
   <font class="ls-statement">Set</font> nextDoc 
-  
   
   <font class="ls-operator">=</font> dc
   
-  
   <font class="ls-operator">.</font>Getnextdocument
   
-  
   <font class="ls-operator">(</font>doc
-  
   
   <font class="ls-operator">)</font>
 		
 		
   
-  
   <font class="ls-comment">'IF you need to stop when one document fails use this</font>
 		
   
-  
   <font class="ls-statement">If</font> 
-  
   
   <font class="ls-operator">Not</font> workOnThisDocument
   
-  
   <font class="ls-operator">(</font>doc
   
-  
   <font class="ls-operator">)</font> 
-  
   
   <font class="ls-statement">Then</font>
 			
   
-  
   <font class="ls-statement">Exit</font> 
-  
   
   <font class="ls-statement">Do</font>
 		
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">If</font>
 		
 		
   
-  
   <font class="ls-statement">Set</font> doc 
-  
   
   <font class="ls-operator">=</font> nextDoc
 	
-  
   
   <font class="ls-statement">Loop</font>
 	
 
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Sub</font>
 
 
 
   
-  
   <font class="ls-comment">%REM Function workOnThisDocument Description: Sample function to report failure or success as return value %END REM</font>
 
   
-  
   <font class="ls-statement">Function</font> workOnThisDocument
-  
   
   <font class="ls-operator">(</font>doc 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-class">NotesDocument</font>
   
-  
   <font class="ls-operator">)</font> 
   
-  
   <font class="ls-keyword">As</font> 
-  
   
   <font class="ls-keyword">Boolean</font>
 	
 	
   
-  
   <font class="ls-statement">On</font> 
   
-  
   <font class="ls-function">Error</font> 
-  
   
   <font class="ls-keyword">GoTo</font> Err_workOnThisDocument
 	
 	
   
-  
   <font class="ls-function">Call</font> LogEvent
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-quote">"Approval successful"</font>
-  
   
   <font class="ls-operator">,</font>SEVERITY_LOW
   
-  
   <font class="ls-operator">,</font>doc
-  
   
   <font class="ls-operator">)</font>
 	
 	
 	
   
-  
   <font class="ls-comment">'If we got here everything worked</font>
 	workOnThisDocument 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-constant">true</font>
 Exit_workOnThisDocument
-  
   
   <font class="ls-operator">:</font>
 	
 	
   
-  
   <font class="ls-statement">Exit</font> 
-  
   
   <font class="ls-statement">Function</font>
 	
 	
 Err_workOnThisDocument
   
-  
   <font class="ls-operator">:</font>
 	
 	
   
-  
   <font class="ls-function">Call</font> LogErrorEx
-  
   
   <font class="ls-operator">(</font>
   
-  
   <font class="ls-function">Error$</font>
-  
   
   <font class="ls-operator">,</font>SEVERITY_HIGH
   
-  
   <font class="ls-operator">,</font>doc
-  
   
   <font class="ls-operator">)</font>
 	workOnThisDocument 
   
-  
   <font class="ls-operator">=</font> 
-  
   
   <font class="ls-constant">false</font>
 	
-  
   
   <font class="ls-statement">Resume</font> Exit_workOnThisDocument
 	
 	
 
   
-  
   <font class="ls-statement">End</font> 
-  
   
   <font class="ls-statement">Function</font>
 
@@ -532,10 +430,8 @@ Err_workOnThisDocument
  </div></pre> 
 <div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;"> 
  <center>
-   This LotusScript was converted to HTML using the 
-  <b><i>ls2html</i></b> routine, 
-  <br>provided by Julian Robichaux at 
-  <a href="http://www.nsftools.com" target="_blank">nsftools.com</a>. 
+   This LotusScript was converted to HTML using the <b><i>ls2html</i></b> routine, 
+  <br>provided by Julian Robichaux at <a href="http://www.nsftools.com" target="_blank">nsftools.com</a>. 
  </center> 
 </div> ... to be continued.</div>
 					<hr />
@@ -726,6 +622,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

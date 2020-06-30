@@ -22,7 +22,7 @@ ga('send', 'pageview');
 <meta name="DC.Title"         content="NotesSensei's Weblog - Poking around the iNotes HTTP API (Part 2) - Fun with Rhino" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
-<meta name="Copyright"        content="2014,2019 Stephan H. Wissel - Creative commons licence" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
 <meta name="twitter:site"     content="@notessensei" />
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
@@ -44,6 +44,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -146,20 +147,12 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>Poking around the iNotes HTTP API (Part 2) - Fun with Rhino</small></h1>
 					<hr />
-					<div>The iNotes HTTP API wasn't designed for consumption outside the iNotes web client. This becomes apparent when looking at 
-<code>Form=l_GetOutline_JSON</code> or 
-<code>Form=l_JSVars</code> that return JavaScript and not JSON! The difference? JSON contains data only, while JavaScript contains 
-<code>function</code> definitions too. 
+					<div>The iNotes HTTP API wasn't designed for consumption outside the iNotes web client. This becomes apparent when looking at <code>Form=l_GetOutline_JSON</code> or <code>Form=l_JSVars</code> that return JavaScript and not JSON! The difference? JSON contains data only, while JavaScript contains <code>function</code> definitions too. 
 <br> To make use of data included in the JavaScript there are 2 possibilities: 
 <ul> 
  <li>do some elaborate String operation</li> 
  <li>actually run JavaScript</li> 
-</ul> Since Java 6, the JDK contains a JavaScript engine, that originally was developed as 
-<a href="https://developer.mozilla.rg/en-US/docs/Mozilla/Projects/Rhino">Mozilla Rhino</a>. The most recent incarnation in Java 8 is 
-<a href="http://openjdk.java.net/projects/nashorn/">Nashorn</a> (which is German for Rhino). When you use an older JDK, think "older JS", nice functions like 
-<code>JSON.stringify </code> or 
-<code>JSON.parse</code> are missing and need to be 
-<a href="https://github.com/douglascrockford/JSON-js">added from elsewhere</a>. 
+</ul> Since Java 6, the JDK contains a JavaScript engine, that originally was developed as <a href="https://developer.mozilla.rg/en-US/docs/Mozilla/Projects/Rhino">Mozilla Rhino</a>. The most recent incarnation in Java 8 is <a href="http://openjdk.java.net/projects/nashorn/">Nashorn</a> (which is German for Rhino). When you use an older JDK, think "older JS", nice functions like <code>JSON.stringify </code> or <code>JSON.parse</code> are missing and need to be <a href="https://github.com/douglascrockford/JSON-js">added from elsewhere</a>. 
 <br> Turning the outline information into something Java useful we need to parse the returned JSON, lets see how that works. The Outline is a little more complex that it might seem. The JSON delivers 6 values (in an array) about the outline entries: 
 <ol start="0"> 
  <li>The hierarchical sequence number. Something like 1 or 3.1 or 3.2.1 - depending on the level. The numbers have gaps where entries in the Outline are hidden from the web</li> 
@@ -171,8 +164,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 </ol>Since that lends itself to some complexity, I created a OutlineInfo class that contains the OutlineEntry objects and that one gets filled in the JavaScript function. 
 <br> Then the code turns out quite lean: 
 <br> 
-<pre class="brush : java">
-public OutlineInfo getOutlineInfo(String code, String outline) {
+<pre class="brush : java">public OutlineInfo getOutlineInfo(String code, String outline) {
         ScriptEngine engine = new ScriptEngineManager().getEngineByExtension("js");
         engine.eval(code);
         Invocable jsFunc = (Invocable) engine;
@@ -180,11 +172,8 @@ public OutlineInfo getOutlineInfo(String code, String outline) {
         return result;
 }
 </pre> 
-<br> The String 
-<code>code</code> contains our JavaScript function. In a working system I probably would keep the engine around somewhere to save the spinup time. 
-<code>outline</code> contains what came back from the call to iNotes. The JavaScript code is equally lean: 
-<pre class="brush : js">
-function getOutlineObject(raw) {
+<br> The String <code>code</code> contains our JavaScript function. In a working system I probably would keep the engine around somewhere to save the spinup time. <code>outline</code> contains what came back from the call to iNotes. The JavaScript code is equally lean: 
+<pre class="brush : js">function getOutlineObject(raw) {
 	importPackage(com.notessensei.demo);
 	var arr;
 	eval("arr = "+raw);
@@ -200,13 +189,9 @@ function getOutlineObject(raw) {
 	return result;	
 }
 </pre> 
-<br> Instead of 
-<code>OutlineInfo</code> you could use a 
-<a href="http://docs.oracle.com/javase/6/docs/api/java/util/Collection.html">Java collection</a> to return the value, so I won't list the class here. The 
-<code>OutlineEntry</code> is more interesting, so you can run the sample yourself: 
+<br> Instead of <code>OutlineInfo</code> you could use a <a href="http://docs.oracle.com/javase/6/docs/api/java/util/Collection.html">Java collection</a> to return the value, so I won't list the class here. The <code>OutlineEntry</code> is more interesting, so you can run the sample yourself: 
 <br> 
-<pre class="brush : java">
-package com.notessensei.demo;
+<pre class="brush : java">package com.notessensei.demo;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -325,8 +310,7 @@ public class OutlineEntry {
 
 }
 </pre> 
-<br> Now the challenge: provide a faster way to generate a collection of 
-<code>OutlineEntry</code> objects! The code above takes on my system between 100 and 150ms</div>
+<br> Now the challenge: provide a faster way to generate a collection of <code>OutlineEntry</code> objects! The code above takes on my system between 100 and 150ms</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -452,6 +436,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
     <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";
