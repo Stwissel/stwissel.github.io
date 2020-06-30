@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Domino Docker and Debugging - NotesSensei's Blog</title>
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-72033-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible"  content="chrome=1" />
+<meta http-equiv="Content-Language" content="en" />
+<meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
+<meta property="og:title"     content="wissel.net - Domino Docker and Debugging" />
+<meta property="og:type"      content="blog" />
+<meta property="og:url"       content="https://wissel.net/blog/2020/06/domino-docker-and-debugging.html" />
+<meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
+<meta property="og:site_name" content="wissel.net" />
+<meta name="viewport"         content="width=device-width, initial-scale=1.0" />
+<meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Domino Docker and Debugging" />
+<meta name="Author"           content="Stephan H. Wissel" />
+<meta name="ICBM"             content="1.2994, 103.8425" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
+<meta name="twitter:site"     content="@notessensei" />
+<meta name="twitter:card"     content="summary" />
+<meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
+<meta name="description"
+	content="Domino Docker and Debugging - Given that Domino once was build to run on 486 capacity of servers, Docker and Domino are posed to be a match made in heaven (eventually). Jesse shared shared his Weekend Domino-Apps-in-Docker Experimentation, Paul shared his learning points and Daniel provided the invaluable Domino on Docker build " />
+<meta name="Keywords"
+	content="Docker,Domino,HCL Notes," />
+<meta name="Abstract"
+	content="Domino Docker and Debugging - Given that Domino once was build to run on 486 capacity of servers, Docker and Domino are posed to be a match made in heaven (eventually). Jesse shared shared his Weekend Domino-Apps-in-Docker Experimentation, Paul shared his learning points and Daniel provided the invaluable Domino on Docker build " />
+<!--[if lt IE 9]>
+		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
+<link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
+<link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
+
+
+<link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="https://feeds.feedburner.com/Wisselnetfeed" />
+
+<meta name="Revisit-After" content="90 Days" />
+</head>
+<body>
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<a class="btn btn-navbar" data-toggle="collapse"
+				data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+				class="icon-bar"></span> <span class="icon-bar"></span>
+			</a> <a class="brand" href="/">wissel.net</a>
+			<div class="nav-collapse">
+				<ul class="nav">
+					<li><a href="/index.html">Home</a></li>
+					<li class="active"><a href="/blog/">Blog</a></li>
+					<li><a href="/blog/series.html">Series</a></li>
+					<li><a href="/blog/downloads/">Downloads</a></li>
+					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
+					<li><a href="/blog/imprint.html">About / Imprint</a></li>
+				</ul>
+				<form action="//www.google.com/cse" id="cse-search-box"
+					class="navbar-search pull-right">
+					<div>
+						<input type="hidden" name="cx"
+							value="partner-pub-4562257798204150:muo14ionenw" /> <input
+							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
+							name="q" class="search-query span2" placeholder="Search" />
+						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+<div class="navbar-spacer"></div>
+
+	<div class="container">
+    		<br />
+		<header>
+			<div id="mainsmall"  class="hero-unit">
+				<h2>wissel.net</h2>
+				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+			</div>
+		</header>
+
+    <script> 
+var $buoop = {notify:{e:-0.01,f:-0.01,o:-0.01,s:-0.01,c:-0.01},insecure:true,unsupported:true,api:5}; 
+function $buo_f(){ 
+ var e = document.createElement("script"); 
+ e.src = "//browser-update.org/update.min.js"; 
+ document.body.appendChild(e);
+};
+try {document.addEventListener("DOMContentLoaded", $buo_f,false)}
+catch(e){window.attachEvent("onload", $buo_f)}
+</script>
+
+    <ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2020/">2020</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2020/06/">June</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/docker.html">Docker</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/domino.html">Domino</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/hclnotes.html">HCL Notes</a>
+  </li>
+</ul>
+
+		<div class="row-fluid">
+			<div class="span12">
+				
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2020/04/watching-the-eventbus.html"><i class="icon-hand-left"></i>Watching the EventBus</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+				<article class="well well-raised">
+					<h1><small>Domino Docker and Debugging</small></h1>
+					<hr />
+					<div><p>Given that Domino once was build to run on 486 capacity of servers, Docker and <a href="https://www.docker.com/blog/why-domino-is-using-docker/">Domino</a> are posed to be a match made in heaven (eventually). Jesse shared shared his <a href="https://frostillic.us/blog/posts/2020/6/28/weekend-domino-apps-in-docker-experimentation">Weekend Domino-Apps-in-Docker Experimentation</a>, Paul shared his <a href="https://paulswithers.github.io/blog/2019/12/04/domino-on-docker">learning points</a> and <a href="http://blog.nashcom.de/">Daniel</a> provided the invaluable <a href="https://github.com/IBM/domino-docker">Domino on Docker build scripts</a>. So it's time to contribute my share. The topic is slightly more exotic</p> 
+<h3>Debug a Java application running on Domino in a Docker container</h3> 
+<p>Before we can get cooking, we need to know what ingredients we need:</p> 
+<ul> 
+ <li>The <a href="https://github.com/IBM/domino-docker">Domino on Docker build scripts</a> including the required Domino Linux installer</li> 
+ <li>Some general understanding how Daniel's <a href="https://www.nashcom.de/nshweb/pages/startscript.htm">Domino Startup Script</a> works</li> 
+ <li>Docker desktop installed on our machine (I use macOS, but I know <a href="https://twitter.com/lotusgeek">someone</a>, who can share his Windows experience)</li> 
+ <li>Basic understanding of <a href="https://docs.docker.com/get-started/">Docker</a></li> 
+ <li>A <a href="https://www.projectkeep.io">Java project</a> that shall be debugged. I use <a href="https://maven.apache.org/">Apache Maven</a>, as discussed <a href="blog/2020/04/my-maven-starter-template.html">before</a>, but <a href="https://gradle.org/">Gradle</a> will do just fine</li> 
+ <li>Understanding how to <a href="https://www.vogella.com/tutorials/EclipseDebugging/article.html">debug Java</a></li> 
+</ul> 
+<p><strong>Our objective</strong>: Create a Domino image that loads the Java application from its host file system, so we do not need to rebuild the container on Java changed. An instance of this image shall allow to connect a debugger to that Java application</p> 
+<h3>Foundation: the Domino image</h3> 
+<p>First we have to build a Domino Docker image, configure a server using a docker volume. This has been mapped out in the <a href="https://github.com/IBM/domino-docker">domino-docker</a> project and its <a href="https://ibm.github.io/domino-docker/">slighly hidden documentation</a>. Just a quick recap:</p> 
+<ul> 
+ <li>Build the image using <code>./build domino</code></li> 
+ <li>Create a volume using <code>docker volume create keep_data</code></li> 
+ <li>Run the instance once to setup the domino</li> 
+</ul> 
+<pre class="brush: bash">docker run -it -e "ServerName=Server1" \
+    -e "OrganizationName=MyOrg" \
+    -e "AdminFirstName=Doctor" \
+    -e "AdminLastName=Notes" \
+    -e "AdminPassword=passw0rd" \
+    -h myserver.domino.local \
+    -p 80:80 \
+    -p 1352:1352 \
+    -v keep_data:/local/notesdata \
+    --stop-timeout=60 \
+    --name server1 \
+    hclcom/domino:11.0.1
+</pre> 
+<p>We shut down the instance once you have confirmed it works. We don't need it thereafter, we only need the volume and image. Of course there's no harm keeping it around</p><h3>The application image</h3> 
+<p>Docker is like <a href="http://quotegeek.com/quotes-from-movies/shrek/7316/">Ogres</a>, so for our application we build another layer. Big advantage of this approach: when a newer Domino image becomes available (I heared 12.0 will be awesome), we only need to change one line in our own <a href="https://docs.docker.com/engine/reference/builder/">dockerfile</a> and nothing in the Domino image</p> 
+<pre class="brush: bash">############################################################################
+# Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
+# Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
+# Copyright HCL Corporation 2020 - APACHE 2.0 see LICSENSE
+############################################################################
+
+# DEBUG VERSION - DON'T DEPLOY INTO PRODUCTION!!!!
+
+FROM hclcom/domino:11.0.1
+
+# Headers
+LABEL DominoDocker.maintainer="stephan.wissel@hcl.com"
+
+USER root
+
+# Prepare environment for KEEP
+
+RUN mkdir -p /opt/hcl/keep
+RUN mkdir -p /opt/hcl/domino/scripts 
+
+COPY install_dir/*_script /opt/hcl/domino/scripts/
+
+RUN chown -R notes:notes /opt/hcl/keep
+RUN chown -R notes:notes /opt/hcl/domino/scripts 
+RUN chmod +x /opt/hcl/domino/scripts/*script
+
+RUN echo 'DOMINO_PRE_SHUTDOWN_SCRIPT=/opt/hcl/domino/scripts/pre_shutdown_script' &gt;&gt; /etc/sysconfig/rc_domino_config
+RUN echo 'DOMINO_POST_STARTUP_SCRIPT=/opt/hcl/domino/scripts/post_startup_script' &gt;&gt; /etc/sysconfig/rc_domino_config
+RUN echo 'DOMINO_POST_SHUTDOWN_SCRIPT=/opt/hcl/domino/scripts/post_shutdown_script' &gt;&gt; /etc/sysconfig/rc_domino_config
+
+# Expose Ports NRPC HTTP LDAP KEEP KEEPADMIN KEEPMETRICS DEBUGGING
+EXPOSE 1352 80 389 8880 8889 8890 8000
+
+ENTRYPOINT ["/domino_docker_entrypoint.sh"]
+
+USER notes
+</pre> 
+<p>Let us break down what that docker file does:</p> 
+<ul> 
+ <li>It is based on the Domino image <code>hclcom/domino:11.0.1</code> we built in the previous step</li> 
+ <li>It creates directories under <code>/opt/hcl</code> where you also can find the Domino binaries</li> 
+ <li>It copies and makes executable scripts and Jar files</li> 
+ <li>It ammends the <code>rc_domino_config</code> file to point to the scripts we just copied</li> 
+ <li>It exposed a few more ports: <code>8880, 8889, 8890</code> are application specific, <code>8000</code> is our debug port</li> 
+</ul> 
+<h3>The scripts</h3> 
+<p>The most interesting one is the <code>post_startup_script</code> than runs once Domino is up and running. It will run the Java application, waiting for the debugger to be ready:</p> 
+<pre class="brush: bash">#!/bin/sh
+# Starts the vert.x tasks that talks to Domino
+export DEBUG=true
+export DOMINO_HOME=/opt/hcl/domino/notes/latest/linux
+export JAVA_HOME=/opt/hcl/domino/notes/latest/linux/jvm
+export NOTESDATA=/local/notesdata
+export DYLD_LIBRARY_PATH=$DOMINO_HOME
+export LD_LIBRARY_PATH=$DOMINO_HOME
+export V_PATH=/opt/hcl/keep/fancyapp.jar
+export CLASSPATH=.:$V_PATH:$DOMINO_HOME/jvm/lib/ext/Notes.jar:$CLASSPATH
+export NOTES_ENV=SERVER
+export LOG_DIR=$NOTESDATA/logs
+[ -d $LOG_DIR ] || mkdir -p $LOG_DIR
+# This cd is important - must be writable -otherwise the docker blows 
+cd $NOTESDATA
+echo "Java will start in debug mode"
+$JAVA_HOME/bin/java -jar -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=y $V_PATH &gt; $LOG_DIR/vertx.log 2&gt;&amp;1 &amp;
+</pre> 
+<p>Let us break this down:</p> 
+<ul> 
+ <li>The <code>export</code> statements establish where to find what</li> 
+ <li>The Java app is run from the Domino data directory</li> 
+ <li>The <code>-agentlib:jdwp=transport=dt_socket</code> tells the JVM to open a debug session via a socket connection</li> 
+ <li>The <code>address=8000,suspend=y</code> declares the port and that the application shall wait until the debugger has attached</li> 
+ <li>Finally <code>2&gt;&amp;1 &amp;</code> tells us: StdOut and StdErr go to the same place and the app will run in the background</li> 
+</ul> 
+<h3>Eclipse debugger</h3> 
+<p>In Eclipse we create a new "Run Configuration" as "Remote Java Application" with a Standard (Socket Attach) connection type and host/port localhost/8000. You can't deploy this to a K8S environment since we will load the Jar from our local disk. Of course you can modify the setup to load the Jars for a different location</p> 
+<p><img src="/blog/images/2020/EclipseDebugger.png" alt="Remote Eclipse Debugger"></p> 
+<h3>Building and starting the new image</h3> 
+<p>Build the image based on the docker file: <code>docker build --tag hclcom/keep:debug</code></p> 
+<p>We are reusing the volume created for a vanilla Domino server, so all the configuration is completed, IDs and names.nsf exist. We now create a new instance based on the new image</p> 
+<pre class="brush: bash">#!/bin/bash
+# Start my local domino server for debug
+docker run -it \
+ -h myserver.domino.local \
+ -p 81:80 \
+ -p 1352:1352 \
+ -p 8880:8880 \
+ -p 8889:8889 \
+ -p 8890:8890 \
+ -p 8000:8000 \
+ -v keep_data:/local/notesdata \
+ -v /[Path to your Java Project]/target:/opt/hcl/keep \
+ --stop-timeout=60 \
+ --name Server1Debug \
+ hclcom/keep:debug
+</pre> 
+<p>Lots of steps. However once setup, you can simply restart the instance using <a href="https://www.docker.com/products/docker-desktop">Docker desktop</a> whenever your Java has changed. There are a few Gremlins building the whole thing on Windows, running seems to be fine. This might be the time to give <a href="https://devblogs.microsoft.com/commandline/wsl2-will-be-generally-available-in-windows-10-version-2004/">WSL</a> another look.</p> 
+<p>As usual YMMV. Next stop: more automation building production ready images</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 30 June 2020
+<span class="divider">|</span>
+<a href="/blog/2020/06/domino-docker-and-debugging.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/docker.html">Docker</a>  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/categories/hclnotes.html">HCL Notes</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/06/domino-docker-and-debugging.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Domino Docker and Debugging" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2020/06/domino-docker-and-debugging.html";
+						</script>
+					</p>
+
+				</article>
+				<a name="comments"></a>
+				<div class="well well-raised" style="text-align : center">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_b5fa2260-ba8f-11ea-843f-49ef93cd2958" type="button">
+		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
+	            </button>
+	            </div>
+				<div id="commentform_b5fa2260-ba8f-11ea-843f-49ef93cd2958"  class="collapse"></div>
+				<div class="well well-raised">
+					<h4>Comments</h4>
+					<ol id="commentList">
+						<li id="nocomments">
+							<h5>No comments yet, be the first to comment</h5>
+						</li>
+					</ol>
+				</div>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2020/04/watching-the-eventbus.html"><i class="icon-hand-left"></i>Watching the EventBus</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+			</div>
+		</div>
+		<ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2020/">2020</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2020/06/">June</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/docker.html">Docker</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/domino.html">Domino</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/hclnotes.html">HCL Notes</a>
+  </li>
+</ul>
+
+	</div>
+	<footer>
+		<div class="container">
+			<div class="row">
+				<div class="span2">
+					<h4>About Me</h4>
+					<p>
+						I work as "Solution Director Innovation" for HCL Software. I'm based in Singapore.
+						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
+					</p>
+					<a href="//stackoverflow.com/users/131021/stwissel">
+					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmers" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmers">
+				</a>
+				</div>
+				<div class="span2">
+					<h4>Contact</h4>
+					<ul>
+						<li><a href="https://www.twitter.com/notessensei">Twitter</a></li>
+						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+						<li><a href="https://www.xing.com/profile/StephanH_Wissel">XING</a></li>
+						<li><a href="https://astore.amazon.com/wissenetblog-20">Amazon Store</a></li>
+						<li><a href="https://kindle.amazon.com/profile/Stephan-H--Wissel/1659300">Amazon Kindle</a></li>
+						<li><a href="http://notessensei.spreadshirt.com/">NotesSensei's Spreadshirt shop</a></li>
+						<li><a href="http://about.me/stephan.wissel/#" title="Another identity site, nothing much here">About Me</a></li>
+					</ul>
+				</div>
+				<div class="span8">
+					<h4>Disclaimer</h4>
+					<p>This site is in no way affiliated, endorsed, sanctioned,
+						supported, nor enlightened by my current or previous employers.
+						I may be an employee, but the opinions, theories, facts, etc.
+						presented here are my own and are in now way given in any official
+						capacity. In short, these are my words and this is my site, not
+						my current or former employers' - and don't even begin to think otherwise.</p>
+					<p>
+						<b>&copy; 2003 - 2020 Stephan H. Wissel - some rights reserved</b> as
+						listed here: <a rel="license"
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
+							alt="Creative Commons License" style="border-width: 0"
+							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
+						Unless otherwise labeled by its originating author, the content
+						found on this site is made available under the terms of an <a
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
+							target="_blank"
+							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
+							Creative Commons License</a>, with the exception that no rights are
+						granted -- since they are not mine to grant -- in any logo,
+						graphic design, trademarks or trade names of any type. Code
+						samples and code downloads on this site are, unless otherwise
+						labeled, made available under an <a
+							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
+							2.0</a> license. Other license models are available on written
+						request and written confirmation.
+					</p>
+				</div>
+			</div>
+		</div>
+	</footer>
+
+	<script type="text/javascript">
+		var permaLink = "https://wissel.net/blog/2020/06/domino-docker-and-debugging.html";
+	</script>
+		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
+	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
+	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
+    <script type="text/javascript" src="/blog/js2/shCore.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushJava.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushJScript.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushXml.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushBash.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
+    <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
+    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		_uacct = "UA-72033-1";
+		urchinTracker();
+	</script>
+	<script type="text/javascript" src="//feeds.feedburner.com/~s/Wisselnet?i=https://wissel.net/blog" charset="utf-8"></script>
+    <script type="text/javascript">
+    $(document).ready(function() {
+            SyntaxHighlighter.all();
+    });
+    </script>
+
+		<script src="/blog/js2/mustache.js"></script>
+	<script src="/blog/js2/blogcomments.js"></script>
+	<script type="text/javascript" src="/blog/js2/Markdown.Converter.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Sanitizer.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Editor.js"></script>
+	<script type="text/javascript" src="//www.google.com/recaptcha/api.js"></script>
+	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+	<script type="text/javascript">
+		var onloadCallback = function() {
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "b5fa2260-ba8f-11ea-843f-49ef93cd2958");
+ 		};
+	</script>
+
+</body>
+</html>

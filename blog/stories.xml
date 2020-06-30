@@ -6,7 +6,48 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2019 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 17 Jun 2020 10:30:24 +0000</pubdate>
+	<pubdate>Tue, 30 Jun 2020 06:44:27 +0000</pubdate>
+<item>
+	<title>Domino Docker and Debugging</title>
+	<description>&lt;p&gt;Given that Domino once was build to run on 486 capacity of servers, Docker and &lt;a href="https://www.docker.com/blog/why-domino-is-using-docker/"&gt;Domino&lt;/a&gt; are posed to be a match made in heaven (eventually). Jesse shared shared his &lt;a href="https://frostillic.us/blog/posts/2020/6/28/weekend-domino-apps-in-docker-experimentation"&gt;Weekend Domino-Apps-in-Docker Experimentation&lt;/a&gt;, Paul shared his &lt;a href="https://paulswithers.github.io/blog/2019/12/04/domino-on-docker"&gt;learning points&lt;/a&gt; and &lt;a href="http://blog.nashcom.de/"&gt;Daniel&lt;/a&gt; provided the invaluable &lt;a href="https://github.com/IBM/domino-docker"&gt;Domino on Docker build scripts&lt;/a&gt;. So it's time to contribute my share. The topic is slightly more exotic&lt;/p&gt; 
+&lt;h3&gt;Debug a Java application running on Domino in a Docker container&lt;/h3&gt; 
+&lt;p&gt;Before we can get cooking, we need to know what ingredients we need:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;The &lt;a href="https://github.com/IBM/domino-docker"&gt;Domino on Docker build scripts&lt;/a&gt; including the required Domino Linux installer&lt;/li&gt; 
+ &lt;li&gt;Some general understanding how Daniel's &lt;a href="https://www.nashcom.de/nshweb/pages/startscript.htm"&gt;Domino Startup Script&lt;/a&gt; works&lt;/li&gt; 
+ &lt;li&gt;Docker desktop installed on our machine (I use macOS, but I know &lt;a href="https://twitter.com/lotusgeek"&gt;someone&lt;/a&gt;, who can share his Windows experience)&lt;/li&gt; 
+ &lt;li&gt;Basic understanding of &lt;a href="https://docs.docker.com/get-started/"&gt;Docker&lt;/a&gt;&lt;/li&gt; 
+ &lt;li&gt;A &lt;a href="https://www.projectkeep.io"&gt;Java project&lt;/a&gt; that shall be debugged. I use &lt;a href="https://maven.apache.org/"&gt;Apache Maven&lt;/a&gt;, as discussed &lt;a href="blog/2020/04/my-maven-starter-template.html"&gt;before&lt;/a&gt;, but &lt;a href="https://gradle.org/"&gt;Gradle&lt;/a&gt; will do just fine&lt;/li&gt; 
+ &lt;li&gt;Understanding how to &lt;a href="https://www.vogella.com/tutorials/EclipseDebugging/article.html"&gt;debug Java&lt;/a&gt;&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;&lt;strong&gt;Our objective&lt;/strong&gt;: Create a Domino image that loads the Java application from its host file system, so we do not need to rebuild the container on Java changed. An instance of this image shall allow to connect a debugger to that Java application&lt;/p&gt; 
+&lt;h3&gt;Foundation: the Domino image&lt;/h3&gt; 
+&lt;p&gt;First we have to build a Domino Docker image, configure a server using a docker volume. This has been mapped out in the &lt;a href="https://github.com/IBM/domino-docker"&gt;domino-docker&lt;/a&gt; project and its &lt;a href="https://ibm.github.io/domino-docker/"&gt;slighly hidden documentation&lt;/a&gt;. Just a quick recap:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;Build the image using &lt;code&gt;./build domino&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;Create a volume using &lt;code&gt;docker volume create keep_data&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;Run the instance once to setup the domino&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;pre class="brush: bash"&gt;docker run -it -e "ServerName=Server1" \
+    -e "OrganizationName=MyOrg" \
+    -e "AdminFirstName=Doctor" \
+    -e "AdminLastName=Notes" \
+    -e "AdminPassword=passw0rd" \
+    -h myserver.domino.local \
+    -p 80:80 \
+    -p 1352:1352 \
+    -v keep_data:/local/notesdata \
+    --stop-timeout=60 \
+    --name server1 \
+    hclcom/domino:11.0.1
+&lt;/pre&gt; 
+&lt;p&gt;We shut down the instance once you have confirmed it works. We don't need it thereafter, we only need the volume and image. Of course there's no harm keeping it around&lt;/p&gt;</description>
+	<link>2020/06/domino-docker-and-debugging.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>b5fa2260-ba8f-11ea-843f-49ef93cd2958</guid>
+	<pubDate>30 June 2020</pubDate>
+
+</item>
 <item>
 	<title>Watching the EventBus</title>
 	<description>&lt;p&gt;I'm quite fond of &lt;a href="https://en.wikipedia.org/wiki/Event-driven_architecture"&gt;Event-driven architecture&lt;/a&gt;, so to no surprise, I like vert.x's &lt;a href="https://vertx.io/docs/vertx-core/js/#event_bus"&gt;EventBus&lt;/a&gt; and its ability to enable &lt;a href="https://searchsoftwarequality.techtarget.com/definition/polyglot-programming"&gt;polyglot programming&lt;/a&gt;. So it is time to have a closer look&lt;/p&gt; 
@@ -289,33 +330,6 @@ echo Done!
 	<author>Stephan H. Wissel</author>
 	<guid>c136bf10-4714-11ea-8b49-d54a8f36cab2</guid>
 	<pubDate>04 February 2020</pubDate>
-
-</item>
-<item>
-	<title>Generating JWT tokens for tests</title>
-	<description>&lt;p&gt;There are many options for &lt;a href="https://auth0.com/docs/authorization/concepts/authz-and-authn"&gt;Authentication and Authorisation&lt;/a&gt;. I'm fond of &lt;a href="https://jwt.io/"&gt;Json Web Tokens&lt;/a&gt; (JWT), implementing &lt;a href="https://tools.ietf.org/html/rfc7519"&gt;RFC7519&lt;/a&gt;. Mostly because they are like &lt;a href="https://en.wikipedia.org/wiki/IBM_Lightweight_Third-Party_Authentication"&gt;LTPA&lt;/a&gt; ~~for grownups~~, but standard compliant&lt;/p&gt; 
-&lt;h3&gt;Quis custodiet ipsos custodes?&lt;/h3&gt; 
-&lt;p&gt;JWT contains information that is digitally signed (and optional encrypted), so a receiving end can verify that the information is correct. The key elements here are:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;the JWT contains a claim, at least the &lt;strong&gt;subject&lt;/strong&gt; that is tamper resistant by being digitally signed&lt;/li&gt; 
- &lt;li&gt;JWT issuer and JWT consumer trust each other, by either having a shared secret (bad idea) or using a public/private key pair. The issuer signs the information with a private key. The consumer (your application server) verifies the signature using the public key&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;So besides protecting the private key of the issuer, you also want to be clear who's keys you trust. The one who &lt;a href="https://en.wikipedia.org/wiki/Quis_custodiet_ipsos_custodes"&gt;holds your identity&lt;/a&gt; can impersonate you at any time (so you might rethink if "Login with Facebook" is such a brilliant idea after all).&lt;/p&gt; 
-&lt;p&gt;However when &lt;strong&gt;testing&lt;/strong&gt; systems, you develop local, you want to be able to have any user at your disposal, so you can generate the claim that is the &lt;a href="https://en.wikipedia.org/wiki/Open_sesame"&gt;Open Sesame&lt;/a&gt; to your test regime&lt;/p&gt; 
-&lt;h3&gt;Building a claim&lt;/h3&gt; 
-&lt;p&gt;We start by building the raw claim &lt;strong&gt;template.json&lt;/strong&gt; file:&lt;/p&gt; 
-&lt;pre class="brush: javascript"&gt;{
-  "iss": "Alibaba Caves",
-  "aud": "40Thiefs",
-  "expSeconds": 300
-}
-&lt;/pre&gt; 
-&lt;p&gt;It contains an issuer, an audience and the duration in seconds. The later one is for my convenience. The receiving system might or might not check issuer (iss) and/or audience (aud).&lt;/p&gt; 
-&lt;p&gt;Next step is to create a public/private key pair&lt;/p&gt;</description>
-	<link>2020/01/generating-jwt-tokens-for-tests.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>955d04d0-445d-11ea-a785-85867ba0af46</guid>
-	<pubDate>01 February 2020</pubDate>
 
 </item>
 
