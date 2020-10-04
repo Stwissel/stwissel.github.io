@@ -111,6 +111,37 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2020/10/deploying-your-static-app-to-your-backend-repo.html">Deploying your static app to your backend repo using GitHub Actions</a></small></h1>
+					<hr />
+					<div><p>Our solution has two parts: a backend written in JavaScript, providing the API and a front-end created in Angular, Ionic, React or whatever is the flavor of the day. Usually you would deploy a <a href="https://www.nginx.com/">web server</a> to handle the URL, host the static files and have it redirect the <code>/api</code> URL to our backend.</p> 
+<p>However there might be <a href="https://www.heroku.com/">reasons</a> (or <a href="https://cloud.ibm.com/">that</a>) that we can't or <a href="https://kubernetes.io/docs/concepts/services-networking/ingress/">don't want to access</a> the web server and need to serve your front-end app from the <code>/static</code> directory of our backend.</p> 
+<h3>Planning and a little YAML</h3> 
+<p>Merging the two repositories seems initially an easy option, it just would break our workflows, so a different solution needs to be devised. The ask is simple:</p> 
+<p><img src="/blog/images/2020/StaticHostig.png" alt="Merging UI files into the back-end"></p> 
+<p>Whenever a change happens in the <code>main</code> branch of the front-end application (mostly through an approved pull request), the application should be build and the result transfered to the back-end application where a pull request merges it into <code>main</code>. Duplicate approvals shall be avoided. So we need:</p> 
+<ol> 
+ <li>Automatic build on push to main</li> 
+ <li>Pull / Push the bundle changes from front-end to the back-end</li> 
+ <li>Create a pull request and merge it in back-end</li> 
+</ol></div>
+					<hr />
+ <a href="/blog/2020/10/deploying-your-static-app-to-your-backend-repo.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 04 October 2020
+<span class="divider">|</span>
+<a href="/blog/2020/10/deploying-your-static-app-to-your-backend-repo.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/github.html">GitHub</a>  <a href="/blog/categories/nodejs.html">NodeJS</a>  <a href="/blog/categories/nodered.html">NodeRED</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/10/deploying-your-static-app-to-your-backend-repo.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Deploying your static app to your backend repo using GitHub Actions" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2020/10/deploying-your-static-app-to-your-backend-repo.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2020/09/architectural-decisions.html">Architectural Decisions</a></small></h1>
 					<hr />
 					<div><p>"<em>Architecture represents the significant design decisions that shape a system,<br> where significant is measured by cost of change.</em>"</p> 
@@ -522,41 +553,6 @@ categories:  <a href="/blog/categories/opensource.html">OpenSource</a>  <a href=
 					</p>
 </p>
 				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2020/02/domino-administration-back-to-basics-part-2.html">Domino Administration Back to Basics (Part 2) - Networking</a></small></h1>
-					<hr />
-					<div><p>In <a href="/blog/2020/02/domino-administration-back-to-basics-part-1.html">Part 1</a> we learned about the marvelous world of Notes Names, <a href="https://en.wikipedia.org/wiki/X.400">X400</a> and the perils of messing with certificates. One big difference to <a href="https://en.wikipedia.org/wiki/X.509">X509</a> is the (<a href="https://github.com/IBM/domino-docker">almost</a>) absence of certificate <a href="https://www.openssl.org/">Command Line tools</a> that can be <a href="https://www.wissel.net/blog/2019/10/create-your-own-ca.html">so much fun</a>.</p> 
-<h3>Domino Networking - protocols <a href="https://en.wikipedia.org/wiki/As_You_Like_It">as you like it</a></h3> 
-<p>Domino predates the rise of <a href="https://en.wikipedia.org/wiki/Internet_protocol_suite">TCP/IP</a> and the internet. To no surprise it has its own idea about networking. Starting with protocol support:</p> 
-<ul> 
- <li><a href="https://en.wikipedia.org/wiki/NetBIOS_Frames">Netbios</a> using <a href="https://en.wikipedia.org/wiki/Network_Driver_Interface_Specification">NDIS</a> (doesn't route) and</li> 
- <li><a href="https://en.wikipedia.org/wiki/IPX/SPX">IPX/SPX</a> A protocol from days long past, when red boxes weren't Redhat but Novell</li> 
- <li><a href="https://help.hcltechsw.com/notes/11.0.0/locacc_direct_dialup_loc_conn_t.html">X.PC DialUp</a> - Yes. A modem or something that takes <a href="https://en.wikipedia.org/wiki/Hayes_command_set">modem commands</a> and will establish a serial connection, no longer ships with Notes</li> 
- <li>A few more obscure protocols: Vines, SPXII</li> 
- <li>last not least TCP/IP</li> 
-</ul> 
-<p>Having this zoo of protocols, Notes needs its own version of name resolution. That version is called <a href="https://help.hcltechsw.com/domino/11.0.0/conf_settingupnotesnamednetworks_t.html">Notes Named Network</a></p> 
-<h3>One step back: What makes a Notes Domain?</h3> 
-<p>A <strong>Notes Domain</strong> consists out of one or more server that use a Domino directory (a.k.a Public Name &amp; Addressbook a.k.a <code>names.nsf</code>) with the same replica id (a story for another time) as the other member servers <strong>and</strong> have the same Domain name in their server document (that's where most of the server's setting are stored).</p> 
-<p>A popular point of confusion: Notes Names (from Part1) and Notes Domains: It is quite common to name your Domain after your orgID, but not mandatory. SO you could have <code>HeavyRock/Acme@Acme</code> or <code>Sandstone/Acme@ToonsInc</code> or <code>Machine/Blowup@Acme</code> The first and the last would be in the same Domain, while the first and second share the Org certifier. Anything goes, but to keep it simple, keep OrgId and Domain the same - unless you have 5 good reasons not to.</p> 
-<p>Another one: <strong>NEVER</strong> name your Notes Domain so it could be mistaken for an internet Domain. So no <code>.</code> in the name. Spaces interestingly are OK!</p></div>
-					<hr />
- <a href="/blog/2020/02/domino-administration-back-to-basics-part-2.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 05 February 2020
-<span class="divider">|</span>
-<a href="/blog/2020/02/domino-administration-back-to-basics-part-2.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/categories/networking.html">Networking</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/02/domino-administration-back-to-basics-part-2.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Domino Administration Back to Basics (Part 2) - Networking" data-twitter-via="@notessensei"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2020/02/domino-administration-back-to-basics-part-2.html";
-						</script>
-					</p>
-</p>
-				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/all.html" title="That's a loooong list!">Older entries<i class="icon-hand-right"></i></a>
 					</li>
@@ -634,6 +630,7 @@ categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/c
 						<li ><a href="/blog/categories/domino.html">Domino</a></li>
 						<li ><a href="/blog/categories/dxlmagic.html">DXLMagic</a></li>
 						<li ><a href="/blog/categories/elearning.html">eLearning</a></li>
+						<li ><a href="/blog/categories/github.html">GitHub</a></li>
 						<li ><a href="/blog/categories/gonephisching.html">Gone Phisching</a></li>
 						<li ><a href="/blog/categories/grpc.html">gRPC</a></li>
 						<li ><a href="/blog/categories/gtd.html">GTD</a></li>
