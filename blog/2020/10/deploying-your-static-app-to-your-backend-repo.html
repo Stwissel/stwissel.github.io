@@ -137,7 +137,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <p>However there might be <a href="https://www.heroku.com/">reasons</a> (or <a href="https://cloud.ibm.com/">that</a>) that we can't or <a href="https://kubernetes.io/docs/concepts/services-networking/ingress/">don't want to access</a> the web server and need to serve your front-end app from the <code>/static</code> directory of our backend.</p> 
 <h3>Planning and a little YAML</h3> 
 <p>Merging the two repositories seems initially an easy option, it just would break our workflows, so a different solution needs to be devised. The ask is simple:</p> 
-<p><img src="/blog/images/2020/StaticHostig.png" alt="Merging UI files into the back-end"></p> 
+<p><img src="/blog/images/2020/StaticHosting.png" alt="Merging UI files into the back-end"></p> 
 <p>Whenever a change happens in the <code>main</code> branch of the front-end application (mostly through an approved pull request), the application should be build and the result transfered to the back-end application where a pull request merges it into <code>main</code>. Duplicate approvals shall be avoided. So we need:</p> 
 <ol> 
  <li>Automatic build on push to main</li> 
@@ -148,12 +148,10 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <p>To give us a head start, the <a href="https://github.com/marketplace?type=actions">GitHub Marketplace</a> lists over 5000 actions, that we can utilize. This makes typical tasks quite easy, once we find the right tool.</p> 
 <p>Since we will be working cross repository, we need a <a href="https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token">Personal Access Token</a> (PAT). As a good practise we limit the token's permission to repo access only. Alternatively we could use a <a href="https://docs.github.com/en/free-pro-team@latest/github/getting-started-with-github/github-glossary#deploy-key">Deploy Key</a>.</p> 
 <p>Our first workflow does nothing spectacular, short of the last step:</p> 
-<pre class="brush: yaml">name: Reconcile front and backend
+<pre class="brush: bash">name: Reconcile front and backend
 
 on:
   push:
-    branches: [main]
-  pull_request:
     branches: [main]
 
 jobs:
@@ -204,7 +202,7 @@ git checkout -b ui/ui-$now
 git push -u origin ui/ui-$now
 </pre> 
 <p>The changes now appear in the back-end repository in a new branch carrying a time stamp it its name. Next stop are pull request and auto-merge. For the pull request we use <code>autopull-ui.yml</code> in the back-end repository:</p> 
-<pre class="brush: yaml">ame: Auto pull request on UI branches
+<pre class="brush: bash">name: Auto pull request on UI branches
 
 on:
   push:
@@ -225,7 +223,7 @@ jobs:
           github_token: ${{secrets.UI_PUSH_TOKEN }}
 </pre> 
 <p>The key values here are the labels <code>ui</code> and <code>automerge</code> which set the stage for <code>auto-merge-ui.yml</code> that takes the pull request and merges it in. When approvers for the two repositories are different, we would skip that step:</p> 
-<pre class="brush: yaml">name: automerge ui
+<pre class="brush: bash">name: automerge ui
 on:
   pull_request:
     types:
