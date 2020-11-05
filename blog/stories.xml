@@ -6,7 +6,39 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2019 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Sun, 04 Oct 2020 16:37:33 +0000</pubdate>
+	<pubdate>Thu, 05 Nov 2020 21:21:35 +0000</pubdate>
+<item>
+	<title>Streams and Functional programming in Java</title>
+	<description>&lt;p&gt;I'm late to the party embracing &lt;a href="https://www.baeldung.com/java-8-streams"&gt;Streams&lt;/a&gt; and &lt;a href="https://www.baeldung.com/java-8-functional-interfaces"&gt;functional interfaces&lt;/a&gt; in Java. Using them for a while taught me the beauty and how things fit together nicely&lt;/p&gt; 
+&lt;h3&gt;Moving parts&lt;/h3&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;At the beginning a class implementing the &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html"&gt;Stream interface&lt;/a&gt; emits items, that can be manipulated using &lt;code&gt;map&lt;/code&gt; and &lt;code&gt;filter&lt;/code&gt; operationf&lt;/li&gt; 
+ &lt;li&gt;The map and filter operations are supported by the Interfaces in &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/package-summary.html"&gt;java.util.function&lt;/a&gt; (we get to the samples later)&lt;/li&gt; 
+ &lt;li&gt;At the end the result gets "collected", in its simplest form using &lt;code&gt;.forEach&lt;/code&gt; or, more sophisticated using a &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html"&gt;Collector&lt;/a&gt; with many &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collectors.html"&gt;ready baked options&lt;/a&gt;&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;h3&gt;What's the big deal?&lt;/h3&gt; 
+&lt;p&gt;short answer: clean, terse and clutter free code.&lt;/p&gt; 
+&lt;p&gt;long answer: an example. Lets say you have a &lt;code&gt;mammal&lt;/code&gt; class which gets subclassed by &lt;code&gt;cat&lt;/code&gt; and &lt;code&gt;dog&lt;/code&gt; (and others). You have a collection of these mamals and need to extract all dogs over weight 50. Weight is not a property of mammal. There might be null values in your collection. Classic code would look like this:&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;List&amp;lt;Dog&amp;gt; getHeavyDogs(final List&amp;lt;Mammal&amp;gt; mammals) {
+    List&amp;lt;Dog&amp;gt; result = new ArrayList&amp;lt;&amp;gt;();
+    for (int i = 0; i &amp;lt; mammals.size(); i++) {
+      Mammal mammal = mammals.get(i);
+      if (mammal != null) {
+        if (mammal instanceof Dog &amp;amp;&amp;amp; ((Dog) mammal).weight() &amp;gt; 50) {
+          result.add((Dog) mammal);
+        }
+      }
+    }
+    return result;
+  }
+&lt;/pre&gt; 
+&lt;p&gt;We all seen this type of code. In a functional and stream style this would look different. We have a little &lt;a href="https://en.wikipedia.org/wiki/Duck_typing"&gt;duck typing&lt;/a&gt; going on here. When a method looks like a functional interface, it can be used as this function. E.g. a method that takes one value and returns a boolean can be used as a &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/Predicate.html"&gt;Predicate&lt;/a&gt;, which comes in handy for filter operations. Another nifty syntax: you can address methods, both static and instance using the &lt;code&gt;::&lt;/code&gt; (double colon) syntax. So when you could use a lambda &lt;code&gt;x -&amp;gt; this.doSomething(x)&lt;/code&gt; you can simply write &lt;code&gt;this::doSomething&lt;/code&gt; and the compiler will sort it out (&lt;code&gt;System.out::println&lt;/code&gt; anyone?)&lt;/p&gt;</description>
+	<link>2020/11/streams-and-functional-programming-in-java.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>1df8e500-1f8e-11eb-a4c5-4bd0df64c996</guid>
+	<pubDate>06 November 2020</pubDate>
+
+</item>
 <item>
 	<title>Deploying your static app to your backend repo using GitHub Actions</title>
 	<description>&lt;p&gt;Our solution has two parts: a backend written in JavaScript, providing the API and a front-end created in Angular, Ionic, React or whatever is the flavor of the day. Usually you would deploy a &lt;a href="https://www.nginx.com/"&gt;web server&lt;/a&gt; to handle the URL, host the static files and have it redirect the &lt;code&gt;/api&lt;/code&gt; URL to our backend.&lt;/p&gt; 
@@ -287,51 +319,6 @@ echo Done!
 	<author>Stephan H. Wissel</author>
 	<guid>f866de10-67a4-11ea-af28-77b6769d4987</guid>
 	<pubDate>17 March 2020</pubDate>
-
-</item>
-<item>
-	<title>OData - the fine print</title>
-	<description>&lt;p&gt;For an &lt;a href="https://stwissel.github.io/presentations/engage2020/index.html"&gt;upcoming event&lt;/a&gt; I had to dig a little deeper into &lt;a href="https://www.odata.org/"&gt;OData&lt;/a&gt; and learned a few things along the lines.&lt;/p&gt; 
-&lt;h3&gt;Same but different&lt;/h3&gt; 
-&lt;p&gt;OData's current version is &lt;a href="http://docs.oasis-open.org/odata/odata/v4.0/odata-v4.0-part1-protocol.html"&gt;4.0&lt;/a&gt; and that's the only version I will focus on in this article.&lt;/p&gt; 
-&lt;p&gt;OData is the love child of an effort that joined Microsoft and SAP &lt;a href="https://www.frankensteins-laboratory.com/home-page"&gt;at the hip&lt;/a&gt; to create an universal internet data access standard, that on first sight has a lot of &lt;a href="https://en.wikipedia.org/wiki/Not_invented_here"&gt;NIH&lt;/a&gt; issues to sort out. But I'm sure on a second (or third or forth) look it will all make sense.&lt;/p&gt; 
-&lt;h3&gt;Key components of OData&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;a service document in &lt;code&gt;JSON&lt;/code&gt; format. It describes what data endpoints are available and where. Depending on the requested scope (more on that later) that JSON contains different levels of details&lt;/li&gt; 
- &lt;li&gt;a meta data document. That document is referenced in the service document. The format is &lt;code&gt;XML&lt;/code&gt;. It describes the data format found in each record, relations to other record and actions that can be taken. Looks like &lt;a href="https://en.wikipedia.org/wiki/XML_schema"&gt;XML Schema&lt;/a&gt;, but not quite. &lt;em&gt;Record&lt;/em&gt; is used loosely here, data can be hierarchical and nested&lt;/li&gt; 
- &lt;li&gt;a query language squeezed into an URL, so data can be fetched using &lt;code&gt;HTTP GET&lt;/code&gt; without using a body submitted. Query allows data selections, filtering, output size and sorting to be specified&lt;/li&gt; 
- &lt;li&gt;Query results in JSON format enhanced with &lt;a href="http://docs.oasis-open.org/odata/odata-json-format/v4.01/odata-json-format-v4.01.html"&gt;OData specific Metadata&lt;/a&gt;&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;What I liked a lot: &lt;a href="https://www.odata.org/"&gt;OData.org&lt;/a&gt; offers a rich set of documentation and tutorials, including a &lt;a href="https://www.postman.com/"&gt;Postman&lt;/a&gt; collection to learn&lt;/p&gt; 
-&lt;h3&gt;Happy soup&lt;/h3&gt; 
-&lt;p&gt;So dealing with OData you can enjoy a mix of technologies:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;JSON for service document and payloads&lt;/li&gt; 
- &lt;li&gt;XML for meta data&lt;/li&gt; 
- &lt;li&gt;a dot notation (like dotNet or Java) for property values like data types (go &lt;a href="https://www.odata.org/getting-started/understand-odata-in-6-steps/"&gt;learn about it&lt;/a&gt;). E.g. &lt;code&gt;Edm.String&lt;/code&gt; defines a String value or &lt;code&gt;Org.OData.Core.V1.ResourcePath&lt;/code&gt; the path to data&lt;/li&gt; 
- &lt;li&gt;another query language&lt;/li&gt; 
- &lt;li&gt;individual items by default get addressed in an uncommon format: &lt;code&gt;serviceurl/People('johndoe')&lt;/code&gt;. Luckily this is optional and you can use the more common format for a route: &lt;code&gt;serviceurl/People/johndoe&lt;/code&gt;. This seems to be born out of squezing the &lt;em&gt;square pin&lt;/em&gt; URL into the &lt;em&gt;round hole&lt;/em&gt; of database schemas and flexible primary keys&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;On the upside: Your Salesforce and Excel users will love it. Import and CRUD operations are well supported.&lt;/p&gt; 
-&lt;p&gt;Initially I was looking at &lt;a href="http://olingo.apache.org/"&gt;Apache Olingo&lt;/a&gt; to implement my needs. Unfortunately the library is too close to the Java servlet model and static defined data models (like your one application, not your data platform), so I disected my needs the hard way.&lt;/p&gt; 
-&lt;h3&gt;Lessons learned along the way&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;A OData client (think Excel, Tableau, Salesforce) will initially connect to the service document url. It sends a &lt;code&gt;GET&lt;/code&gt; request. To specify what level of detail is required the &lt;code&gt;ACCEPT&lt;/code&gt; header is used. So when testing your provider implementation you need to take that into account&lt;/li&gt; 
- &lt;li&gt;Excel sends &lt;code&gt;ACCEPT application/json;odata.metadata=minimal&lt;/code&gt;&lt;/li&gt; 
- &lt;li&gt;Salesforce sends &lt;code&gt;ACCEPT application/json;odata.metadata=full&lt;/code&gt;&lt;/li&gt; 
- &lt;li&gt;OpenAPI can specify the top level &lt;code&gt;application/json&lt;/code&gt; or the full qualified content type in the response. If you fully qualify it, you might end up with a &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/406"&gt;406&lt;/a&gt; and wonder what happens&lt;/li&gt; 
- &lt;li&gt;The meta data url gets specified in your service document and is usually the service document url extended by &lt;code&gt;/$metadata&lt;/code&gt;&lt;/li&gt; 
- &lt;li&gt;I ran into a potential Salesforce bug, where the meta data URL was ignored and the service document URL extended by &lt;code&gt;$metadata&lt;/code&gt;. Note the missing &lt;code&gt;/&lt;/code&gt;. Caused a bit of grief since Excel does &lt;code&gt;/$metadata&lt;/code&gt;&lt;/li&gt; 
- &lt;li&gt;Everything is case sensitive, which makes sense, but is fun in Domino that treats item names case insensitive&lt;/li&gt; 
- &lt;li&gt;I couldn't get Salesforce to play nice until I added a field &lt;code&gt;ExternalId&lt;/code&gt; to my form. Might be my lack of understanding how to change the primary key Salesforce will play nice with or something missing in my Metadata&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;Same, same, but different&lt;/h3&gt; 
-&lt;p&gt;Swap out the GET for a POST and the XML for something not-quite-JSON and you get &lt;a href="https://graphql.org/"&gt;GraphQL&lt;/a&gt; that tries to address a similar set of functionalities. We really love wheels reinvented&lt;/p&gt; 
-&lt;p&gt;More lessons to be learned, stay tuned!&lt;/p&gt;</description>
-	<link>2020/03/odata-the-fine-print.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>3f7c2eb0-5920-11ea-bc53-e13ee52fcb38</guid>
-	<pubDate>04 March 2020</pubDate>
 
 </item>
 
