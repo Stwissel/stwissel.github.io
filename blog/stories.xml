@@ -6,7 +6,62 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2019 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Thu, 05 Nov 2020 21:21:35 +0000</pubdate>
+	<pubdate>Sat, 28 Nov 2020 08:29:42 +0000</pubdate>
+<item>
+	<title>Schema mapping with Java functional interfaces</title>
+	<description>&lt;p&gt;Mapping one data structure into another is a never ending chore since COBOL's &lt;code&gt;MOVE CORRESPONDING&lt;/code&gt;. One to one mappings are trivial, onnce computation is needed, clean code can become messy, really fast&lt;/p&gt; 
+&lt;h3&gt;Map with Functions&lt;/h3&gt; 
+&lt;p&gt;We will use the following, simplified, scenario with source and target formats:&lt;/p&gt; 
+&lt;pre class="brush: json"&gt;{
+	"FirstName" : "Peter",
+	"LastName" : "Pan",
+	"DoB" : "1873-11-23",
+	"ToC" : "accepted",
+	"Marketing" : "no"
+}
+&lt;/pre&gt; 
+&lt;p&gt;Desired Result:&lt;/p&gt; 
+&lt;pre class="brush: json"&gt;{
+	"fullname" : "Peter Pan",
+	"birthday" : "1873-11-23",
+	"gdpr" : true
+}
+&lt;/pre&gt; 
+&lt;p&gt;In our case only &lt;code&gt;DoB&lt;/code&gt; has a simple mapping to &lt;code&gt;birthday&lt;/code&gt; all others need computation or are dropped. So to keep code clean we will use a map with mapping functions, so each computation can be in its own method. The defaults 1:1 and drop functions get defined first.&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;final Map&amp;lt;String, Function&amp;lt;JsonObject, JsonObject&amp;gt;&amp;gt; functionList = new HashMap&amp;lt;&amp;gt;();
+
+Function&amp;lt;JsonObject, JsonObject&amp;gt; simple(final String fieldNameIn, final String fieldNameOut) {
+	return in -&amp;gt; new JsonObject().put(fieldNameOut, in.getValue(fieldNameIn));
+}
+
+Function&amp;lt;JsonObject, JsonObject&amp;gt; drop() {
+	return in -&amp;gt; new JsonObject();
+}
+
+&lt;/pre&gt; 
+&lt;p&gt;Each of the functions returns an Json object that &lt;strong&gt;only&lt;/strong&gt; returns a value for the one field it gets called for. We will use a collector to aggregate the values. Since we are planning to use streams and functional interfaces, we need a helper class.&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;class MapHelper() {
+	JsonObject source;
+	Function&amp;lt;JsonObject, JsonObject&amp;gt; mapper;
+	JsonObject apply() {
+		return this.mapper.apply(this.source);
+	}
+}
+
+MapHelper getMapHelper(final JsonObject source, final Map.Entry&amp;lt;String, Object&amp;gt; incoming) {
+    MapHelper result = new MapHelper();
+    result.source = source;
+    result.mapper = this.functionList.getOrDefault(incoming.getKey(), drop());
+    return result;
+  }
+&lt;/pre&gt; 
+&lt;p&gt;Since each function will return some JSON, that needs to be merged together, we use a Java &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html"&gt;Collector&lt;/a&gt; to accumulate the values.&lt;/p&gt;</description>
+	<link>2020/11/schema-mapping-with-java-functional-interfaces.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>3c53a360-3149-11eb-b6d9-332622ac7adf</guid>
+	<pubDate>28 November 2020</pubDate>
+
+</item>
 <item>
 	<title>Streams and Functional programming in Java</title>
 	<description>&lt;p&gt;I'm late to the party embracing &lt;a href="https://www.baeldung.com/java-8-streams"&gt;Streams&lt;/a&gt; and &lt;a href="https://www.baeldung.com/java-8-functional-interfaces"&gt;functional interfaces&lt;/a&gt; in Java. Using them for a while taught me the beauty and how things fit together nicely&lt;/p&gt; 
@@ -262,63 +317,6 @@ server.websocketHandler(this::handlerWebsockets);
 	<author>Stephan H. Wissel</author>
 	<guid>b2cd0400-7001-11ea-9c0e-65de6ddf10e2</guid>
 	<pubDate>27 March 2020</pubDate>
-
-</item>
-<item>
-	<title>Running Java applications with Notes on macOS</title>
-	<description>&lt;p&gt;My main work computer is a MacBook running macOS. Thank to &lt;a href="https://amzn.to/2QkhsA9"&gt;Logitech&lt;/a&gt;, they keyboard is just fine. As you know macOS neither features Domino Designer or Domino Admin. For &lt;a href="https://stwissel.github.io/presentations/engage2020/index.html"&gt;recent development&lt;/a&gt; I wanted to make sure that my applications can run on the client (I've done &lt;a href="/blog/2014/07/adventures-with-vertx-64bit-and-the-ibm-notes-client.html"&gt;that before&lt;/a&gt;).&lt;/p&gt; 
-&lt;h3&gt;Java, Java on the wall, what's the right path of them all?&lt;/h3&gt; 
-&lt;p&gt;(Sorry Schneewitchen)&lt;/p&gt; 
-&lt;p&gt;In Notes/Domino &lt;a href="https://www.ibm.com/support/knowledgecenter/SSKTMJ_9.0.1/admin/over_whats_new_in_fp8.html"&gt;R9.0.1FP8&lt;/a&gt; - (client FP10) the Java runtime was updated to Java8 and in &lt;a href="https://help.hcltechsw.com/domino/11.0.0/wn_new_java_runtime_environment.html"&gt;R11&lt;/a&gt; changed to AdoptOpenJDK.&lt;/p&gt; 
-&lt;p&gt;On macOS that led to a particular situation. The jvm packaged with the &lt;code&gt;HCL Notes.app&lt;/code&gt; can be found in the path&lt;br&gt; &lt;code&gt;HCL Notes.app/jre/Contents/Home&lt;/code&gt; with &lt;code&gt;bin&lt;/code&gt;, &lt;code&gt;lib&lt;/code&gt; and &lt;code&gt;lib/ext&lt;/code&gt; as we can expect from a JVM. Suspiciously absent are &lt;code&gt;Notes.jar&lt;/code&gt;, &lt;code&gt;websvc.jar&lt;/code&gt; and &lt;code&gt;njempcl.jar&lt;/code&gt;. They can be located at &lt;code&gt;HCL Notes.app/Contents/MacOS.jvm/lib/ext&lt;/code&gt;.&lt;/p&gt; 
-&lt;p&gt;While this isn't an issue for the Notes client, it is an obstacle when you try to run an external jar file. &lt;code&gt;java -jar somejar.jar&lt;/code&gt; ignores any classpath setting outside the JVM and only loads resources from the default JBM path (lib/ext).&lt;/p&gt; 
-&lt;p&gt;I suspect the separation was neccesary due to the &lt;a href="https://adoptopenjdk.net/"&gt;AdoptOpenJDK&lt;/a&gt; distribution rules.&lt;/p&gt; 
-&lt;p&gt;To solve this, we can use a start script that creates a &lt;a href="http://man7.org/linux/man-pages/man1/ln.1.html"&gt;symbolic link&lt;/a&gt; in the right place. Takeing the usual suspects like &lt;code&gt;DYLD_LIBRARY_PATH&lt;/code&gt; and &lt;code&gt;LD_LIBRARY_PATH&lt;/code&gt; into account we end with a script like this:&lt;/p&gt; 
-&lt;pre class="brush: bash"&gt;#!/bin/bash
-# MacOS Keep Starter file
-# Keep locations - update as needed - leave the TLS stuff empty if you don't have it
-export KEEPJAR=$HOME/keep/projectkeep.jar
-export LOG_DIR=$HOME/keep/logs
-export TLSFile=$HOME/keep/private/demoserver.projectkeep.io.pfx
-export TLSPassword=supersecret
-
-# Don't change anything below unless you are sure what you are doing
-# Java files places unfortunately troublesome, so we link some
-cd /Applications/HCL\ Notes.app/jre/Contents/Home/lib/ext
-export SRCDIR="../../../../../Contents/MacOS/jvm/lib/ext"
-if [ ! -f njempcl.jar ]; then
-	ln -s $SRCDIR/njempcl.jar .
-    echo "Linked njempcl.jar"
-fi
-if [ ! -f Notes.jar ]; then
-	ln -s $SRCDIR/Notes.jar .
-    echo "Linked Notes.jar"
-fi
-if [ ! -f websvc.jar ]; then
-	ln -s $SRCDIR/websvc.jar .
-    echo "Linked websvc.jar"
-fi
-
-# Local Keep Server
-export DEBUG=true
-export PATH=/Applications/HCL\ Notes.app/Contents/MacOS:$PATH
-export JAVA_HOME=/Applications/HCL\ Notes.app/jre/Contents/Home
-export GodMode=true
-export DYLD_LIBRARY_PATH=/Applications/HCL\ Notes.app/Contents/MacOS
-export LD_LIBRARY_PATH=/Applications/HCL\ Notes.app/Contents/MacOS
-echo $LD_LIBRARY_PATH ..
-cd $HOME/Library/Application\ Support/HCL\ Notes\ Data
-/Applications/HCL\ Notes.app/jre/Contents/Home/bin/java -jar $KEEPJAR
-cd ~
-echo Done!
-
-&lt;/pre&gt; 
-&lt;p&gt;This script presumes thay we have admin permissions. We could contemplate to check for existing symbolic links and remove the ones we did set. I decided, that smells too much like &lt;a href="https://martinfowler.com/bliki/Yagni.html"&gt;YAGNI&lt;/a&gt;.&lt;/p&gt; 
-&lt;p&gt;As usual: YMMV&lt;/p&gt;</description>
-	<link>2020/03/running-java-applications-with-notes-on-macos.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>f866de10-67a4-11ea-af28-77b6769d4987</guid>
-	<pubDate>17 March 2020</pubDate>
 
 </item>
 

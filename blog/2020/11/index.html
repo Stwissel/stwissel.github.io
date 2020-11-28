@@ -126,6 +126,75 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				</div>
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2020/11/schema-mapping-with-java-functional-interfaces.html">Schema mapping with Java functional interfaces</a></small>
+					</h1>
+					<hr />
+					<div><p>Mapping one data structure into another is a never ending chore since COBOL's <code>MOVE CORRESPONDING</code>. One to one mappings are trivial, onnce computation is needed, clean code can become messy, really fast</p> 
+<h3>Map with Functions</h3> 
+<p>We will use the following, simplified, scenario with source and target formats:</p> 
+<pre class="brush: json">{
+	"FirstName" : "Peter",
+	"LastName" : "Pan",
+	"DoB" : "1873-11-23",
+	"ToC" : "accepted",
+	"Marketing" : "no"
+}
+</pre> 
+<p>Desired Result:</p> 
+<pre class="brush: json">{
+	"fullname" : "Peter Pan",
+	"birthday" : "1873-11-23",
+	"gdpr" : true
+}
+</pre> 
+<p>In our case only <code>DoB</code> has a simple mapping to <code>birthday</code> all others need computation or are dropped. So to keep code clean we will use a map with mapping functions, so each computation can be in its own method. The defaults 1:1 and drop functions get defined first.</p> 
+<pre class="brush: java">final Map&lt;String, Function&lt;JsonObject, JsonObject&gt;&gt; functionList = new HashMap&lt;&gt;();
+
+Function&lt;JsonObject, JsonObject&gt; simple(final String fieldNameIn, final String fieldNameOut) {
+	return in -&gt; new JsonObject().put(fieldNameOut, in.getValue(fieldNameIn));
+}
+
+Function&lt;JsonObject, JsonObject&gt; drop() {
+	return in -&gt; new JsonObject();
+}
+
+</pre> 
+<p>Each of the functions returns an Json object that <strong>only</strong> returns a value for the one field it gets called for. We will use a collector to aggregate the values. Since we are planning to use streams and functional interfaces, we need a helper class.</p> 
+<pre class="brush: java">class MapHelper() {
+	JsonObject source;
+	Function&lt;JsonObject, JsonObject&gt; mapper;
+	JsonObject apply() {
+		return this.mapper.apply(this.source);
+	}
+}
+
+MapHelper getMapHelper(final JsonObject source, final Map.Entry&lt;String, Object&gt; incoming) {
+    MapHelper result = new MapHelper();
+    result.source = source;
+    result.mapper = this.functionList.getOrDefault(incoming.getKey(), drop());
+    return result;
+  }
+</pre> 
+<p>Since each function will return some JSON, that needs to be merged together, we use a Java <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html">Collector</a> to accumulate the values.</p></div>
+					<hr />
+ <a href="/blog/2020/11/schema-mapping-with-java-functional-interfaces.html">Read more</a>
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 28 November 2020
+<span class="divider">|</span>
+<a href="/blog/2020/11/schema-mapping-with-java-functional-interfaces.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/11/schema-mapping-with-java-functional-interfaces.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Schema mapping with Java functional interfaces" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2020/11/schema-mapping-with-java-functional-interfaces.html";
+						</script>
+					</p>
+
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2020/11/streams-and-functional-programming-in-java.html">Streams and Functional programming in Java</a></small>
 					</h1>
 					<hr />

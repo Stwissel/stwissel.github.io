@@ -111,6 +111,73 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2020/11/schema-mapping-with-java-functional-interfaces.html">Schema mapping with Java functional interfaces</a></small></h1>
+					<hr />
+					<div><p>Mapping one data structure into another is a never ending chore since COBOL's <code>MOVE CORRESPONDING</code>. One to one mappings are trivial, onnce computation is needed, clean code can become messy, really fast</p> 
+<h3>Map with Functions</h3> 
+<p>We will use the following, simplified, scenario with source and target formats:</p> 
+<pre class="brush: json">{
+	"FirstName" : "Peter",
+	"LastName" : "Pan",
+	"DoB" : "1873-11-23",
+	"ToC" : "accepted",
+	"Marketing" : "no"
+}
+</pre> 
+<p>Desired Result:</p> 
+<pre class="brush: json">{
+	"fullname" : "Peter Pan",
+	"birthday" : "1873-11-23",
+	"gdpr" : true
+}
+</pre> 
+<p>In our case only <code>DoB</code> has a simple mapping to <code>birthday</code> all others need computation or are dropped. So to keep code clean we will use a map with mapping functions, so each computation can be in its own method. The defaults 1:1 and drop functions get defined first.</p> 
+<pre class="brush: java">final Map&lt;String, Function&lt;JsonObject, JsonObject&gt;&gt; functionList = new HashMap&lt;&gt;();
+
+Function&lt;JsonObject, JsonObject&gt; simple(final String fieldNameIn, final String fieldNameOut) {
+	return in -&gt; new JsonObject().put(fieldNameOut, in.getValue(fieldNameIn));
+}
+
+Function&lt;JsonObject, JsonObject&gt; drop() {
+	return in -&gt; new JsonObject();
+}
+
+</pre> 
+<p>Each of the functions returns an Json object that <strong>only</strong> returns a value for the one field it gets called for. We will use a collector to aggregate the values. Since we are planning to use streams and functional interfaces, we need a helper class.</p> 
+<pre class="brush: java">class MapHelper() {
+	JsonObject source;
+	Function&lt;JsonObject, JsonObject&gt; mapper;
+	JsonObject apply() {
+		return this.mapper.apply(this.source);
+	}
+}
+
+MapHelper getMapHelper(final JsonObject source, final Map.Entry&lt;String, Object&gt; incoming) {
+    MapHelper result = new MapHelper();
+    result.source = source;
+    result.mapper = this.functionList.getOrDefault(incoming.getKey(), drop());
+    return result;
+  }
+</pre> 
+<p>Since each function will return some JSON, that needs to be merged together, we use a Java <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html">Collector</a> to accumulate the values.</p></div>
+					<hr />
+ <a href="/blog/2020/11/schema-mapping-with-java-functional-interfaces.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 28 November 2020
+<span class="divider">|</span>
+<a href="/blog/2020/11/schema-mapping-with-java-functional-interfaces.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/11/schema-mapping-with-java-functional-interfaces.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Schema mapping with Java functional interfaces" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2020/11/schema-mapping-with-java-functional-interfaces.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2020/11/streams-and-functional-programming-in-java.html">Streams and Functional programming in Java</a></small></h1>
 					<hr />
 					<div><p>I'm late to the party embracing <a href="https://www.baeldung.com/java-8-streams">Streams</a> and <a href="https://www.baeldung.com/java-8-functional-interfaces">functional interfaces</a> in Java. Using them for a while taught me the beauty and how things fit together nicely</p> 
@@ -469,74 +536,6 @@ categories:  <a href="/blog/categories/gtd.html">GTD</a>  <a href="/blog/categor
 						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/03/email-etiquette.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="eMail etiquette - the 60ties are calling" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2020/03/email-etiquette.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2020/03/running-java-applications-with-notes-on-macos.html">Running Java applications with Notes on macOS</a></small></h1>
-					<hr />
-					<div><p>My main work computer is a MacBook running macOS. Thank to <a href="https://amzn.to/2QkhsA9">Logitech</a>, they keyboard is just fine. As you know macOS neither features Domino Designer or Domino Admin. For <a href="https://stwissel.github.io/presentations/engage2020/index.html">recent development</a> I wanted to make sure that my applications can run on the client (I've done <a href="/blog/2014/07/adventures-with-vertx-64bit-and-the-ibm-notes-client.html">that before</a>).</p> 
-<h3>Java, Java on the wall, what's the right path of them all?</h3> 
-<p>(Sorry Schneewitchen)</p> 
-<p>In Notes/Domino <a href="https://www.ibm.com/support/knowledgecenter/SSKTMJ_9.0.1/admin/over_whats_new_in_fp8.html">R9.0.1FP8</a> - (client FP10) the Java runtime was updated to Java8 and in <a href="https://help.hcltechsw.com/domino/11.0.0/wn_new_java_runtime_environment.html">R11</a> changed to AdoptOpenJDK.</p> 
-<p>On macOS that led to a particular situation. The jvm packaged with the <code>HCL Notes.app</code> can be found in the path<br> <code>HCL Notes.app/jre/Contents/Home</code> with <code>bin</code>, <code>lib</code> and <code>lib/ext</code> as we can expect from a JVM. Suspiciously absent are <code>Notes.jar</code>, <code>websvc.jar</code> and <code>njempcl.jar</code>. They can be located at <code>HCL Notes.app/Contents/MacOS.jvm/lib/ext</code>.</p> 
-<p>While this isn't an issue for the Notes client, it is an obstacle when you try to run an external jar file. <code>java -jar somejar.jar</code> ignores any classpath setting outside the JVM and only loads resources from the default JBM path (lib/ext).</p> 
-<p>I suspect the separation was neccesary due to the <a href="https://adoptopenjdk.net/">AdoptOpenJDK</a> distribution rules.</p> 
-<p>To solve this, we can use a start script that creates a <a href="http://man7.org/linux/man-pages/man1/ln.1.html">symbolic link</a> in the right place. Takeing the usual suspects like <code>DYLD_LIBRARY_PATH</code> and <code>LD_LIBRARY_PATH</code> into account we end with a script like this:</p> 
-<pre class="brush: bash">#!/bin/bash
-# MacOS Keep Starter file
-# Keep locations - update as needed - leave the TLS stuff empty if you don't have it
-export KEEPJAR=$HOME/keep/projectkeep.jar
-export LOG_DIR=$HOME/keep/logs
-export TLSFile=$HOME/keep/private/demoserver.projectkeep.io.pfx
-export TLSPassword=supersecret
-
-# Don't change anything below unless you are sure what you are doing
-# Java files places unfortunately troublesome, so we link some
-cd /Applications/HCL\ Notes.app/jre/Contents/Home/lib/ext
-export SRCDIR="../../../../../Contents/MacOS/jvm/lib/ext"
-if [ ! -f njempcl.jar ]; then
-	ln -s $SRCDIR/njempcl.jar .
-    echo "Linked njempcl.jar"
-fi
-if [ ! -f Notes.jar ]; then
-	ln -s $SRCDIR/Notes.jar .
-    echo "Linked Notes.jar"
-fi
-if [ ! -f websvc.jar ]; then
-	ln -s $SRCDIR/websvc.jar .
-    echo "Linked websvc.jar"
-fi
-
-# Local Keep Server
-export DEBUG=true
-export PATH=/Applications/HCL\ Notes.app/Contents/MacOS:$PATH
-export JAVA_HOME=/Applications/HCL\ Notes.app/jre/Contents/Home
-export GodMode=true
-export DYLD_LIBRARY_PATH=/Applications/HCL\ Notes.app/Contents/MacOS
-export LD_LIBRARY_PATH=/Applications/HCL\ Notes.app/Contents/MacOS
-echo $LD_LIBRARY_PATH ..
-cd $HOME/Library/Application\ Support/HCL\ Notes\ Data
-/Applications/HCL\ Notes.app/jre/Contents/Home/bin/java -jar $KEEPJAR
-cd ~
-echo Done!
-
-</pre> 
-<p>This script presumes thay we have admin permissions. We could contemplate to check for existing symbolic links and remove the ones we did set. I decided, that smells too much like <a href="https://martinfowler.com/bliki/Yagni.html">YAGNI</a>.</p> 
-<p>As usual: YMMV</p></div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 17 March 2020
-<span class="divider">|</span>
-<a href="/blog/2020/03/running-java-applications-with-notes-on-macos.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/hclnotes.html">HCL Notes</a>  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/macos.html">macOS</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/03/running-java-applications-with-notes-on-macos.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Running Java applications with Notes on macOS" data-twitter-via="@notessensei"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2020/03/running-java-applications-with-notes-on-macos.html";
 						</script>
 					</p>
 </p>
