@@ -111,6 +111,49 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2021/04/reading-resources-from-jar-files.html">Reading Resources from JAR Files</a></small></h1>
+					<hr />
+					<div><p>One interesting challenge I <a href="https://www.theprojectthatshallnotbenamed.com/">encountered</a> is the need or ability to make an Java application extensible by providing additional classes and configuation. Ideally extension should happen by dropping a properly crafted JAR file into a specified location and restard the server. Along the line I learned about Java's classpath. This is what is to be shared here.</p> 
+<h3>Act one: onto the classpath</h3> 
+<p>When you start off with Java, you would expect, that you simply can set the <a href="https://docs.oracle.com/javase/tutorial/essential/environment/paths.html">classpath</a> varible either using an environment variable or the <code>java -cp</code> parameter. Then you learn the <a href="https://stackoverflow.com/questions/11922681/differences-between-java-cp-and-java-jar">hard way</a>, that <code>java -jar</code> and <code>java -cp</code> are mutually exclusive. After a short flirt with <a href="https://product.hubspot.com/blog/the-fault-in-our-jars-why-we-stopped-building-fat-jars">fatJAR</a>, you end up with a directory structure like this:</p> 
+<p><img src="/blog/images/2021/ApplicationDirectoryStructure.png" alt="Directory Structure"></p> 
+<p>The secreingredient to make this work is the manifest file inside the <code>myApp.jar</code>. It needs to be told to put all jar files in <code>libs</code> onto the classpath too. In <a href="https://maven.apache.org/">maven</a>, it looks like this:</p> 
+<pre class="brush: xml">&lt;plugin&gt;
+    &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+    &lt;artifactId&gt;maven-jar-plugin&lt;/artifactId&gt;
+    &lt;version&gt;${maven.jar.plugin.version}&lt;/version&gt;
+    &lt;configuration&gt;
+        &lt;archive&gt;
+            &lt;manifest&gt;
+                &lt;mainClass&gt;com.hcl.domino.keep.Launch&lt;/mainClass&gt;
+            &lt;/manifest&gt;
+            &lt;manifestEntries&gt;
+                &lt;Class-Path&gt;.&lt;/Class-Path&gt;
+                &lt;Class-Path&gt;libs/*&lt;/Class-Path&gt;
+            &lt;/manifestEntries&gt;
+        &lt;/archive&gt;
+    &lt;/configuration&gt;
+&lt;/plugin&gt;
+</pre> 
+<p>Now, that all JARS are successfully availble on the classspath, we can try to retrieve them.</p></div>
+					<hr />
+ <a href="/blog/2021/04/reading-resources-from-jar-files.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 29 April 2021
+<span class="divider">|</span>
+<a href="/blog/2021/04/reading-resources-from-jar-files.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2021/04/reading-resources-from-jar-files.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Reading Resources from JAR Files" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2021/04/reading-resources-from-jar-files.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2021/01/collecting-java-streams.html">Collecting Java Streams</a></small></h1>
 					<hr />
 					<div><p>I wrote about <a href="/blog/2020/11/streams-and-functional-programming-in-java.html">Java Streams before</a>, sharing how they work for me and how, in conjunction with Java's <a href="https://www.baeldung.com/java-8-functional-interfaces">functional interfaces</a>, they enable us to write clean(er) code. I'd like to revisit my learnings, with some focus on the final step: what happens at the tail end of a stream operation</p> 
@@ -465,59 +508,6 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/04/watching-the-eventbus.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Watching the EventBus" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2020/04/watching-the-eventbus.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2020/04/simplexmldoc-revisited.html">SimpleXMLDoc revisited</a></small></h1>
-					<hr />
-					<div><p>It is 2020, <a href="https://www.json.org/json-en.html">JSON</a> is supposed to have won, with a <a href="https://en.wikipedia.org/wiki/Protocol_Buffers">challenger in sight</a>. <a href="https://en.wikipedia.org/wiki/XML">XML</a> with its fine distinction between Elements, Attributes and clear ownership demarked by name spaces, was supposed to be gone. But <a href="https://www.odata.org/">OData</a> made it <a href="http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html">necessary</a> to look again, as did <a href="https://en.wikipedia.org/wiki/CalDAV">CalDAV</a></p> 
-<h3>Out into the OutputStream</h3> 
-<p>The <a href="https://www.wissel.net/blog/downloads/2011/SimpleXMLDoc.java">initial version</a> was introduced in the <a href="https://wissel.net/blog/2011/10/xml-helper-class-for-xagents.html">context of XAgents</a> which mandated an <a href="https://docs.oracle.com/javase/8/docs/api/java/io/OutputStream.html">OutputStream</a>. I find that adequate and useful, so I kept that. If you just want a String, a <a href="https://docs.oracle.com/javase/8/docs/api/java/io/ByteArrayOutputStream.html">ByteArrayOutputStream</a> will do quite nicely</p> 
-<h3>Fluent methods</h3> 
-<p>The big change to the <a href="https://gist.github.com/Stwissel/ff2dca14074058e80c374bf6cfd0897e">revamped version</a> is the addition of a fluent API. Each method call returns the object instance itself, so you can chain your document creation to look modern (and type less)</p> 
-<h3>Namespace and attributes</h3> 
-<p>Originally I though "simple" would be sufficient to create <code>Elements</code> only. But as time goes by one starts to appreciate name spaces and <code>Attributes</code>, so I added support for these too. To keep things simple: once we specify the namespace at the beginning of the document, we can simply refer to it by its alias name.</p> 
-<p>A sample:</p> 
-<pre class="brush: java">    final ByteArrayOutputStream out = new ByteArrayOutputStream();
-    final SimpleXMLDoc doc = new SimpleXMLDoc(out);
-    doc.addNamespace("X", "https://xmen.org")
-    .addNamespace("", "https://whyOhWhy.com/xml")
-    .setXmlStyleSheet("somestle.xslt")
-    .openElement("Endpoints")
-    .openElement(doc.element("X:Endpoint")
-          .addAttribute("name", "A Name")
-          .addAttribute("url", "http://anywhere/")
-          .addAttribute("meta", "meta not metta"))
-     .closeElement(1)
-     .addSimpleElement("description", "Something useful")
-     .closeDocument();
-    System.out.println(out.toString());
-</pre> 
-<h3>Key methods</h3> 
-<ul> 
- <li><code>addNamespace</code>: adds one name space and establishes the alias. To keep it simple, namespaces are defined <strong>only</strong> at the beginning fo the document</li> 
- <li><code>setXmlStyleSheet</code>: Same here, needs to be defined at the beginning - after all this class streams the result and stylesheets only start at the beginning</li> 
- <li><code>OpenElement</code> starts a new XML Element. When provided with a string, it is an attribute free element, that can include the namespace abbreviation. When using a doc.element, we can add attributes</li> 
- <li><code>addSimpleElement</code>: add an element, its String content and close it</li> 
- <li><code>closeElement</code>: write out a number of closing tags. It deliberately uses number of tags and not tag names, so you don't need to track the names you have opened. Ensures that XML stays valid</li> 
- <li><code>closeDocument</code>: closes all remaining Elements in the correct sequence and closes the document. Can be called once only</li> 
-</ul> 
-<p>Check the <a href="https://gist.github.com/Stwissel/ff2dca14074058e80c374bf6cfd0897e">full source code</a> for details</p> 
-<p>As usual YMMV</p></div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 13 April 2020
-<span class="divider">|</span>
-<a href="/blog/2020/04/simplexmldoc-revisited.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/xml.html">XML</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/04/simplexmldoc-revisited.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="SimpleXMLDoc revisited" data-twitter-via="@notessensei"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2020/04/simplexmldoc-revisited.html";
 						</script>
 					</p>
 </p>

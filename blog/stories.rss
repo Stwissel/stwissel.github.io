@@ -6,7 +6,38 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Mon, 26 Apr 2021 05:55:51 +0000</pubdate>
+	<pubdate>Thu, 29 Apr 2021 14:00:22 +0000</pubdate>
+<item>
+	<title>Reading Resources from JAR Files</title>
+	<description>&lt;p&gt;One interesting challenge I &lt;a href="https://www.theprojectthatshallnotbenamed.com/"&gt;encountered&lt;/a&gt; is the need or ability to make an Java application extensible by providing additional classes and configuation. Ideally extension should happen by dropping a properly crafted JAR file into a specified location and restard the server. Along the line I learned about Java's classpath. This is what is to be shared here.&lt;/p&gt; 
+&lt;h3&gt;Act one: onto the classpath&lt;/h3&gt; 
+&lt;p&gt;When you start off with Java, you would expect, that you simply can set the &lt;a href="https://docs.oracle.com/javase/tutorial/essential/environment/paths.html"&gt;classpath&lt;/a&gt; varible either using an environment variable or the &lt;code&gt;java -cp&lt;/code&gt; parameter. Then you learn the &lt;a href="https://stackoverflow.com/questions/11922681/differences-between-java-cp-and-java-jar"&gt;hard way&lt;/a&gt;, that &lt;code&gt;java -jar&lt;/code&gt; and &lt;code&gt;java -cp&lt;/code&gt; are mutually exclusive. After a short flirt with &lt;a href="https://product.hubspot.com/blog/the-fault-in-our-jars-why-we-stopped-building-fat-jars"&gt;fatJAR&lt;/a&gt;, you end up with a directory structure like this:&lt;/p&gt; 
+&lt;p&gt;&lt;img src="/blog/images/2021/ApplicationDirectoryStructure.png" alt="Directory Structure"&gt;&lt;/p&gt; 
+&lt;p&gt;The secreingredient to make this work is the manifest file inside the &lt;code&gt;myApp.jar&lt;/code&gt;. It needs to be told to put all jar files in &lt;code&gt;libs&lt;/code&gt; onto the classpath too. In &lt;a href="https://maven.apache.org/"&gt;maven&lt;/a&gt;, it looks like this:&lt;/p&gt; 
+&lt;pre class="brush: xml"&gt;&amp;lt;plugin&amp;gt;
+    &amp;lt;groupId&amp;gt;org.apache.maven.plugins&amp;lt;/groupId&amp;gt;
+    &amp;lt;artifactId&amp;gt;maven-jar-plugin&amp;lt;/artifactId&amp;gt;
+    &amp;lt;version&amp;gt;${maven.jar.plugin.version}&amp;lt;/version&amp;gt;
+    &amp;lt;configuration&amp;gt;
+        &amp;lt;archive&amp;gt;
+            &amp;lt;manifest&amp;gt;
+                &amp;lt;mainClass&amp;gt;com.hcl.domino.keep.Launch&amp;lt;/mainClass&amp;gt;
+            &amp;lt;/manifest&amp;gt;
+            &amp;lt;manifestEntries&amp;gt;
+                &amp;lt;Class-Path&amp;gt;.&amp;lt;/Class-Path&amp;gt;
+                &amp;lt;Class-Path&amp;gt;libs/*&amp;lt;/Class-Path&amp;gt;
+            &amp;lt;/manifestEntries&amp;gt;
+        &amp;lt;/archive&amp;gt;
+    &amp;lt;/configuration&amp;gt;
+&amp;lt;/plugin&amp;gt;
+&lt;/pre&gt; 
+&lt;p&gt;Now, that all JARS are successfully availble on the classspath, we can try to retrieve them.&lt;/p&gt;</description>
+	<link>2021/04/reading-resources-from-jar-files.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>ce4a84f0-a8d6-11eb-af9d-1184c78a15d1</guid>
+	<pubDate>29 April 2021</pubDate>
+
+</item>
 <item>
 	<title>Collecting Java Streams</title>
 	<description>&lt;p&gt;I wrote about &lt;a href="/blog/2020/11/streams-and-functional-programming-in-java.html"&gt;Java Streams before&lt;/a&gt;, sharing how they work for me and how, in conjunction with Java's &lt;a href="https://www.baeldung.com/java-8-functional-interfaces"&gt;functional interfaces&lt;/a&gt;, they enable us to write clean(er) code. I'd like to revisit my learnings, with some focus on the final step: what happens at the tail end of a stream operation&lt;/p&gt; 
@@ -257,48 +288,6 @@ server.websocketHandler(this::handlerWebsockets);
 	<author>Stephan H. Wissel</author>
 	<guid>3c9fb2d0-891c-11ea-867f-b576e977aa02</guid>
 	<pubDate>28 April 2020</pubDate>
-
-</item>
-<item>
-	<title>SimpleXMLDoc revisited</title>
-	<description>&lt;p&gt;It is 2020, &lt;a href="https://www.json.org/json-en.html"&gt;JSON&lt;/a&gt; is supposed to have won, with a &lt;a href="https://en.wikipedia.org/wiki/Protocol_Buffers"&gt;challenger in sight&lt;/a&gt;. &lt;a href="https://en.wikipedia.org/wiki/XML"&gt;XML&lt;/a&gt; with its fine distinction between Elements, Attributes and clear ownership demarked by name spaces, was supposed to be gone. But &lt;a href="https://www.odata.org/"&gt;OData&lt;/a&gt; made it &lt;a href="http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html"&gt;necessary&lt;/a&gt; to look again, as did &lt;a href="https://en.wikipedia.org/wiki/CalDAV"&gt;CalDAV&lt;/a&gt;&lt;/p&gt; 
-&lt;h3&gt;Out into the OutputStream&lt;/h3&gt; 
-&lt;p&gt;The &lt;a href="https://www.wissel.net/blog/downloads/2011/SimpleXMLDoc.java"&gt;initial version&lt;/a&gt; was introduced in the &lt;a href="https://wissel.net/blog/2011/10/xml-helper-class-for-xagents.html"&gt;context of XAgents&lt;/a&gt; which mandated an &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/io/OutputStream.html"&gt;OutputStream&lt;/a&gt;. I find that adequate and useful, so I kept that. If you just want a String, a &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/io/ByteArrayOutputStream.html"&gt;ByteArrayOutputStream&lt;/a&gt; will do quite nicely&lt;/p&gt; 
-&lt;h3&gt;Fluent methods&lt;/h3&gt; 
-&lt;p&gt;The big change to the &lt;a href="https://gist.github.com/Stwissel/ff2dca14074058e80c374bf6cfd0897e"&gt;revamped version&lt;/a&gt; is the addition of a fluent API. Each method call returns the object instance itself, so you can chain your document creation to look modern (and type less)&lt;/p&gt; 
-&lt;h3&gt;Namespace and attributes&lt;/h3&gt; 
-&lt;p&gt;Originally I though "simple" would be sufficient to create &lt;code&gt;Elements&lt;/code&gt; only. But as time goes by one starts to appreciate name spaces and &lt;code&gt;Attributes&lt;/code&gt;, so I added support for these too. To keep things simple: once we specify the namespace at the beginning of the document, we can simply refer to it by its alias name.&lt;/p&gt; 
-&lt;p&gt;A sample:&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;    final ByteArrayOutputStream out = new ByteArrayOutputStream();
-    final SimpleXMLDoc doc = new SimpleXMLDoc(out);
-    doc.addNamespace("X", "https://xmen.org")
-    .addNamespace("", "https://whyOhWhy.com/xml")
-    .setXmlStyleSheet("somestle.xslt")
-    .openElement("Endpoints")
-    .openElement(doc.element("X:Endpoint")
-          .addAttribute("name", "A Name")
-          .addAttribute("url", "http://anywhere/")
-          .addAttribute("meta", "meta not metta"))
-     .closeElement(1)
-     .addSimpleElement("description", "Something useful")
-     .closeDocument();
-    System.out.println(out.toString());
-&lt;/pre&gt; 
-&lt;h3&gt;Key methods&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;&lt;code&gt;addNamespace&lt;/code&gt;: adds one name space and establishes the alias. To keep it simple, namespaces are defined &lt;strong&gt;only&lt;/strong&gt; at the beginning fo the document&lt;/li&gt; 
- &lt;li&gt;&lt;code&gt;setXmlStyleSheet&lt;/code&gt;: Same here, needs to be defined at the beginning - after all this class streams the result and stylesheets only start at the beginning&lt;/li&gt; 
- &lt;li&gt;&lt;code&gt;OpenElement&lt;/code&gt; starts a new XML Element. When provided with a string, it is an attribute free element, that can include the namespace abbreviation. When using a doc.element, we can add attributes&lt;/li&gt; 
- &lt;li&gt;&lt;code&gt;addSimpleElement&lt;/code&gt;: add an element, its String content and close it&lt;/li&gt; 
- &lt;li&gt;&lt;code&gt;closeElement&lt;/code&gt;: write out a number of closing tags. It deliberately uses number of tags and not tag names, so you don't need to track the names you have opened. Ensures that XML stays valid&lt;/li&gt; 
- &lt;li&gt;&lt;code&gt;closeDocument&lt;/code&gt;: closes all remaining Elements in the correct sequence and closes the document. Can be called once only&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;p&gt;Check the &lt;a href="https://gist.github.com/Stwissel/ff2dca14074058e80c374bf6cfd0897e"&gt;full source code&lt;/a&gt; for details&lt;/p&gt; 
-&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
-	<link>2020/04/simplexmldoc-revisited.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>0bf96660-7d93-11ea-96f1-bbdc839f73d4</guid>
-	<pubDate>13 April 2020</pubDate>
 
 </item>
 
