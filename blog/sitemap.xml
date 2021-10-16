@@ -6,7 +6,7 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Sat, 16 Oct 2021 10:20:43 +0000</pubdate>
+	<pubdate>Sat, 16 Oct 2021 10:46:13 +0000</pubdate>
 <item>
 	<title>Streaming CouchDB data</title>
 	<description>&lt;p&gt;I'm a confessing fan of &lt;a href="http://couchdb.apache.org/"&gt;CouchDB&lt;/a&gt;, &lt;a href="https://en.wikipedia.org/wiki/Stream_(computing)"&gt;stream programming&lt;/a&gt; and the &lt;a href="https://www.npmjs.com/package/nano"&gt;official CouchDB NodeJS library&lt;/a&gt;. Nano supports returning data as &lt;a href="https://nodejs.org/api/stream.html"&gt;NodeJS Stream&lt;/a&gt;, so you can &lt;a href="https://www.codemag.com/article/1803071/Getting-Started-with-Node-Streams"&gt;pipe it away&lt;/a&gt;. Most examples use file streams or &lt;a href="https://nodejs.org/api/process.html#process_process_stdout"&gt;&lt;code&gt;process.stdout&lt;/code&gt;&lt;/a&gt;, while my goal was to process individual documents that are part of the stream&lt;/p&gt; 
@@ -17,7 +17,7 @@ const nano = Nano(couchDBURL);
 nano.listAsStream({ include_docs: true }).pipe(process.stdout);
 &lt;/pre&gt; 
 &lt;p&gt;This little snippet will read out all documents in your couchDB. You need to supply the &lt;code&gt;couchDBURL&lt;/code&gt; value, e.g. &lt;code&gt;http://localhost:5984/test&lt;/code&gt;. On a closer look, we see that the data returned arrives in continious buffers that don't match JSON document boundaries, so processing one document after the other needs extra work.&lt;/p&gt; 
-&lt;p&gt;A &lt;a href="https://strongloop.com/strongblog/practical-examples-of-the-new-node-js-streams-api/"&gt;blog entry&lt;/a&gt; in the StrongLoop block provides the first clue what to do. To process CouchDB stream data we need both a &lt;a href="https://nodejs.org/api/stream.html#stream_class_stream_transform"&gt;Transform stream&lt;/a&gt; to chop incoming data into line by line and a &lt;a href="https://nodejs.org/api/stream.html#stream_implementing_a_writable_stream"&gt;writable stream&lt;/a&gt; for our results.&lt;/p&gt; 
+&lt;p&gt;A &lt;a href="https://strongloop.com/strongblog/practical-examples-of-the-new-node-js-streams-api/"&gt;blog entry&lt;/a&gt; in the StrongLoop blog provides the first clue what to do. To process CouchDB stream data we need both a &lt;a href="https://nodejs.org/api/stream.html#stream_class_stream_transform"&gt;Transform stream&lt;/a&gt; to chop incoming data into line by line and a &lt;a href="https://nodejs.org/api/stream.html#stream_implementing_a_writable_stream"&gt;writable stream&lt;/a&gt; for our results.&lt;/p&gt; 
 &lt;p&gt;Our code, finally will look like this:&lt;/p&gt; 
 &lt;pre class="brush: javascript"&gt;const Nano = require("nano");
 const { Writable, Transform } = require("stream");
