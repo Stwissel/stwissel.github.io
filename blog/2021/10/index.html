@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<title>NotesSensei's Blog - by year: Year 2021</title>
+<title>NotesSensei's Blog by month: By Date: October 2021</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -111,78 +110,77 @@ try {document.addEventListener("DOMContentLoaded", $buo_f,false)}
 catch(e){window.attachEvent("onload", $buo_f)}
 </script>
 
-
 		<div class="row-fluid">
 			<div class="span9">
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2020/12/index.html"><i class="icon-hand-left"></i>By Date: December 2020</a>
+					<li><a href="/blog/2021/04/index.html"><i class="icon-hand-left"></i>By Date: April 2021</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
 					<span class="divider">|</span>
-					<li><a href="/blog/2021/01/index.html">By Date: January 2021<i class="icon-hand-right"></i></a>
+					<li><a href="/blog/categories/afterhours.html">After hours<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 
 				<div class="well well-raised">
-					<h1>Year 2021</h1>
-				</div>
-				<div class="well">
-					<h1>
-						<a href="10">October</a>
-					</h1>
+					<h1>By Date: October 2021</h1>
 				</div>
 				<article class="well well-raised">
 					<h1>
 						<small><a href="/blog/2021/10/streaming-couchdb-data.html">Streaming CouchDB data</a></small>
 					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+					<hr />
+					<div><p>I'm a confessing fan of <a href="http://couchdb.apache.org/">CouchDB</a>, <a href="https://en.wikipedia.org/wiki/Stream_(computing)">stream programming</a> and the <a href="https://www.npmjs.com/package/nano">official CouchDB NodeJS library</a>. Nano supports returning data as <a href="https://nodejs.org/api/stream.html">NodeJS Stream</a>, so you can <a href="https://www.codemag.com/article/1803071/Getting-Started-with-Node-Streams">pipe it away</a>. Most examples use file streams or <a href="https://nodejs.org/api/process.html#process_process_stdout"><code>process.stdout</code></a>, while my goal was to process individual documents that are part of the stream</p> 
+<h3>You can't walk into the same stream a second time</h3> 
+<p>This old Buddhist saying holds true for NodeJS streams too. So any processing needs to happen in the chain of the stream. Let's start with the simple example of reading all documents from a couchDB:</p> 
+<pre class="brush: javascript">const Nano = require("nano");
+const nano = Nano(couchDBURL);
+nano.listAsStream({ include_docs: true }).pipe(process.stdout);
+</pre> 
+<p>This little snippet will read out all documents in your couchDB. You need to supply the <code>couchDBURL</code> value, e.g. <code>http://localhost:5984/test</code>. On a closer look, we see that the data returned arrives in continious buffers that don't match JSON document boundaries, so processing one document after the other needs extra work.</p> 
+<p>A <a href="https://strongloop.com/strongblog/practical-examples-of-the-new-node-js-streams-api/">blog entry</a> in the StrongLoop block provides the first clue what to do. To process CouchDB stream data we need both a <a href="https://nodejs.org/api/stream.html#stream_class_stream_transform">Transform stream</a> to chop incoming data into line by line and a <a href="https://nodejs.org/api/stream.html#stream_implementing_a_writable_stream">writable stream</a> for our results.</p> 
+<p>Our code, finally will look like this:</p> 
+<pre class="brush: javascript">const Nano = require("nano");
+const { Writable, Transform } = require("stream");
+
+const exportOneDb = (couchDBURL, resultCallback) =&gt; {
+  const nano = Nano(couchDBURL);
+  nano
+    .listAsStream({ include_docs: true })
+    .on("error", (e) =&gt; console.error("error", e))
+    .pipe(lineSplitter())
+    .pipe(jsonMaker())
+    .pipe(documentWriter(resultCallback));
+};
+</pre> 
+<p>Let's have a closer look at the new functions, the first two implement <code>transform</code>, the last one <code>writable</code>:</p> 
+<ul> 
+ <li><code>lineSplitter</code>, as the name implies, cuts the buffer into separate lines for processing. As far as I could tell, CouchDB documents always returned on one line</li> 
+ <li><code>jsonMaker</code>, extracts the documents and discards the wrapper with document count that surrounds them</li> 
+ <li><code>documentWriter</code>, writing out the JSON object using a callback</li> 
+</ul></div>
+					<hr />
+ <a href="/blog/2021/10/streaming-couchdb-data.html">Read more</a>
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 16 October 2021
 <span class="divider">|</span>
 <a href="/blog/2021/10/streaming-couchdb-data.html#comments">Comments (0)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/couchdb.html">CouchDB</a>  <a href="/blog/categories/nodejs.html">NodeJS</a> 
 
-				</article>
- 				<div class="well">
-					<h1>
-						<a href="04">April</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2021/04/reading-resources-from-jar-files.html">Reading Resources from JAR Files</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 29 April 2021
-<span class="divider">|</span>
-<a href="/blog/2021/04/reading-resources-from-jar-files.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a> 
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2021/10/streaming-couchdb-data.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Streaming CouchDB data" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2021/10/streaming-couchdb-data.html";
+						</script>
+					</p>
 
 				</article>
- 				<div class="well">
-					<h1>
-						<a href="01">January</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2021/01/collecting-java-streams.html">Collecting Java Streams</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 01 January 2021
-<span class="divider">|</span>
-<a href="/blog/2021/01/collecting-java-streams.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a> 
-
-				</article>
- 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2020/12/index.html"><i class="icon-hand-left"></i>By Date: December 2020</a>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2021/04/index.html"><i class="icon-hand-left"></i>By Date: April 2021</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
 					<span class="divider">|</span>
-					<li><a href="/blog/2021/01/index.html">By Date: January 2021<i class="icon-hand-right"></i></a>
+					<li><a href="/blog/categories/afterhours.html">After hours<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 
@@ -291,7 +289,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 						<li ><a href="/blog/2018/">2018</a></li>
 						<li ><a href="/blog/2019/">2019</a></li>
 						<li ><a href="/blog/2020/">2020</a></li>
-						<li  class="active"><a href="/blog/2021/">2021</a></li>
+						<li ><a href="/blog/2021/">2021</a></li>
 						<li ><a href="/blog/all.html" title="That's a long list!">Complete archive</a></li>
 					</ul>
 				</aside>
@@ -304,8 +302,8 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 			</div>
 		</div>
 	</div>
-	<!-- Footer ================================================== -->
-			<footer>
+	<!-- Footer	================================================== -->
+		<footer>
 		<div class="container">
 			<div class="row">
 				<div class="span2">
@@ -363,9 +361,6 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 		</div>
 	</footer>
 
-	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/";
-	</script>
 		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
 	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Reading Resources from JAR Files - NotesSensei's Blog</title>
+<title>Streaming CouchDB data - NotesSensei's Blog</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -12,14 +12,14 @@ ga('send', 'pageview');
 <meta http-equiv="X-UA-Compatible"  content="chrome=1" />
 <meta http-equiv="Content-Language" content="en" />
 <meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
-<meta property="og:title"     content="wissel.net - Reading Resources from JAR Files" />
+<meta property="og:title"     content="wissel.net - Streaming CouchDB data" />
 <meta property="og:type"      content="blog" />
-<meta property="og:url"       content="https://wissel.net/blog/2021/04/reading-resources-from-jar-files.html" />
+<meta property="og:url"       content="https://wissel.net/blog/2021/10/streaming-couchdb-data.html" />
 <meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
 <meta property="og:site_name" content="wissel.net" />
 <meta name="viewport"         content="width=device-width, initial-scale=1.0" />
 <meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
-<meta name="DC.Title"         content="NotesSensei's Weblog - Reading Resources from JAR Files" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Streaming CouchDB data" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
 <meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
@@ -27,11 +27,11 @@ ga('send', 'pageview');
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
 <meta name="description"
-	content="Reading Resources from JAR Files - One interesting challenge I encountered is the need or ability to make an Java application extensible by providing additional classes and configuation. Ideally extension should happen by dropping a properly crafted JAR file into a specified location and restard the server. Along the line I learned a" />
+	content="Streaming CouchDB data - I&#39;m a confessing fan of CouchDB, stream programming and the official CouchDB NodeJS library. Nano supports returning data as NodeJS Stream, so you can pipe it away. Most examples use file streams or process.stdout, while my goal was to process individual documents that are part of the stream You can" />
 <meta name="Keywords"
-	content="Java," />
+	content="CouchDB,NodeJS," />
 <meta name="Abstract"
-	content="Reading Resources from JAR Files - One interesting challenge I encountered is the need or ability to make an Java application extensible by providing additional classes and configuation. Ideally extension should happen by dropping a properly crafted JAR file into a specified location and restard the server. Along the line I learned a" />
+	content="Streaming CouchDB data - I&#39;m a confessing fan of CouchDB, stream programming and the official CouchDB NodeJS library. Nano supports returning data as NodeJS Stream, so you can pipe it away. Most examples use file streams or process.stdout, while my goal was to process individual documents that are part of the stream You can" />
 <!--[if lt IE 9]>
 		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
 <![endif]-->
@@ -109,9 +109,12 @@ catch(e){window.attachEvent("onload", $buo_f)}
     <ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2021/">2021</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2021/04/">April</a></li>
+  <li><a href="/blog/2021/10/">October</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
+    <span class="divider">|</span><a href="/blog/categories/couchdb.html">CouchDB</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/nodejs.html">NodeJS</a>
   </li>
 </ul>
 
@@ -119,120 +122,131 @@ catch(e){window.attachEvent("onload", $buo_f)}
 			<div class="span12">
 				
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2021/01/collecting-java-streams.html"><i class="icon-hand-left"></i>Collecting Java Streams</a>
+					<li><a href="/blog/2021/04/reading-resources-from-jar-files.html"><i class="icon-hand-left"></i>Reading Resources from JAR Files</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2021/10/streaming-couchdb-data.html">Streaming CouchDB data<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 				<article class="well well-raised">
-					<h1><small>Reading Resources from JAR Files</small></h1>
+					<h1><small>Streaming CouchDB data</small></h1>
 					<hr />
-					<div><p>One interesting challenge I <a href="https://www.theprojectthatshallnotbenamed.com/">encountered</a> is the need or ability to make an Java application extensible by providing additional classes and configuation. Ideally extension should happen by dropping a properly crafted JAR file into a specified location and restard the server. Along the line I learned about Java's classpath. This is what is to be shared here.</p> 
-<h3>Act one: onto the classpath</h3> 
-<p>When you start off with Java, you would expect, that you simply can set the <a href="https://docs.oracle.com/javase/tutorial/essential/environment/paths.html">classpath</a> varible either using an environment variable or the <code>java -cp</code> parameter. Then you learn the <a href="https://stackoverflow.com/questions/11922681/differences-between-java-cp-and-java-jar">hard way</a>, that <code>java -jar</code> and <code>java -cp</code> are mutually exclusive. After a short flirt with <a href="https://product.hubspot.com/blog/the-fault-in-our-jars-why-we-stopped-building-fat-jars">fatJAR</a>, you end up with a directory structure like this:</p> 
-<p><img src="/blog/images/2021/ApplicationDirectoryStructure.png" alt="Directory Structure"></p> 
-<p>The secreingredient to make this work is the manifest file inside the <code>myApp.jar</code>. It needs to be told to put all jar files in <code>libs</code> onto the classpath too. In <a href="https://maven.apache.org/">maven</a>, it looks like this:</p> 
-<pre class="brush: xml">&lt;plugin&gt;
-    &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
-    &lt;artifactId&gt;maven-jar-plugin&lt;/artifactId&gt;
-    &lt;version&gt;${maven.jar.plugin.version}&lt;/version&gt;
-    &lt;configuration&gt;
-        &lt;archive&gt;
-            &lt;manifest&gt;
-                &lt;mainClass&gt;com.hcl.domino.keep.Launch&lt;/mainClass&gt;
-            &lt;/manifest&gt;
-            &lt;manifestEntries&gt;
-                &lt;Class-Path&gt;.&lt;/Class-Path&gt;
-                &lt;Class-Path&gt;libs/*&lt;/Class-Path&gt;
-            &lt;/manifestEntries&gt;
-        &lt;/archive&gt;
-    &lt;/configuration&gt;
-&lt;/plugin&gt;
+					<div><p>I'm a confessing fan of <a href="http://couchdb.apache.org/">CouchDB</a>, <a href="https://en.wikipedia.org/wiki/Stream_(computing)">stream programming</a> and the <a href="https://www.npmjs.com/package/nano">official CouchDB NodeJS library</a>. Nano supports returning data as <a href="https://nodejs.org/api/stream.html">NodeJS Stream</a>, so you can <a href="https://www.codemag.com/article/1803071/Getting-Started-with-Node-Streams">pipe it away</a>. Most examples use file streams or <a href="https://nodejs.org/api/process.html#process_process_stdout"><code>process.stdout</code></a>, while my goal was to process individual documents that are part of the stream</p> 
+<h3>You can't walk into the same stream a second time</h3> 
+<p>This old Buddhist saying holds true for NodeJS streams too. So any processing needs to happen in the chain of the stream. Let's start with the simple example of reading all documents from a couchDB:</p> 
+<pre class="brush: javascript">const Nano = require("nano");
+const nano = Nano(couchDBURL);
+nano.listAsStream({ include_docs: true }).pipe(process.stdout);
 </pre> 
-<p>Now, that all JARS are successfully availble on the classspath, we can try to retrieve them.</p><h3>Act two: find a resource</h3> 
-<p>Reliably opening resources in an Java app needs to be done using an <a href="https://docs.oracle.com/javase/8/docs/api/java/io/InputStream.html">InputStream</a>. It is the only way to happily ignore if the resource is inside a JAR or happens to live on the file system. Why is that important? Well, in a Docker deployment I usually don't package my applications as Jars, since they live inside a container already. We don't want to play <a href="https://en.wikipedia.org/wiki/Inception">Inception</a>.</p> 
-<p>There are two method returning a resource as an InputStream:</p> 
+<p>This little snippet will read out all documents in your couchDB. You need to supply the <code>couchDBURL</code> value, e.g. <code>http://localhost:5984/test</code>. On a closer look, we see that the data returned arrives in continious buffers that don't match JSON document boundaries, so processing one document after the other needs extra work.</p> 
+<p>A <a href="https://strongloop.com/strongblog/practical-examples-of-the-new-node-js-streams-api/">blog entry</a> in the StrongLoop block provides the first clue what to do. To process CouchDB stream data we need both a <a href="https://nodejs.org/api/stream.html#stream_class_stream_transform">Transform stream</a> to chop incoming data into line by line and a <a href="https://nodejs.org/api/stream.html#stream_implementing_a_writable_stream">writable stream</a> for our results.</p> 
+<p>Our code, finally will look like this:</p> 
+<pre class="brush: javascript">const Nano = require("nano");
+const { Writable, Transform } = require("stream");
+
+const exportOneDb = (couchDBURL, resultCallback) =&gt; {
+  const nano = Nano(couchDBURL);
+  nano
+    .listAsStream({ include_docs: true })
+    .on("error", (e) =&gt; console.error("error", e))
+    .pipe(lineSplitter())
+    .pipe(jsonMaker())
+    .pipe(documentWriter(resultCallback));
+};
+</pre> 
+<p>Let's have a closer look at the new functions, the first two implement <code>transform</code>, the last one <code>writable</code>:</p> 
 <ul> 
- <li><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html#getResourceAsStream-java.lang.String-"><code>Class.getResourceAsStream</code></a></li> 
- <li><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/ClassLoader.html#getResourceAsStream-java.lang.String-"><code>ClassLoader.getResourceAsStream</code></a></li> 
-</ul> 
-<p>On the surface they do the same, but on a closer look slightly different. <code>Class.getResourceAsStream</code> looks for resources at the path location of the class itself, so when a resource is at the root of the jar, you need a leading <code>/</code>, e.g. <code>/config.json</code>. <code>ClassLoader.getResourceAsStream</code> on the other hand would return <code>null</code> when the resource name is prefixed with <code>/</code>, while without it works as expected e.g. <code>config.json</code>.</p> 
-<p>I use <a href="https://github.com/google/guava/wiki/IOExplained">Google Guava's</a> I/O system to read a resource into a String:</p> 
-<pre class="brush: java">  static Optional&lt;String&gt; stream2String(final InputStream in) {
-    try {
-      ByteSource byteSource = new ByteSource() {
-        @Override
-        public InputStream openStream() {
-          return in;
+ <li><code>lineSplitter</code>, as the name implies, cuts the buffer into separate lines for processing. As far as I could tell, CouchDB documents always returned on one line</li> 
+ <li><code>jsonMaker</code>, extracts the documents and discards the wrapper with document count that surrounds them</li> 
+ <li><code>documentWriter</code>, writing out the JSON object using a callback</li> 
+</ul><h3>Splitting lines</h3> 
+<p>The little special: a chunk might end in the middle of a line, so we keep the last line around for the next iteration until it gets flushed out. The <code>callback()</code> triggers the next step in the pipe.</p> 
+<pre class="brush: javascript">const lineSplitter = () =&gt;
+  new Transform({
+    objectMode: true,
+    transform(chunk, encoding, callback) {
+      let raw = Buffer.from(chunk, encoding).toString();
+      if (this._leftOver) {
+        raw = this._leftOver + raw;
+      }
+      let lines = raw.split("\n");
+      this._leftOver = lines.splice(lines.length - 1, 1)[0];
+      for (var i in lines) {
+        this.push(lines[i]);
+      }
+      callback();
+    },
+    flush(callback) {
+      if (this._leftOver) {
+        this.push(this._leftOver);
+      }
+      this._leftOver = null;
+      callback();
+    },
+  });
+</pre> 
+<p><strong>Nota bene</strong>: the call to <code>lineSplitter()</code> returns a new instance, not executes the split, since each instance can only be used for one stream at all. I tried to just define the function and found NodeJS terminating without a trace when the same instance was used on a second stream.</p> 
+<h3>Extracting documents</h3> 
+<p>You might want to adjust this function when you are interested in other data.</p> 
+<pre class="brush: javascript">const jsonMaker = () =&gt;
+  new Transform({
+    objectMode: true,
+    transform(rawLine, encoding, callback) {
+      // remove the comma at the end of the line - CouchDB sent an array
+      let line = rawLine.toString().replace(/,$/m, "").trim();
+      if (line.startsWith('{"id":') &amp;&amp; line.endsWith("}")) {
+        try {
+          let j = JSON.parse(line);
+          // We only want the document
+          if (j.doc) {
+            this.push(JSON.stringify(j.doc));
+          }
+        } catch (e) {
+          console.error(e.message);
         }
-      };
-
-      return Optional.of(byteSource.asCharSource(StandardCharsets.UTF_8).read());
-    } catch (IOException e) {
-      e.printStackTrace();
-      return Optional.empty();
-    }
-  }
+      }
+      callback();
+    },
+  });
 </pre> 
-<p>Getting one file is only half the Story, we want all of them</p> 
-<h3>Act three: find all resources</h3> 
-<p>The method we need for this is <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/ClassLoader.html#getResources-java.lang.String-"><code>ClassLoader.getResources</code></a>. It returns an <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Enumeration.html">Enumeration</a> of URLs. You might be tempted to use <a href="https://docs.oracle.com/javase/8/docs/api/java/net/URL.html#getFile--"><code>URL.getFile()</code></a> to get hands on the file, but you will fail when the resource is inside a jar, indicated by the URL starting with <code>jar:file:/</code>. The solution is the same as for single resources: use the InputStream provided by <a href="https://docs.oracle.com/javase/8/docs/api/java/net/URL.html#openStream--"><code>URL.openStream()</code></a>. I use this helper:</p> 
-<pre class="brush: java">String readFromURL(final URL source) {
-    try (InputStream in = source.openStream()) {
-      return stream2String(in).orElseThrow(() -&gt; new Exception("Can't read " + source));
-    } catch (Exception e) {
-      return e.getMessage();
-    }
-
-  }
+<p><strong>Nota bene</strong>: Streams process buffers or strings, not JSON Objects, so we need to stringify/parse between the modules</p> 
+<h3>Writing out</h3> 
+<p>In the last step we take the document and process it with whatever we need to do.</p> 
+<pre class="brush: javascript">const documentWriter = (resultCallback) =&gt;
+  new Writable({
+    write(chunk, encoding, callback) {
+      let json = JSON.parse(Buffer.from(chunk, encoding).toString());
+      // Process the code
+      resultCallback(json);
+      // Tell that we are done
+      callback();
+    },
+  });
 </pre> 
-<p>You can test this with a quick code snippet, it will provide you with 3 resources:</p> 
-<pre class="brush: java">void allTheFileContent() throws IOException {
-    Enumeration&lt;URL&gt; r = this.getClass().getClassLoader().getResources("settings.json");
-    Collections.list(r).stream()
-        .map(this::readFromURL)
-        .forEach(System.out::println);
-  }
-</pre> 
-<h3>Act four: merge</h3> 
-<p>In my use case, I need a combined <code>settings.json</code> file. Luckily the <a href="https://vertx.io">Eclipse vert.x</a> framework provides a <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html#mergeIn-io.vertx.core.json.JsonObject-"><code>JsonObject.mergeIn()</code></a> method that does the heavy lifting. Add a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html"><code>Collector</code></a> and you get:</p> 
-<pre class="brush: java">JsonObject merge(final String resourceName) throws IOException {
-    Enumeration&lt;URL&gt; r = this.getClass().getClassLoader().getResources(resourceName);
-    return Collections.list(r).stream()
-        .map(this::readFromURL)
-        .map(JsonObject::new)
-        .collect(Collector.of(() -&gt; new JsonObject(),
-            JsonObject::mergeIn,
-            JsonObject::mergeIn));
-  }
-</pre> 
-<p>Mission accomplished: all settings merged. As usual YMMV</p></div>
+<p>I wonder if that would make a good addition to the <code>nano</code> library</p> 
+<p>As usual YMMV</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 29 April 2021
+Stephan H Wissel</a> on 16 October 2021
 <span class="divider">|</span>
-<a href="/blog/2021/04/reading-resources-from-jar-files.html#comments">Comments (0)</a>
+<a href="/blog/2021/10/streaming-couchdb-data.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a> 
+categories:  <a href="/blog/categories/couchdb.html">CouchDB</a>  <a href="/blog/categories/nodejs.html">NodeJS</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2021/04/reading-resources-from-jar-files.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Reading Resources from JAR Files" data-twitter-via="@notessensei"></div>
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2021/10/streaming-couchdb-data.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Streaming CouchDB data" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2021/04/reading-resources-from-jar-files.html";
+							var permaLink = "https://wissel.net/blog/2021/10/streaming-couchdb-data.html";
 						</script>
 					</p>
 
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_ce4a84f0-a8d6-11eb-af9d-1184c78a15d1" type="button">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_3c572e40-2e5f-11ec-a72e-eb1375b3050a" type="button">
 		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
 	            </button>
 	            </div>
-				<div id="commentform_ce4a84f0-a8d6-11eb-af9d-1184c78a15d1"  class="collapse"></div>
+				<div id="commentform_3c572e40-2e5f-11ec-a72e-eb1375b3050a"  class="collapse"></div>
 				<div class="well well-raised">
 					<h4>Comments</h4>
 					<ol id="commentList">
@@ -242,12 +256,9 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 					</ol>
 				</div>
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2021/01/collecting-java-streams.html"><i class="icon-hand-left"></i>Collecting Java Streams</a>
+					<li><a href="/blog/2021/04/reading-resources-from-jar-files.html"><i class="icon-hand-left"></i>Reading Resources from JAR Files</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2021/10/streaming-couchdb-data.html">Streaming CouchDB data<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 			</div>
@@ -255,9 +266,12 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 		<ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2021/">2021</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2021/04/">April</a></li>
+  <li><a href="/blog/2021/10/">October</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
+    <span class="divider">|</span><a href="/blog/categories/couchdb.html">CouchDB</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/nodejs.html">NodeJS</a>
   </li>
 </ul>
 
@@ -321,7 +335,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 	</footer>
 
 	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/2021/04/reading-resources-from-jar-files.html";
+		var permaLink = "https://wissel.net/blog/2021/10/streaming-couchdb-data.html";
 	</script>
 		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
 	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
@@ -357,7 +371,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 	<script type="text/javascript">
 		var onloadCallback = function() {
-    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "ce4a84f0-a8d6-11eb-af9d-1184c78a15d1");
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "3c572e40-2e5f-11ec-a72e-eb1375b3050a");
  		};
 	</script>
 

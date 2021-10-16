@@ -6,7 +6,44 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 06 Oct 2021 10:58:21 +0000</pubdate>
+	<pubdate>Sat, 16 Oct 2021 10:10:29 +0000</pubdate>
+<item>
+	<title>Streaming CouchDB data</title>
+	<description>&lt;p&gt;I'm a confessing fan of &lt;a href="http://couchdb.apache.org/"&gt;CouchDB&lt;/a&gt;, &lt;a href="https://en.wikipedia.org/wiki/Stream_(computing)"&gt;stream programming&lt;/a&gt; and the &lt;a href="https://www.npmjs.com/package/nano"&gt;official CouchDB NodeJS library&lt;/a&gt;. Nano supports returning data as &lt;a href="https://nodejs.org/api/stream.html"&gt;NodeJS Stream&lt;/a&gt;, so you can &lt;a href="https://www.codemag.com/article/1803071/Getting-Started-with-Node-Streams"&gt;pipe it away&lt;/a&gt;. Most examples use file streams or &lt;a href="https://nodejs.org/api/process.html#process_process_stdout"&gt;&lt;code&gt;process.stdout&lt;/code&gt;&lt;/a&gt;, while my goal was to process individual documents that are part of the stream&lt;/p&gt; 
+&lt;h3&gt;You can't walk into the same stream a second time&lt;/h3&gt; 
+&lt;p&gt;This old Buddhist saying holds true for NodeJS streams too. So any processing needs to happen in the chain of the stream. Let's start with the simple example of reading all documents from a couchDB:&lt;/p&gt; 
+&lt;pre class="brush: javascript"&gt;const Nano = require("nano");
+const nano = Nano(couchDBURL);
+nano.listAsStream({ include_docs: true }).pipe(process.stdout);
+&lt;/pre&gt; 
+&lt;p&gt;This little snippet will read out all documents in your couchDB. You need to supply the &lt;code&gt;couchDBURL&lt;/code&gt; value, e.g. &lt;code&gt;http://localhost:5984/test&lt;/code&gt;. On a closer look, we see that the data returned arrives in continious buffers that don't match JSON document boundaries, so processing one document after the other needs extra work.&lt;/p&gt; 
+&lt;p&gt;A &lt;a href="https://strongloop.com/strongblog/practical-examples-of-the-new-node-js-streams-api/"&gt;blog entry&lt;/a&gt; in the StrongLoop block provides the first clue what to do. To process CouchDB stream data we need both a &lt;a href="https://nodejs.org/api/stream.html#stream_class_stream_transform"&gt;Transform stream&lt;/a&gt; to chop incoming data into line by line and a &lt;a href="https://nodejs.org/api/stream.html#stream_implementing_a_writable_stream"&gt;writable stream&lt;/a&gt; for our results.&lt;/p&gt; 
+&lt;p&gt;Our code, finally will look like this:&lt;/p&gt; 
+&lt;pre class="brush: javascript"&gt;const Nano = require("nano");
+const { Writable, Transform } = require("stream");
+
+const exportOneDb = (couchDBURL, resultCallback) =&amp;gt; {
+  const nano = Nano(couchDBURL);
+  nano
+    .listAsStream({ include_docs: true })
+    .on("error", (e) =&amp;gt; console.error("error", e))
+    .pipe(lineSplitter())
+    .pipe(jsonMaker())
+    .pipe(documentWriter(resultCallback));
+};
+&lt;/pre&gt; 
+&lt;p&gt;Let's have a closer look at the new functions, the first two implement &lt;code&gt;transform&lt;/code&gt;, the last one &lt;code&gt;writable&lt;/code&gt;:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;&lt;code&gt;lineSplitter&lt;/code&gt;, as the name implies, cuts the buffer into separate lines for processing. As far as I could tell, CouchDB documents always returned on one line&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;jsonMaker&lt;/code&gt;, extracts the documents and discards the wrapper with document count that surrounds them&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;documentWriter&lt;/code&gt;, writing out the JSON object using a callback&lt;/li&gt; 
+&lt;/ul&gt;</description>
+	<link>2021/10/streaming-couchdb-data.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>3c572e40-2e5f-11ec-a72e-eb1375b3050a</guid>
+	<pubDate>16 October 2021</pubDate>
+
+</item>
 <item>
 	<title>Reading Resources from JAR Files</title>
 	<description>&lt;p&gt;One interesting challenge I &lt;a href="https://www.theprojectthatshallnotbenamed.com/"&gt;encountered&lt;/a&gt; is the need or ability to make an Java application extensible by providing additional classes and configuation. Ideally extension should happen by dropping a properly crafted JAR file into a specified location and restard the server. Along the line I learned about Java's classpath. This is what is to be shared here.&lt;/p&gt; 
@@ -271,23 +308,6 @@ MapHelper getMapHelper(final JsonObject source, final Map.Entry&amp;lt;String, O
 	<author>Stephan H. Wissel</author>
 	<guid>b5fa2260-ba8f-11ea-843f-49ef93cd2958</guid>
 	<pubDate>30 June 2020</pubDate>
-
-</item>
-<item>
-	<title>Watching the EventBus</title>
-	<description>&lt;p&gt;I'm quite fond of &lt;a href="https://en.wikipedia.org/wiki/Event-driven_architecture"&gt;Event-driven architecture&lt;/a&gt;, so to no surprise, I like vert.x's &lt;a href="https://vertx.io/docs/vertx-core/js/#event_bus"&gt;EventBus&lt;/a&gt; and its ability to enable &lt;a href="https://searchsoftwarequality.techtarget.com/definition/polyglot-programming"&gt;polyglot programming&lt;/a&gt;. So it is time to have a closer look&lt;/p&gt; 
-&lt;h3&gt;Dem Volk aufs Maul geschaut&lt;/h3&gt; 
-&lt;p&gt;(That's a word play on &lt;a href="https://www.eva-leipzig.de/product_info.php?info=p2961_Dem-Volk-aufs-Maul-geschaut.html"&gt;Martin Luther&lt;/a&gt; loosly translated as "Watch them how they talk")&lt;/p&gt; 
-&lt;p&gt;I wanted to know, what exactly is happening "on the wire", without disrupting the regular flow. Turns out, there is an easy way to do this. The vert.x EventBus provides the methods &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/EventBus.html#addOutboundInterceptor-io.vertx.core.Handler-"&gt;addOutboundInterceptor&lt;/a&gt; and &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/EventBus.html#addInboundInterceptor-io.vertx.core.Handler-"&gt;addInboundInterceptor&lt;/a&gt; that provide you with access to a Handler with a &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/DeliveryContext.html"&gt;DeliveryContext&lt;/a&gt;.&lt;/p&gt; 
-&lt;p&gt;From there you can get to the &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/Message.html"&gt;Message&lt;/a&gt; or directly the message's body. So I took it for a spin in conjunction with a Websocket. This allows me to watch as the messages flow through:&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;final HttpServer server = this.vertx.createHttpServer();
-server.websocketHandler(this::handlerWebsockets);
-
-&lt;/pre&gt;</description>
-	<link>2020/04/watching-the-eventbus.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>3c9fb2d0-891c-11ea-867f-b576e977aa02</guid>
-	<pubDate>28 April 2020</pubDate>
 
 </item>
 
