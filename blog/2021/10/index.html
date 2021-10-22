@@ -117,13 +117,92 @@ catch(e){window.attachEvent("onload", $buo_f)}
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
 					<span class="divider">|</span>
-					<li><a href="/blog/categories/afterhours.html">After hours<i class="icon-hand-right"></i></a>
+					<li><a href="/blog/categories/afterhours.html">After Hours<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 
 				<div class="well well-raised">
 					<h1>By Date: October 2021</h1>
 				</div>
+				<article class="well well-raised">
+					<h1>
+						<small><a href="/blog/2021/10/java-streams-filters-with-side-effects.html">Java Streams filters with side effects</a></small>
+					</h1>
+					<hr />
+					<div><p>Once you get used to <a href="/blog/2020/11/streams-and-functional-programming-in-java.html">stream programming</a> and the pattern of <a href="/blog/2021/01/collecting-java-streams.html">create, select, manipulate and collect</a> your code will never look the same</p> 
+<h3>Putting side effects to good (?) use</h3> 
+<p>The pure teachings tell us, <a href="https://www.baeldung.com/java-stream-filter-lambda">filters</a> should select objects for processing and <strong>not</strong> have any side effects or do processing on their own. But ignoring the teachings could produce clean code (I probably will roast in debug hell for this). Let's look at an example:</p> 
+<pre class="brush: java">final Collection&lt;MyNotification&gt; notifications = getNotifications();
+final Iterator&lt;MyNotification&gt; iter = notifications.iterator();
+
+while(iter.hasNext()) {
+  MyNotification n = iter.next();
+
+  if (n.priority == Priority.high) {
+    sendHighPriority(n);
+  } else if (n.groupNotification) {
+    sendGroupNotification(n);
+  } else if (n.special &amp;&amp; !n.delay &gt; 30) {
+    sendSpecial(n);
+  } else if (!n.special) {
+    sendStandard(n);
+  } else {
+    reportWrongNotification(n);
+  }
+}
+</pre> 
+<p>This gets messy very fast and all selection logic is confined to the if conditions in one function (which initially looks like a good idea). How about rewriting the code <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html">Stream</a> style? It will be more boiler plate, but better segregation:</p> 
+<pre class="brush: java">final Stream&lt;MyNotification&gt; notifications = getNotifications();
+
+notifications
+  .filter(this::highPriority)
+  .filter(this::groupSend)
+  .filter(this::specialNoDelay)
+  .filter(this::standard)
+  .forEach(this::reportWrongNotification);
+</pre> 
+<p>The filter functions would look like this:</p> 
+<pre class="brush: java">boolean highPriority(final MyNotification n) {
+  if (n.priority == Priority.high) {
+    sendHighPriority(n);
+    return false; // No further processing required
+  }
+  return true; // Furhter processing required
+}
+
+boolean groupSend(final MyNotification n) {
+  if (n.groupNotification) {
+    sendGroupNotification(n);
+    return false; // No further processing required
+  }
+  return true; // Furhter processing required
+}
+</pre> 
+<p>You get the idea. With proper JavaDoc method headers, this code looks more maintainable.<br> We can push this a little further (as explored on <a href="https://stackoverflow.com/questions/69670736/how-to-apply-a-collection-of-filters-to-a-java-stream">Stackoverflow</a>). Imagin the number of process steps might vary and you don't want to update that code for every variation. You could do something like this:</p> 
+<pre class="brush: java">final Stream&lt;MyNotification&gt; notifications = getNotifications();
+final Stream&lt;Predicate&lt;MyNotifications&gt;&gt; filters = getFilters();
+
+notifications
+  .filter(filters.reduce(f -&gt; true, Predicate::and))
+  .forEach(this::reportWrongNotification);
+</pre> 
+<p>As usual YMMV</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 22 October 2021
+<span class="divider">|</span>
+<a href="/blog/2021/10/java-streams-filters-with-side-effects.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2021/10/java-streams-filters-with-side-effects.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Java Streams filters with side effects" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2021/10/java-streams-filters-with-side-effects.html";
+						</script>
+					</p>
+
+				</article>
 				<article class="well well-raised">
 					<h1>
 						<small><a href="/blog/2021/10/streaming-couchdb-data.html">Streaming CouchDB data</a></small>
@@ -180,7 +259,7 @@ categories:  <a href="/blog/categories/couchdb.html">CouchDB</a>  <a href="/blog
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
 					<span class="divider">|</span>
-					<li><a href="/blog/categories/afterhours.html">After hours<i class="icon-hand-right"></i></a>
+					<li><a href="/blog/categories/afterhours.html">After Hours<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 
@@ -200,7 +279,7 @@ categories:  <a href="/blog/categories/couchdb.html">CouchDB</a>  <a href="/blog
 				<aside id="sidebar_categoriesArchive" class="well">
 					<ul class="nav nav-list">
 						<li class="nav-header">Categories</li>
-						<li ><a href="/blog/categories/afterhours.html">After hours</a></li>
+						<li ><a href="/blog/categories/afterhours.html">After Hours</a></li>
 						<li ><a href="/blog/categories/apex.html">Apex</a></li>
 						<li ><a href="/blog/categories/blog.html">Blog</a></li>
 						<li ><a href="/blog/categories/bluemix.html">Bluemix</a></li>
