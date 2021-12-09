@@ -6,7 +6,41 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Fri, 26 Nov 2021 12:32:21 +0000</pubdate>
+	<pubdate>Thu, 09 Dec 2021 09:08:49 +0000</pubdate>
+<item>
+	<title>Factory based dependency injection</title>
+	<description>&lt;p&gt;&lt;a href="https://en.wikipedia.org/wiki/No_Man_Is_an_Island_(album)"&gt;No man is an island&lt;/a&gt; and no code you write lives without dependencies (even your low-level assembly code depends on the processor's microcode). Testing (with) dependencies can be [insert expletive]&lt;/p&gt; 
+&lt;h3&gt;Dependency injection to the rescue&lt;/h3&gt; 
+&lt;p&gt;The general approach to make dependent code testable is &lt;a href="https://en.wikipedia.org/wiki/Dependency_injection"&gt;Dependency injection&lt;/a&gt;. Instead of calling out and create an instance of the dependency, the dependency is hand over as parameter. This could be in a constructor, a property setter or as method parameter.&lt;/p&gt; 
+&lt;p&gt;A key requirement for successful dependency injection: the injected object gets injected as an &lt;a href="https://docs.oracle.com/javase/tutorial/java/concepts/interface.html"&gt;Interface&lt;/a&gt; rather than a concrete class. So &lt;a href="https://amzn.to/3ozoD9k"&gt;do your homework&lt;/a&gt; and build your apps around interfaces.&lt;/p&gt; 
+&lt;p&gt;An example to illustrate how not to do, and how to change:&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;public Optional&amp;lt;Customer&amp;gt; findCustomer(final String id) {
+ // Some processing here, omitted for clarity
+
+ // actual find
+ final CustomerDbFind find = CustomerDb.getFinder();
+ return Optional.ofNullable(find.customerById(id));
+
+}
+&lt;/pre&gt; 
+&lt;p&gt;When you try to test this function, you depend on the static method of the &lt;code&gt;CustomerDb&lt;/code&gt; which is a pain to mock out. So one consideration could be to hand the &lt;code&gt;CustomerDb&lt;/code&gt; as dependency. But this would violate "provide interface, not class". The conclusion, presuming &lt;code&gt;CustomerDbFind&lt;/code&gt; is an interface will be:&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;public Optional&amp;lt;Customer&amp;gt; findCustomer(final CustomerDbFind find, final String id) {
+ // Some processing here, omitted for clarity
+
+ // actual find
+
+ return Optional.ofNullable(find.customerById(id));
+
+}
+&lt;/pre&gt; 
+&lt;p&gt;This now allows to construct the dependency outside the method to test by implementing the interface or using a &lt;a href="https://site.mockito.org"&gt;Mock library&lt;/a&gt;&lt;/p&gt; 
+&lt;h3&gt;Not so fast&lt;/h3&gt;</description>
+	<link>2021/12/factory-based-dependency-injection.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>f5e53190-58c6-11ec-a5a2-1d9fd86b9254</guid>
+	<pubDate>09 December 2021</pubDate>
+
+</item>
 <item>
 	<title>Java Streams filters with side effects</title>
 	<description>&lt;p&gt;Once you get used to &lt;a href="/blog/2020/11/streams-and-functional-programming-in-java.html"&gt;stream programming&lt;/a&gt; and the pattern of &lt;a href="/blog/2021/01/collecting-java-streams.html"&gt;create, select, manipulate and collect&lt;/a&gt; your code will never look the same&lt;/p&gt; 
@@ -309,30 +343,6 @@ MapHelper getMapHelper(final JsonObject source, final Map.Entry&amp;lt;String, O
 	<author>Stephan H. Wissel</author>
 	<guid>28b45380-0657-11eb-b7f2-a398fdcdf824</guid>
 	<pubDate>04 October 2020</pubDate>
-
-</item>
-<item>
-	<title>Architectural Decisions</title>
-	<description>&lt;p&gt;"&lt;em&gt;Architecture represents the significant design decisions that shape a system,&lt;br&gt; where significant is measured by cost of change.&lt;/em&gt;"&lt;/p&gt; 
-&lt;p&gt;-- &lt;a href="https://en.wikipedia.org/wiki/Grady_Booch"&gt;Grady Booch&lt;/a&gt;&lt;/p&gt; 
-&lt;p&gt;In &lt;a href="https://amzn.to/2Zh2S17"&gt;real architecture&lt;/a&gt; it is obvious, when thee foundation is completed and the stories of your building rise, there's no way to swap out the foundations without demolition and starting over.&lt;/p&gt; 
-&lt;p&gt;In &lt;a href="https://amzn.to/3bB3tQ0"&gt;software architecture&lt;/a&gt; it is less obvious, but nevertheless similar important not to send in the demolition crew half way into delivery.&lt;/p&gt; 
-&lt;p&gt;While in construction you demolition crew easily can be identified by hard hats, orange vests and &lt;a href="https://www.askkentay.com/wp-content/uploads/2018/03/wrecking-ball.jpg"&gt;heavy machinery&lt;/a&gt;, your software demolition crew often comes disguised as &lt;em&gt;concerned stakeholder&lt;/em&gt; questioning fundamental decisions over and over (out of a variety of motives). So it is paramount to document your archtectural decisions well.&lt;/p&gt; 
-&lt;h3&gt;Decisions, Justification, Alternatives, Impact&lt;/h3&gt; 
-&lt;p&gt;Our typical architecture decision documentation starts, duh, with the table of content (unless that sits in a sidebar) and an overview of your architecture. One or more diagrams to provide an overview are well placed here.&lt;/p&gt; 
-&lt;p&gt;Now number the decisions, so they can be refered to by their shortform (e.g AD45) rather than their full title. For larger or delicate system, you want to place each decision on their own page, not at least to be able to extract one (as PDF) for customer sign up. While it is tempting to use a word processor, I'd argue to use an engineering format like markdown or, when complexity justifies it, &lt;a href="https://en.wikipedia.org/wiki/Darwin_Information_Typing_Architecture"&gt;DITA&lt;/a&gt;. Document format and storage could be considered primordial architectural decisions.&lt;/p&gt; 
-&lt;p&gt;Each decision needs to provide four elements:&lt;/p&gt; 
-&lt;ol&gt; 
- &lt;li&gt;&lt;strong&gt;Decision&lt;/strong&gt;&lt;br&gt;What have you decided. A factual statement. Something along the line "&lt;em&gt;Our choosen programming language is COBOL&lt;/em&gt;"&lt;/li&gt; 
- &lt;li&gt;&lt;strong&gt;Justification&lt;/strong&gt;&lt;br&gt; Outline why. It should cover features, cost, skills. You don't need to state why the alternative failed in your considerations&lt;/li&gt; 
- &lt;li&gt;&lt;strong&gt;Alternatives&lt;/strong&gt;&lt;br&gt;What have you looked at, what made you reject the alternative possibiliy. We need to be careful, &lt;a href="https://en.wikipedia.org/wiki/Analysis_paralysis"&gt;analysis paralysis&lt;/a&gt; lurks here. There is always another framework, language or database you could consider. This is also the area where our "friendly" demolition crew will try to stall us&lt;/li&gt; 
- &lt;li&gt;&lt;strong&gt;Impact&lt;/strong&gt;&lt;br&gt;Serves are a reinforcement of &lt;em&gt;Justification&lt;/em&gt;, but extends, when appropriate, on potential risk and its mitigation. It is an important section, nevertheless our "&lt;em&gt;Reichsbedenkentr??ger&lt;/em&gt;" (loosely translated as "&lt;em&gt;Imperial wardens of concern&lt;/em&gt;") lurk here. So stay concise to the point. You don't write a PHD thesis here.&lt;/li&gt; 
-&lt;/ol&gt; 
-&lt;p&gt;Depending on the impact of the system (malefunktion threatens life, threatens assets or requires to hit reload in the browser) you need to spend more or less time on it. For a refresher on this concepts, have a look at &lt;a href="https://en.wikipedia.org/wiki/Analysis_paralysis"&gt;Crystal Clear&lt;/a&gt; page xvi in the preface.&lt;/p&gt;</description>
-	<link>2020/09/architectural-decisions.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>104f5f80-f101-11ea-9db3-55dd0fb67ebe</guid>
-	<pubDate>07 September 2020</pubDate>
 
 </item>
 

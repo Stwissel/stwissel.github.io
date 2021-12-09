@@ -111,6 +111,52 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2021/12/factory-based-dependency-injection.html">Factory based dependency injection</a></small></h1>
+					<hr />
+					<div><p><a href="https://en.wikipedia.org/wiki/No_Man_Is_an_Island_(album)">No man is an island</a> and no code you write lives without dependencies (even your low-level assembly code depends on the processor's microcode). Testing (with) dependencies can be [insert expletive]</p> 
+<h3>Dependency injection to the rescue</h3> 
+<p>The general approach to make dependent code testable is <a href="https://en.wikipedia.org/wiki/Dependency_injection">Dependency injection</a>. Instead of calling out and create an instance of the dependency, the dependency is hand over as parameter. This could be in a constructor, a property setter or as method parameter.</p> 
+<p>A key requirement for successful dependency injection: the injected object gets injected as an <a href="https://docs.oracle.com/javase/tutorial/java/concepts/interface.html">Interface</a> rather than a concrete class. So <a href="https://amzn.to/3ozoD9k">do your homework</a> and build your apps around interfaces.</p> 
+<p>An example to illustrate how not to do, and how to change:</p> 
+<pre class="brush: java">public Optional&lt;Customer&gt; findCustomer(final String id) {
+ // Some processing here, omitted for clarity
+
+ // actual find
+ final CustomerDbFind find = CustomerDb.getFinder();
+ return Optional.ofNullable(find.customerById(id));
+
+}
+</pre> 
+<p>When you try to test this function, you depend on the static method of the <code>CustomerDb</code> which is a pain to mock out. So one consideration could be to hand the <code>CustomerDb</code> as dependency. But this would violate "provide interface, not class". The conclusion, presuming <code>CustomerDbFind</code> is an interface will be:</p> 
+<pre class="brush: java">public Optional&lt;Customer&gt; findCustomer(final CustomerDbFind find, final String id) {
+ // Some processing here, omitted for clarity
+
+ // actual find
+
+ return Optional.ofNullable(find.customerById(id));
+
+}
+</pre> 
+<p>This now allows to construct the dependency outside the method to test by implementing the interface or using a <a href="https://site.mockito.org">Mock library</a></p> 
+<h3>Not so fast</h3></div>
+					<hr />
+ <a href="/blog/2021/12/factory-based-dependency-injection.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 09 December 2021
+<span class="divider">|</span>
+<a href="/blog/2021/12/factory-based-dependency-injection.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/categories/java.html">Java</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2021/12/factory-based-dependency-injection.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Factory based dependency injection" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2021/12/factory-based-dependency-injection.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2021/10/java-streams-filters-with-side-effects.html">Java Streams filters with side effects</a></small></h1>
 					<hr />
 					<div><p>Once you get used to <a href="/blog/2020/11/streams-and-functional-programming-in-java.html">stream programming</a> and the pattern of <a href="/blog/2021/01/collecting-java-streams.html">create, select, manipulate and collect</a> your code will never look the same</p> 
@@ -516,42 +562,6 @@ categories:  <a href="/blog/categories/github.html">GitHub</a>  <a href="/blog/c
 						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/10/deploying-your-static-app-to-your-backend-repo.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Deploying your static app to your backend repo using GitHub Actions" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2020/10/deploying-your-static-app-to-your-backend-repo.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2020/09/architectural-decisions.html">Architectural Decisions</a></small></h1>
-					<hr />
-					<div><p>"<em>Architecture represents the significant design decisions that shape a system,<br> where significant is measured by cost of change.</em>"</p> 
-<p>-- <a href="https://en.wikipedia.org/wiki/Grady_Booch">Grady Booch</a></p> 
-<p>In <a href="https://amzn.to/2Zh2S17">real architecture</a> it is obvious, when thee foundation is completed and the stories of your building rise, there's no way to swap out the foundations without demolition and starting over.</p> 
-<p>In <a href="https://amzn.to/3bB3tQ0">software architecture</a> it is less obvious, but nevertheless similar important not to send in the demolition crew half way into delivery.</p> 
-<p>While in construction you demolition crew easily can be identified by hard hats, orange vests and <a href="https://www.askkentay.com/wp-content/uploads/2018/03/wrecking-ball.jpg">heavy machinery</a>, your software demolition crew often comes disguised as <em>concerned stakeholder</em> questioning fundamental decisions over and over (out of a variety of motives). So it is paramount to document your archtectural decisions well.</p> 
-<h3>Decisions, Justification, Alternatives, Impact</h3> 
-<p>Our typical architecture decision documentation starts, duh, with the table of content (unless that sits in a sidebar) and an overview of your architecture. One or more diagrams to provide an overview are well placed here.</p> 
-<p>Now number the decisions, so they can be refered to by their shortform (e.g AD45) rather than their full title. For larger or delicate system, you want to place each decision on their own page, not at least to be able to extract one (as PDF) for customer sign up. While it is tempting to use a word processor, I'd argue to use an engineering format like markdown or, when complexity justifies it, <a href="https://en.wikipedia.org/wiki/Darwin_Information_Typing_Architecture">DITA</a>. Document format and storage could be considered primordial architectural decisions.</p> 
-<p>Each decision needs to provide four elements:</p> 
-<ol> 
- <li><strong>Decision</strong><br>What have you decided. A factual statement. Something along the line "<em>Our choosen programming language is COBOL</em>"</li> 
- <li><strong>Justification</strong><br> Outline why. It should cover features, cost, skills. You don't need to state why the alternative failed in your considerations</li> 
- <li><strong>Alternatives</strong><br>What have you looked at, what made you reject the alternative possibiliy. We need to be careful, <a href="https://en.wikipedia.org/wiki/Analysis_paralysis">analysis paralysis</a> lurks here. There is always another framework, language or database you could consider. This is also the area where our "friendly" demolition crew will try to stall us</li> 
- <li><strong>Impact</strong><br>Serves are a reinforcement of <em>Justification</em>, but extends, when appropriate, on potential risk and its mitigation. It is an important section, nevertheless our "<em>Reichsbedenkentr??ger</em>" (loosely translated as "<em>Imperial wardens of concern</em>") lurk here. So stay concise to the point. You don't write a PHD thesis here.</li> 
-</ol> 
-<p>Depending on the impact of the system (malefunktion threatens life, threatens assets or requires to hit reload in the browser) you need to spend more or less time on it. For a refresher on this concepts, have a look at <a href="https://en.wikipedia.org/wiki/Analysis_paralysis">Crystal Clear</a> page xvi in the preface.</p></div>
-					<hr />
- <a href="/blog/2020/09/architectural-decisions.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 07 September 2020
-<span class="divider">|</span>
-<a href="/blog/2020/09/architectural-decisions.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/software.html">Software</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/09/architectural-decisions.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Architectural Decisions" data-twitter-via="@notessensei"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2020/09/architectural-decisions.html";
 						</script>
 					</p>
 </p>
