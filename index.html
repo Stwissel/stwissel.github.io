@@ -111,6 +111,118 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2021/12/spotless-code-with-a-git-hook.html">Spotless code with a git hook</a></small></h1>
+					<hr />
+					<div><p>When developing software in a team, a source of constant annoyment is code formatting. Each IDE has slightly different ideas about it, not even getting into the <a href="https://www.jwz.org/doc/tabs-vs-spaces.html">tabs vs. spaces</a> debate. Especially annoying in Java land is the import sort order</p> 
+<h3>Automation to the rescue</h3> 
+<p>I switch between editors (if you need to know: <a href="https://www.eclipse.org">Eclipse</a>, <a href="https://code.visualstudio.com">Visual Studio Code</a>, <a href="https://www.oxygenxml.com">OxygenXML</a>, <a href="https://www.jetbrains.com/idea/">IntelliJ</a>, <a href="https://www.sublimetext.com">Sublime</a>, <a href="https://www.geany.org">Geany</a>, <a href="https://www.nano-editor.org">nano</a> or <a href="https://en.wikipedia.org/wiki/Vi">vi (ESC :!wq)</a>) frequently, so an editor specific solution isn't an option.</p> 
+<p><a href="https://github.com/diffplug/spotless">Spotless</a> to the rescue. It's a neat project using <a href="https://maven.apache.org">Maven</a> or <a href="https://gradle.org">Gradle</a> to format pretty (pun inteded) much all code types I use. The documentation states:</p> 
+<blockquote> 
+ <p>Spotless can format &lt;antlr | c | c# | c++ | css | flow | graphql | groovy | html | java | javascript | json | jsx | kotlin | less | license headers | markdown | objective-c | protobuf | python | scala | scss | sql | typeScript | vue | yaml | anything&gt; using &lt;gradle | maven | anything&gt;.</p> 
+</blockquote> 
+<h3>Setup</h3> 
+<p>I opted for the eclipse defined Java formatting, using almost the Google formatting rules with the notable exception not merging line breaks back.</p> 
+<p>There are 3 steps involved for the <a href="https://github.com/diffplug/spotless/tree/main/plugin-maven">Maven setup</a>:</p> 
+<ul> 
+ <li>Obtaining the formatting files, <a href="https://github.com/diffplug/spotless/blob/main/ECLIPSE_SCREENSHOTS.md">outlined here</a>. Just make sure you are happy with the format first</li> 
+ <li>Add the maven plugin (see below)</li> 
+ <li>Add a git hook (see below)</li> 
+</ul> 
+<h3>pom.xml</h3> 
+<p>This is what I added to my <code>pom.xml</code>. By default spotless would run <code>check</code> only, so I added <code>apply</code> to enforce the formatting</p> 
+<pre class="brush: xml">&lt;properties&gt;
+   &lt;spotless.version&gt;2.4.1&lt;/spotless.version&gt;
+&lt;/properties&gt;
+
+&lt;build&gt;
+    &lt;plugins&gt;
+        &lt;plugin&gt;
+            &lt;groupId&gt;com.diffplug.spotless&lt;/groupId&gt;
+            &lt;artifactId&gt;spotless-maven-plugin&lt;/artifactId&gt;
+            &lt;version&gt;${spotless.version}&lt;/version&gt;
+            &lt;executions&gt;
+               &lt;execution&gt;
+                 &lt;goals&gt;
+                   &lt;goal&gt;apply&lt;/goal&gt;
+                 &lt;/goals&gt;
+               &lt;/execution&gt;
+            &lt;/executions&gt;
+            &lt;configuration&gt;
+                &lt;formats&gt;
+                    &lt;format&gt;
+                        &lt;!-- Markdown, JSON and gitignore --&gt;
+                        &lt;includes&gt;
+                            &lt;include&gt;*.md&lt;/include&gt;
+                            &lt;include&gt;*.json&lt;/include&gt;
+                            &lt;include&gt;.gitignore&lt;/include&gt;
+                        &lt;/includes&gt;
+                        &lt;trimTrailingWhitespace /&gt;
+                        &lt;endWithNewline /&gt;
+                        &lt;indent&gt;
+                            &lt;spaces&gt;true&lt;/spaces&gt;
+                            &lt;spacesPerTab&gt;2&lt;/spacesPerTab&gt;
+                        &lt;/indent&gt;
+                    &lt;/format&gt;
+                &lt;/formats&gt;
+                &lt;!-- ECLIPSE Java format --&gt;
+                &lt;java&gt;
+                    &lt;toggleOffOn /&gt;
+                    &lt;importOrder&gt;
+                        &lt;file&gt;${maven.multiModuleProjectDirectory}/spotless.importorder&lt;/file&gt;
+                    &lt;/importOrder&gt;
+                    &lt;removeUnusedImports /&gt;
+                    &lt;eclipse&gt;
+                        &lt;file&gt;${maven.multiModuleProjectDirectory}/eclipse-java-keep-style.xml&lt;/file&gt;
+                    &lt;/eclipse&gt;
+                &lt;/java&gt;
+            &lt;/configuration&gt;
+        &lt;/plugin&gt;
+    &lt;/plugins&gt;
+&lt;/build&gt;
+</pre> 
+<p>A few remarks:</p> 
+<ul> 
+ <li>I run <code>apply</code> rather than <code>check</code></li> 
+ <li>the directory variable <code>${maven.multiModuleProjectDirectory}</code> is needed, so sub projects work</li> 
+ <li>you want to extend the configuration to include JS/TS eventually</li> 
+</ul> 
+<h3>.git/hooks/pre-commit</h3> 
+<p>Create or edit your <code>[projectroot]/.git/hooks/pre-commit</code> file:</p> 
+<pre class="brush: bash">#!/bin/bash
+# Run formatting on pre-commit
+files=`git status --porcelain | cut -c 4-`
+fulllist=''
+for f in $files; do
+    fulllist+=(.*)$(basename $f)$'\n'
+done;
+list=`echo "${fulllist}" | paste -s -d, /dev/stdin`
+echo Working on $list
+# Activate Java 11
+export JAVA_HOME=`/usr/libexec/java_home -v 11.0`
+/usr/local/bin/mvn spotless:apply -Dspotless.check.skip=false -DspotlessFiles=$list
+</pre> 
+<ul> 
+ <li>You might not need the line with Java</li> 
+ <li>swap <code>apply</code> for <code>check</code> when you just want to check</li> 
+</ul> 
+<p>As usual YMMV</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 10 December 2021
+<span class="divider">|</span>
+<a href="/blog/2021/12/spotless-code-with-a-git-hook.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/software.html">Software</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2021/12/spotless-code-with-a-git-hook.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Spotless code with a git hook" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2021/12/spotless-code-with-a-git-hook.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2021/12/factory-based-dependency-injection.html">Factory based dependency injection</a></small></h1>
 					<hr />
 					<div><p><a href="https://en.wikipedia.org/wiki/No_Man_Is_an_Island_(album)">No man is an island</a> and no code you write lives without dependencies (even your low-level assembly code depends on the processor's microcode). Testing (with) dependencies can be [insert expletive]</p> 
@@ -531,37 +643,6 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/11/streams-and-functional-programming-in-java.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Streams and Functional programming in Java" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2020/11/streams-and-functional-programming-in-java.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2020/10/deploying-your-static-app-to-your-backend-repo.html">Deploying your static app to your backend repo using GitHub Actions</a></small></h1>
-					<hr />
-					<div><p>Our solution has two parts: a backend written in JavaScript, providing the API and a front-end created in Angular, Ionic, React or whatever is the flavor of the day. Usually you would deploy a <a href="https://www.nginx.com/">web server</a> to handle the URL, host the static files and have it redirect the <code>/api</code> URL to our backend.</p> 
-<p>However there might be <a href="https://www.heroku.com/">reasons</a> (or <a href="https://cloud.ibm.com/">that</a>) that we can't or <a href="https://kubernetes.io/docs/concepts/services-networking/ingress/">don't want to access</a> the web server and need to serve your front-end app from the <code>/static</code> directory of our backend.</p> 
-<h3>Planning and a little YAML</h3> 
-<p>Merging the two repositories seems initially an easy option, it just would break our workflows, so a different solution needs to be devised. The ask is simple:</p> 
-<p><img src="/blog/images/2020/StaticHosting.png" alt="Merging UI files into the back-end"></p> 
-<p>Whenever a change happens in the <code>main</code> branch of the front-end application (mostly through an approved pull request), the application should be build and the result transfered to the back-end application where a pull request merges it into <code>main</code>. Duplicate approvals shall be avoided. So we need:</p> 
-<ol> 
- <li>Automatic build on push to main</li> 
- <li>Pull / Push the bundle changes from front-end to the back-end</li> 
- <li>Create a pull request and merge it in back-end</li> 
-</ol></div>
-					<hr />
- <a href="/blog/2020/10/deploying-your-static-app-to-your-backend-repo.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 04 October 2020
-<span class="divider">|</span>
-<a href="/blog/2020/10/deploying-your-static-app-to-your-backend-repo.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/github.html">GitHub</a>  <a href="/blog/categories/nodejs.html">NodeJS</a>  <a href="/blog/categories/nodered.html">NodeRED</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/10/deploying-your-static-app-to-your-backend-repo.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Deploying your static app to your backend repo using GitHub Actions" data-twitter-via="@notessensei"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2020/10/deploying-your-static-app-to-your-backend-repo.html";
 						</script>
 					</p>
 </p>
