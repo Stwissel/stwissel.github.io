@@ -111,6 +111,71 @@ catch(e){window.attachEvent("onload", $buo_f)}
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2021/12/refresh-local-git-repositories.html">Refresh local git repositories</a></small></h1>
+					<hr />
+					<div><p>I keep all my software that is under version control below a few directories only. E.g. OpenSource projects I cloned to learn from them live below <code>~/OpenSource</code>. Keeping up with updates requires to pull them all.</p> 
+<h3>Pulling the main branch</h3> 
+<p>My little helper does:</p> 
+<ul> 
+ <li>change into each first level sub directory</li> 
+ <li>check if it is under version control</li> 
+ <li>capture the current branch</li> 
+ <li>switch to <code>main</code> or <code>master</code> branch, depending on which one is there</li> 
+ <li>capture the name of the tracked remote</li> 
+ <li>fetch all remotes</li> 
+ <li>pull the tracked remote</li> 
+ <li>switch back to the branch it was in</li> 
+</ul> 
+<p>The script does not check if the current branch is dirty (preventing checkout) or pushing back changes. Enjoy</p> 
+<pre class="brush: bash">#!/bin/bash
+# Pull all repos below the current working directory
+
+do_the_sync() {
+  for f in *; do
+      if [ -d $f -a ! -h $f ]; then
+         cd -- "$f";
+         if [ -d ".git" ]; then
+            curBranch=$(git branch --show-current)
+            mainBranch=nn
+            echo "Working on $f";
+            if [ "`git branch --list main`" ]; then
+              mainBranch=main
+            else
+              mainBranch=master
+            fi
+            remoteBranch=$(git rev-parse --abbrev-ref ${mainBranch}@{upstream})
+            IFS='/' read -r remoteSrv string &lt;&lt;&lt; "$remoteBranch"
+            echo "working on $mainBranch tracking $remoteSrv"
+            git fetch --all;
+            git pull $remoteSrv;
+            git checkout $curBranch
+         fi
+         cd ..;
+      fi;
+  done;
+};
+
+do_the_sync
+echo "DONE!"
+</pre> 
+<p>As usual YMMV</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 23 December 2021
+<span class="divider">|</span>
+<a href="/blog/2021/12/refresh-local-git-repositories.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/github.html">GitHub</a>  <a href="/blog/categories/software.html">Software</a> 
+
+						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2021/12/refresh-local-git-repositories.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Refresh local git repositories" data-twitter-via="@notessensei"></div>
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2021/12/refresh-local-git-repositories.html";
+						</script>
+					</p>
+</p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2021/12/spotless-code-with-a-git-hook.html">Spotless code with a git hook</a></small></h1>
 					<hr />
 					<div><p>When developing software in a team, a source of constant annoyment is code formatting. Each IDE has slightly different ideas about it, not even getting into the <a href="https://www.jwz.org/doc/tabs-vs-spaces.html">tabs vs. spaces</a> debate. Especially annoying in Java land is the import sort order</p> 
@@ -213,7 +278,7 @@ Stephan H Wissel</a> on 10 December 2021
 <span class="divider">|</span>
 <a href="/blog/2021/12/spotless-code-with-a-git-hook.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/software.html">Software</a> 
+categories:  <a href="/blog/categories/github.html">GitHub</a>  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/software.html">Software</a> 
 
 						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2021/12/spotless-code-with-a-git-hook.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Spotless code with a git hook" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
@@ -599,50 +664,6 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/11/schema-mapping-with-java-functional-interfaces.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Schema mapping with Java functional interfaces" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2020/11/schema-mapping-with-java-functional-interfaces.html";
-						</script>
-					</p>
-</p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2020/11/streams-and-functional-programming-in-java.html">Streams and Functional programming in Java</a></small></h1>
-					<hr />
-					<div><p>I'm late to the party embracing <a href="https://www.baeldung.com/java-8-streams">Streams</a> and <a href="https://www.baeldung.com/java-8-functional-interfaces">functional interfaces</a> in Java. Using them for a while taught me the beauty and how things fit together nicely</p> 
-<h3>Moving parts</h3> 
-<ul> 
- <li>At the beginning a class implementing the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html">Stream interface</a> emits items, that can be manipulated using <code>map</code> and <code>filter</code> operationf</li> 
- <li>The map and filter operations are supported by the Interfaces in <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/package-summary.html">java.util.function</a> (we get to the samples later)</li> 
- <li>At the end the result gets "collected", in its simplest form using <code>.forEach</code> or, more sophisticated using a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html">Collector</a> with many <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collectors.html">ready baked options</a></li> 
-</ul> 
-<h3>What's the big deal?</h3> 
-<p>short answer: clean, terse and clutter free code.</p> 
-<p>long answer: an example. Lets say you have a <code>mammal</code> class which gets subclassed by <code>cat</code> and <code>dog</code> (and others). You have a collection of these mamals and need to extract all dogs over weight 50. Weight is not a property of mammal. There might be null values in your collection. Classic code would look like this:</p> 
-<pre class="brush: java">List&lt;Dog&gt; getHeavyDogs(final List&lt;Mammal&gt; mammals) {
-    List&lt;Dog&gt; result = new ArrayList&lt;&gt;();
-    for (int i = 0; i &lt; mammals.size(); i++) {
-      Mammal mammal = mammals.get(i);
-      if (mammal != null) {
-        if (mammal instanceof Dog &amp;&amp; ((Dog) mammal).weight() &gt; 50) {
-          result.add((Dog) mammal);
-        }
-      }
-    }
-    return result;
-  }
-</pre> 
-<p>We all seen this type of code. In a functional and stream style this would look different. We have a little <a href="https://en.wikipedia.org/wiki/Duck_typing">duck typing</a> going on here. When a method looks like a functional interface, it can be used as this function. E.g. a method that takes one value and returns a boolean can be used as a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/Predicate.html">Predicate</a>, which comes in handy for filter operations. Another nifty syntax: you can address methods, both static and instance using the <code>::</code> (double colon) syntax. So when you could use a lambda <code>x -&gt; this.doSomething(x)</code> you can simply write <code>this::doSomething</code> and the compiler will sort it out (<code>System.out::println</code> anyone?)</p></div>
-					<hr />
- <a href="/blog/2020/11/streams-and-functional-programming-in-java.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 06 November 2020
-<span class="divider">|</span>
-<a href="/blog/2020/11/streams-and-functional-programming-in-java.html#comments">Comments (3)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a> 
-
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/11/streams-and-functional-programming-in-java.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Streams and Functional programming in Java" data-twitter-via="@notessensei"></div>
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2020/11/streams-and-functional-programming-in-java.html";
 						</script>
 					</p>
 </p>

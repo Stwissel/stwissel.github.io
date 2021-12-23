@@ -6,7 +6,61 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Fri, 10 Dec 2021 16:10:22 +0000</pubdate>
+	<pubdate>Thu, 23 Dec 2021 14:48:06 +0000</pubdate>
+<item>
+	<title>Refresh local git repositories</title>
+	<description>&lt;p&gt;I keep all my software that is under version control below a few directories only. E.g. OpenSource projects I cloned to learn from them live below &lt;code&gt;~/OpenSource&lt;/code&gt;. Keeping up with updates requires to pull them all.&lt;/p&gt; 
+&lt;h3&gt;Pulling the main branch&lt;/h3&gt; 
+&lt;p&gt;My little helper does:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;change into each first level sub directory&lt;/li&gt; 
+ &lt;li&gt;check if it is under version control&lt;/li&gt; 
+ &lt;li&gt;capture the current branch&lt;/li&gt; 
+ &lt;li&gt;switch to &lt;code&gt;main&lt;/code&gt; or &lt;code&gt;master&lt;/code&gt; branch, depending on which one is there&lt;/li&gt; 
+ &lt;li&gt;capture the name of the tracked remote&lt;/li&gt; 
+ &lt;li&gt;fetch all remotes&lt;/li&gt; 
+ &lt;li&gt;pull the tracked remote&lt;/li&gt; 
+ &lt;li&gt;switch back to the branch it was in&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;The script does not check if the current branch is dirty (preventing checkout) or pushing back changes. Enjoy&lt;/p&gt; 
+&lt;pre class="brush: bash"&gt;#!/bin/bash
+# Pull all repos below the current working directory
+
+do_the_sync() {
+  for f in *; do
+      if [ -d $f -a ! -h $f ]; then
+         cd -- "$f";
+         if [ -d ".git" ]; then
+            curBranch=$(git branch --show-current)
+            mainBranch=nn
+            echo "Working on $f";
+            if [ "`git branch --list main`" ]; then
+              mainBranch=main
+            else
+              mainBranch=master
+            fi
+            remoteBranch=$(git rev-parse --abbrev-ref ${mainBranch}@{upstream})
+            IFS='/' read -r remoteSrv string &amp;lt;&amp;lt;&amp;lt; "$remoteBranch"
+            echo "working on $mainBranch tracking $remoteSrv"
+            git fetch --all;
+            git pull $remoteSrv;
+            git checkout $curBranch
+         fi
+         cd ..;
+      fi;
+  done;
+};
+
+do_the_sync
+echo "DONE!"
+&lt;/pre&gt; 
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2021/12/refresh-local-git-repositories.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>516554b0-63f7-11ec-9248-c18c40a7135e</guid>
+	<pubDate>23 December 2021</pubDate>
+
+</item>
 <item>
 	<title>Spotless code with a git hook</title>
 	<description>&lt;p&gt;When developing software in a team, a source of constant annoyment is code formatting. Each IDE has slightly different ideas about it, not even getting into the &lt;a href="https://www.jwz.org/doc/tabs-vs-spaces.html"&gt;tabs vs. spaces&lt;/a&gt; debate. Especially annoying in Java land is the import sort order&lt;/p&gt; 
@@ -393,38 +447,6 @@ MapHelper getMapHelper(final JsonObject source, final Map.Entry&amp;lt;String, O
 	<author>Stephan H. Wissel</author>
 	<guid>3c53a360-3149-11eb-b6d9-332622ac7adf</guid>
 	<pubDate>28 November 2020</pubDate>
-
-</item>
-<item>
-	<title>Streams and Functional programming in Java</title>
-	<description>&lt;p&gt;I'm late to the party embracing &lt;a href="https://www.baeldung.com/java-8-streams"&gt;Streams&lt;/a&gt; and &lt;a href="https://www.baeldung.com/java-8-functional-interfaces"&gt;functional interfaces&lt;/a&gt; in Java. Using them for a while taught me the beauty and how things fit together nicely&lt;/p&gt; 
-&lt;h3&gt;Moving parts&lt;/h3&gt; 
-&lt;ul&gt; 
- &lt;li&gt;At the beginning a class implementing the &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html"&gt;Stream interface&lt;/a&gt; emits items, that can be manipulated using &lt;code&gt;map&lt;/code&gt; and &lt;code&gt;filter&lt;/code&gt; operationf&lt;/li&gt; 
- &lt;li&gt;The map and filter operations are supported by the Interfaces in &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/package-summary.html"&gt;java.util.function&lt;/a&gt; (we get to the samples later)&lt;/li&gt; 
- &lt;li&gt;At the end the result gets "collected", in its simplest form using &lt;code&gt;.forEach&lt;/code&gt; or, more sophisticated using a &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html"&gt;Collector&lt;/a&gt; with many &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collectors.html"&gt;ready baked options&lt;/a&gt;&lt;/li&gt; 
-&lt;/ul&gt; 
-&lt;h3&gt;What's the big deal?&lt;/h3&gt; 
-&lt;p&gt;short answer: clean, terse and clutter free code.&lt;/p&gt; 
-&lt;p&gt;long answer: an example. Lets say you have a &lt;code&gt;mammal&lt;/code&gt; class which gets subclassed by &lt;code&gt;cat&lt;/code&gt; and &lt;code&gt;dog&lt;/code&gt; (and others). You have a collection of these mamals and need to extract all dogs over weight 50. Weight is not a property of mammal. There might be null values in your collection. Classic code would look like this:&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;List&amp;lt;Dog&amp;gt; getHeavyDogs(final List&amp;lt;Mammal&amp;gt; mammals) {
-    List&amp;lt;Dog&amp;gt; result = new ArrayList&amp;lt;&amp;gt;();
-    for (int i = 0; i &amp;lt; mammals.size(); i++) {
-      Mammal mammal = mammals.get(i);
-      if (mammal != null) {
-        if (mammal instanceof Dog &amp;amp;&amp;amp; ((Dog) mammal).weight() &amp;gt; 50) {
-          result.add((Dog) mammal);
-        }
-      }
-    }
-    return result;
-  }
-&lt;/pre&gt; 
-&lt;p&gt;We all seen this type of code. In a functional and stream style this would look different. We have a little &lt;a href="https://en.wikipedia.org/wiki/Duck_typing"&gt;duck typing&lt;/a&gt; going on here. When a method looks like a functional interface, it can be used as this function. E.g. a method that takes one value and returns a boolean can be used as a &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/Predicate.html"&gt;Predicate&lt;/a&gt;, which comes in handy for filter operations. Another nifty syntax: you can address methods, both static and instance using the &lt;code&gt;::&lt;/code&gt; (double colon) syntax. So when you could use a lambda &lt;code&gt;x -&amp;gt; this.doSomething(x)&lt;/code&gt; you can simply write &lt;code&gt;this::doSomething&lt;/code&gt; and the compiler will sort it out (&lt;code&gt;System.out::println&lt;/code&gt; anyone?)&lt;/p&gt;</description>
-	<link>2020/11/streams-and-functional-programming-in-java.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>1df8e500-1f8e-11eb-a4c5-4bd0df64c996</guid>
-	<pubDate>06 November 2020</pubDate>
 
 </item>
 
