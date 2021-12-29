@@ -6,7 +6,51 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Tue, 28 Dec 2021 02:55:57 +0000</pubdate>
+	<pubdate>Wed, 29 Dec 2021 07:31:25 +0000</pubdate>
+<item>
+	<title>Deploying your frontend as webJar</title>
+	<description>&lt;p&gt;In an API driven world back-end and front-end are clearly separated and might live on different servers alltogether. However for smaller applications serving static files happens from the same place as your backend lives&lt;/p&gt; 
+&lt;h3&gt;So many choices&lt;/h3&gt; 
+&lt;p&gt;The &lt;a href="https://www.nginx.com/"&gt;web server&lt;/a&gt; that proxies your application server could have a rule for static files, your firewall could so that, you use a static directory on your application server or pack, that's the story here, your front-end into a jar. I'm not discussing the merits of the different approaches here, that's a story for another time, but describe the workflow and tools for the JAR approach.&lt;/p&gt; 
+&lt;h3&gt;vert.x static routes&lt;/h3&gt; 
+&lt;p&gt;In &lt;a href="https://vertx.io"&gt;Vertx&lt;/a&gt; a static route can be declared with a &lt;a href="https://vertx.io/docs/vertx-web/java/#_serving_static_resources"&gt;few lines&lt;/a&gt; of code:&lt;/p&gt; 
+&lt;pre class="brush: java"&gt;Router router = Router.router(vertx);
+router.route("/ui/*")
+      .handler(StaticHandler.create("uitarget"));
+&lt;/pre&gt; 
+&lt;p&gt;Vertx will then look for the folder &lt;code&gt;uitarget&lt;/code&gt; in its current working directory or on the classpath. So you will need to put your jar on the classpath&lt;/p&gt; 
+&lt;h3&gt;The swagger-ui example&lt;/h3&gt; 
+&lt;p&gt;There are &lt;a href="https://www.webjars.org/"&gt;lots of prepackaged UI jars&lt;/a&gt; available and &lt;a href="https://www.webjars.org/documentation#vertx"&gt;easy to integrate into vert.x&lt;/a&gt;. For example the &lt;a href="https://swagger.io/tools/swagger-ui/"&gt;Swagger UI&lt;/a&gt;. Define a dependency in your &lt;code&gt;pom.xml&lt;/code&gt; and a one liner to access the code:&lt;/p&gt; 
+&lt;pre class="brush: xml"&gt;&amp;lt;dependency&amp;gt;
+    &amp;lt;groupId&amp;gt;org.webjars&amp;lt;/groupId&amp;gt;
+    &amp;lt;artifactId&amp;gt;swagger-ui&amp;lt;/artifactId&amp;gt;
+    &amp;lt;version&amp;gt;4.1.3&amp;lt;/version&amp;gt;
+&amp;lt;/dependency&amp;gt;
+&lt;/pre&gt; 
+&lt;pre class="brush: java"&gt;Router router = Router.router(vertx);
+router.route("/assets/lib/*").handler(StaticHandler.create("META-INF/resources/webjars"));
+&lt;/pre&gt; 
+&lt;h3&gt;Packing your own front-end&lt;/h3&gt; 
+&lt;p&gt;Most modern build front-ends owe their executable form to an &lt;code&gt;npm build&lt;/code&gt; command. If you are not sure check the documentation for &lt;a href="https://reactjs.org/"&gt;React&lt;/a&gt;, &lt;a href="https://angular.io/"&gt;Angular&lt;/a&gt;, &lt;a href="https://angular.io/"&gt;Lightning&lt;/a&gt;, &lt;a href="https://vuejs.org/"&gt;Vue&lt;/a&gt;, &lt;a href="https://ionicframework.com/"&gt;Ionic&lt;/a&gt; or whatever framework you fancy.&lt;/p&gt; 
+&lt;p&gt;There are two plugins for &lt;a href="https://maven.apache.org/"&gt;maven&lt;/a&gt; that can process front-end work:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;The &lt;a href="https://github.com/eirslett/frontend-maven-plugin"&gt;Frontend Maven Plugin&lt;/a&gt;: Specialized module that handles download of NodeJS and running your NodeJS based build tools. Great when you don't have NodeJS installed anyway&lt;/li&gt; 
+ &lt;li&gt;The &lt;a href="https://www.mojohaus.org/exec-maven-plugin/"&gt;Exec Maven Plugin&lt;/a&gt;: Generic plugin to run stuff. Doesn't download NodeJS for you. More work to setup (that's what I picked)&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;The steps you will need to perform, actually not you, but your &lt;code&gt;mvn package&lt;/code&gt; run:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;run &lt;code&gt;npm install&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;run &lt;code&gt;npm build&lt;/code&gt;&lt;/li&gt; 
+ &lt;li&gt;move files into the target directory structure&lt;/li&gt; 
+ &lt;li&gt;build the Jar&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;All of this can be wrapped into your &lt;code&gt;pom.xml&lt;/code&gt;. I usually add the front-end as a module to the whole project, so a build is always complete&lt;/p&gt;</description>
+	<link>2021/12/deploying-your-frontend-as-webjar.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>a32c0030-6705-11ec-817f-4bcc5378b126</guid>
+	<pubDate>27 December 2021</pubDate>
+
+</item>
 <item>
 	<title>Refresh local git repositories</title>
 	<description>&lt;p&gt;I keep all my software that is under version control below a few directories only. E.g. OpenSource projects I cloned to learn from them live below &lt;code&gt;~/OpenSource&lt;/code&gt;. Keeping up with updates requires to pull them all.&lt;/p&gt; 
@@ -392,61 +436,6 @@ const streamOneDb = (couchDBURL, resultCallback) =&amp;gt; {
 	<author>Stephan H. Wissel</author>
 	<guid>42079290-3df0-11eb-85be-f5257d56bdd9</guid>
 	<pubDate>14 December 2020</pubDate>
-
-</item>
-<item>
-	<title>Schema mapping with Java functional interfaces</title>
-	<description>&lt;p&gt;Mapping one data structure into another is a never ending chore since COBOL's &lt;code&gt;MOVE CORRESPONDING&lt;/code&gt;. One to one mappings are trivial, onnce computation is needed, clean code can become messy, really fast&lt;/p&gt; 
-&lt;h3&gt;Map with Functions&lt;/h3&gt; 
-&lt;p&gt;We will use the following, simplified, scenario with source and target formats:&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;{
-	"FirstName" : "Peter",
-	"LastName" : "Pan",
-	"DoB" : "1873-11-23",
-	"ToC" : "accepted",
-	"Marketing" : "no"
-}
-&lt;/pre&gt; 
-&lt;p&gt;Desired Result:&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;{
-	"fullname" : "Peter Pan",
-	"birthday" : "1873-11-23",
-	"gdpr" : true
-}
-&lt;/pre&gt; 
-&lt;p&gt;In our case only &lt;code&gt;DoB&lt;/code&gt; has a simple mapping to &lt;code&gt;birthday&lt;/code&gt; all others need computation or are dropped. So to keep code clean we will use a map with mapping functions, so each computation can be in its own method. The defaults 1:1 and drop functions get defined first.&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;final Map&amp;lt;String, Function&amp;lt;JsonObject, JsonObject&amp;gt;&amp;gt; functionList = new HashMap&amp;lt;&amp;gt;();
-
-Function&amp;lt;JsonObject, JsonObject&amp;gt; simple(final String fieldNameIn, final String fieldNameOut) {
-	return in -&amp;gt; new JsonObject().put(fieldNameOut, in.getValue(fieldNameIn));
-}
-
-Function&amp;lt;JsonObject, JsonObject&amp;gt; drop() {
-	return in -&amp;gt; new JsonObject();
-}
-
-&lt;/pre&gt; 
-&lt;p&gt;Each of the functions returns an Json object that &lt;strong&gt;only&lt;/strong&gt; returns a value for the one field it gets called for. We will use a collector to aggregate the values. Since we are planning to use streams and functional interfaces, we need a helper class.&lt;/p&gt; 
-&lt;pre class="brush: java"&gt;class MapHelper() {
-	JsonObject source;
-	Function&amp;lt;JsonObject, JsonObject&amp;gt; mapper;
-	JsonObject apply() {
-		return this.mapper.apply(this.source);
-	}
-}
-
-MapHelper getMapHelper(final JsonObject source, final Map.Entry&amp;lt;String, Object&amp;gt; incoming) {
-    MapHelper result = new MapHelper();
-    result.source = source;
-    result.mapper = this.functionList.getOrDefault(incoming.getKey(), drop());
-    return result;
-  }
-&lt;/pre&gt; 
-&lt;p&gt;Since each function will return some JSON, that needs to be merged together, we use a Java &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html"&gt;Collector&lt;/a&gt; to accumulate the values.&lt;/p&gt;</description>
-	<link>2020/11/schema-mapping-with-java-functional-interfaces.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>3c53a360-3149-11eb-b6d9-332622ac7adf</guid>
-	<pubDate>28 November 2020</pubDate>
 
 </item>
 
