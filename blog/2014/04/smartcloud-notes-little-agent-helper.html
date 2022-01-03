@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -135,16 +136,18 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <br> One of the most unpleasant restrictions is: " <i>No customer agents or scripts will be executed on server </i>", so no agent, no DOLS tasks. However you can run an agent (or other code) <a href="http://www-10.lotus.com/ldd/bhwiki.nsf/dx/Using_server-based_agents_in_a_SmartCloud_Notes_hybrid_environment">on an on-premises server</a>. The interesting question is: when and how to trigger such code. Looking at the <a href="http://www-10.lotus.com/ldd/dominowiki.nsf/dx/The_basics_of_iNotes_customization">basic iNotes customization</a> article you can find the <code>Custom_Scene_PreSubmit_Lite</code> JavaScript function. This could be the place to launch such a trigger. More on that in the next installment. 
 <br> This article outlines the receiving end - the stuff that runs on your on-premises server. Instead of running agents, I'll outline a plug-in that allows to process the document submitted. The interface between SCN and this service is a JSON submission in the form of: 
 <br> 
-<pre class="brush: js">{
+<pre><code class="language-js">
+{
   "userName": "TestUser@acme.com",
   "action": "DemoTask",
   "unid": "32char-unid"
 }
-</pre> 
+</code></pre> 
 <br> Once the plug-in receives this data, processing can commence. Of course the server (that's the ID the plug-in runs with) needs to have access to the mail file at the task required level. Let's get started: 
 <br> In a plugin project we define a new servlet: 
 <br> 
-<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre><code class="language-xml">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;?eclipse version="3.4"?&gt;
 &lt;plugin&gt;
    &lt;extension
@@ -156,10 +159,11 @@ catch(e){window.attachEvent("onload", $buo_f)}
       &lt;/servlet&gt;
    &lt;/extension&gt;
 &lt;/plugin&gt;
-</pre> 
+</code></pre> 
 <br> Then our servlet looks like this: 
 <br> 
-<pre class="brush: java">package com.notessensei.cloudproxy;
+<pre><code class="language-java">
+package com.notessensei.cloudproxy;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -177,68 +181,69 @@ import lotus.domino.NotesException;
 
 public class TaskServlet extends HttpServlet {
 
-	private static final long		serialVersionUID	= 1L;
+ private static final long  serialVersionUID = 1L;
 
-	// Number of threads allowed to run concurrently for data sync
-	private static final int		THREADPOOLSIZE		= 16;
+ // Number of threads allowed to run concurrently for data sync
+ private static final int  THREADPOOLSIZE  = 16;
 
-	// The background executor for talking to the cloud
-	private final ExecutorService	service				= Executors.newFixedThreadPool(THREADPOOLSIZE);
+ // The background executor for talking to the cloud
+ private final ExecutorService service    = Executors.newFixedThreadPool(THREADPOOLSIZE);
 
-	// The Cache where we keep our user lookup objects, handle with care!
-	private final UserCache			userCache			= new UserCache();
+ // The Cache where we keep our user lookup objects, handle with care!
+ private final UserCache   userCache   = new UserCache();
 
-	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		// Takes in a JSON String and makes a task object
-		InputStream in = req.getInputStream();
-		CloudNotesTask it = CloudNotesTask.load(in);
-		String result;
+ @Override
+ protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+  // Takes in a JSON String and makes a task object
+  InputStream in = req.getInputStream();
+  CloudNotesTask it = CloudNotesTask.load(in);
+  String result;
 
-		if (it != null) {
-			it.setUserCache(this.userCache);
-			DocumentTaskFactory.getDocumentTask(it);
-			this.service.execute(it);
-			resp.setStatus(HttpServletResponse.SC_OK);
-			result = "{\"status\" : \"task accepted\"}";
-		} else {
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			result = "{\"status\" : \"task failed\"}";
-		}
+  if (it != null) {
+   it.setUserCache(this.userCache);
+   DocumentTaskFactory.getDocumentTask(it);
+   this.service.execute(it);
+   resp.setStatus(HttpServletResponse.SC_OK);
+   result = "{\"status\" : \"task accepted\"}";
+  } else {
+   resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+   result = "{\"status\" : \"task failed\"}";
+  }
 
-		// Prepare the reply back
-		resp.setContentType("application/json");
-		PrintWriter out = resp.getWriter();
-		out.println(result);
-		out.close();
+  // Prepare the reply back
+  resp.setContentType("application/json");
+  PrintWriter out = resp.getWriter();
+  out.println(result);
+  out.close();
 
-	}
+ }
 
-	/**
-	 * Get rid of all Notes objects
-	 * 
-	 * @param morituri
-	 *            = the one designated to die, read your Caesar!
-	 */
-	public static void shred(final Base... morituri) {
-		for (Base obsoleteObject : morituri) {
-			if (obsoleteObject != null) {
-				try {
-					obsoleteObject.recycle();
-				} catch (NotesException e) {
-					// We don't care we want go get
-					// rid of it anyway
-				} finally {
-					obsoleteObject = null;
-				}
-			}
-		}
-	}
+ /**
+  * Get rid of all Notes objects
+  *
+  * @param morituri
+  *            = the one designated to die, read your Caesar!
+  */
+ public static void shred(final Base... morituri) {
+  for (Base obsoleteObject : morituri) {
+   if (obsoleteObject != null) {
+    try {
+     obsoleteObject.recycle();
+    } catch (NotesException e) {
+     // We don't care we want go get
+     // rid of it anyway
+    } finally {
+     obsoleteObject = null;
+    }
+   }
+  }
+ }
 }
-</pre> 
-<br>The two interesting pieces are the CloudNotesTask and the UserCache. In my sample I use some Apache licensed Google libraries <a href="https://code.google.com/p/google-gson/">gson</a> and <a href="https://code.google.com/p/guava-libraries/">guava</a>. They make Java live much easier. From the guava library the Cache object is used, that automatically retrieves data when requested. The calling class just queries the cache and data acquisition is completely transparent. Look for yourself: 
+</code></pre> ## 
+<br> The two interesting pieces are the CloudNotesTask and the UserCache. In my sample I use some Apache licensed Google libraries <a href="https://code.google.com/p/google-gson/">gson</a> and <a href="https://code.google.com/p/guava-libraries/">guava</a>. They make Java live much easier. From the guava library the Cache object is used, that automatically retrieves data when requested. The calling class just queries the cache and data acquisition is completely transparent. Look for yourself: 
 <br> 
-<pre class="brush: java">package com.notessensei.cloudproxy;
+<pre><code class="language-java">
+package com.notessensei.cloudproxy;
 
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
@@ -259,57 +264,56 @@ import com.google.common.cache.LoadingCache;
  */
 public class UserCache {
 
-	private final static String					LOOKUP_VIEW_NAME	= "($Users)";
-	private final static String					MAILSERVER_FIELD	= "MailServer";
-	private final static String					MAILFILE_FIELD = "MailFile";
+ private final static String     LOOKUP_VIEW_NAME = "($Users)";
+ private final static String     MAILSERVER_FIELD = "MailServer";
+ private final static String     MAILFILE_FIELD = "MailFile";
 
-	// TODO CHECK the size and validity of the cache lifespan
-	private final static int					MAX_CACHE_ENTRIES	= 1000;
-	private final static int					EXPIRES_AFTER = 8;
-	private final static TimeUnit				UNIT = TimeUnit.HOURS;
+ // TODO CHECK the size and validity of the cache lifespan
+ private final static int     MAX_CACHE_ENTRIES = 1000;
+ private final static int     EXPIRES_AFTER = 8;
+ private final static TimeUnit    UNIT = TimeUnit.HOURS;
 
-	private final LoadingCache
- 
- <string, string="">
-  
-  
-  	cachedUsers;
-	private final Vector
-  
-  
-  <string>
-   
-    serverFields; private Session session = null; public UserCache() { // Fields to retrieve; this.serverFields = new Vector 
-   
-   <string>
-    
-     (); this.serverFields.add(MAILSERVER_FIELD); this.serverFields.add(MAILFILE_FIELD); // Get users from the database UserLoader loader = new UserLoader(); this.cachedUsers = CacheBuilder.newBuilder().maximumSize(MAX_CACHE_ENTRIES).recordStats() .expireAfterAccess(EXPIRES_AFTER, UNIT).build(loader); } public String getDBUrl(Session s, String user) { // Crude trick, might fire back at some time this.session = s; try { return this.cachedUsers.get(user); } catch (ExecutionException e) { // TODO Auto-generated catch block e.printStackTrace(); } return null; } /** * This is the class that actually talks to the directory */ private class UserLoader extends CacheLoader 
-    
-    <string, string="">
-     
-      { @Override public String load(String user) throws Exception { if (session == null || !session.isValid()) { throw new Exception("Session was null or invalid"); } // TODO: verify that this works! Vector 
-     
-     <string>
-      
-       userVector = new Vector 
-      
-      <string>
-        (); userVector.add(user); Directory dir = session.getDirectory(); DirectoryNavigator nav = dir.lookupNames(LOOKUP_VIEW_NAME, userVector, serverFields, false); if (!nav.isNameLocated()) { throw new ExecutionException(new Throwable("Can't find user " + user)); } // Now assemble the result StringBuilder result = new StringBuilder(); result.append("notes://"); String serverName = nav.getFirstItemValue().get(0).toString(); String dbName = nav.getNextItemValue().get(0).toString(); Name name = session.createName(serverName); result.append(name.getCommon()); result.append("/"); result.append(dbName.replace("\\", "/")); TaskServlet.shred(name, nav, dir); return result.toString(); } } } 
-      </string> 
-     
-     </string> 
-    
-    </string,> 
-   
-   </string> 
-  
-  </string>
- 
- 
- </string,></pre> 
+ private final LoadingCache&lt;String&gt;,&lt;String&gt; cachedUsers;
+ private final Vector&lt;String&gt; serverFields;
+ private Session session = null;
+
+ public UserCache() {
+       // Fields to retrieve;
+    this.serverFields = new Vector&lt;String:&gt;();
+       this.serverFields.add(MAILSERVER_FIELD);
+ this.serverFields.add(MAILFILE_FIELD);
+  // Get users from the database
+  UserLoader loader = new UserLoader();
+   this.cachedUsers = CacheBuilder.newBuilder().maximumSize(MAX_CACHE_ENTRIES).recordStats()
+                                  .expireAfterAccess(EXPIRES_AFTER, UNIT)
+          .build(loader);
+ }
+
+ public String getDBUrl(Session s, String user) {
+  // Crude trick, might fire back at some time
+  this.session = s;
+  try {
+    return this.cachedUsers.get(user);
+  } catch (ExecutionException e) {
+    // TODO Auto-generated catch block
+     e.printStackTrace();
+   } return null;
+  }
+  /**
+   * This is the class that actually talks to the directory
+  */
+   private class UserLoader extends CacheLoaderlt;String&gt;,&lt;String&gt; {
+     @Override public String load(String user) throws Exception {
+       if (session == null || !session.isValid()) {
+        throw new Exception("Session was null or invalid");
+         }
+    // TODO: verify that this works!
+     Vector&lt;String&gt;userVector = new Vector&lt;&gt;(); userVector.add(user); Directory dir = session.getDirectory(); DirectoryNavigator nav = dir.lookupNames(LOOKUP_VIEW_NAME, userVector, serverFields, false); if (!nav.isNameLocated()) { throw new ExecutionException(new Throwable("Can't find user " + user)); } // Now assemble the result StringBuilder result = new StringBuilder(); result.append("notes://"); String serverName = nav.getFirstItemValue().get(0).toString(); String dbName = nav.getNextItemValue().get(0).toString(); Name name = session.createName(serverName); result.append(name.getCommon()); result.append("/"); result.append(dbName.replace("\\", "/")); TaskServlet.shred(name, nav, dir); return result.toString(); } } }
+</code></pre> 
 <br> The next piece is the task, which uses a callback to process an individual document: 
 <br> 
-<pre class="brush: java">package com.notessensei.cloudproxy;
+<pre><code class="language-java">
+package com.notessensei.cloudproxy;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -326,137 +330,138 @@ import com.google.gson.GsonBuilder;
 
 public class CloudNotesTask implements Runnable {
 
-	public static CloudNotesTask load(InputStream in) {
-		Gson gson = new GsonBuilder().create();
-		CloudNotesTask result = gson.fromJson(new InputStreamReader(in), CloudNotesTask.class);
-		return result;
-	}
+ public static CloudNotesTask load(InputStream in) {
+  Gson gson = new GsonBuilder().create();
+  CloudNotesTask result = gson.fromJson(new InputStreamReader(in), CloudNotesTask.class);
+  return result;
+ }
 
-	/**
-	 * Just for testing the tasks
-	 * 
-	 * @param args
-	 *            UserName, Action, unid
-	 */
-	public static void main(String args[]) {
+ /**
+  * Just for testing the tasks
+  *
+  * @param args
+  *            UserName, Action, unid
+  */
+ public static void main(String args[]) {
 
-		CloudNotesTask it = new CloudNotesTask();
-		it.setUserName((args.length &lt; 1) ? "TestUser" : args[0]);
-		it.setAction((args.length &lt; 2) ? "DemoTask" : args[1]);
-		it.setUnid((args.length &lt; 3) ? "32char-unid" : args[2]);
-		System.out.println(it.toJson());
+  CloudNotesTask it = new CloudNotesTask();
+  it.setUserName((args.length &lt; 1) ? "TestUser" : args[0]);
+  it.setAction((args.length &lt; 2) ? "DemoTask" : args[1]);
+  it.setUnid((args.length &lt; 3) ? "32char-unid" : args[2]);
+  System.out.println(it.toJson());
 
-	}
+ }
 
-	private String			userName	= null;
-	private String			action		= null;
-	private String			unid		= null;
-	private UserCache		userCache	= null;
-	private IDocumentTask	callback	= null;
+ private String   userName = null;
+ private String   action  = null;
+ private String   unid  = null;
+ private UserCache  userCache = null;
+ private IDocumentTask callback = null;
 
-	public final String getAction() {
-		return this.action;
-	}
+ public final String getAction() {
+  return this.action;
+ }
 
-	public final String getUnid() {
-		return this.unid;
-	}
+ public final String getUnid() {
+  return this.unid;
+ }
 
-	public final String getUserName() {
-		return this.userName;
-	}
+ public final String getUserName() {
+  return this.userName;
+ }
 
-	public void run() {
-		if (!areWeGoodToGo()) {
-			return;
-		}
+ public void run() {
+  if (!areWeGoodToGo()) {
+   return;
+  }
 
-		NotesThread.sinitThread();
+  NotesThread.sinitThread();
 
-		try {
-			Session s = NotesFactory.createSession();
+  try {
+   Session s = NotesFactory.createSession();
 
-			String dbURL = this.getDBUrl(s, this.userName);
+   String dbURL = this.getDBUrl(s, this.userName);
 
-			if (dbURL == null || dbURL.trim().equals("")) {
-				// No database to go to found
-				return;
-			}
+   if (dbURL == null || dbURL.trim().equals("")) {
+    // No database to go to found
+    return;
+   }
 
-			try {
-				Database database = (Database) s.resolve(dbURL);
-				Document doc = database.getDocumentByUNID(getUnid());
+   try {
+    Database database = (Database) s.resolve(dbURL);
+    Document doc = database.getDocumentByUNID(getUnid());
 
-				this.callback.processDocument(s, doc, this);
+    this.callback.processDocument(s, doc, this);
 
-				TaskServlet.shred(doc, database);
-			} catch (NotesException e) {
-				// TODO FIX THE ERROR HANDLING - PLEASE!!!!
-				e.printStackTrace();
-			}
-		} catch (NotesException e1) {
-			// TODO FIX THE ERROR HANDLING - PLEASE!!!!
-			e1.printStackTrace();
-		}
-		NotesThread.stermThread();
-	}
+    TaskServlet.shred(doc, database);
+   } catch (NotesException e) {
+    // TODO FIX THE ERROR HANDLING - PLEASE!!!!
+    e.printStackTrace();
+   }
+  } catch (NotesException e1) {
+   // TODO FIX THE ERROR HANDLING - PLEASE!!!!
+   e1.printStackTrace();
+  }
+  NotesThread.stermThread();
+ }
 
-	public final void setAction(String action) {
-		this.action = action;
-	}
+ public final void setAction(String action) {
+  this.action = action;
+ }
 
-	/**
-	 * @param callback
-	 *            the callback to set
-	 */
-	public final void setCallback(IDocumentTask callback) {
-		this.callback = callback;
-	}
+ /**
+  * @param callback
+  *            the callback to set
+  */
+ public final void setCallback(IDocumentTask callback) {
+  this.callback = callback;
+ }
 
-	public final void setUnid(String unid) {
-		this.unid = unid;
-	}
+ public final void setUnid(String unid) {
+  this.unid = unid;
+ }
 
-	public void setUserCache(UserCache userCache) {
-		this.userCache = userCache;
-	}
+ public void setUserCache(UserCache userCache) {
+  this.userCache = userCache;
+ }
 
-	public final void setUserName(String userName) {
-		this.userName = userName;
-	}
+ public final void setUserName(String userName) {
+  this.userName = userName;
+ }
 
-	public String toJson() {
-		GsonBuilder gb = new GsonBuilder();
-		gb.setPrettyPrinting();
-		gb.disableHtmlEscaping();
-		Gson gson = gb.create();
-		return gson.toJson(this);
-	}
+ public String toJson() {
+  GsonBuilder gb = new GsonBuilder();
+  gb.setPrettyPrinting();
+  gb.disableHtmlEscaping();
+  Gson gson = gb.create();
+  return gson.toJson(this);
+ }
 
-	/**
-	 * Checks if we have a valid task object and return if we have all we need
-	 * Does NOT check if the user or the eMail actually exists in the directory
-	 * 
-	 * @return
-	 */
-	private boolean areWeGoodToGo() {
-		return ((this.userName != null) &amp;&amp; (this.action != null) &amp;&amp; (this.unid != null) &amp;&amp; (this.callback != null));
-	}
+ /**
+  * Checks if we have a valid task object and return if we have all we need
+  * Does NOT check if the user or the eMail actually exists in the directory
+  *
+  * @return
+  */
+ private boolean areWeGoodToGo() {
+  return ((this.userName != null) &amp;&amp; (this.action != null) &amp;&amp; (this.unid != null) &amp;&amp; (this.callback != null));
+ }
 
-	private String getDBUrl(Session s, String user) {
-		if (this.userCache == null) {
-			// This should NEVER happen (unless you test it)
-			this.userCache = new UserCache();
-		}
+ private String getDBUrl(Session s, String user) {
+  if (this.userCache == null) {
+   // This should NEVER happen (unless you test it)
+   this.userCache = new UserCache();
+  }
 
-		return this.userCache.getDBUrl(s, user);
-	}
+  return this.userCache.getDBUrl(s, user);
+ }
 
 }
-</pre> 
+</code></pre> 
 <br> Finally the interface and factory that does the actual work on the document: 
 <br> 
-<pre class="brush: java">package com.notessensei.cloudproxy;
+<pre><code class="language-java">
+package com.notessensei.cloudproxy;
 
 /**
  * Provides the implementations to process the documents when triggered from a
@@ -464,11 +469,11 @@ public class CloudNotesTask implements Runnable {
  */
 public class DocumentTaskFactory {
 
-	public static IDocumentTask getDocumentTask(CloudNotesTask task) {
-		// TODO: Implement Task Classes based on the nature of the task
-		System.out.println(task.toJson());
-		return null;
-	}
+ public static IDocumentTask getDocumentTask(CloudNotesTask task) {
+  // TODO: Implement Task Classes based on the nature of the task
+  System.out.println(task.toJson());
+  return null;
+ }
 
 }
 
@@ -483,10 +488,10 @@ import lotus.domino.Session;
  */
 public interface IDocumentTask {
 
-	public void processDocument(Session session, Document document, CloudNotesTask task);
+ public void processDocument(Session session, Document document, CloudNotesTask task);
 
 }
-</pre> 
+</code></pre> 
 <br> As usual: YMMV</div>
 					<hr />
 					<p>
@@ -497,12 +502,10 @@ Stephan H Wissel</a> on 17 April 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/04/smartcloud-notes-little-agent-helper.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="SmartCloud Notes little agent helper" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/04/smartcloud-notes-little-agent-helper.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -601,8 +604,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2014/04/smartcloud-notes-little-agent-helper.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -614,6 +616,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

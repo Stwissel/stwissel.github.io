@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -160,7 +161,8 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>There are lots of loose ends to consider: using the <a href="">OpenNTF Domino API</a> to gain easy access to theads to send the messages in the background would be top on the list. Allow template storage, different messages for HTML and Text (and EE), eMail preview some of the others. But that's a story for another time</li> 
 </ul> The result is a reusable bean for custom mass eMails.In my implementation I tested it on Domino (and the Notes client) 9.,0.1FP2. The bean should run in most 8.5x ++ versions, but the UI (not part of this post, subject to a future one) used the new CKEditor 4.2, so it won't run on older versions. 
 <br> 
-<pre class="brush : java">package com.notessensei;
+<pre><code class="language-java">
+package com.notessensei;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -188,220 +190,221 @@ import com.ibm.xsp.http.MimeMultipart;
 
 public class MergeManager implements Serializable {
 
-	private static final long	                   serialVersionUID	= 1L;
-	private String	                               subject;
-	private String	                               from;
-	private String	                               rawAddresses;
-	private final Map&lt;String, Map&lt;String, String&gt;&gt;	rcpData	        = new TreeMap&lt;String, Map&lt;String, String&gt;&gt;();
-	private MimeMultipart	                       message;
-	private String	                               eMailField	    = "eMail";
-	private final ArrayList&lt;String&gt;	               fields	        = new ArrayList&lt;String&gt;();
-	private final MustacheFactory	               factory	        = new DefaultMustacheFactory();
-	private final StringBuilder	                   statusMessages	= new StringBuilder();
+    private static final long	                   serialVersionUID	= 1L;
+    private String	                               subject;
+    private String	                               from;
+    private String	                               rawAddresses;
+    private final Map&lt;String, Map&lt;String, String&gt;&gt;	rcpData	        = new TreeMap&lt;String, Map&lt;String, String&gt;&gt;();
+    private MimeMultipart	                       message;
+    private String	                               eMailField	    = "eMail";
+    private final ArrayList&lt;String&gt;	               fields	        = new ArrayList&lt;String&gt;();
+    private final MustacheFactory	               factory	        = new DefaultMustacheFactory();
+    private final StringBuilder	                   statusMessages	= new StringBuilder();
 
-	public MergeManager() {
-		// Default Constructor to
-		// be able to work as a bean
-	}
+    public MergeManager() {
+    	// Default Constructor to
+    	// be able to work as a bean
+    }
 
-	private void addOneDataLine(Map&lt;String, Map&lt;String, String&gt;&gt; allRCP, ArrayList&lt;String&gt; fields, String raw) {
-		Map&lt;String, String&gt; oneLine = new HashMap&lt;String, String&gt;();
-		String key = raw; // Backup pla
-		try {
-			String[] dataItems = raw.split(",");
-			for (int i = 0; i &lt; dataItems.length; i++) {
-				oneLine.put(fields.get(i), dataItems[i]);
-				if (fields.get(i).equalsIgnoreCase(this.eMailField)) {
-					key = dataItems[i];
-				}
-			}
-			allRCP.put(key, oneLine);
+    private void addOneDataLine(Map&lt;String, Map&lt;String, String&gt;&gt; allRCP, ArrayList&lt;String&gt; fields, String raw) {
+    	Map&lt;String, String&gt; oneLine = new HashMap&lt;String, String&gt;();
+    	String key = raw; // Backup pla
+    	try {
+    		String[] dataItems = raw.split(",");
+    		for (int i = 0; i &lt; dataItems.length; i++) {
+    			oneLine.put(fields.get(i), dataItems[i]);
+    			if (fields.get(i).equalsIgnoreCase(this.eMailField)) {
+    				key = dataItems[i];
+    			}
+    		}
+    		allRCP.put(key, oneLine);
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
 
-	}
+    }
 
-	public void clear() {
-		this.message = null;
-		this.subject = null;
-		this.rawAddresses = null;
-		this.statusMessages.delete(0, this.statusMessages.length() - 1);
-	}
+    public void clear() {
+    	this.message = null;
+    	this.subject = null;
+    	this.rawAddresses = null;
+    	this.statusMessages.delete(0, this.statusMessages.length() - 1);
+    }
 
-	public String getCount() {
-		return (this.rcpData.isEmpty()) ? "0" : String.valueOf(this.rcpData.size());
-	}
+    public String getCount() {
+    	return (this.rcpData.isEmpty()) ? "0" : String.valueOf(this.rcpData.size());
+    }
 
-	public String getEmailField() {
-		return this.eMailField;
-	}
+    public String getEmailField() {
+    	return this.eMailField;
+    }
 
-	public ArrayList&lt;String&gt; getFields() {
-		return this.fields;
-	}
+    public ArrayList&lt;String&gt; getFields() {
+    	return this.fields;
+    }
 
-	private void getFields(ArrayList&lt;String&gt; list, String raw) {
-		String[] fieldNames = raw.split(",");
-		list.clear();
-		for (int i = 0; i &lt; fieldNames.length; i++) {
-			list.add(fieldNames[i]);
-		}
-		return;
-	}
+    private void getFields(ArrayList&lt;String&gt; list, String raw) {
+    	String[] fieldNames = raw.split(",");
+    	list.clear();
+    	for (int i = 0; i &lt; fieldNames.length; i++) {
+    		list.add(fieldNames[i]);
+    	}
+    	return;
+    }
 
-	public String getFrom() {
-		return this.from;
-	}
+    public String getFrom() {
+    	return this.from;
+    }
 
-	public MimeMultipart getMessage() {
-		return this.message;
-	}
+    public MimeMultipart getMessage() {
+    	return this.message;
+    }
 
-	public String getRawAddresses() {
-		return (this.rawAddresses == null) ? ("eMail,salutation,greeting\n"+
+    public String getRawAddresses() {
+    	return (this.rawAddresses == null) ? ("eMail,salutation,greeting\n"+
                                   "peter.parker@noreply.com,Hi spidy,Your arachno fan\n"+
                                   "st.wissel@sg.ibm.com,Dear NotesSensei,Keep on coding"
-		        : this.rawAddresses;
-	}
+    	        : this.rawAddresses;
+    }
 
-	public String getStatus() {
-		return this.statusMessages.toString();
-	}
+    public String getStatus() {
+    	return this.statusMessages.toString();
+    }
 
-	public String getSubject() {
-		return this.subject;
-	}
+    public String getSubject() {
+    	return this.subject;
+    }
 
-	private void populateMail(Session s, Document mail, String htmlBody,String textBody, String receipient) throws NotesException {
-		s.setConvertMime(false);
+    private void populateMail(Session s, Document mail, String htmlBody,String textBody, String receipient) throws NotesException {
+    	s.setConvertMime(false);
 
-		final MIMEEntity emailRoot = mail.createMIMEEntity("Body");
+    	final MIMEEntity emailRoot = mail.createMIMEEntity("Body");
 
-		// Primary Header
-		String fromSender = this.getFrom();
-		MIMEHeader emailHeader = emailRoot.createHeader("Return-Path");
-		emailHeader.setHeaderVal(fromSender);
-		emailHeader = emailRoot.createHeader("From");
-		emailHeader.setHeaderVal(fromSender);
-		emailHeader = emailRoot.createHeader("Sender");
-		emailHeader.setHeaderVal(fromSender);
+    	// Primary Header
+    	String fromSender = this.getFrom();
+    	MIMEHeader emailHeader = emailRoot.createHeader("Return-Path");
+    	emailHeader.setHeaderVal(fromSender);
+    	emailHeader = emailRoot.createHeader("From");
+    	emailHeader.setHeaderVal(fromSender);
+    	emailHeader = emailRoot.createHeader("Sender");
+    	emailHeader.setHeaderVal(fromSender);
 
-		emailHeader = emailRoot.createHeader("Recipients");
-		emailHeader.setHeaderVal(receipient);
+    	emailHeader = emailRoot.createHeader("Recipients");
+    	emailHeader.setHeaderVal(receipient);
 
-		emailHeader = emailRoot.createHeader("To");
-		emailHeader.setHeaderVal(receipient);
-		
-		emailHeader = emailRoot.createHeader("Subject");
-		emailHeader.setHeaderVal(this.getSubject());
+    	emailHeader = emailRoot.createHeader("To");
+    	emailHeader.setHeaderVal(receipient);
 
-		// Text and HTML Body
-		MIMEEntity emailRootChild = emailRoot.createChildEntity();
-		final String boundary = System.currentTimeMillis() + "-" + String.valueOf(this.hashCode());
-		emailHeader = emailRootChild.createHeader("Content-Type");
-		emailHeader.setHeaderVal("multipart/alternative; boundary=\"" + boundary + "\"");
+    	emailHeader = emailRoot.createHeader("Subject");
+    	emailHeader.setHeaderVal(this.getSubject());
 
-		MIMEEntity emailChild = emailRootChild.createChildEntity();
+    	// Text and HTML Body
+    	MIMEEntity emailRootChild = emailRoot.createChildEntity();
+    	final String boundary = System.currentTimeMillis() + "-" + String.valueOf(this.hashCode());
+    	emailHeader = emailRootChild.createHeader("Content-Type");
+    	emailHeader.setHeaderVal("multipart/alternative; boundary=\"" + boundary + "\"");
 
-		Stream stream = s.createStream();
-		stream.writeText(textBody);
-		emailChild.setContentFromText(stream, "text/plain; charset=\"UTF-8\"", MIMEEntity.ENC_NONE);
-		stream.close();
+    	MIMEEntity emailChild = emailRootChild.createChildEntity();
 
-		emailChild = emailRootChild.createChildEntity();
-		stream = s.createStream();
-		stream.writeText(htmlBody);
-		emailChild.setContentFromText(stream, "text/html; charset=\"UTF-8\"", MIMEEntity.ENC_NONE);
-		stream.close();
-		stream.recycle();
-		stream = null;
-		s.setConvertMime(true);
-	}
+    	Stream stream = s.createStream();
+    	stream.writeText(textBody);
+    	emailChild.setContentFromText(stream, "text/plain; charset=\"UTF-8\"", MIMEEntity.ENC_NONE);
+    	stream.close();
 
-	public void process(Session s, Database database, Database mailbox) {
-		System.out.println(this.message.getHTML());
-		System.out.println(this.message.getContentAsText());
-		Mustache mHTML = this.factory.compile(new StringReader(this.message.getHTML()), "eMailHTML");
-		Mustache mText = this.factory.compile(new StringReader(this.message.getContentAsText()), "eMailPlain");
-		for (Map&lt;String, String&gt; oneRecord : this.rcpData.values()) {
-			this.sendOneMessage(s, database, mailbox, mHTML, mText, oneRecord);
-		}
-	}
+    	emailChild = emailRootChild.createChildEntity();
+    	stream = s.createStream();
+    	stream.writeText(htmlBody);
+    	emailChild.setContentFromText(stream, "text/html; charset=\"UTF-8\"", MIMEEntity.ENC_NONE);
+    	stream.close();
+    	stream.recycle();
+    	stream = null;
+    	s.setConvertMime(true);
+    }
 
-	private void processRawAdresses(String raw) {
-		ByteArrayInputStream in = new ByteArrayInputStream(raw.getBytes());
-		boolean firstLine = true;
-		Scanner scanner = new Scanner(in);
+    public void process(Session s, Database database, Database mailbox) {
+    	System.out.println(this.message.getHTML());
+    	System.out.println(this.message.getContentAsText());
+    	Mustache mHTML = this.factory.compile(new StringReader(this.message.getHTML()), "eMailHTML");
+    	Mustache mText = this.factory.compile(new StringReader(this.message.getContentAsText()), "eMailPlain");
+    	for (Map&lt;String, String&gt; oneRecord : this.rcpData.values()) {
+    		this.sendOneMessage(s, database, mailbox, mHTML, mText, oneRecord);
+    	}
+    }
 
-		while (scanner.hasNextLine()) {
-			if (firstLine) {
-				this.rcpData.clear();
-				this.getFields(this.fields, scanner.nextLine());
-				firstLine = false;
-			} else {
-				this.addOneDataLine(this.rcpData, this.fields, scanner.nextLine());
-			}
-		}
-		this.statusMessages.append(String.format("%x Records loaded and ready\n", this.rcpData.size()));
-		try {
-			in.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+    private void processRawAdresses(String raw) {
+    	ByteArrayInputStream in = new ByteArrayInputStream(raw.getBytes());
+    	boolean firstLine = true;
+    	Scanner scanner = new Scanner(in);
 
-	private void sendOneMessage(Session s, Database database, Database mailbox, Mustache mHTML, Mustache mText, Map&lt;String, String&gt; oneRecord) {
-		
-		// Text as HTML and as plain Text
-		StringWriter htmlBody = new StringWriter();
-		StringWriter textBody = new StringWriter();
-		mHTML.execute(htmlBody, oneRecord);
-		mText.execute(textBody, oneRecord);
-		try {
-			Document mail = database.createDocument();
-			String rcpt = oneRecord.get(this.eMailField);
-			mail.replaceItemValue("Form", "Memo");
-			this.populateMail(s, mail, htmlBody.toString(), textBody.toString(), rcpt);
-			mail.save();
-			if (mailbox != null) {
-				mail.copyToDatabase(mailbox);
-			}
-			mail.recycle();
-			this.statusMessages.append("Mail send to ");
-			this.statusMessages.append(rcpt);
-			this.statusMessages.append("\n");
-		} catch (Exception e) {
-			this.statusMessages.append(e.getMessage());
-			this.statusMessages.append("\n");
-		}
-	}
+    	while (scanner.hasNextLine()) {
+    		if (firstLine) {
+    			this.rcpData.clear();
+    			this.getFields(this.fields, scanner.nextLine());
+    			firstLine = false;
+    		} else {
+    			this.addOneDataLine(this.rcpData, this.fields, scanner.nextLine());
+    		}
+    	}
+    	this.statusMessages.append(String.format("%x Records loaded and ready\n", this.rcpData.size()));
+    	try {
+    		in.close();
+    	} catch (IOException e) {
+    		e.printStackTrace();
+    	}
+    }
 
-	public void setEmailField(String mailField) {
-		this.eMailField = mailField;
-	}
+    private void sendOneMessage(Session s, Database database, Database mailbox, Mustache mHTML, Mustache mText, Map&lt;String, String&gt; oneRecord) {
 
-	public void setFrom(String from) {
-		this.from = from;
-	}
+    	// Text as HTML and as plain Text
+    	StringWriter htmlBody = new StringWriter();
+    	StringWriter textBody = new StringWriter();
+    	mHTML.execute(htmlBody, oneRecord);
+    	mText.execute(textBody, oneRecord);
+    	try {
+    		Document mail = database.createDocument();
+    		String rcpt = oneRecord.get(this.eMailField);
+    		mail.replaceItemValue("Form", "Memo");
+    		this.populateMail(s, mail, htmlBody.toString(), textBody.toString(), rcpt);
+    		mail.save();
+    		if (mailbox != null) {
+    			mail.copyToDatabase(mailbox);
+    		}
+    		mail.recycle();
+    		this.statusMessages.append("Mail send to ");
+    		this.statusMessages.append(rcpt);
+    		this.statusMessages.append("\n");
+    	} catch (Exception e) {
+    		this.statusMessages.append(e.getMessage());
+    		this.statusMessages.append("\n");
+    	}
+    }
 
-	public void setMessage(MimeMultipart message) {
-		this.message = message;
-	}
+    public void setEmailField(String mailField) {
+    	this.eMailField = mailField;
+    }
 
-	public void setRawAddresses(String rawAddresses) {
-		if (rawAddresses != null &amp;&amp; !rawAddresses.equals(this.rawAddresses)) {
-			this.processRawAdresses(rawAddresses);
-			this.rawAddresses = rawAddresses;
-		}
-	}
+    public void setFrom(String from) {
+    	this.from = from;
+    }
 
-	public void setSubject(String subject) {
-		this.subject = subject;
-	}
+    public void setMessage(MimeMultipart message) {
+    	this.message = message;
+    }
+
+    public void setRawAddresses(String rawAddresses) {
+    	if (rawAddresses != null &amp;&amp; !rawAddresses.equals(this.rawAddresses)) {
+    		this.processRawAdresses(rawAddresses);
+    		this.rawAddresses = rawAddresses;
+    	}
+    }
+
+    public void setSubject(String subject) {
+    	this.subject = subject;
+    }
+
 }
-</pre> 
+</code></pre> 
 <br> As usual YMMV</div>
 					<hr />
 					<p>
@@ -412,12 +415,10 @@ Stephan H Wissel</a> on 13 December 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/xpages.html">XPages</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/12/mail-merge-with-xpages.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Mail Merge with XPages" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/12/mail-merge-with-xpages.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -514,8 +515,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2014/12/mail-merge-with-xpages.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -527,6 +527,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

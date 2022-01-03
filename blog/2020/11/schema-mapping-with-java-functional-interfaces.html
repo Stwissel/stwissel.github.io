@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -133,23 +134,23 @@ catch(e){window.attachEvent("onload", $buo_f)}
 					<div><p>Mapping one data structure into another is a never ending chore since COBOL's <code>MOVE CORRESPONDING</code>. One to one mappings are trivial, onnce computation is needed, clean code can become messy, really fast</p> 
 <h3>Map with Functions</h3> 
 <p>We will use the following, simplified, scenario with source and target formats:</p> 
-<pre class="brush: java">{
+<pre><code class="language-java">{
 	"FirstName" : "Peter",
 	"LastName" : "Pan",
 	"DoB" : "1873-11-23",
 	"ToC" : "accepted",
 	"Marketing" : "no"
 }
-</pre> 
+</code></pre> 
 <p>Desired Result:</p> 
-<pre class="brush: java">{
+<pre><code class="language-java">{
 	"fullname" : "Peter Pan",
 	"birthday" : "1873-11-23",
 	"gdpr" : true
 }
-</pre> 
+</code></pre> 
 <p>In our case only <code>DoB</code> has a simple mapping to <code>birthday</code> all others need computation or are dropped. So to keep code clean we will use a map with mapping functions, so each computation can be in its own method. The defaults 1:1 and drop functions get defined first.</p> 
-<pre class="brush: java">final Map&lt;String, Function&lt;JsonObject, JsonObject&gt;&gt; functionList = new HashMap&lt;&gt;();
+<pre><code class="language-java">final Map&lt;String, Function&lt;JsonObject, JsonObject&gt;&gt; functionList = new HashMap&lt;&gt;();
 
 Function&lt;JsonObject, JsonObject&gt; simple(final String fieldNameIn, final String fieldNameOut) {
 	return in -&gt; new JsonObject().put(fieldNameOut, in.getValue(fieldNameIn));
@@ -159,9 +160,9 @@ Function&lt;JsonObject, JsonObject&gt; drop() {
 	return in -&gt; new JsonObject();
 }
 
-</pre> 
+</code></pre> 
 <p>Each of the functions returns an Json object that <strong>only</strong> returns a value for the one field it gets called for. We will use a collector to aggregate the values. Since we are planning to use streams and functional interfaces, we need a helper class.</p> 
-<pre class="brush: java">class MapHelper() {
+<pre><code class="language-java">class MapHelper() {
 	JsonObject source;
 	Function&lt;JsonObject, JsonObject&gt; mapper;
 	JsonObject apply() {
@@ -175,18 +176,19 @@ MapHelper getMapHelper(final JsonObject source, final Map.Entry&lt;String, Objec
     result.mapper = this.functionList.getOrDefault(incoming.getKey(), drop());
     return result;
   }
-</pre> 
+</code></pre> 
 <p>Since each function will return some JSON, that needs to be merged together, we use a Java <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html">Collector</a> to accumulate the values.</p><p>The Collector interface provides the static function <code>Collector.of</code> that is suitable for our purpose:</p> 
-<pre class="brush: java">Collector&lt;MapHelper, JsonObject, JsonObject&gt; myCollector() {
+<pre><code class="language-java">Collector&lt;MapHelper, JsonObject, JsonObject&gt; myCollector() {
 	return Collector.of(
 		JsonObject::new,
 		(internal, incoming) -&gt; internal.mergeIn(incoming.apply()),
 		(part1, part2) -&gt; part1.mergeIn(part2)
 	);
 }
-</pre> 
+</code></pre> 
 <p>Next stop are the additional functions for the <code>gdpr</code> and the <code>fullname</code> fields and the population of our <code>functionList</code> A few small functions will do.</p> 
-<pre class="brush: java">Function&lt;JsonObject, JsonObject&gt; gdpr() {
+<pre><code class="language-java">
+Function&lt;JsonObject, JsonObject&gt; gdpr() {
 	return in -&gt; in.getString("ToC").equals("accepted") &amp;&amp; !in.getString("Marketing").equals("unknown");
 }
 
@@ -204,15 +206,15 @@ void populateMapper() {
 	functionList.put("gdpr", grpr());
 	functionList.put("LastName", fullname());
 }
-</pre> 
+</code></pre> 
 <p>With all this in place we now can setup the final function that excutes our actual mapping operation;</p> 
-<pre class="brush: java">JsonObject transform(final JsonObject incoming) {
+<pre><code class="language-java">JsonObject transform(final JsonObject incoming) {
 	populateMapper();
 	return incoming.stream()
 	.map(e -&gt; getMapHelper(incoming, e))
 	.collect(myCollector());
 }
-</pre> 
+</code></pre> 
 <p>What have you seen: usage of Java Streams, custom collector and functional interfaces to create clean mapping code. Be aware that you need better checks in your functions, omitted here for readability</p> 
 <p>As usual YMMV</p></div>
 					<hr />
@@ -224,12 +226,10 @@ Stephan H Wissel</a> on 28 November 2020
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/java.html">Java</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/11/schema-mapping-with-java-functional-interfaces.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Schema mapping with Java functional interfaces" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2020/11/schema-mapping-with-java-functional-interfaces.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -326,8 +326,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2020/11/schema-mapping-with-java-functional-interfaces.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -339,6 +338,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

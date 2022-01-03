@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -185,12 +186,10 @@ Stephan H Wissel</a> on 30 December 2019
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/https.html">HTTP(S)</a>  <a href="/blog/categories/networking.html">Networking</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2019/12/http-debugging-cheat-sheet.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="http(s) debugging cheat sheet" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2019/12/http-debugging-cheat-sheet.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -201,7 +200,7 @@ categories:  <a href="/blog/categories/https.html">HTTP(S)</a>  <a href="/blog/c
 <h3>The scenario</h3> 
 <p><img src="/blog/images/2019/EventBus1.png" alt="Classic Eventbus Request Response"></p> 
 <p>Image created using <a href="http://www.websequencediagrams.com/">WebSequenceDiagramms</a></p> 
-<pre class="brush: bash">title Vert.x EventBus
+<pre><code class="language-bash">title Vert.x EventBus
 
 participant Requester
 participant EventBus
@@ -211,7 +210,7 @@ Requester-&gt;EventBus: request DataSet
 EventBus-&gt;DataSource: forward request
 DataSource-&gt;EventBus: reply with data
 EventBus-&gt;Requester: forward reply
-</pre> 
+</code></pre> 
 <p>A requester (e.g. the handler of a HTTP Listener) sends a request via the <a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/EventBus.html">EventBus</a> using a <strong>request-response</strong> pattern with <a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/EventBus.html#request-java.lang.String-java.lang.Object-io.vertx.core.eventbus.DeliveryOptions-io.vertx.core.Handler-"><code>EventBus.request(...)</code></a>. Simple and easy. The problem with this: one request has one response. That doesn't work for streaming data.</p> 
 <h3>Taking a page from the military</h3> 
 <p>The standard pattern for military commands is:</p> 
@@ -226,7 +225,7 @@ EventBus-&gt;Requester: forward reply
 <p>So our scenario now looks like this:</p> 
 <p><img src="/blog/images/2019/EventBus2.png" alt="Classic Eventbus Request Response"></p> 
 <p>Image created using <a href="http://www.websequencediagrams.com/">WebSequenceDiagramms</a></p> 
-<pre class="brush: bash">title Vert.x EventBus Streaming
+<pre><code class="language-bash">title Vert.x EventBus Streaming
 
 participant Requester
 participant EventBus
@@ -248,9 +247,9 @@ DataSource-&gt;EventBus: publish last data
 EventBus-&gt;Requester: forward response
 Requester-&gt;EventBus: end listening\non temp address
 note over Requester, DataSource: End of publish/subscribe
-</pre> 
+</code></pre> 
 <p>To implement this, I'm taking advantage of EventBus' <a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/DeliveryOptions.html">DeliveryOptions</a> that allow me to set header values. I define a header <code>StreamListenerAddress</code> that my data source will use for publishing data:</p> 
-<pre class="brush: java">// Error handling omitted
+<pre><code class="language-java">// Error handling omitted
 public void initiateStreamResponse(final String dataAddress, final JsonObject requestMessage, Promise&lt;Void&gt; didItWork) {
 	final String streamListenerAddress = "tempListenerAddresses." + UUID.randomUUID().toString();
 	final EventBus eventBus = this.getVertx().eventBus();
@@ -282,7 +281,7 @@ public void initiateStreamResponse(final String dataAddress, final JsonObject re
 			}
 		});
 }
-</pre> 
+</code></pre> 
 <h2>What next?</h2> 
 <ul> 
  <li>In Part 2 I will describe the data source part of this approach</li> 
@@ -298,12 +297,10 @@ Stephan H Wissel</a> on 04 December 2019
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/reactive.html">Reactive</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2019/12/a-streaming-pattern-for-the-vert.x-eventbus.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="A Streaming Pattern for the vert.x EventBus (Part 1)" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2019/12/a-streaming-pattern-for-the-vert.x-eventbus.html";
 						</script>
 					</p>
-
 				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/2019/10/index.html"><i class="icon-hand-left"></i>By Date: October 2019</a>
@@ -489,8 +486,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 		</div>
 	</footer>
 
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -502,6 +498,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

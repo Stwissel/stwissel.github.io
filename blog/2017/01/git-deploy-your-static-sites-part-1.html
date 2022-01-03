@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -133,9 +134,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				<article class="well well-raised">
 					<h1><small>GIT deploy your static sites - Part 1</small></h1>
 					<hr />
-					<div>When you, in principal, like the idea to <a href="/blog/2017/01/serving-single-page-applications-with-domino.html">serve SPA from the http server</a>, you will encounter the pressing question: <strike>
-  where do babies come from 
-</strike> how to get your application deployed onto the http server? This applies to nodeJS applications too, but that is part of another story for another time. 
+					<div>When you, in principal, like the idea to <a href="/blog/2017/01/serving-single-page-applications-with-domino.html">serve SPA from the http server</a>, you will encounter the pressing question: <strike> where do babies come from </strike> how to get your application deployed onto the http server? This applies to nodeJS applications too, but that is part of another story for another time. 
 <br> On <a href="https://console.ng.bluemix.net/">Bluemix</a> that's easy: just use a <a href="https://hub.jazz.net/docs/deploy/#example">Pipeline</a>. 
 <br> For mere mortal environments there are several options: 
 <ul> 
@@ -150,31 +149,36 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Setting up a new site should be fast and reliable (including https - but that's part 2)</li> 
 </ul> The "secret" ingredients here are <a href="https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks#Server-Side-Hooks">git-hooks</a>, in specific the <code>post-receive</code>. Hooks, in a nutshell are shell scripts that are triggered by events that happen to a git environment. I got inspired by <a href="http://nicolasgallagher.com/simple-git-deployment-strategy-for-static-sites/">this entry</a> but wanted to automate the setup.So I devised the following shell script: 
 <br> 
-<pre class="brush: bash">#!/bin/bash
+<pre><code class="language-bash">
+#!/bin/bash
 # Script to establish a git driven static site 
 WEBROOT=~/var/www
 GITROOT=~/var/repositories
 SITENAME=$1
 
 # Check if we have a parameter. We expect the base URL only
+
 if [ -z ${SITENAME+x} ]; then
-  echo "You need to provide a site name: addnginxsite.sh acme.com";
-  exit
+echo "You need to provide a site name: addnginxsite.sh acme.com";
+exit
 else
- echo "Site to be created '$SITENAME' with alias 'www.$SITENAME'";
+echo "Site to be created '$SITENAME' with alias 'www.$SITENAME'";
 fi
 
 # Create the web root directory and .wellknown for letsencrypt
+
 mkdir -p $WEBROOT/$SITENAME/.wellknown
 echo "<h1>Site root for $SITENAME</h1>" &gt; $WEBROOT/$SITENAME/index.html
 
 # Create the repository and add the index file
+
 git init --bare $GITROOT/$SITENAME
 
 git -C $WEBROOT/$SITENAME --git-dir=$GITROOT/$SITENAME --work-tree=$WEBROOT/$SITENAME add --all
 git -C $WEBROOT/$SITENAME --git-dir=$GITROOT/$SITENAME --work-tree=$WEBROOT/$SITENAME commit -m "automatic creation of ${SITENAME}"
 
 # Create the commit hook
+
 HOOKNAME=$GITROOT/$SITENAME/hooks/post-receive
 echo "#!/bin/bash" &gt; $HOOKNAME
 echo "if [ \`git rev-parse --abbrev-ref HEAD\` == 'master' ]; then" &gt;&gt; $HOOKNAME
@@ -183,7 +187,7 @@ echo "    git --work-tree=$WEBROOT/$SITENAME checkout --force" &gt;&gt; $HOOKNAM
 echo "fi" &gt;&gt; $HOOKNAME
 chmod +x $HOOKNAME
 echo Done creation of $SITENAME
-</pre> 
+</code></pre> 
 <br> You need to adjust the path variables to your environment. Next stop: <!-- a href="2017/01/git-deploy-your-static-sites-part-1.html"  -->Create the nginx site with SSL. 
 <br> As usual: YMMV</div>
 					<hr />
@@ -195,12 +199,10 @@ Stephan H Wissel</a> on 12 January 2017
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/nginx.html">nginx</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2017/01/git-deploy-your-static-sites-part-1.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="GIT deploy your static sites - Part 1" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2017/01/git-deploy-your-static-sites-part-1.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -300,8 +302,7 @@ categories:  <a href="/blog/categories/nginx.html">nginx</a>  <a href="/blog/cat
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2017/01/git-deploy-your-static-sites-part-1.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -313,6 +314,7 @@ categories:  <a href="/blog/categories/nginx.html">nginx</a>  <a href="/blog/cat
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

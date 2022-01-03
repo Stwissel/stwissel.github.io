@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -152,7 +153,8 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Initially also update Domino using a web service - so during transition no comments would get lost</li> 
 </ul> 
 <p>In its initial incarnation the Comment servlet is a OSGi plugin that listens to the <code>/comments</code> URL implemented as Wink servlet. So the class of interest is the one defining the service. We have one method for post, one for get and a helper function</p> 
-<pre class="brush: java">/**
+<pre><code class="language-java">
+/**
  * Wink implementation of Comment service
  */
 @Workspace(workspaceTitle = "Blog Comments", collectionTitle = "Create or display comments")
@@ -260,10 +262,12 @@ public class CommentService extends CommentResponse {
         }
         mon.stop();
     }
+
 }
-</pre><p>The two interesting lines in the class above are <code>CommentManager.INSTANCE.saveComment(comment, true);</code> and <code> CommentManager.INSTANCE.loadComments(parentid);</code>, with the former saving a new comment and the later loading the list of comments. Both use the CommentsManager Singleton to access comments. The key component is a <a href="https://github.com/google/guava">Google Guava</a> cache and the <a href="http://www.ikea.com/sg/en/catalog/categories/series/07488/" title="Hope you don't mind this practical joke">Ektorp</a> CouchDB library</p> 
+</code></pre><p>The two interesting lines in the class above are <code>CommentManager.INSTANCE.saveComment(comment, true);</code> and <code> CommentManager.INSTANCE.loadComments(parentid);</code>, with the former saving a new comment and the later loading the list of comments. Both use the CommentsManager Singleton to access comments. The key component is a <a href="https://github.com/google/guava">Google Guava</a> cache and the <a href="http://www.ikea.com/sg/en/catalog/categories/series/07488/" title="Hope you don't mind this practical joke">Ektorp</a> CouchDB library</p> 
 <h3>Setting up the cache</h3> 
-<pre class="brush: java"> class CommentLoader extends CacheLoader&lt;String, Collection&lt;BlogComment&gt;&gt; {
+<pre><code class="language-java">
+ class CommentLoader extends CacheLoader&lt;String, Collection&lt;BlogComment&gt;&gt; {
 
         private final Logger logger = Logger.getLogger(this.getClass().getName());
 
@@ -296,9 +300,11 @@ public class CommentService extends CommentResponse {
         CommentLoader loader = new CommentLoader();
         this.commentCache = CacheBuilder.newBuilder().maximumSize(1000).recordStats().expireAfterAccess(8, TimeUnit.HOURS)
                 .build(loader);
-</pre> 
+
+</code></pre> 
 <h3>Save a comment</h3> 
-<pre class="brush: java">public String saveComment(BlogComment bc, boolean validate) {
+<pre><code class="language-java">
+public String saveComment(BlogComment bc, boolean validate) {
         String key = this.config.CHECKCAPTCHA ? this.config.RECAPTCHAKEY : null;
         boolean isValid = bc.isValid(key);
         String result = bc.getValidationResult();
@@ -325,9 +331,11 @@ public class CommentService extends CommentResponse {
         }
         return result;
     }
-</pre> 
+
+</code></pre> 
 <h3>Load comments</h3> 
-<pre class="brush: java">public Collection&lt;BlogComment&gt; loadComments(final String parentId) {
+<pre><code class="language-java">
+public Collection&lt;BlogComment&gt; loadComments(final String parentId) {
         Collection&lt;BlogComment&gt; result = null;
         if (parentId != null) {
             try {
@@ -338,9 +346,10 @@ public class CommentService extends CommentResponse {
         }
         return result;
     }
-</pre> 
+</code></pre> 
 <h3>Getting a gravatar image</h3> 
-<pre class="brush: java">public String getGravatarURL() {
+<pre><code class="language-java">
+public String getGravatarURL() {
 
         if ((this.gravatarURL == null) || this.gravatarURL.trim().equals("")) {
             if (this.eMail != null) {
@@ -351,27 +360,30 @@ public class CommentService extends CommentResponse {
 
         return this.gravatarURL;
     }
-</pre> 
+
+</code></pre> 
 <h3>Create HTML from Markdown</h3> 
-<pre class="brush: java">private void createHtmlBody(String markdownBody) {
+<pre><code class="language-java">
+private void createHtmlBody(String markdownBody) {
         PegDownProcessor p = new PegDownProcessor();
         this.htmlBody = p.markdownToHtml(HTMLFilter.filter(markdownBody));
     }
-</pre> 
+</code></pre> 
 <h3>Check for valid Captcha</h3> 
-<pre class="brush: java">public static boolean isValidCaptcha(String captchaKey, String remoteAddress, String challenge, String response) {
-		boolean result = true;
-		// We only test if we have a remote address and the captcha switch is on
-		if (remoteAddress != null &amp;&amp; captchaKey != null) {
-			ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
-			reCaptcha.setPrivateKey(captchaKey);
-			ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(remoteAddress, challenge, response);
-			result = reCaptchaResponse.isValid();
-		}
+<pre><code class="language-java">
+public static boolean isValidCaptcha(String captchaKey, String remoteAddress, String challenge, String response) {
+  boolean result = true;
+  // We only test if we have a remote address and the captcha switch is on
+  if (remoteAddress != null &amp;&amp; captchaKey != null) {
+   ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
+   reCaptcha.setPrivateKey(captchaKey);
+   ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(remoteAddress, challenge, response);
+   result = reCaptchaResponse.isValid();
+  }
 
-		return result;
-	}
-</pre> 
+return result;
+}
+</code></pre> 
 <p>For the full details of the implementation, including the background task talking to Domino, you need to wait for the source release on Github. Next stop: the comment front end</p></div>
 					<hr />
 					<p>
@@ -382,12 +394,10 @@ Stephan H Wissel</a> on 04 May 2017
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/blog.html">Blog</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2017/05/from-blogsphere-to-a-static-site-part-4-comment-backend.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="From Blogsphere to a Static Site (Part 4) - Comment backend" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2017/05/from-blogsphere-to-a-static-site-part-4-comment-backend.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -491,8 +501,7 @@ categories:  <a href="/blog/categories/blog.html">Blog</a>
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2017/05/from-blogsphere-to-a-static-site-part-4-comment-backend.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -504,6 +513,7 @@ categories:  <a href="/blog/categories/blog.html">Blog</a>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

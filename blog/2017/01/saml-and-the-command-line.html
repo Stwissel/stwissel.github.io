@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -138,7 +139,8 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <br> One lovely step in the process: the IBM IdP returns a HTML page with a hidden form containing the SAML assertion result to be posted back to the application provider. Quite interesting, when your application provider is a command line app. Let's get to work. 
 <br> The script is written in <a href="https://nodejs.org">node.js</a> and uses <a href="https://www.npmjs.com/package/request">request</a> and <a href="https://www.npmjs.com/package/fast-html-parser">fast-html-parser</a> npm package. The first step is to load the login form (which comes with a first set of cookies) 
 <br> 
-<pre class="brush: js">var requestOptionsTemplate = {
+<pre><code class="language-js">
+var requestOptionsTemplate = {
     headers: {
         'Origin': 'https://api.notes.ap.collabserv.com/api/traveler/',
         'User-Agent': 'ancy CommandLine Script',
@@ -155,10 +157,11 @@ function scLoginPart1() {
     requestOptions.url = 'https://apps.na.collabserv.com/manage/account/dashboardHandler/input';
     request(requestOptions, scLoginPart2);
 }
-</pre> 
+</code></pre> 
 <br> The function calls the URL where the login form can be found. The result gets delivered to the function <code>scLoginPart2</code>. That function makes use of a global configuration variable <code>config</code> that was created through <code>const config = require("./config.json")</code> and contains all the credentials we need. Step2 submits the form and hands over to Step3. 
 <br> 
-<pre class="brush: js">function scLoginPart2(err, httpResponse, body) {
+<pre><code class="language-js">
+function scLoginPart2(err, httpResponse, body) {
     if (err) {
         return console.error(err);
     }
@@ -184,16 +187,17 @@ function captureCookies(response) {
     var outgoingCookies = [];
     if (incomingCookies) {
         incomingCookies.forEach(function(cookie) {
-            outgoingCookies.push(cookie.split(';')[0]);
+            outgoingCookies.push[cookie.split(';'](0));
         });
     }
     // Array, allows for duplicate coolie names
     return outgoingCookies;
 }
-</pre> 
+</code></pre> 
 <br> Part 3 / 4 finally collect all the cookies we need, so to turn attention to getting the API token in step 5 
 <br> 
-<pre class="brush: js">function scLoginPart3(err, httpResponse, body) {
+<pre><code class="language-js">
+function scLoginPart3(err, httpResponse, body) {
     if (err) {
         console.error('Login failed miserably');
         return console.error(err);
@@ -223,9 +227,10 @@ function scLoginPart4(err, httpResponse, body) {
     // Now we have some cookies in app, we need the SAML dance for api.notes
     scLoginPart5(cookieHarvest)
 }
-</pre> 
+</code></pre> 
 <br> In Part 5 we first request the URL with actual data (devices in our case), but get another SAML dance step, since we have <code>apps.na</code> vs <code>api.notes</code> in the URL<br> 
-<pre class="brush: js">function scLoginPart5(incomingCookies) {
+<pre><code class="language-js">
+function scLoginPart5(incomingCookies) {
     console.log("Executing SAML postback to SmartCloud");
     var requestOptions = Object.assign({}, requestOptionsTemplate);
     requestOptions.headers.Cookie = incomingCookies.join('; ');
@@ -233,10 +238,11 @@ function scLoginPart4(err, httpResponse, body) {
     requestOptions.url = 'https://api.notes.ap.collabserv.com/api/traveler/devices';
     request(requestOptions, scLoginPart6);
 }
-</pre> 
+</code></pre> 
 <br> Part 6 is the interesting one. If not authenticated against the <code>api.notes</code> URL yet, the server will return an HTML form with a JavaScript action that posts that form, containing the SAML assertion to the api URL. Since we don't use a browser to handle that automatically, we need to grab the html, extract the form and post it ourselves 
 <br> 
-<pre class="brush: js">function scLoginPart6(err, httpResponse, body) {
+<pre><code class="language-js">
+function scLoginPart6(err, httpResponse, body) {
     if (err) {
         return console.error(err);
     }
@@ -274,11 +280,13 @@ function scLoginPart4(err, httpResponse, body) {
         console.error('Authentication to SmartCloud failed');
         process.exit(1);
     }
+
 }
-</pre> 
+</code></pre> 
 <br> Part 7 then processes an successful redirect to get our first actual payload. 
 <br> 
-<pre class="brush: js">function scLoginPart7(err, response, body) {
+<pre><code class="language-js">
+function scLoginPart7(err, response, body) {
     if (err) {
         return console.error(err);
     }
@@ -295,7 +303,7 @@ function scLoginPart4(err, httpResponse, body) {
         doSomethingUseful(goodBody, resultCookies);
     });
 }
-</pre> 
+</code></pre> 
 <br> The error path in the code isn't very well modeled, so there's work left to do. So there were just <a href="https://www.youtube.com/watch?v=rP0vn9PZ3kU" title="That pun is only for old German bags">7 bridges to cross</a>. 
 <br> As usual YMMV.</div>
 					<hr />
@@ -307,12 +315,10 @@ Stephan H Wissel</a> on 30 January 2017
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/nodejs.html">NodeJS</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2017/01/saml-and-the-command-line.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="SAML and the Command Line" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2017/01/saml-and-the-command-line.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -415,8 +421,7 @@ categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href=
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2017/01/saml-and-the-command-line.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -428,6 +433,7 @@ categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href=
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

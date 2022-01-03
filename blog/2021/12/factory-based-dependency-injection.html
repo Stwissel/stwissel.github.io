@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -138,7 +139,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <p>The general approach to make dependent code testable is <a href="https://en.wikipedia.org/wiki/Dependency_injection">Dependency injection</a>. Instead of calling out and create an instance of the dependency, the dependency is hand over as parameter. This could be in a constructor, a property setter or as method parameter.</p> 
 <p>A key requirement for successful dependency injection: the injected object gets injected as an <a href="https://docs.oracle.com/javase/tutorial/java/concepts/interface.html">Interface</a> rather than a concrete class. So <a href="https://amzn.to/3ozoD9k">do your homework</a> and build your apps around interfaces.</p> 
 <p>An example to illustrate how not to do, and how to change:</p> 
-<pre class="brush: java">public Optional&lt;Customer&gt; findCustomer(final String id) {
+<pre><code class="language-java">public Optional&lt;Customer&gt; findCustomer(final String id) {
  // Some processing here, omitted for clarity
 
  // actual find
@@ -146,9 +147,9 @@ catch(e){window.attachEvent("onload", $buo_f)}
  return Optional.ofNullable(find.customerById(id));
 
 }
-</pre> 
+</code></pre> 
 <p>When you try to test this function, you depend on the static method of the <code>CustomerDb</code> which is a pain to mock out. So one consideration could be to hand the <code>CustomerDb</code> as dependency. But this would violate "provide interface, not class". The conclusion, presuming <code>CustomerDbFind</code> is an interface will be:</p> 
-<pre class="brush: java">public Optional&lt;Customer&gt; findCustomer(final CustomerDbFind find, final String id) {
+<pre><code class="language-java">public Optional&lt;Customer&gt; findCustomer(final CustomerDbFind find, final String id) {
  // Some processing here, omitted for clarity
 
  // actual find
@@ -156,11 +157,12 @@ catch(e){window.attachEvent("onload", $buo_f)}
  return Optional.ofNullable(find.customerById(id));
 
 }
-</pre> 
+</code></pre> 
 <p>This now allows to construct the dependency outside the method to test by implementing the interface or using a <a href="https://site.mockito.org">Mock library</a></p> 
 <h3>Not so fast</h3><p>Handing over all dependencies as method parameters can lead to parameter bloat and prevent methods to be used in <a href="https://www.baeldung.com/java-8-functional-interfaces">functional interfaces</a>, which by design don't allow adding additional parameters.</p> 
 <p>The solution we came up with, is to use a factory interface to provide all those global values (setup, flags, pools etc) in an default implemented interface that is retrieved from a <a href="https://www.baeldung.com/java-singleton">Singleton</a>. Bear with me on the details:</p> 
-<pre class="brush: java">// The interface we get global objects from
+<pre><code class="language-java">
+// The interface we get global objects from
 public interface GlobalFactory() {
 
    default CustomerDbFind getFinder() {
@@ -188,9 +190,9 @@ public enum GlobalFactorySource() {
     this.gf = new GlobalFactory() {};
   }
 }
-</pre> 
+</code></pre> 
 <p>Now we can refactor our method to be compliant with functional interfaces (one in, one out):</p> 
-<pre class="brush: java">public Optional&lt;Customer&gt; findCustomer(final String id) {
+<pre><code class="language-java">public Optional&lt;Customer&gt; findCustomer(final String id) {
  // Some processing here, omitted for clarity
 
  // actual find
@@ -198,17 +200,17 @@ public enum GlobalFactorySource() {
  return Optional.ofNullable(find.customerById(id));
 
 }
-</pre> 
+</code></pre> 
 <p>This now can be used in <a href="https://stackify.com/streams-guide-java-8/">Java streams</a> like this:</p> 
-<pre class="brush: java">List&lt;Customer&gt; customers = customerIdList.stream()
+<pre><code class="language-java">List&lt;Customer&gt; customers = customerIdList.stream()
                            .map(this::findCustomer)
                            .filter(Optional::isPresent)
                            .map(Optional::get)
                            .collect(Collectors.toList());
-</pre> 
+</code></pre> 
 <h3>Onwards to testing</h3> 
 <p>In your unit test (in BeforeAll) you would overwrite the factory with something constructed or mocked:</p> 
-<pre class="brush: java">GlobalFactory mockFactory = new GlobalFactory() {
+<pre><code class="language-java">GlobalFactory mockFactory = new GlobalFactory() {
 
   @Overwrite
   CustomerDbFind getFinder() {
@@ -225,7 +227,7 @@ Assertion.assertTrue(findCustomer.isPresent());
 
 // At the end
 GlobalFactorySource.INSTANCE.reset();
-</pre> 
+</code></pre> 
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>
@@ -236,12 +238,10 @@ Stephan H Wissel</a> on 09 December 2021
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/categories/java.html">Java</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2021/12/factory-based-dependency-injection.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Factory based dependency injection" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2021/12/factory-based-dependency-injection.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -341,8 +341,7 @@ categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/c
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2021/12/factory-based-dependency-injection.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -354,6 +353,7 @@ categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/c
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

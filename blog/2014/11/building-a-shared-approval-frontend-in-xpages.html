@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -151,45 +152,44 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <br> 
 <br> The green part of the application exists, the first question is: how to design the submission. There are a number of options you could choose from: 
 <ul> 
- <li>Have the Approval Central application poll participating applications on schedule. That option is least efficient, but might be your only choice if you can't touch the existing apps at all (happens more often than you think, when <strike>
-    admins are paranoid 
-  </strike> policies are set very cautious</li> 
+ <li>Have the Approval Central application poll participating applications on schedule. That option is least efficient, but might be your only choice if you can't touch the existing apps at all (happens more often than you think, when <strike> admins are paranoid </strike> policies are set very cautious</li> 
  <li>Have each application create a flow document directly in the workflow central application. You could use a inherited LotusScript library for that. While that might have been the prefered choice a decade ago, it has two problems: first you limit your participating applications to Notes only (and there are other applications with decision requirements) and you would expose the inner workings of your application prematurely</li> 
  <li>Use a web service interface to implement <a href="http://en.wikipedia.org/wiki/Design_by_contract">Contract first</a> development. While REST is the current IT fashion, you pick SOAP. The simple reason: LotusScript can talk SOAP quite well via the Webservice consumer design element, while REST would require your notification code being written in Java. So a SOAP service it is</li> 
 </ul>To get started two classes in LotusScript provide the interface the WebService provider needs to generate the WSDL file for submission. In a production environment you need to add validation and sanity checks to the code (and probably more fields): 
 <br> 
-<pre class="brush: vb">Option Public
+<pre><code class="language-vb">
+Option Public
 Option Declare
 
-Public Class ApprovalRequest	
-	public System As String
-	Public CallbackLocation As String
-	Public Title As String
-	Public Requestor As String
+Public Class ApprovalRequest
+public System As String
+Public CallbackLocation As String
+Public Title As String
+Public Requestor As String
 
 End Class
 
 Public Class ApprovalSubmission
-	Public Function submitForApproval(request As ApprovalRequest) As String
-		Dim s As New NotesSession
-		Dim db As NotesDatabase
-		Dim doc As NotesDocument
-		submitForApproval = "OK"
-		
-		Set db = s.Currentdatabase
-		Set doc = db.Createdocument()
-		call doc.Replaceitemvalue("Form", "approvalRequest" )
-		Call doc.Replaceitemvalue("System", request.System)
-		Call doc.Replaceitemvalue("Title", request.Title)
-		Call doc.Replaceitemvalue("CallbackLocation", request.CallbackLocation )
-		Call doc.Replaceitemvalue("Created", now)
-		Call doc.Save(true, true)
-	End Function	
+Public Function submitForApproval(request As ApprovalRequest) As String
+Dim s As New NotesSession
+Dim db As NotesDatabase
+Dim doc As NotesDocument
+submitForApproval = "OK"
+Set db = s.Currentdatabase
+Set doc = db.Createdocument()
+call doc.Replaceitemvalue("Form", "approvalRequest" )
+Call doc.Replaceitemvalue("System", request.System)
+Call doc.Replaceitemvalue("Title", request.Title)
+Call doc.Replaceitemvalue("CallbackLocation", request.CallbackLocation )
+Call doc.Replaceitemvalue("Created", now)
+Call doc.Save(true, true)
+End Function
 End Class
-</pre> 
+</code></pre> 
 <br> Using this class you can generate the WSDL by pointing to <code>ApprovalSubmission</code> as <i>PortType</i> class. The resulting WSDL looks like this: 
 <br> 
-<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre><code class="language-xml">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;definitions targetNamespace="urn:DefaultNamespace"
      xmlns="http://schemas.xmlsoap.org/wsdl/"
      xmlns:apachesoap="http://xml.apache.org/xml-soap"
@@ -242,7 +242,7 @@ End Class
   &lt;/port&gt;
  &lt;/service&gt;
 &lt;/definitions&gt;
-</pre> 
+</code></pre> 
 <br> Using a <a href="https://addons.mozilla.org/en-US/firefox/addon/soa-client">SOAP client</a>, you can start testing that interface. When you look at the skeleton API you will see a notable absence of specific data for that request. I was thinking quite hard if the specific data should be included and if yes in what format. In conclusion I opted against it to keep the interface lean. Also the set of potential decisions (Yes,No,Try again etc.) is something I'd rather delegate to a configuration document. This will allow to gradually move the whole flow into the approval application. 
 <br> The callback location would, for a Notes application, contain the notes://... URL, so <code>session.resolve(CallbackLocation)</code> will give us a handle on the document. Using our <a href="/blog/2014/11/mustache-helper-for-domino.html">newly acquired</a> {{Mustache}} skills, we can call back and pull information out as HTML blob as needed. You might want to pull different information based on the (size) capabilities of your target device. 
 <br> The callback can later be used to write back values into the application document. Some planning to get that right (and some facade and factories) is required. Another consideration, once your code is working, is caching. Should you pull the data from the applications live on request or pull them when you get the request. Until your application is running well I'd opt for live pulling - unless the access to the servers is slow. 
@@ -256,12 +256,10 @@ Stephan H Wissel</a> on 17 November 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/xpages.html">XPages</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/11/building-a-shared-approval-frontend-in-xpages.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Building a shared approval frontend in XPages" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/11/building-a-shared-approval-frontend-in-xpages.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -364,8 +362,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2014/11/building-a-shared-approval-frontend-in-xpages.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -377,6 +374,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

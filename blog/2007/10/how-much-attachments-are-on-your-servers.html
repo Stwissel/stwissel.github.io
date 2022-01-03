@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -486,149 +487,126 @@ catch(e){window.attachEvent("onload", $buo_f)}
   
   
   
-'SizeTools: 
+'SizeTools:
 
 Option Public
 Option Declare
 
 Public Class DBSizeInfo
-	Private db As NotesDatabase 'The database to be counted
-	Public DBSize As Variant 'Size of the database 
-	Public AttachmentSize As Variant
-	Public AttachmentCount As Variant
-	Public DocumentCount As Variant
-	Public hasError As Boolean
-	
-	Sub new (curDB As NotesDatabase)
-		Set db = curDB
-		hasError = False
-	End Sub
-	
-	
-	Public Function Count As Boolean
-		Dim doc As NotesDocument
-		Dim dc As NotesDocumentCollection
-		Dim countResult As Variant
-		Dim sizeResult As Variant
-		On Error Goto Err_Count
-		
-		If Not db.IsOpen Then
-			Call db.Open("","")
-			If Not db.IsOpen Then
-				'We could not open it
-				Print "Can't open " &amp; db.FilePath
-				Count = False
-				Goto Exit_Count
-			End If
-		End If
-		
-		DBSize = db.Size
-		AttachmentCount = 0
-		AttachmentSize = 0
-		DocumentCount = 0
-		
-		Set dc = db.AllDocuments
-		Set doc = dc.GetFirstDocument
-		
-		Do Until doc Is Nothing
-			If doc.HasEmbedded Then
-				Call getAttachmentSizes(doc)
-			End If
-			DocumentCount = DocumentCount + 1
-			Set doc = dc.GetNextDocument(doc)
-		Loop
-		
-		Count = True 'If we got here it worked
+Private db As NotesDatabase 'The database to be counted
+Public DBSize As Variant 'Size of the database
+Public AttachmentSize As Variant
+Public AttachmentCount As Variant
+Public DocumentCount As Variant
+Public hasError As Boolean
+Sub new (curDB As NotesDatabase)
+Set db = curDB
+hasError = False
+End Sub
+Public Function Count As Boolean
+Dim doc As NotesDocument
+Dim dc As NotesDocumentCollection
+Dim countResult As Variant
+Dim sizeResult As Variant
+On Error Goto Err_Count
+If Not db.IsOpen Then
+Call db.Open("","")
+If Not db.IsOpen Then
+'We could not open it
+Print "Can't open " &amp; db.FilePath
+Count = False
+Goto Exit_Count
+End If
+End If
+DBSize = db.Size
+AttachmentCount = 0
+AttachmentSize = 0
+DocumentCount = 0
+Set dc = db.AllDocuments
+Set doc = dc.GetFirstDocument
+Do Until doc Is Nothing
+If doc.HasEmbedded Then
+Call getAttachmentSizes(doc)
+End If
+DocumentCount = DocumentCount + 1
+Set doc = dc.GetNextDocument(doc)
+Loop
+Count = True 'If we got here it worked
 Exit_Count:
-		Exit Function
-		
+Exit Function
 Err_Count:
-		Print Error$ &amp; " in  Count in " &amp; db.FilePath &amp; " in line " &amp; Cstr(Erl)
-		Count = False
-		hasError = True
-		Resume Exit_Count
-	End Function
-	
-	Public Sub Save(reportDB As NotesDatabase)
-		Dim doc As NotesDocument
-		Dim v As NotesView
-		Dim searchkey(0 To 1) As String
-		
-		On Error Goto Err_Save
-		
-		Set v = reportDB.GetView("(LookupByServerAndPath)")
-		If v Is Nothing Then
-			Set doc = New NotesDocument(reportDB)
-		Else
-			If db.Server = "" Then
-				searchkey(0) = "(local)"
-			Else
-				searchkey(0) = db.Server				
-			End If
-			searchkey(1) = Lcase(db.FilePath)
-			Set doc = v.GetDocumentByKey(searchkey,True)
-			If doc Is Nothing Then
-				Set doc = New NotesDocument(reportDB)
-			End If
-		End If
-		
-		Call doc.ReplaceItemValue("Form","SizeReport")
-		Call doc.ReplaceItemValue("DBSize",Me.DBSize)
-		Call doc.ReplaceItemValue("AttachmentSize",Me.AttachmentSize)
-		Call doc.ReplaceItemValue("AttachmentCount",Me.AttachmentCount)
-		Call doc.ReplaceItemValue("DocumentCount",Me.DocumentCount)	
-		If hasError Then
-			Call doc.ReplaceItemValue("ErrorFlag",1)				
-		Elseif doc.HasItem("hasError") Then
-			Call doc.RemoveItem("ErrorFlag")
-		End If
-		If db.Server = "" Then
-			Call doc.ReplaceItemValue("ServerName","(local)")
-		Else
-			Call doc.ReplaceItemValue("ServerName",db.Server	)
-		End If
-		
-		Call doc.ReplaceItemValue("FilePath",Lcase(db.FilePath))
-		Call doc.Save(True,True)
-		
+Print Error$ &amp; " in Count in " &amp; db.FilePath &amp; " in line " &amp; Cstr(Erl)
+Count = False
+hasError = True
+Resume Exit_Count
+End Function
+Public Sub Save(reportDB As NotesDatabase)
+Dim doc As NotesDocument
+Dim v As NotesView
+Dim searchkey(0 To 1) As String
+On Error Goto Err_Save
+Set v = reportDB.GetView("(LookupByServerAndPath)")
+If v Is Nothing Then
+Set doc = New NotesDocument(reportDB)
+Else
+If db.Server = "" Then
+searchkey(0) = "(local)"
+Else
+searchkey(0) = db.Server
+End If
+searchkey(1) = Lcase(db.FilePath)
+Set doc = v.GetDocumentByKey(searchkey,True)
+If doc Is Nothing Then
+Set doc = New NotesDocument(reportDB)
+End If
+End If
+Call doc.ReplaceItemValue("Form","SizeReport")
+Call doc.ReplaceItemValue("DBSize",Me.DBSize)
+Call doc.ReplaceItemValue("AttachmentSize",Me.AttachmentSize)
+Call doc.ReplaceItemValue("AttachmentCount",Me.AttachmentCount)
+Call doc.ReplaceItemValue("DocumentCount",Me.DocumentCount)
+If hasError Then
+Call doc.ReplaceItemValue("ErrorFlag",1)
+Elseif doc.HasItem("hasError") Then
+Call doc.RemoveItem("ErrorFlag")
+End If
+If db.Server = "" Then
+Call doc.ReplaceItemValue("ServerName","(local)")
+Else
+Call doc.ReplaceItemValue("ServerName",db.Server )
+End If
+Call doc.ReplaceItemValue("FilePath",Lcase(db.FilePath))
+Call doc.Save(True,True)
 Exit_Save:
-		Exit Sub
-		
+Exit Sub
 Err_Save:
-		Print Error$ &amp; " in " &amp; db.FilePath
-		Resume Exit_Save
-	End Sub
-	
-	Private Sub getAttachmentSizes(doc As NotesDocument)
-		Dim attNames As Variant		
-		Dim att As NotesEmbeddedObject
-		Dim result As Variant
-		result = 0
-		On Error Goto Err_getAttachmentSizes
-		
-		attNames = Evaluate(|@Attachmentnames|, doc)
-		
-		If attNames(0) &lt;&gt; "" Then
-			Forall an In attNames
-				Print "Checking Attachment  " &amp; an
-				Set att = doc.GetAttachment(an)
-				result = result + att.FileSize
-				Me.AttachmentCount = Me.AttachmentCount + 1
-			End Forall
-		End If
-		
+Print Error$ &amp; " in " &amp; db.FilePath
+Resume Exit_Save
+End Sub
+Private Sub getAttachmentSizes(doc As NotesDocument)
+Dim attNames As Variant
+Dim att As NotesEmbeddedObject
+Dim result As Variant
+result = 0
+On Error Goto Err_getAttachmentSizes
+attNames = Evaluate(|@Attachmentnames|, doc)
+If attNames(0) &lt;&gt; "" Then
+Forall an In attNames
+Print "Checking Attachment " &amp; an
+Set att = doc.GetAttachment(an)
+result = result + att.FileSize
+Me.AttachmentCount = Me.AttachmentCount + 1
+End Forall
+End If
 Exit_getAttachmentSizes:
-		Me.AttachmentSize = Me.AttachmentSize +  result
-		Exit Sub
-		
+Me.AttachmentSize = Me.AttachmentSize + result
+Exit Sub
 Err_getAttachmentSizes:
-		Print Error$ &amp; " in getAttachmentSizes doc: " &amp; doc.UniversalID 
-		Resume Exit_getAttachmentSizes
-	End Sub
-	
+Print Error$ &amp; " in getAttachmentSizes doc: " &amp; doc.UniversalID
+Resume Exit_getAttachmentSizes
+End Sub
 End Class
 
- 
  
  </div></pre> 
 <br>You can <a href="/blog/attachments/2007/Attachmentsizes.zip">download the sample database</a>. 
@@ -642,12 +620,10 @@ Stephan H Wissel</a> on 29 October 2007
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2007/10/how-much-attachments-are-on-your-servers.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="How much attachments are on your servers?" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2007/10/how-much-attachments-are-on-your-servers.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -784,8 +760,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2007/10/how-much-attachments-are-on-your-servers.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -797,6 +772,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

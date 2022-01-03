@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -133,7 +134,8 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <br> <code>@Retention(RetentionPolicy.RUNTIME) public @interface ItemPathMappings { String[] value(); }</code> 
 <br> To further improve usefulness, I created a "BaseConfiguration" my classes will inherit from, that contains the common properties I want all my classes (and documents) to have. You might want to adjust it to your needs: 
 <br> 
-<pre class="brush : java">ackage com.notessensei.domino;
+<pre><code class="language-java">
+ackage com.notessensei.domino;
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -168,9 +170,10 @@ public abstract class BaseConfiguration implements Serializable, Comparable&lt;B
         return Serializer.toXMLString(this);
     }
 }
-</pre> 
+</code></pre> 
 <br> The next building block is my Serializer support with a couple of static methods, that make dealing with XML and JSON easier. 
-<pre class="brush : java">package com.notessensei.domino;
+<pre><code class="language-java">
+package com.notessensei.domino;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -248,10 +251,11 @@ public class Serializer {
         return targetClass.cast(um.unmarshal(in));
     }
 }
-</pre> 
+</code></pre> 
 <br> The key piece is for the XML serialization/deserialization to work is the abstract class <code>AbstractXmlDocument</code>. That class contains the load and save methods that interact with Domino's MIME capabilities as well as executing the XPath expressions to store the Notes fields. The implementations of this abstract class will have annotations that combine the Notes field name, the type and the XPath expression. An implementation would look like this: 
 <br> 
-<pre class="brush : java">package com.notessensei.domino.xmldocument;
+<pre><code class="language-java">
+package com.notessensei.domino.xmldocument;
 import javax.xml.bind.JAXBException;
 import lotus.domino.Database;
 import lotus.domino.Document;
@@ -314,10 +318,403 @@ public class ApplicationXmlDocument extends AbstractXmlDocument {
         return null;
     }
 }
-</pre> 
-<br></div>
+</code></pre> ## 
+<br> Here is the base class: 
+<br> 
+<pre><code class="language-java">
+package com.notessensei.domino.xmldocument;
+
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.TreeMap;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
+import lotus.domino.Item;
+import lotus.domino.MIMEEntity;
+import lotus.domino.MIMEHeader;
+import lotus.domino.NotesException;
+import lotus.domino.Stream;
+
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+
+import com.notessensei.domino.BaseConfiguration;
+import com.notessensei.domino.Serializer;
+
+@XmlAccessorType(XmlAccessType.NONE)
+public abstract class AbstractXmlDocument {
+
+    /**
+     * Holds the the definition that extracts data from an XML Document into
+     * a Notes Item. Will be triggered by an annotation in the implementation class
+     */
+    public class FieldExtractDefinition implements Comparable&lt;FieldExtractDefinition&gt; {
+
+        public final static String ELEMENT_SEPARATOR = "\\|";
+        private final String       path;
+        private final String       itemName;
+        private final FieldType    fieldType;
+
+        /**
+         * Creates a FieldExtractDefinition from a raw String in the format:
+         * Itemname|FieldType|XPath
+         * 
+         * @param rawString
+         */
+        public FieldExtractDefinition(String rawString) {
+            Scanner scanner = new Scanner(rawString);
+            scanner.useDelimiter(ELEMENT_SEPARATOR);
+            this.itemName = scanner.next();
+            this.fieldType = FieldType.valueOf(scanner.next().toUpperCase());
+            // The rest of the elements make the XPath
+            this.path = scanner.nextLine().substring(1);
+        }
+
+        public int compareTo(FieldExtractDefinition fed) {
+            return this.toString().compareTo(fed.toString());
+        }
+
+        public FieldType getDataType() {
+            return fieldType;
+        }
+
+        public String getItemName() {
+            return itemName;
+        }
+
+        public String getXPath() {
+            return path;
+        }
+
+        @Override
+        public String toString() {
+            return Serializer.toJSONString(this);
+        }
+
+    }
+
+    public enum FieldType {
+        NUMBER, TEXT, NAMES, READER, AUTHOR, DATE
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface ItemPathMappings {
+
+        String[] value();
+
+    }
+
+    private final String                             MIME_FIELD_NAME = "Body";
+    private final String                             FORM_NAME       = "Form";
+
+    private final Collection&lt;FieldExtractDefinition&gt; definitions     = new HashSet&lt;FieldExtractDefinition&gt;();
+
+    private String                                   formName;
+
+    private org.w3c.dom.Document                     style           = null;
+
+    public AbstractXmlDocument(String formName) {
+        this.formName = formName;
+        // Now load the annotations
+        ItemPathMappings ipm = this.getClass().getAnnotation(ItemPathMappings.class);
+        if (ipm != null) {
+            for (String oneMapping : ipm.value()) {
+                this.definitions.add(new FieldExtractDefinition(oneMapping));
+            }
+        }
+    }
+
+    public String getFormName() {
+        return this.formName;
+    }
+
+    public org.w3c.dom.Document getStyle() {
+        return this.style;
+    }
+
+    public abstract &lt;T extends BaseConfiguration&gt; T load(lotus.domino.Session session, lotus.domino.Database db, String unid);
+
+    public abstract &lt;T extends BaseConfiguration&gt; T load(lotus.domino.Session session, lotus.domino.Document d);
+
+    public boolean save(lotus.domino.Session session, lotus.domino.Document d, Object source) {
+        boolean success = true;
+        try {
+            boolean oldMime = session.isConvertMime();
+            session.setConvertMime(false);
+
+            // Save the form to be sure
+            if (this.formName != null) {
+                d.replaceItemValue(FORM_NAME, this.formName);
+            }
+
+            // We must remove the mime body - otherwise it will not work
+            if (d.hasItem(MIME_FIELD_NAME)) {
+                d.removeItem(MIME_FIELD_NAME);
+            }
+
+            org.w3c.dom.Document domDoc = Serializer.getDocument(source);
+
+            // Create the top mime entry
+            MIMEEntity root = d.createMIMEEntity(MIME_FIELD_NAME);
+            MIMEHeader header = root.createHeader("Content-Type");
+            header.setHeaderVal("multipart/mixed");
+
+            MIMEEntity body = root.createChildEntity();
+            MIMEHeader bheader = body.createHeader("Content-Type");
+            bheader.setHeaderVal("multipart/alternative");
+
+            MIMEEntity textMime = body.createChildEntity();
+            MIMEHeader textHeader = textMime.createHeader("Content-Type");
+            String cType = (this.style == null) ? "text/plain" : "text/html";
+            textHeader.setHeaderVal(cType);
+
+            Stream stream2 = session.createStream();
+            stream2.write(this.dom2Byte(domDoc, this.style));
+            textMime.setContentFromBytes(stream2, cType + "; charset=\"UTF-8\"", MIMEEntity.ENC_NONE);
+
+            MIMEEntity xmlMime = body.createChildEntity();
+            MIMEHeader xmlHeader = xmlMime.createHeader("Content-Type");
+            xmlHeader.setHeaderVal("application/xml");
+
+            Stream stream = session.createStream();
+            stream.write(this.dom2Byte(domDoc, null));
+            xmlMime.setContentFromBytes(stream, "application/xml; charset=\"UTF-8\"", MIMEEntity.ENC_NONE);
+
+            // Now extract the fields
+            this.extractFields(domDoc, d, body);
+
+            session.setConvertMime(oldMime);
+        } catch (NotesException e) {
+            success = false;
+            e.printStackTrace();
+        } catch (ParserConfigurationException e) {
+            success = false;
+            e.printStackTrace();
+        } catch (JAXBException e) {
+            success = false;
+            e.printStackTrace();
+        }
+
+        return success;
+    }
+
+    public Map&lt;String, String&gt; extractMappingResults(Object source) throws ParserConfigurationException, JAXBException {
+        Map&lt;String, String&gt; result = new TreeMap&lt;String, String&gt;();
+        org.w3c.dom.Document domDoc = (source instanceof org.w3c.dom.Document) ? (org.w3c.dom.Document) source : Serializer
+                    .getDocument(source);
+        for (FieldExtractDefinition f : this.definitions) {
+            String candidate = this.extractOneField(domDoc, f.getXPath());
+            if (candidate != null) {
+                result.put(f.getItemName(), candidate);
+            }
+        }
+
+        return result;
+    }
+
+    public void setFormName(String formName) {
+        this.formName = formName;
+    }
+
+    public AbstractXmlDocument setPrettyPrintStyle(org.w3c.dom.Document style) {
+        this.style = style;
+        return this;
+    }
+
+    public void setStyle(InputStream styleStream) {
+
+        Document d = null;
+        final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setValidating(false); // Will blow if set to true
+        factory.setNamespaceAware(true);
+
+        try {
+            InputSource source = new InputSource(styleStream);
+            final DocumentBuilder docb = factory.newDocumentBuilder();
+            d = docb.parse(source);
+
+        } catch (final Exception e) {
+            e.printStackTrace();
+            d = null;
+        }
+
+        if (d == null) {
+            System.out.println("DOM from stream generation failed:\n");
+        }
+
+        this.style = d;
+    }
+
+    /**
+     * Loads XML from Notes document and returns the content as bytes to
+     * be marshalled into a Java object creation
+     * 
+     * @param session
+     *            NotesSession
+     * @param d
+     *            Document with MIME content
+     * @return bytes for object instance creation
+     */
+    protected byte[] loadFromMime(lotus.domino.Session session, lotus.domino.Document d) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        try {
+            boolean oldMime = session.isConvertMime();
+            session.setConvertMime(false);
+
+            // Load the TOP mime entitiy - must be multipart/mixed
+            MIMEEntity root = d.getMIMEEntity(MIME_FIELD_NAME);
+            if (root != null &amp;&amp; root.getContentType().equals("multipart") &amp;&amp; root.getContentSubType().equals("mixed")) {
+                // We check for the body whtou should be multipart/alternate
+                MIMEEntity body = root.getFirstChildEntity();
+                if (body != null &amp;&amp; body.getContentType().equals("multipart") &amp;&amp; body.getContentSubType().equals("alternative")) {
+                    // Now we go after Content-Type = application/xml
+                    MIMEEntity payload = body.getFirstChildEntity();
+
+                    while (payload != null &amp;&amp; !payload.getContentSubType().equals("xml")) {
+                        System.out.println(payload.getContentType());
+                        System.out.println(payload.getContentSubType());
+                        MIMEEntity nextMime = payload.getNextEntity();
+                        payload.recycle();
+                        payload = nextMime;
+                    }
+
+                    if (payload != null) {
+                        Stream notesStream = session.createStream();
+                        payload.getContentAsBytes(notesStream);
+                        notesStream.setPosition(0);
+                        notesStream.getContents(out);
+                        notesStream.recycle();
+                    }
+                }
+
+            }
+            ;
+            session.setConvertMime(oldMime);
+        } catch (NotesException e) {
+            e.printStackTrace();
+        }
+
+        return out.toByteArray();
+    }
+
+    private byte[] dom2Byte(Document dom, Document stylesheet) {
+        StreamResult xResult = null;
+        DOMSource source = null;
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Transformer transformer = null;
+
+        try {
+            final TransformerFactory tFactory = TransformerFactory.newInstance();
+            xResult = new StreamResult(out);
+            source = new DOMSource(dom);
+
+            if (stylesheet != null) {
+                final DOMSource style = new DOMSource(stylesheet);
+                transformer = tFactory.newTransformer(style);
+            } else {
+                transformer = tFactory.newTransformer();
+            }
+
+            // We don't want the XML declaration in front
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+
+            transformer.transform(source, xResult);
+
+        } catch (final Exception e) {
+            e.printStackTrace();
+        }
+
+        return out.toByteArray();
+
+    }
+
+    private void extractFields(Document domDoc, lotus.domino.Document d, MIMEEntity body) {
+        Map&lt;String, String&gt; itemList = null;
+        try {
+            itemList = this.extractMappingResults(domDoc);
+        } catch (ParserConfigurationException e1) {
+            e1.printStackTrace();
+        } catch (JAXBException e1) {
+            e1.printStackTrace();
+        }
+
+        if (itemList == null) {
+            return;
+        }
+
+        for (FieldExtractDefinition f : this.definitions) {
+
+            String fName = f.getItemName();
+            String fValue = itemList.get(fName);
+
+            if (!fName.equalsIgnoreCase(MIME_FIELD_NAME) &amp;&amp; !(fValue == null)) {
+                // We can't allow to overwrite the body or write empty values
+                try {
+                    MIMEHeader h = body.createHeader(fName);
+                    h.setHeaderVal(fValue);
+                    Item curItem = d.replaceItemValue(fName, fValue);
+                    FieldType ft = f.getDataType();
+                    if (ft.equals(FieldType.AUTHOR)) {
+                        curItem.setAuthors(true);
+                    } else if (ft.equals(FieldType.READER)) {
+                        curItem.setReaders(true);
+                    }
+               
+                } catch (NotesException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+    }
+
+    private String extractOneField(Document domDoc, String xPathString) {
+
+        Object exprResult = null;
+        final XPath xpath = XPathFactory.newInstance().newXPath();
+        final MagicNamespaceContext nsc = new MagicNamespaceContext();
+        xpath.setNamespaceContext(nsc);
+
+        try {
+            exprResult = xpath.evaluate(xPathString, domDoc);
+        } catch (final XPathExpressionException e) {
+            System.err.println("XPATH failed for " + xPathString);
+            System.err.println(e.getMessage());
+        }
+        // if it failed we abort
+        if (exprResult == null) {
+            return null;
+        }
+
+        return exprResult.toString();
+
+    }
+}
+</code></pre> 
+<br> As time permits I will provide a full working example. 
+<br> YMMV!</div>
 					<hr />
- <a href="/blog/2015/03/xpages-xml-document-datasource-take-2.html">Read more</a>
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 05 March 2015
@@ -326,12 +723,10 @@ Stephan H Wissel</a> on 05 March 2015
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/xpages.html">XPages</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2015/03/xpages-xml-document-datasource-take-2.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="XPages XML Document DataSource - Take 2" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2015/03/xpages-xml-document-datasource-take-2.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -380,12 +775,10 @@ Stephan H Wissel</a> on 02 March 2015
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/bluemix.html">Bluemix</a>  <a href="/blog/categories/couchdb.html">CouchDB</a>  <a href="/blog/categories/java.html">Java</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Develop local, deploy (cloud) global - Java and CouchDB" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html";
 						</script>
 					</p>
-
 				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/2015/01/index.html"><i class="icon-hand-left"></i>By Date: January 2015</a>
@@ -571,8 +964,7 @@ categories:  <a href="/blog/categories/bluemix.html">Bluemix</a>  <a href="/blog
 		</div>
 	</footer>
 
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -584,6 +976,7 @@ categories:  <a href="/blog/categories/bluemix.html">Bluemix</a>  <a href="/blog
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

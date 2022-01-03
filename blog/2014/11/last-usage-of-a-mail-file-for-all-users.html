@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -136,91 +137,75 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>No email has been sent for a while</li> 
 </ul> Calendar entries or todo were not part of the consideration, but that's just a question in what view you look. For "any" document it is <code>($All)</code> and for sent documents <code>($Sent)</code>. The LotusScript code is just a few lines. I needs to be run, so it can access all mailboxes.You can do that in Full-Admin mode or run it with the server id. Important: all servers need to be reachable. Of course the code could be modified to run on the current server only and to send a (MIME) message instead of writing a file. Anyway here you go: 
 <br> 
-<pre class="brush: vb">Option Public
+<pre><code class="language-vb">
+Option Public
 Option Declare
 
 Sub Initialize
-	Dim s As New NotesSession
-	Dim allAdr As Variant
-	Dim out As NotesStream
-	Dim nab As NotesDatabase
-	
-	Set out = s.Createstream()
-	
-	'change this - you could write into
-	'an eMail or a database or or or
-	out.Open("report.csv")
-	
-	allAdr = s.Addressbooks
-	
-	ForAll oneDB In allAdr
-		Set nab = oneDB
-		Call recordUsers(out, nab)
-	End ForAll
-	
-	Call out.Close()
-	
+Dim s As New NotesSession
+Dim allAdr As Variant
+Dim out As NotesStream
+Dim nab As NotesDatabase
+Set out = s.Createstream()
+'change this - you could write into
+'an eMail or a database or or or
+out.Open("report.csv")
+allAdr = s.Addressbooks
+ForAll oneDB In allAdr
+Set nab = oneDB
+Call recordUsers(out, nab)
+End ForAll
+Call out.Close()
 End Sub
 
 Sub recordUsers(out As NotesStream, nab As NotesDatabase)
-	
-	On Error GoTo Err_recordUsers
-	
-	Dim userView As NotesView
-	Set userView = nab.Getview("People")
-	If userView Is Nothing Then
-		Call out.Writetext("No user view in "+nab.Filepath, EOL_PLATFORM)
-		GoTo Exit_recordUsers
-	End If
-	
-	Dim doc As NotesDocument
-	Dim MailServer As String
-	Dim MailFile As String
-	Dim FullName As String
-	
-	Set doc = userView.Getfirstdocument()
-	Do Until doc Is Nothing
-		
-		'Check for the fields
-		If doc.Hasitem("FullName") Then
-			FullName = doc.Getitemvalue("FullName")(0)
-			
-			If Not doc.Hasitem("MailServer") Or Not doc.Hasitem("MailFile") Then
-				Call out.Writetext("No entry for user "+fullName)
-			Else
-				MailServer = doc.Getitemvalue("MailServer")(0)
-				MailFile = doc.Getitemvalue("MailFile")(0)
-				Call out.Writetext(fullName+", ",EOL_NONE)
-				Call fetchLastDocumentDate(out, MailServer, MailFile)
-			End If
-			
-		End If
-		Set doc = userView.Getnextdocument(doc)
-	Loop
-	
+On Error GoTo Err_recordUsers
+Dim userView As NotesView
+Set userView = nab.Getview("People")
+If userView Is Nothing Then
+Call out.Writetext("No user view in "+nab.Filepath, EOL_PLATFORM)
+GoTo Exit_recordUsers
+End If
+Dim doc As NotesDocument
+Dim MailServer As String
+Dim MailFile As String
+Dim FullName As String
+Set doc = userView.Getfirstdocument()
+Do Until doc Is Nothing
+'Check for the fields
+If doc.Hasitem("FullName") Then
+FullName = doc.Getitemvalue("FullName")(0)
+If Not doc.Hasitem("MailServer") Or Not doc.Hasitem("MailFile") Then
+Call out.Writetext("No entry for user "+fullName)
+Else
+MailServer = doc.Getitemvalue("MailServer")(0)
+MailFile = doc.Getitemvalue("MailFile")(0)
+Call out.Writetext(fullName+", ",EOL_NONE)
+Call fetchLastDocumentDate(out, MailServer, MailFile)
+End If
+End If
+Set doc = userView.Getnextdocument(doc)
+Loop
 Exit_recordUsers:
-	Exit Sub
-	
+Exit Sub
 Err_recordUsers:
-	MsgBox Error$
-	Resume Exit_recordUsers
-	
+MsgBox Error$
+Resume Exit_recordUsers
 End Sub
 
 Sub fetchLastDocumentDate(out As NotesStream, MailServer As String, MailFile As String)
-	Dim s As New NotesSession
-	Dim nsf As NotesDatabase
-	Dim v As NotesView
-	Dim doc As NotesDocument
-	
-	Set nsf = s.Getdatabase(MailServer, MailFile)
-	If Not nsf.Isopen Then
-		Call nsf.Open("", "")
-	End If
-	If Not nsf.Isopen Then
-		Call out.Writetext("can't open "+MailFile, EOL_PLATFORM)
-	Else
-		Set v = nsf.Getview("$All") 'Change this if your definition of dormant is different
+Dim s As New NotesSession
+Dim nsf As NotesDatabase
+Dim v As NotesView
+Dim doc As NotesDocument
+Set nsf = s.Getdatabase(MailServer, MailFile)
+If Not nsf.Isopen Then
+Call nsf.Open("", "")
+End If
+If Not nsf.Isopen Then
+Call out.Writetext("can't open "+MailFile, EOL_PLATFORM)
+Else
+Set v = nsf.Getview("$All") 'Change this if your definition of dormant is different
 		Set doc = v.Getlastdocument()
 		Call out.Writetext(CStr(doc.Created), EOL_PLATFORM)
 	End If
@@ -229,10 +214,10 @@ Exit_fetchLastDocumentDate:
 	
 err_fetchLastDocumentDate:
 	Call out.Writetext(Error$, EOL_PLATFORM)
-	Resume Err_fetchLastDocumentDate
+Resume Err_fetchLastDocumentDate
 End Sub
 
-</pre> 
+</code></pre> 
 <br> As usual YMMV</div>
 					<hr />
 					<p>
@@ -243,12 +228,10 @@ Stephan H Wissel</a> on 21 November 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/11/last-usage-of-a-mail-file-for-all-users.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Last usage of a mail file - for all users" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/11/last-usage-of-a-mail-file-for-all-users.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -362,8 +345,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2014/11/last-usage-of-a-mail-file-for-all-users.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -375,6 +357,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

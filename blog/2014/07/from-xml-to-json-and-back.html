@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -134,15 +135,17 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <br> Only more than a decade later (1998) SGML's offspring <a href="http://en.wikipedia.org/wiki/XML">XML</a> took centre stage. With broad support for schemas, transformation and tooling the de facto standard for application neutral (almost) human readable data formats was established - and the world was good. 
 <br> But <a href="http://www.yourperfectsmile.co.uk/wp-content/uploads/2013/07/Brunett-large.jpg">bracket phobia</a> and a heavy toll, especially on browsers, for processing led to to rise of <a href="http://en.wikipedia.org/wiki/JSON">JSON</a> (starting ca. 2002), which rapidly became the standard for browser-server communication. It it native to JavaScript, very light compared to XML and fast to process. However it lacks (as time of writing) support for an approved schema and transformation language (like XSLT). 
 <br> This leads to the common scenario that you need both: XML for server to server communication and JSON for in-process and browser to server communication. While they look very similar, XML and JSON are different enough to make transition difficult. XML knows elements and attributes, while JSON only knows key/value pairs. A JSON snippet like this: 
-<pre class="brush: js">{ "name" : "Peter Pan",
+<pre><code class="language-js">
+{ "name" : "Peter Pan",
   "passport" : "none",
   "girlfriend" : "Tinkerbell",
   "followers" : [{"name" : "Frank"},{"name" : "Paul"}]
 }
-</pre> 
+</code></pre> 
 <br> can be expressed in XML in various ways: 
 <br> 
-<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre><code class="language-xml">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;person name="Peter Pan" passport="none"&gt;
     &lt;girfriend name="Tinkerbell" /&gt;
     &lt;followers&gt;
@@ -150,10 +153,11 @@ catch(e){window.attachEvent("onload", $buo_f)}
         &lt;person name="Paul" /&gt;
     &lt;/followers&gt;
 &lt;/person&gt;
-</pre> 
+</code></pre> 
 <br> .or. 
 <br> 
-<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre><code class="language-xml">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;person&gt;
     &lt;name&gt;Peter Pan&lt;/name&gt;
     &lt;passport&gt;none&lt;/passport&gt;
@@ -171,152 +175,154 @@ catch(e){window.attachEvent("onload", $buo_f)}
         &lt;/person&gt;
     &lt;/followers&gt;
 &lt;/person&gt;
-</pre> 
+</code></pre> 
 <br> .or. 
 <br> 
-<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre><code class="language-xml">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;person name="Peter Pan" passport="none"&gt;
     &lt;person name="Tinkerbell" role="girfriend" /&gt;
     &lt;person name="Frank" role="follower" /&gt;
     &lt;person name="Paul" role="follower" /&gt;
 &lt;/person&gt;
-</pre> 
+</code></pre> 
 <br> (and many others) The JSON object doesn't need a "root name", the XML does. The other way around is easier: each attribute simply becomes a key/value pair. Some XML purist see attributes as evil, I think they do have their place to make relations clearer (is-a vs. has-a) and XML less verbose. So transforming back and forth between XML and JSON needs a "neutral" format. In my <a href="http://www.entwicklercamp.de/EC14/Track3Session4">XML Session</a> at <a href="http://www.entwicklercamp.de/">Entwicklercamp 2014</a> I demoed how to use a Java class as this neutral format. With the help of the right libraries, that's flexible and efficient.Using my favorite fruit class as an example, the solution is easy to comprehend: 
-<pre class="brush: java">@XmlRootElement(name = "FruitBasket")
+<pre><code class="language-java">
+@XmlRootElement(name = "FruitBasket")
 public class FruitBasket {
 
-	public static Fruit fromXML(InputStream in) throws Exception {
-		JAXBContext context = JAXBContext.newInstance(FruitBasket.class);
-		Unmarshaller um = context.createUnmarshaller();
-		return (Fruit) um.unmarshal(in);
-	}
+ public static Fruit fromXML(InputStream in) throws Exception {
+  JAXBContext context = JAXBContext.newInstance(FruitBasket.class);
+  Unmarshaller um = context.createUnmarshaller();
+  return (Fruit) um.unmarshal(in);
+ }
 
-	@XmlElement(name = "Fruit")
-	private final Collection&lt;Fruit&gt;	allFruits	= new ArrayList&lt;Fruit&gt;();
+ @XmlElement(name = "Fruit")
+ private final Collection&lt;Fruit&gt; allFruits = new ArrayList&lt;Fruit&gt;();
 
-	public boolean add(Fruit fruit) {
-		return this.allFruits.add(fruit);
-	}
+ public boolean add(Fruit fruit) {
+  return this.allFruits.add(fruit);
+ }
 
-	public boolean addAll(Collection&lt;Fruit&gt; allFruits) {
-		return this.allFruits.addAll(allFruits);
-	}
+ public boolean addAll(Collection&lt;Fruit&gt; allFruits) {
+  return this.allFruits.addAll(allFruits);
+ }
 
-	public void saveXML(OutputStream out) throws Exception {
-		JAXBContext context = JAXBContext.newInstance(FruitBasket.class);
-		Marshaller m = context.createMarshaller();
-		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-		m.marshal(this, out);
-	}
+ public void saveXML(OutputStream out) throws Exception {
+  JAXBContext context = JAXBContext.newInstance(FruitBasket.class);
+  Marshaller m = context.createMarshaller();
+  m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+  m.marshal(this, out);
+ }
 
-	public void saveJSON(OutputStream out) throws IOException {
-		GsonBuilder gb = new GsonBuilder();
-		gb.setPrettyPrinting();
-		gb.disableHtmlEscaping();
-		Gson gson = gb.create();
-		PrintWriter writer = new PrintWriter(out);
-		gson.toJson(this, writer);
-		writer.flush();
-		writer.close();
-	}
+ public void saveJSON(OutputStream out) throws IOException {
+  GsonBuilder gb = new GsonBuilder();
+  gb.setPrettyPrinting();
+  gb.disableHtmlEscaping();
+  Gson gson = gb.create();
+  PrintWriter writer = new PrintWriter(out);
+  gson.toJson(this, writer);
+  writer.flush();
+  writer.close();
+ }
 
-	@Override
-	public String toString() {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		try {
-			this.saveJSON(out);
-			//this.saveXML(out);
-		} catch (IOException e) {
-			return super.toString();
-		}
-		return out.toString();
-	}
+ @Override
+ public String toString() {
+  ByteArrayOutputStream out = new ByteArrayOutputStream();
+  try {
+   this.saveJSON(out);
+   //this.saveXML(out);
+  } catch (IOException e) {
+   return super.toString();
+  }
+  return out.toString();
+ }
 }
 
 @XmlRootElement(name = "Fruit")
 public class Fruit {
 
-	public static Fruit fromJson(InputStream in) {
-		Gson gson = new GsonBuilder().create();
-		Fruit result = gson.fromJson(new InputStreamReader(in), Fruit.class);
-		return result;
-	}
+ public static Fruit fromJson(InputStream in) {
+  Gson gson = new GsonBuilder().create();
+  Fruit result = gson.fromJson(new InputStreamReader(in), Fruit.class);
+  return result;
+ }
 
-	public static Fruit fromXML(InputStream in) throws Exception {
-		JAXBContext context = JAXBContext.newInstance(Fruit.class);
-		Unmarshaller um = context.createUnmarshaller();
-		return (Fruit) um.unmarshal(in);
-	}
+ public static Fruit fromXML(InputStream in) throws Exception {
+  JAXBContext context = JAXBContext.newInstance(Fruit.class);
+  Unmarshaller um = context.createUnmarshaller();
+  return (Fruit) um.unmarshal(in);
+ }
 
-	private String	name;
-	private String	color;
-	private String	taste;
+ private String name;
+ private String color;
+ private String taste;
 
-	public Fruit() {
-		// Default constructor
-	}
+ public Fruit() {
+  // Default constructor
+ }
 
-	public Fruit(final String name, final String color, final String taste) {
-		this.name = name;
-		this.color = color;
-		this.taste = taste;
-	}
+ public Fruit(final String name, final String color, final String taste) {
+  this.name = name;
+  this.color = color;
+  this.taste = taste;
+ }
 
-	public final String getColor() {
-		return this.color;
-	}
+ public final String getColor() {
+  return this.color;
+ }
 
-	public final String getName() {
-		return this.name;
-	}
+ public final String getName() {
+  return this.name;
+ }
 
-	public final String getTaste() {
-		return this.taste;
-	}
+ public final String getTaste() {
+  return this.taste;
+ }
 
-	public void saveJSON(OutputStream out) throws IOException {
-		GsonBuilder gb = new GsonBuilder();
-		gb.setPrettyPrinting();
-		gb.disableHtmlEscaping();
-		Gson gson = gb.create();
-		PrintWriter writer = new PrintWriter(out);
-		gson.toJson(this, writer);
-		writer.flush();
-		writer.close();
-	}
+ public void saveJSON(OutputStream out) throws IOException {
+  GsonBuilder gb = new GsonBuilder();
+  gb.setPrettyPrinting();
+  gb.disableHtmlEscaping();
+  Gson gson = gb.create();
+  PrintWriter writer = new PrintWriter(out);
+  gson.toJson(this, writer);
+  writer.flush();
+  writer.close();
+ }
 
-	public void saveXML(OutputStream out) throws Exception {
-		JAXBContext context = JAXBContext.newInstance(Fruit.class);
-		Marshaller m = context.createMarshaller();
-		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-		m.marshal(this, out);
-	}
+ public void saveXML(OutputStream out) throws Exception {
+  JAXBContext context = JAXBContext.newInstance(Fruit.class);
+  Marshaller m = context.createMarshaller();
+  m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+  m.marshal(this, out);
+ }
 
-	public final void setColor(String color) {
-		this.color = color;
-	}
+ public final void setColor(String color) {
+  this.color = color;
+ }
 
-	public final void setName(String name) {
-		this.name = name;
-	}
+ public final void setName(String name) {
+  this.name = name;
+ }
 
-	public final void setTaste(String taste) {
-		this.taste = taste;
-	}
+ public final void setTaste(String taste) {
+  this.taste = taste;
+ }
 
-	public String toJSON() throws IOException {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		this.saveJSON(out);
-		return out.toString();
-	}
+ public String toJSON() throws IOException {
+  ByteArrayOutputStream out = new ByteArrayOutputStream();
+  this.saveJSON(out);
+  return out.toString();
+ }
 
-	public String toXML() throws Exception {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		this.saveXML(out);
-		return out.toString();
-	}
+ public String toXML() throws Exception {
+  ByteArrayOutputStream out = new ByteArrayOutputStream();
+  this.saveXML(out);
+  return out.toString();
+ }
 }
-</pre> 
+</code></pre> 
 <br> The trick here is to use <a href="http://www.oracle.com/technetwork/articles/javase/index-140168.html">JAXB</a> and Google <a href="https://code.google.com/p/google-gson/">GSON</a> to make your life easier. Lets have a closer look: 
 <br> Under the hood both GSON and JAXB use reflection to turn a class into JSON/XML and back. Annotations are added in front of the class or method and need to be defined in a package like any other Java source construct. By default GSON doesn't use any annotations, but in the package <code>com.google.gson.annotations</code>. There are just 4 of them: 
 <ul> 
@@ -353,12 +359,10 @@ Stephan H Wissel</a> on 12 July 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/software.html">Software</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/07/from-xml-to-json-and-back.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="From XML to JSON and back" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/07/from-xml-to-json-and-back.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -465,8 +469,7 @@ categories:  <a href="/blog/categories/software.html">Software</a>
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2014/07/from-xml-to-json-and-back.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -478,6 +481,7 @@ categories:  <a href="/blog/categories/software.html">Software</a>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

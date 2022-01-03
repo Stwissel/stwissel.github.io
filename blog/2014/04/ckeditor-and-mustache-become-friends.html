@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -146,32 +147,33 @@ catch(e){window.attachEvent("onload", $buo_f)}
 					<div>In the beginning there was <a href="http://en.wikipedia.org/wiki/WordStar">WordStar</a> and <a href="http://en.wikipedia.org/wiki/Comma-separated_values">CSV</a>. The possibility of (then printed) personalized mass-communication had arrived in the form of <a href="http://en.wikipedia.org/wiki/Mail_merge">mail-merge</a>. For Notes eMails that is still a challenge (the latest version of <a href="http://www.openoffice.org/">OpenOffice</a> now seems to have a reasonable eMail-Merge, but that's off topic here) since creating the template message with variables to be filled is kind of fuzzy (a.k.a usually out of the reach of mere mortal users). 
 <br> XPages, Mustache and <a href="http://ckeditor.com/">CKEditor</a> to the rescue! The CKEditor shipping with XPages can be <a href="http://openntf.org/XSnippets.nsf/snippet.xsp?id=rich-text-editor-nsf-custom-plugin-extension">easily customized</a>, so adding <a href="http://www.kuba.co.uk/blog.php?blog_id=15">a dropdown</a> that inserts Mustache markup shouldn't be too hard. To allow easy reuse of the code, I created a bean than contains all needed components. Add it to a page and simply call the bean functions. The first sample, using only uses static therefore is quite simple: 
 <br> 
-<pre class="brush: xml">
- 
+<pre><code class="language-xml">
  <!--?xml version="1.0" encoding="UTF-8"?-->
 &lt;xp:view xmlns:xp="http://www.ibm.com/xsp/core"&gt;
-	&lt;xp:scriptBlock id="scriptBlock1" value="#{mustache.sampleData}"&gt;
-	&lt;/xp:scriptBlock&gt;
-	&lt;h1&gt;Mustache and CKEdit demo&lt;/h1&gt;
-	&lt;xp:inputRichText id="inputRichText1"&gt;
-		&lt;xp:this.dojoAttributes&gt;
-			&lt;xp:dojoAttribute name="extraPlugins" value="mustache"&gt;
-			&lt;/xp:dojoAttribute&gt;		
-		&lt;/xp:this.dojoAttributes&gt;
-	&lt;/xp:inputRichText&gt;
+ &lt;xp:scriptBlock id="scriptBlock1" value="#{mustache.sampleData}"&gt;
+ &lt;/xp:scriptBlock&gt;
+ &lt;h1&gt;Mustache and CKEdit demo&lt;/h1&gt;
+ &lt;xp:inputRichText id="inputRichText1"&gt;
+  &lt;xp:this.dojoAttributes&gt;
+   &lt;xp:dojoAttribute name="extraPlugins" value="mustache"&gt;
+   &lt;/xp:dojoAttribute&gt;  
+  &lt;/xp:this.dojoAttributes&gt;
+ &lt;/xp:inputRichText&gt;
 &lt;/xp:view&gt;
-</pre> 
+</code></pre> 
 <br> The variable <code>mustache</code> is configured as a managed bean in <code>faces-config.xml</code>: 
 <br> 
-<pre class="brush: xml">&lt;managed-bean&gt;
-	&lt;managed-bean-name&gt;mustache&lt;/managed-bean-name&gt;
-	&lt;managed-bean-class&gt;com.notessensei.xpages.MustacheWrapper&lt;/managed-bean-class&gt;
-	&lt;managed-bean-scope&gt;session&lt;/managed-bean-scope&gt;
+<pre><code class="language-xml">
+&lt;managed-bean&gt;
+ &lt;managed-bean-name&gt;mustache&lt;/managed-bean-name&gt;
+ &lt;managed-bean-class&gt;com.notessensei.xpages.MustacheWrapper&lt;/managed-bean-class&gt;
+ &lt;managed-bean-scope&gt;session&lt;/managed-bean-scope&gt;
 &lt;/managed-bean&gt;
-</pre> 
+</code></pre> 
 <br> While it seems a little overkill to move the JavaScript into a Java function, we will see that the bean, once completed, is quite useful and keeps what we need in one place.The code so far: 
 <br> 
-<pre class="brush: java">package com.notessensei.xpages;
+<pre><code class="language-java">
+package com.notessensei.xpages;
 
 import java.io.Serializable;
 
@@ -180,81 +182,81 @@ import java.io.Serializable;
  */
 public class MustacheWrapper implements Serializable {
 
-	private static final long	serialVersionUID	= 1L;
+ private static final long serialVersionUID = 1L;
 
-	private final String	  preText;
-	private final String	  postText;
+ private final String   preText;
+ private final String   postText;
 
-	public MustacheWrapper() {
-		this.preText = this.populatePreText();
-		this.postText = this.populatePostText();
-	}
-	
-	public String getSampleData() {
-		StringBuilder sample = new StringBuilder();
-		sample.append(this.preText);
-		sample.append("this.add('{{Subject}}','Subject','Subject');\n");
-		sample.append("this.add('{{From}}','From','From');\n");
-		sample.append("this.add('{{To}}','To','To');\n");
-		sample.append("this.add('{{Date}}','Date','Date');\n");
-		sample.append("this.add('{{Form}}','Form','Form');\n");
-		sample.append(this.postText);
-		return sample.toString();
-	}
+ public MustacheWrapper() {
+  this.preText = this.populatePreText();
+  this.postText = this.populatePostText();
+ }
+ 
+ public String getSampleData() {
+  StringBuilder sample = new StringBuilder();
+  sample.append(this.preText);
+  sample.append("this.add('{{Subject}}','Subject','Subject');\n");
+  sample.append("this.add('{{From}}','From','From');\n");
+  sample.append("this.add('{{To}}','To','To');\n");
+  sample.append("this.add('{{Date}}','Date','Date');\n");
+  sample.append("this.add('{{Form}}','Form','Form');\n");
+  sample.append(this.postText);
+  return sample.toString();
+ }
 
-	/**
-	 * Client JavaScript code before the actual values
-	 * 
-	 * @return
-	 */
-	private String populatePreText() {
+ /**
+  * Client JavaScript code before the actual values
+  *
+  * @return
+  */
+ private String populatePreText() {
 
-		StringBuilder result = new StringBuilder();
+  StringBuilder result = new StringBuilder();
 
-		result.append("CKEDITOR.plugins.add( 'mustache',\n");
-		result.append("		{  requires : ['richcombo'],\n");
-		result.append("		   init : function( editor ) {\n");
-		result.append("		   	      var config = editor.config\n");
-		result.append("		   	      var lang = editor.lang.format\n");
-		result.append("		   	      editor.ui.addRichCombo( 'mustache',\n");
-		result.append("		   	      { label : \"Variables\",\n");
-		result.append("		   	        title : \"Variables\",\n");
-		result.append("		   	        voiceLabel : \"Variables\",\n");
-		result.append("		   	        className : 'cke_format',\n");
-		result.append("		   	        multiSelect : false,\n");
-		result.append("		   	        panel : {\n");
-		result.append("		   	                  css : [ config.contentsCss, CKEDITOR.getUrl( editor.skinPath + 'editor.css' ) ],\n");
-		result.append("		   	        		  voiceLabel : lang.panelVoiceLabel },\n");
-		result.append("		   	        init : function() {\n");
-		result.append("		   	               this.startGroup(\"Variables\");\n");
-		// The rest is in the PostText
-		return result.toString();
-	}
+  result.append("CKEDITOR.plugins.add( 'mustache',\n");
+  result.append("  {  requires : ['richcombo'],\n");
+  result.append("     init : function( editor ) {\n");
+  result.append("            var config = editor.config\n");
+  result.append("            var lang = editor.lang.format\n");
+  result.append("            editor.ui.addRichCombo( 'mustache',\n");
+  result.append("            { label : \"Variables\",\n");
+  result.append("              title : \"Variables\",\n");
+  result.append("              voiceLabel : \"Variables\",\n");
+  result.append("              className : 'cke_format',\n");
+  result.append("              multiSelect : false,\n");
+  result.append("              panel : {\n");
+  result.append("                        css : [ config.contentsCss, CKEDITOR.getUrl( editor.skinPath + 'editor.css' ) ],\n");
+  result.append("                  voiceLabel : lang.panelVoiceLabel },\n");
+  result.append("              init : function() {\n");
+  result.append("                     this.startGroup(\"Variables\");\n");
+  // The rest is in the PostText
+  return result.toString();
+ }
 
-	/**
-	 * Client JavaScript code AFTER the actual values
-	 * 
-	 * @return
-	 */
-	private String populatePostText() {
+ /**
+  * Client JavaScript code AFTER the actual values
+  *
+  * @return
+  */
+ private String populatePostText() {
 
-		StringBuilder result = new StringBuilder();
-		result.append("		   	    },\n"); // End of the init function!
-		result.append("		   	        onClick : function( value ) {\n");
-		result.append("		   	                  editor.focus();\n");
-		result.append("		   	                  editor.fire('saveSnapshot');\n");
-		result.append("		                      editor.insertHtml(value);\n");
-		result.append("		   	                  editor.fire('saveSnapshot');\n");
-		result.append("          } });\n");
-		result.append("		   	      var toolbarName = config.toolbar;\n");
-		result.append("		   	      config[\"toolbar_\"+toolbarName].push(");
-		result.append("{\"name\" : \"mustache\", \"items\" : [\"mustache\"] });\n");
-		result.append("  }});\n");
+  StringBuilder result = new StringBuilder();
+  result.append("          },\n"); // End of the init function!
+  result.append("              onClick : function( value ) {\n");
+  result.append("                        editor.focus();\n");
+  result.append("                        editor.fire('saveSnapshot');\n");
+  result.append("                        editor.insertHtml(value);\n");
+  result.append("                        editor.fire('saveSnapshot');\n");
+  result.append("          } });\n");
+  result.append("            var toolbarName = config.toolbar;\n");
+  result.append("            config[\"toolbar_\"+toolbarName].push(");
+  result.append("{\"name\" : \"mustache\", \"items\" : [\"mustache\"] });\n");
+  result.append("  }});\n");
 
-		return result.toString();
-	}
+  return result.toString();
+ }
 }
-</pre> 
+</code></pre> 
 <br> Next stop: generate the list of variables from a form or a document (or supply a collection)</div>
 					<hr />
 					<p>
@@ -265,12 +267,10 @@ Stephan H Wissel</a> on 09 April 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/xpages.html">XPages</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/04/ckeditor-and-mustache-become-friends.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="CKEditor and Mustache become friends" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/04/ckeditor-and-mustache-become-friends.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -386,8 +386,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2014/04/ckeditor-and-mustache-become-friends.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -399,6 +398,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

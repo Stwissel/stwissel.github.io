@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -130,7 +131,8 @@ catch(e){window.attachEvent("onload", $buo_f)}
 					</h1>
 					<hr />
 					<div><p>Blogsphere allows to create RichText and plain HTML entries. To export them I need to grab the HTML, either the manual entered or the RichText generated on, clean it up (especially for my manual entered HTML) and then replace image sources and internal links using the new URL syntax. To make this happen I created 2 functions that saved images and attachments and created a lookup list, so the HTML cleanup has a mapping table to work with</p> 
-<pre class="brush: java">private void saveImage(Document doc) {
+<pre><code class="language-java">
+private void saveImage(Document doc) {
         String sourceDirectory = this.config.sourceDirectory + this.config.imageDirectory;
         try {
             String subject = doc.getItemValueString("ImageName");
@@ -179,10 +181,39 @@ catch(e){window.attachEvent("onload", $buo_f)}
         }
 
     }
-</pre> 
-<p>With images saved the HTML cleanup can proceed. As mentioned before I'm using <a href="https://jsoup.org/">JSoup</a> to process crappy HTML. It allows for easy extraction of elements and attributes, so processing of links an images is just a few lines</p></div>
+
+</code></pre> ## 
+<p>With images saved the HTML cleanup can proceed. As mentioned before I'm using <a href="https://jsoup.org/">JSoup</a> to process crappy HTML. It allows for easy extraction of elements and attributes, so processing of links an images is just a few lines</p> 
+<pre><code class="language-java">
+    private String cleanupHTMLlinksAndImages(String source, String location) {
+
+        org.jsoup.nodes.Document hDoc = Jsoup.parse(source);
+        this.cleanupTagUrlAttribute(hDoc, "img", "src", location);
+        this.cleanupTagUrlAttribute(hDoc, "a", "href", location);
+        return hDoc.body().html();
+
+    }
+
+    private void cleanupTagUrlAttribute(org.jsoup.nodes.Document hDoc, String elementName, String attName, String location) {
+
+        String query = elementName + "[" + attName + "]";
+        Elements elements = hDoc.select(query);
+
+        for (Element element : elements) {
+            String attValue = element.attr(attName).trim();
+            if (this.mapperOldNewURLs.containsKey(attValue.toLowerCase())) {
+                String replace = this.mapperOldNewURLs.get(attValue.toLowerCase());
+                System.out.print("Replacing:");
+                System.out.print(attValue);
+                System.out.print(" with ");
+                System.out.println(replace);
+                element.attr(attName, replace);
+            }
+        }
+    }
+</code></pre> 
+<p>The returned HTML not only has the attribute values cleaned up, but also produces valid clean HTML.<br>Next stop: rendering output. Stay tuned</p></div>
 					<hr />
- <a href="/blog/2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html">Read more</a>
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 17 April 2017
@@ -191,12 +222,10 @@ Stephan H Wissel</a> on 17 April 2017
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/blog.html">Blog</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="From Blogsphere to a Static Site (Part 2) - Cleaning up the HTML" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2017/04/from-blogsphere-to-a-static-site-part-2-cleaning-up-the-html.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -221,12 +250,10 @@ Stephan H Wissel</a> on 15 April 2017
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/blog.html">Blog</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="From Blogsphere to a Static Site (Part 1) - Objects" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2017/04/from-blogsphere-to-a-static-site-part-1-objects.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -261,12 +288,10 @@ Stephan H Wissel</a> on 12 April 2017
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/blog.html">Blog</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2017/04/from-blogsphere-to-a-static-site-part-0-requirements.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="From Blogsphere to a Static Site (Part 0) - Requirements" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2017/04/from-blogsphere-to-a-static-site-part-0-requirements.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -275,9 +300,7 @@ categories:  <a href="/blog/categories/blog.html">Blog</a>
 					<hr />
 					<div><p>We all heard the announcements around <a href="https://itcblogs.currentanalysis.com/2017/02/23/at-ibm-the-future-of-collaboration-isnt-rosy-its-pink/">Project Pink</a> headed by <a href="https://www.linkedin.com/in/jasonroygary/">Jason R. Gary</a>, the future of IBM Connections. Attending the conference we could admire him all <a href="https://twitter.com/jasonroygary/status/836337112555323392">clad out in pink</a>.</p> 
 <p>However there is something more going on (and I'm not talking about his "don style" haircut). Besides the pink suit, Jason has been spotted in a deep purple jacket on several occasions, like his <a href="https://www.youtube.com/watch?v=2gKIsWqbJIk#action=share">FossASIA talk</a>. Digging deeper it seems IBM collaboration projects are now colour coded. Purple is chosen quite deliberately: <a href="http://www.bourncreative.com/meaning-of-the-color-purple/">The color purple</a>&nbsp;is a rare occurring color in nature and as a result is often seen as having sacred meaning.&nbsp;Purple&nbsp;combines the calm stability of blue and the fierce energy of red. The color purple is often associated with royalty, nobility, luxury, power, and ambition. Purple also represents meanings of wealth, extravagance, creativity, wisdom, dignity, grandeur, devotion, peace, pride, mystery, independence, and magic.</p> 
-<p>You might have guessed it: it is the next generation of IBM Notes! Not one of the <strike>
-   fix 
- </strike>feature packs, but an entire new generation. Under <a href="http://www.monkey47.com/">the influence</a> Jason admitted: "<i>We took the Notes Client source code and compiled it with XCode for iOS. Guess what: it worked. Cocoa needs some work, but it isn't rocket science</i>"</p> 
+<p>You might have guessed it: it is the next generation of IBM Notes! Not one of the <strike> fix </strike>feature packs, but an entire new generation. Under <a href="http://www.monkey47.com/">the influence</a> Jason admitted: "<i>We took the Notes Client source code and compiled it with XCode for iOS. Guess what: it worked. Cocoa needs some work, but it isn't rocket science</i>"</p> 
 <p>There you have it! After banning Notes clients from your desktop, instead of relying on the <a href="http://www-01.ibm.com/common/ssi/cgi-bin/ssialias?infotype=AN&amp;subtype=CA&amp;htmlfid=897/ENUS216-201">IBM Client Application Access</a>, you just can launch <i>IBM Notes Native for iOS</i>??? on your iPad and continue working. Any improvements and updates are automatically rolled out using the Apple app shop. Availability will be April 1st, 2018.</p> 
 <p>We live in interesting times!</p></div>
 					<hr />
@@ -289,12 +312,10 @@ Stephan H Wissel</a> on 01 April 2017
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2017/04/project-deep-purple-ibm-notes-native-for-ios.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Project Deep Purple - IBM Notes Native for iOS" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2017/04/project-deep-purple-ibm-notes-native-for-ios.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -322,12 +343,10 @@ Stephan H Wissel</a> on 01 April 2017
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/ibm.html">IBM</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2017/04/goodbye-ibm-hello-salesforce.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Goodbye IBM, hello Salesforce!" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2017/04/goodbye-ibm-hello-salesforce.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -347,12 +366,10 @@ Stephan H Wissel</a> on 01 April 2017
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2017/04/formula-on-json.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="@Formula on JSON" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2017/04/formula-on-json.html";
 						</script>
 					</p>
-
 				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/2017/02/index.html"><i class="icon-hand-left"></i>By Date: February 2017</a>
@@ -538,8 +555,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
 		</div>
 	</footer>
 
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -551,6 +567,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

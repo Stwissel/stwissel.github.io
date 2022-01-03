@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -149,12 +150,10 @@ Stephan H Wissel</a> on 24 August 2015
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/bluemix.html">Bluemix</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2015/08/theres-a-plug-in-for-that-getting-started-with-cf-plug-ins.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="There&apos;s a plug-in for that! Getting started with Cloud Foundry plug-ins" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2015/08/theres-a-plug-in-for-that-getting-started-with-cf-plug-ins.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -166,7 +165,8 @@ categories:  <a href="/blog/categories/bluemix.html">Bluemix</a>
 <img src="/blog/images/2015/websocketout.png" border="0" alt="Web socket in NodeRED"> 
 <br> On the browser side I decided to use <a href="https://angularjs.org/">angular.js</a> and one of its web socket libraries <a href="https://github.com/wilk/ng-websocket">ng-websocket</a>. The application code is just about 50 lines, so here it goes: 
 <br> 
-<pre class="brush : js">'use strict';
+<pre><code class="language-js">
+'use strict';
 
 var websocketEndpoint = 'wss://'+window.location.hostname+'/ws/bulb';
 
@@ -216,10 +216,129 @@ myApp.run(function ($websocket, $location) {
 });
 
 console.log('Done');
-</pre> 
-<br> The HTML is simple. I split it into the main file and 3 status files. One could easily put the statuses into a script template section or inside the app.</div>
+</code></pre> ## 
+<br> The HTML is simple. I split it into the main file and 3 status files. One could easily put the statuses into a script template section or inside the app. This would reduce the number of http requests. For the bulb I used font-awesome, so no image has been harmed in creating this demo. 
+<br> 
+<h4> The bower.json</h4> 
+<pre><code class="language-js">
+{
+  "name": "iotlightbulb",
+  "description": "A simple lightbulb show from a websocket",
+  "version": "0.1.0",
+  "license": "APACHE2.0",
+  "private": true,
+  "dependencies": {
+    "angular": "~1.4.0",
+    "angular-route": "~1.4.0",
+    "html5-boilerplate": "~5.2.0",
+    "ng-websocket": "~0.2.1",
+    "components-font-awesome": "components/font-awesome#~4.3.0"
+  }
+}
+</code></pre> 
+<h4>index.html</h4> 
+<pre><code class="language-html">
+&lt;!DOCTYPE html&gt;
+&lt;head&gt;
+    &lt;meta charset="utf-8"&gt;
+    &lt;meta http-equiv="X-UA-Compatible" content="IE=edge"&gt;
+    &lt;title&gt;The Socket bulb&lt;/title&gt;
+    &lt;meta name="description" content=""&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+    &lt;link rel="stylesheet" href="bower_components/html5-boilerplate/dist/css/normalize.css"&gt;
+    &lt;link rel="stylesheet" href="bower_components/html5-boilerplate/dist/css/main.css"&gt;
+    &lt;link rel="stylesheet" href="bower_components/components-font-awesome/css/font-awesome.min.css"&gt;
+    &lt;link rel="stylesheet" href="app.css"&gt;
+    &lt;script src="bower_components/html5-boilerplate/dist/js/vendor/modernizr-2.8.3.min.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body ng-app="myApp"&gt;
+&lt;div class="container"&gt;
+&lt;!--[if lt IE 9]&gt;
+&lt;p class="browsehappy"&gt;You are using an &lt;strong&gt;outdated&lt;/strong&gt; browser. Please &lt;a href="http://browsehappy.com/"&gt;upgrade your browser&lt;/a&gt; to improve your experience.&lt;/p&gt;
+&lt;![endif]--&gt;
+&lt;h1&gt;Angular Lightbulb App&lt;/h1&gt;
+
+&lt;div ng-view&gt;Let there be light&lt;/div&gt;
+&lt;ul class="menu"&gt;
+&lt;li&gt;&lt;a href="#/bulbunknown"&gt;unknown&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#/bulbon"&gt;ON&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#/bulboff"&gt;OFF&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;script src="bower_components/angular/angular.js"&gt;&lt;/script&gt;
+&lt;script src="bower_components/angular-route/angular-route.js"&gt;&lt;/script&gt;
+&lt;script src="bower_components/ng-websocket/ng-websocket.js"&gt;&lt;/script&gt;
+&lt;script src="app.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre> 
+<h4>bulb-unknown.html</h4> 
+<pre><code class="language-html">
+&lt;p&gt;The light &lt;br/&gt;
+    &lt;span class="fa-stack fa-5x"&gt;
+        &lt;i class="fa fa-lightbulb-o  fa-stack-2x" style="color :  #000044"&gt;&lt;/i&gt;
+        &lt;i class="fa fa-question-circle fa-stack-1x" style="color :  red"&gt;&lt;/i&gt;
+    &lt;/span&gt;
+&lt;/p&gt;
+</code></pre> 
+<h4>bulb-on.html</h4> 
+<pre><code class="language-html">
+&lt;p&gt;The light &lt;br/&gt;
+    &lt;span class="fa-stack fa-5x"&gt;
+        &lt;i class="fa fa-cog fa-stack-2x" style="color :  yellow"&gt;&lt;/i&gt;
+        &lt;i class="fa fa-lightbulb-o  fa-stack-2x" style="color :  #FFAB00"&gt;&lt;/i&gt;
+    &lt;/span&gt;
+&lt;/p&gt;
+</code></pre> 
+<h4>bulb-off.html</h4> 
+<pre><code class="language-html">
+&lt;p&gt;The light &lt;br/&gt;
+    &lt;span class="fa-stack fa-5x"&gt;
+      &lt;i class="fa fa-ban fa-stack-2x" style="color: red;"&gt;&lt;/i&gt;
+        &lt;i class="fa fa-lightbulb-o  fa-stack-2x"&gt; &lt;/i&gt;
+    &lt;/span&gt;
+&lt;/p&gt;
+</code></pre> 
+<h4> The CSS</h4> 
+<pre><code class="language-css">
+/* app css stylesheet */
+.container {
+  margin : 25%;
+  width : 50%;
+  text-align: center;
+}
+
+.menu {
+list-style: none;
+border-top: 0.1em solid black;
+margin-top: 2em;
+padding: 0 0 0.5em;
+}
+
+.menu:before {
+content: "[";
+}
+
+.menu:after {
+content: "]";
+}
+
+.menu &gt; li {
+display: inline;
+}
+
+.menu &gt; li:before {
+content: "|";
+padding-right: 0.3em;
+}
+
+.menu &gt; li:nth-child(1):before {
+content: "";
+padding: 0;
+}
+</code></pre> 
+<br> As usual: YMMV</div>
 					<hr />
- <a href="/blog/2015/08/let-there-be-a-light-angular-nodered-and-websockets.html">Read more</a>
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 24 August 2015
@@ -228,12 +347,10 @@ Stephan H Wissel</a> on 24 August 2015
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/bluemix.html">Bluemix</a>  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/nodered.html">NodeRED</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2015/08/let-there-be-a-light-angular-nodered-and-websockets.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Let there be a light - Angular, nodeRED and Websockets" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2015/08/let-there-be-a-light-angular-nodered-and-websockets.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -274,12 +391,10 @@ Stephan H Wissel</a> on 23 August 2015
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/bluemix.html">Bluemix</a>  <a href="/blog/categories/cloudcomputing.html">Cloud Computing</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2015/08/identiy-in-the-age-of-cloud.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Identiy in the age of cloud" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2015/08/identiy-in-the-age-of-cloud.html";
 						</script>
 					</p>
-
 				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/2015/07/index.html"><i class="icon-hand-left"></i>By Date: July 2015</a>
@@ -465,8 +580,7 @@ categories:  <a href="/blog/categories/bluemix.html">Bluemix</a>  <a href="/blog
 		</div>
 	</footer>
 
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -478,6 +592,7 @@ categories:  <a href="/blog/categories/bluemix.html">Bluemix</a>  <a href="/blog
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

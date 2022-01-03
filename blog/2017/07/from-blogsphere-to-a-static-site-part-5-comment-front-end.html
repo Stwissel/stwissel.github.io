@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -151,7 +152,8 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Some formatting should be allowed. I opted for a Markdown editor with preview capabilities</li> 
 </ul> 
 <p>The first component is the placeholder for the existing comments and the button showing the comment form:</p> 
-<pre class="brush: html">&lt;a name="comments"&gt;&lt;/a&gt;
+<pre><code class="language-html">
+&lt;a name="comments"&gt;&lt;/a&gt;
 {{^commentsclosed}}
 &lt;div class="well well-raised" style="text-align : center"&gt;
   &lt;button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_{{UNID}}" type="button"&gt;
@@ -175,9 +177,10 @@ catch(e){window.attachEvent("onload", $buo_f)}
     {{/comments}}
   &lt;/ol&gt;
 &lt;/div&gt;
-</pre> 
+</code></pre> 
 <p>The second component is the comment form, implemented as mustache template - one of the reasons I picked Mustache: runs on the server and the client in tons of languages</p> 
-<pre class="brush: html">&lt;form title="Comment form for blog discussion" onSubmit="return addComment(this,'{{recaptchaid}}','{{parentId}}')" class="form-vertical well well-raised"&gt;
+<pre><code class="language-html">
+&lt;form title="Comment form for blog discussion" onSubmit="return addComment(this,'{{recaptchaid}}','{{parentId}}')" class="form-vertical well well-raised"&gt;
   &lt;fieldset&gt;
     &lt;legend&gt;Add your comment&lt;/legend&gt;
     &lt;p&gt;Please note: &lt;b&gt;Comments without a valid and working eMail address will be removed.&lt;/b&gt;
@@ -220,7 +223,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
     &lt;div class="alert alert-block" id="alertContainer" style="display : none"&gt;One moment please, submitting comment...&lt;/div&gt;
   &lt;/fieldset&gt;
 &lt;/form&gt;
-</pre> 
+</code></pre> 
 <p>The whole mechanism gets to work with just a few jQuery JavaScript functions (Vanilla JS would work too, but I had JQuery already for the social buttons, so I reused that) and the respective JS files:</p><ul> 
  <li>mustache.js</li> 
  <li>blogcomments.js</li> 
@@ -230,122 +233,123 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>//www.google.com/recaptcha/api/js/recaptcha_ajax.js</li> 
 </ul> 
 <h3>blogcomments.js</h3> 
-<pre class="brush: javascript">var destinationURL = "/blog/comments";
+<pre><code class="language-js">
+var destinationURL = "/blog/comments";
 
 function getCommentForm(recaptchaid, parentId) {
-  var params = {};
-  params.recaptchaid = recaptchaid;
-  params.parentId = parentId;
-  var result = {};
-  $.ajax({
-    url: '/blog/js2/comment.mustache',
-    dataType: 'text',
-    success: function(template) {
-      result = Mustache.render(template, params);
-    },
-    async: false
-  });
-  return result;
+var params = {};
+params.recaptchaid = recaptchaid;
+params.parentId = parentId;
+var result = {};
+$.ajax({
+url: '/blog/js2/comment.mustache',
+dataType: 'text',
+success: function(template) {
+result = Mustache.render(template, params);
+},
+async: false
+});
+return result;
 }
 
 function addComment(form, recaptchaid, parentId) {
-  $('#commentsubmit').hide();
-  $('#commentcontrol').hide();
-  $('#captchadiv').hide();
-  $("#alertContainer").html("One moment please, submitting comment...")
-    .show();
+$('#commentsubmit').hide();
+$('#commentcontrol').hide();
+$('#captchadiv').hide();
+$("#alertContainer").html("One moment please, submitting comment...")
+.show();
 
-  $.postJSON({
-    url: destinationURL,
-    data: {
-      Commentor: this.Commentor.value,
-      eMail: this.Email.value,
-      webSite: this.webSite.value,
-      Body: this["wmd-input"].value,
-      rChallenge: this.recaptcha_challenge_field.value,
-      rResponse: this.recaptcha_response_field.value,
-      parentId: parentId
-    },
-    success: function(result) {
-      $("#alertContainer").html(result).addClass("alert-error").delay(
-        2000).hide(200, function() {
-        resetComment(recaptchaid, parentId);
-      });
-    },
-    error: function(err) {
-      $("#alertContainer").html(err.responseText).addClass("alert-error")
-        .delay(1000).hide(200, function() {
-          resetComment(recaptchaid, parentId);
-        });
-    }
-  });
-  return false;
+$.postJSON({
+url: destinationURL,
+data: {
+Commentor: this.Commentor.value,
+eMail: this.Email.value,
+webSite: this.webSite.value,
+Body: this["wmd-input"].value,
+rChallenge: this.recaptcha_challenge_field.value,
+rResponse: this.recaptcha_response_field.value,
+parentId: parentId
+},
+success: function(result) {
+$("#alertContainer").html(result).addClass("alert-error").delay(
+2000).hide(200, function() {
+resetComment(recaptchaid, parentId);
+});
+},
+error: function(err) {
+$("#alertContainer").html(err.responseText).addClass("alert-error")
+.delay(1000).hide(200, function() {
+resetComment(recaptchaid, parentId);
+});
+}
+});
+return false;
 }
 
 function resetComment(recaptchaid, parentId) {
-  var hasSuccess = $("div.commentsuccess");
-  if (hasSuccess.length == 0) {
-    // It didn't work!
-    $("#alertContainer").show();
-    $('#commentsubmit').show();
-    $('#commentcontrol').show();
-    $('#captchadiv').show();
-  } else {
-    renderComment(recaptchaid, parentId);
-  }
+var hasSuccess = $("div.commentsuccess");
+if (hasSuccess.length == 0) {
+// It didn't work!
+$("#alertContainer").show();
+$('#commentsubmit').show();
+$('#commentcontrol').show();
+$('#captchadiv').show();
+} else {
+renderComment(recaptchaid, parentId);
+}
 }
 
 function renderComment(recaptchaid, parentId) {
-  var fid = "#commentform_" + parentId;
-  var form = getCommentForm(recaptchaid, parentId);
-  $(fid).empty().append(form);
-  if (Recaptcha) {
-    var theDiv = document.getElementById("captchadiv");
-    Recaptcha.create(recaptchaid, theDiv, {
-      tabindex: 1,
-      theme: "clean"
-        /*
-         * , callback : Recaptcha.focus_response_field
-         */
-    });
-  }
+var fid = "#commentform\_" + parentId;
+var form = getCommentForm(recaptchaid, parentId);
+$(fid).empty().append(form);
+if (Recaptcha) {
+var theDiv = document.getElementById("captchadiv");
+Recaptcha.create(recaptchaid, theDiv, {
+tabindex: 1,
+theme: "clean"
+/\*
+_ , callback : Recaptcha.focus_response_field
+_/
+});
+}
 
-  // Markdown
-  var converter1 = Markdown.getSanitizingConverter();
-  var editor1 = new Markdown.Editor(converter1);
-  editor1.run();
+// Markdown
+var converter1 = Markdown.getSanitizingConverter();
+var editor1 = new Markdown.Editor(converter1);
+editor1.run();
 
-  // Comments that are not yet static
-  $.ajax({
-    url: destinationURL + "?parentid=" + parentId,
-    type: 'GET',
-    async: true,
-    success: function(data) {
-      if (data &amp;&amp; data.length &gt; 0) {
-        $("li.dynamicComments").remove();
-        $("#nocomments").remove();
-        $("#commentList").append(data);
-      }
-    },
-    error: function(data) {
-      // Crude error handling
-      $("#alertContainer").html(data).show();
-    }
-  });
+// Comments that are not yet static
+$.ajax({
+url: destinationURL + "?parentid=" + parentId,
+type: 'GET',
+async: true,
+success: function(data) {
+if (data &amp;&amp; data.length &gt; 0) {
+$("li.dynamicComments").remove();
+$("#nocomments").remove();
+$("#commentList").append(data);
+}
+},
+error: function(data) {
+// Crude error handling
+$("#alertContainer").html(data).show();
+}
+});
 }
 
 jQuery.extend({
-  postJSON: function(params) {
-    return jQuery.ajax(jQuery.extend(params, {
-      type: "POST",
-      data: JSON.stringify(params.data),
-      dataType: "json",
-      contentType: "application/json",
-      processData: false
-    }));
-  }
+postJSON: function(params) {
+return jQuery.ajax(jQuery.extend(params, {
+type: "POST",
+data: JSON.stringify(params.data),
+dataType: "json",
+contentType: "application/json",
+processData: false
+}));
+}
 });
-</pre> 
+</code></pre> 
 <p>As usual: YMMV</p></div>
 					<hr />
 					<p>
@@ -356,12 +360,10 @@ Stephan H Wissel</a> on 20 July 2017
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/blog.html">Blog</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2017/07/from-blogsphere-to-a-static-site-part-5-comment-front-end.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="From Blogsphere to a Static Site (Part 5) - Comment front-end" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2017/07/from-blogsphere-to-a-static-site-part-5-comment-front-end.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -458,8 +460,7 @@ categories:  <a href="/blog/categories/blog.html">Blog</a>
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2017/07/from-blogsphere-to-a-static-site-part-5-comment-front-end.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -471,6 +472,7 @@ categories:  <a href="/blog/categories/blog.html">Blog</a>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

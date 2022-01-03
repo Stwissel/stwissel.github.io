@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -143,24 +144,24 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <p>Postman has great build in support for <a href="https://www.getpostman.com/docs/v6/postman/sending_api_requests/authorization">all sorts of authorization</a> interactively. However my goal here is to fully automate it, so you can run a <a href="http://blog.getpostman.com/2014/03/07/writing-automated-tests-for-apis-using-postman/">test suite</a> without manual intervention. First stop is the creation of one environment. You can have multiple environments to cater to different Salesforce instances.</p> 
 <p><strong>Important</strong> Never ever ever store the environment into version control. It would contain credentials -&gt; <strong>bad bad</strong> idea!</p> 
 <p>My environment variables look like this:</p> 
-<pre class="brush: javascript">{
+<pre><code class="language-javascript">{
 	"CLIENT_ID" : "the ClientId from Salesforce",
 	"CLIENT_SECRET" : "The ClientSecret from Salesforce",
     "USER_ID" : "some@email.com",
     "PASSWORD" : "DontTell",
     "LOGIN_URL" : "https://login.salesforce.com/"
 }
-</pre> 
+</code></pre> 
 <p>Providing the Login URL allows to reuse postman collections between Sandboxes, Developer Orgs or Production Orgs without the need to actually edit the postman entries. Next on the menu: getting a token</p><h3>Getting a token</h3> 
 <p>Your Postman URL will look like this: <code>{{LOGIN_URL}}/services/oauth2/token</code>. Depending on the environment you will use production or Sandbox. The request ist an unauthenticated <code>POST</code> with a single header of <code>Content-Type:application/x-www-form-urlencoded</code> The body you post looks like this:</p> 
-<pre class="brush: bash">grant_type:password
+<pre><code class="language-bash">grant_type:password
 client_id:{{CLIENT_ID}}
 client_secret:{{CLIENT_SECRET}}
 password:{{PASSWORD}}
 username:{{USER_ID}}
-</pre> 
+</code></pre> 
 <p>PostMan replaces anything inside <code>{{ .... }}</code> with values from your environment. This approach allows you to share your Postman collections without disclosing what should be private. A successful response will look like this:</p> 
-<pre class="brush: javascript">{
+<pre><code class="language-javascript">{
     "access_token": "some long string that you need in your authorization header",
     "instance_url": "https://yourdomain.my.salesforce.com",
     "id": "https://login.salesforce.com/id/somestring/anotherstring",
@@ -168,9 +169,9 @@ username:{{USER_ID}}
     "issued_at": "1530761889707",
     "signature": "theThirdStringCheckSum"
 }
-</pre> 
+</code></pre> 
 <p>All future call need go to the instance URL with the access token as bearer authorization. To make that easy we use PostMan's test script to capture that values into the environment:</p> 
-<pre class="brush: javascript">pm.test("Status code is 200", function () {
+<pre><code class="language-javascript">pm.test("Status code is 200", function () {
     pm.response.to.have.status(200);
 });
 
@@ -183,10 +184,10 @@ pm.test("Has a bearer token", function () {
 // Save the bearer
 pm.environment.set("Bearer", jsonData.access_token);
 pm.environment.set("Instance", jsonData.instance_url);
-</pre> 
+</code></pre> 
 <h3>Getting the API version</h3> 
 <p>Our next stop is figuring out the current API version (<code>43.0</code> at the point of writing). To do this we send a <code>GET</code> request to<br> <code>{{Instance}}/services/data</code> with a header of <code>Authorization:Bearer {{Bearer}}</code>. This call will return an JSON array with available API versions from 20.0 - 43.0 (at time of writing). Again we use the testing capability to capture the latest version:</p> 
-<pre class="brush: javascript">pm.test("Response time is less than 200ms", function () {
+<pre><code class="language-javascript">pm.test("Response time is less than 200ms", function () {
     pm.expect(pm.response.responseTime).to.be.below(200);
 });
 
@@ -197,7 +198,7 @@ pm.test("Status code is 200", function () {
 var jsonData = pm.response.json();
 var maxElements = jsonData.length - 1;
 pm.environment.set("service_url", jsonData[maxElements].url);
-</pre> 
+</code></pre> 
 <p>Now we are ready to call more of the rest API. For example to get the list of all API endpoints you would send a <code>GET</code> request to <code>{{Instance}}{{service_url}}</code> with the familiar header of <code>Authorization:Bearer {{Bearer}}</code>.</p> 
 <p>Now you have all components in place to create more API calls and tests</p> 
 <p>As usual YMMV</p></div>
@@ -210,12 +211,10 @@ Stephan H Wissel</a> on 06 July 2018
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2018/07/postman-and-the-salesforce-rest-api.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Postman and the Salesforce REST API" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2018/07/postman-and-the-salesforce-rest-api.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -323,8 +322,7 @@ categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href=
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2018/07/postman-and-the-salesforce-rest-api.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -336,6 +334,7 @@ categories:  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href=
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

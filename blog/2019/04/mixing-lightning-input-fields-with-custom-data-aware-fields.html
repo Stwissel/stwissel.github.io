@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -159,7 +160,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li><a href="https://github.com/Stwissel/lwcaura/tree/master/experiments/experiment5/main/default/lwc/uxQuickLookup">uxQickLookup</a> which allows you to lookup an object. It works in lightning apps, mobile and communities and can serve as a stop-gap for the missing lookup on mobile. I <a href="/blog/2019/04/dynamic-lookup-for-lwc-update.html">recently updated it</a> to show additional fields beside the object name</li> 
 </ul> 
 <h3>How it works</h3><p>A sample form looks like this:</p> 
-<pre class="brush: xml">&lt;template&gt;
+<pre><code class="language-xml">&lt;template&gt;
     &lt;lightning-card title="Form Sample"&gt;
         &lt;div class="slds-p-horizontal_small"&gt;
             &lt;c-extended-form object-api-name="Account"&gt;
@@ -188,10 +189,10 @@ catch(e){window.attachEvent("onload", $buo_f)}
         &lt;/div&gt;
     &lt;/lightning-card&gt;
 &lt;/template&gt;
-</pre> 
+</code></pre> 
 <p>The extended form supports the same properties as <code>lightning-input-form</code> and follows the same structure. You might miss the submit button and the <code>lightning-messages</code> elements. They are already contained inside the extended form, as it the <code>lightning-layout</code>.</p> 
 <p>The above sample shows the setup for new Account objects, since the <code>record-id</code> attribute is missing. The form itself is quite light, the <em>magic</em> is in the handler functions:</p> 
-<pre class="brush: xml">&lt;template&gt;
+<pre><code class="language-xml">&lt;template&gt;
     &lt;lightning-record-edit-form
         record-type-id={recordTypeId}
         record-id={recordId}
@@ -216,7 +217,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
         &lt;/lightning-layout&gt;
     &lt;/lightning-record-edit-form&gt;
 &lt;/template&gt;
-</pre> 
+</code></pre> 
 <p>There are just 6 elements in the form:</p> 
 <ul> 
  <li><a href="https://developer.salesforce.com/docs/component-library/bundle/lightning-record-edit-form/documentation">lightning-record-edit-form</a>: doing the heavy lifting to connect to the <a href="https://developer.salesforce.com/docs/component-library/documentation/lwc/lwc.data_ui_api">lightning data service</a></li> 
@@ -234,17 +235,17 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Add it to the form with an attribute <code>data-field</code>. This was necessary, so we can find them using a <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector">querySelector</a>. I could have used a specific class name, but that's harder to understand when looking at it later (what's the class for? Is it style or selection - bad for maintenance). Initially I thought to use <code>extended-field-name</code> as attribute and use that in the querySelector, but that didn't work. Anyway having a consistent name for the field name attribute lowers your error rate.</li> 
 </ul> 
 <p>So when adding input components (structure omitted for readability) you would see something like this:</p> 
-<pre class="brush: xml">&lt;c-special-input data-field field-name="Phone"&gt;&lt;/c-special-input&gt;
+<pre><code class="language-xml">&lt;c-special-input data-field field-name="Phone"&gt;&lt;/c-special-input&gt;
 &lt;c-ux-debounced-input data-field field-name="FirstName"&gt;&lt;/c-ux-debounced-input&gt;
 &lt;c-ux-quick-lookup data-field field-name="Account"
                    object-api-name="Account"
                    label="Pick an account"
                    fields="Industry,Type,AccountNumber"&gt;&lt;/c-ux-quick-lookup&gt;
-</pre> 
+</code></pre> 
 <h3>Loading Data</h3> 
 <p>This is handled in the <code>formLoadHandler</code>. Lightning data service provides all information we might need. In this component we pull the field values. Those values are either the current value of the field, for an existing record or the default for a new record.</p> 
 <p>Thereafter we grab all fields with the <code>data-field</code> attribute and provide a value if we have one in the record for that <code>field-name</code> (called as <code>node.fieldName</code>). It takes a while to get used to the permanent switch between <a href="http://wiki.c2.com/?KebabCase">kebab-case</a> and <a href="http://wiki.c2.com/?CamelCase">CamelCase</a>.</p> 
-<pre class="brush: js">    formLoadHandler(event) {
+<pre><code class="language-js">    formLoadHandler(event) {
         let fields = event.detail.record.fields;
         const defaultValues = {};
         for (let f in fields) {
@@ -266,27 +267,27 @@ catch(e){window.attachEvent("onload", $buo_f)}
             }
         }
     }
-</pre> 
+</code></pre> 
 <h3>Handling Changes</h3> 
 <p>Handling changes has 2 components. First we need to attach a event listener watching out for the <code>valueChanged</code> event. This is done in the constructor. Since events bubble, we don't need to bind one to each of our special input fields.</p> 
-<pre class="brush: js">    constructor() {
+<pre><code class="language-js">    constructor() {
         super();
         // Holds our fields
         this.specialFieldMap = {};
         this.addEventListener('valueChanged', this.listenDataChange, true);
     }
-</pre> 
+</code></pre> 
 <p>One of the little stumbling blocks for the <code>listenDataChange</code> was that in a normal event handler function the <code>this</code> keyword binds to the event target. So <code>this.specialFieldMap</code> in the component would be unaccessible. The solution here is to use an <a href="https://hackernoon.com/getting-to-grips-with-es6-arrow-functions-ebfa62c5c5d6">ES6 arrow function</a> that doesn't rebind <code>this</code>. Once you make friends with ES6, there is no way back.</p> 
-<pre class="brush: js"> /* Capturing all changed values from our data control */
+<pre><code class="language-js"> /* Capturing all changed values from our data control */
     listenDataChange = event =&gt; {
         let fieldInfo = event.detail;
         this.specialFieldMap[fieldInfo.name] = fieldInfo.value;
     };
-</pre> 
+</code></pre> 
 <p>The syntax is something to get used to, especially when you have function that don't take input parameters and you see <code>let x = () =&gt; { return Math.random()}</code> - which just returns a random when you call <code>x()</code></p> 
 <h3>Saving back</h3> 
 <p>The final piece is saving data back to Salesforce. The <code>onsubmit</code> event provides access to the whole form and we can easily mix in the values we have collected from the fields' <code>valueChanged</code> event. The beauty: no special server code required. We operate in the context of the lightning data service.</p> 
-<pre class="brush: js">formSubmitHandler = event =&gt; {
+<pre><code class="language-js">formSubmitHandler = event =&gt; {
         event.preventDefault();
         const fields = event.detail.fields;
         for (let key in this.specialFieldMap) {
@@ -298,9 +299,9 @@ catch(e){window.attachEvent("onload", $buo_f)}
             .querySelector('lightning-record-edit-form')
             .submit(fields);
     };
-</pre> 
+</code></pre> 
 <p>For good measure we indicate success and redirect to the record form:</p> 
-<pre class="brush: js">   formSuccessHandler(event) {
+<pre><code class="language-js">   formSuccessHandler(event) {
         const record = event.detail;
         const evt = new ShowToastEvent({
             title: 'Record created',
@@ -322,7 +323,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
         };
         this[NavigationMixin.Navigate](destination);
     }
-</pre> 
+</code></pre> 
 <p>Go <a href="https://github.com/Stwissel/lwcaura/tree/master/experiments/experiment8/main/default/lwc">check it out</a> and don't forget: YMMY!</p></div>
 					<hr />
 					<p>
@@ -333,12 +334,10 @@ Stephan H Wissel</a> on 06 April 2019
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/blog/categories/salesforce.html">Salesforce</a>  <a href="/blog/categories/webcomponents.html">WebComponents</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2019/04/mixing-lightning-input-fields-with-custom-data-aware-fields.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Mixing lightning-input-fields with custom data aware fields" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2019/04/mixing-lightning-input-fields-with-custom-data-aware-fields.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -454,8 +453,7 @@ Instead of <c-special-input>, can I add another child component having lighting-
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2019/04/mixing-lightning-input-fields-with-custom-data-aware-fields.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -467,6 +465,7 @@ Instead of <c-special-input>, can I add another child component having lighting-
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

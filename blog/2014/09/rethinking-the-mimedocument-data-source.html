@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -141,7 +142,8 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Using a stylesheet a fully human readable version can be stored with the original MIME (good to eMail)</li> 
 </ul> I haven't sorted out the details, but lets look at some of the building blocks. Who ever has seen me demo XPages will recognize the fruit class. The difference here: I added the XML annotations for a successful serialization: 
 <br> 
-<pre class="brush: java">package test;
+<pre><code class="language-java">
+package test;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -152,15 +154,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "Fruit", namespace = "http://www.notessensei.com/fruits")
 @XmlAccessorType(XmlAccessType.NONE)
 public class Fruit {
-    @XmlAttribute(name = "name")
-    private String  name;
-    @XmlElement(name = "color")
-    private String  color;
-    @XmlElement(name = "taste")
-    private String  taste;
-    @XmlAttribute(name = "smell")
-    private String  smell;
-    
+@XmlAttribute(name = "name")
+private String name;
+@XmlElement(name = "color")
+private String color;
+@XmlElement(name = "taste")
+private String taste;
+@XmlAttribute(name = "smell")
+private String smell;
+
     public String getSmell() {
         return this.smell;
     }
@@ -191,7 +193,7 @@ public class Fruit {
     public final String getTaste() {
         return this.taste;
     }
-    
+
     public final void setColor(String color) {
         this.color = color;
     }
@@ -203,25 +205,28 @@ public class Fruit {
     public final void setTaste(String taste) {
         this.taste = taste;
     }
+
 }
-</pre> 
+</code></pre> 
 <br> The function (probably in a manager class or instance) to turn that into a Document is quite short. The serialization of JAXB would allow to directly serialize it into a Stream or String, but we need the XML Document step to be able to apply the XPath. 
 <br> 
-<pre class="brush: java">public org.w3c.dom.Document getDocument(Fruit fruit) throws ParserConfigurationException, JAXBException {
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db = dbf.newDocumentBuilder();
-		org.w3c.dom.Document doc = db.newDocument();
-		JAXBContext context = JAXBContext.newInstance(fruit.getClass());
-		Marshaller m = context.createMarshaller();
-		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-		m.marshal(fruit, doc);
-		return doc;
-	}
-</pre> 
+<pre><code class="language-java">
+public org.w3c.dom.Document getDocument(Fruit fruit) throws ParserConfigurationException, JAXBException {
+  DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+  DocumentBuilder db = dbf.newDocumentBuilder();
+  org.w3c.dom.Document doc = db.newDocument();
+  JAXBContext context = JAXBContext.newInstance(fruit.getClass());
+  Marshaller m = context.createMarshaller();
+  m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+  m.marshal(fruit, doc);
+  return doc;
+ }
+</code></pre> 
 <br> The little catch here: There is a Document in the <code>lotus.domino</code> package as well as in the <code>org.w3c.dom</code> package. You need to take care not to confuse the two. Saving it into a document including the style sheet (to make it pretty) is short too. The function provides the stylesheet as a w3c Document and the list of fields to extract as a key (the field) - value (the XPath) map. Something like this: 
-<br><pre class="brush: java">       public boolean saveFruitXmlToDocument(lotus.domino.Session session s, lotus.domino.Document d, org.w3c.dom.Document xDoc, org.w3c.dom.Document style) {
-		public static final MIME_FIELD_NAME = "Body";
-		boolean success = true;
+<br><pre><code class="language-java">
+       public boolean saveFruitXmlToDocument(lotus.domino.Session session s, lotus.domino.Document d, org.w3c.dom.Document xDoc, org.w3c.dom.Document style) {
+  public static final MIME_FIELD_NAME = "Body";
+  boolean success = true;
         Map&lt;String,String&gt; defs = new HashMap&lt;String,String&gt;();
         //These are specific to the fruit class, should be read from a source
         defs.add("Subject", "/fruit:Fruit/@name");
@@ -229,90 +234,93 @@ public class Fruit {
         defs.add("Color", "/fruit:Fruit/color");
         defs.add("Attributes", "/fruit:Fruit/@*");
         defs.add("Summary", "/fruit:Fruit");
-        
+
         try {
-			boolean oldMime = session.isConvertMime();
-			session.setConvertMime(false);
 
-			// We must remove the mime body - otherwise it will not work
-			if (d.hasItem(MIME_FIELD_NAME)) {
-				d.removeItem(MIME_FIELD_NAME);
-			}
-			
-			// Create the top mime entry
-			MIMEEntity root = d.createMIMEEntity(MIME_FIELD_NAME);
-			MIMEHeader header = root.createHeader("Content-Type");
-            header.setHeaderVal("multipart/mixed");
-			
-			MIMEEntity body = root.createChildEntity();
-			MIMEHeader bheader = body.createHeader("Content-Type");
-			bheader.setHeaderVal("multipart/alternative");
+boolean oldMime = session.isConvertMime();
+session.setConvertMime(false);
 
-			MIMEEntity textMime = body.createChildEntity();
-			MIMEHeader textHeader = textMime.createHeader("Content-Type");
-			String cType = (this.style == null) ? "text/plain" : "text/html";
-			textHeader.setHeaderVal(cType);
-			Stream stream2 = session.createStream();
-			stream2.write(this.dom2Byte(xDoc, style));
-			textMime.setContentFromBytes(stream2, cType + "; charset=\"UTF-8\"",
-					MIMEEntity.ENC_NONE);
+// We must remove the mime body - otherwise it will not work
+if (d.hasItem(MIME_FIELD_NAME)) {
+d.removeItem(MIME_FIELD_NAME);
+}
 
-	         MIMEEntity xmlMime = body.createChildEntity();
-	            MIMEHeader xmlHeader = xmlMime.createHeader("Content-Type");
-	            xmlHeader.setHeaderVal("application/xml");	            
-	            Stream stream = session.createStream();
-	            stream.write(this.dom2Byte(xDoc,null));
-	            xmlMime.setContentFromBytes(stream, "application/xml; charset=\"UTF-8\"", MIMEEntity.ENC_NONE);
+// Create the top mime entry
+MIMEEntity root = d.createMIMEEntity(MIME_FIELD_NAME);
+MIMEHeader header = root.createHeader("Content-Type");
+header.setHeaderVal("multipart/mixed");
 
-			// Now extract the fields
-			for (Map.Entry&lt;String,String&gt; e : this.definitions) {
-				this.extractOneField(xDoc, d, body, e.getKey(), e.getValue());
-			}
-			session.setConvertMime(oldMime);
-		} catch (Exception e) {
-			success = false;
-			e.printStackTrace();
-		} 
+MIMEEntity body = root.createChildEntity();
+MIMEHeader bheader = body.createHeader("Content-Type");
+bheader.setHeaderVal("multipart/alternative");
 
-		return success;
-	}
-	
-	private void extractOneField(org.w3c.dom.Document xDoc, lotus.domino.Document d,
-			MIMEEntity body, String fName, String xPath) throws NotesException {
+MIMEEntity textMime = body.createChildEntity();
+MIMEHeader textHeader = textMime.createHeader("Content-Type");
+String cType = (this.style == null) ? "text/plain" : "text/html";
+textHeader.setHeaderVal(cType);
+Stream stream2 = session.createStream();
+stream2.write(this.dom2Byte(xDoc, style));
+textMime.setContentFromBytes(stream2, cType + "; charset=\"UTF-8\"",
+MIMEEntity.ENC_NONE);
 
-		if (fName.equalsIgnoreCase(MIME_FIELD_NAME)) {
-			return; // We can't allow to overwrite the body
-		}
+          MIMEEntity xmlMime = body.createChildEntity();
+             MIMEHeader xmlHeader = xmlMime.createHeader("Content-Type");
+             xmlHeader.setHeaderVal("application/xml");
+             Stream stream = session.createStream();
+             stream.write(this.dom2Byte(xDoc,null));
+             xmlMime.setContentFromBytes(stream, "application/xml; charset=\"UTF-8\"", MIMEEntity.ENC_NONE);
 
-		Vector&lt;String&gt; v = this.xpath2Vector(xDoc, xPath);
-		Item curItem = d.replaceItemValue(fName, v);
-	}
-	
-	private Vector&lt;String&gt; xpath2Vector(org.w3c.dom.Document xDoc, String xPathString) {
+// Now extract the fields
+for (Map.Entry&lt;String,String&gt; e : this.definitions) {
+this.extractOneField(xDoc, d, body, e.getKey(), e.getValue());
+}
+session.setConvertMime(oldMime);
+} catch (Exception e) {
+success = false;
+e.printStackTrace();
+}
+
+return success;
+}
+
+private void extractOneField(org.w3c.dom.Document xDoc, lotus.domino.Document d,
+MIMEEntity body, String fName, String xPath) throws NotesException {
+
+if (fName.equalsIgnoreCase(MIME_FIELD_NAME)) {
+return; // We can't allow to overwrite the body
+}
+
+Vector&lt;String&gt; v = this.xpath2Vector(xDoc, xPath);
+Item curItem = d.replaceItemValue(fName, v);
+}
+
+private Vector&lt;String&gt; xpath2Vector(org.w3c.dom.Document xDoc, String xPathString) {
 
         Vector&lt;String&gt; result = new Vector&lt;String&gt;();
         Object exprResult = null;
         XPath xpath = XPathFactory.newInstance().newXPath();
-		MagicNamespaceContext nsc = new MagicNamespaceContext();
-        xpath.setNamespaceContext(nsc);
+
+MagicNamespaceContext nsc = new MagicNamespaceContext();
+xpath.setNamespaceContext(nsc);
 
         try {
             exprResult = xpath.evaluate(xPathString, doc, XPathConstants.NODESET);
             for (int i = 0; i &lt; nodes.getLength(); i++) {
                Node curNode = nodes.item(i);
                result.add(curNode.getNodeValue());
-			}
-        } catch (XPathExpressionException e) {
-            System.err.println("XPATH failed for " + xPathString);
-        }        
-       return result;
-   }
-       
-   private byte[] dom2Byte(Node dom, org.w3c.dom.Document stylesheet) {
-        StreamResult xResult = null;
-        DOMSource source = null;
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Transformer transformer = null;
+
+}
+} catch (XPathExpressionException e) {
+System.err.println("XPATH failed for " + xPathString);
+}  
+ return result;
+}
+
+private byte[] dom2Byte(Node dom, org.w3c.dom.Document stylesheet) {
+StreamResult xResult = null;
+DOMSource source = null;
+ByteArrayOutputStream out = new ByteArrayOutputStream();
+Transformer transformer = null;
 
         try {
             TransformerFactory tFactory = TransformerFactory.newInstance();
@@ -328,7 +336,7 @@ public class Fruit {
 
             // We don't want the XML declaration in front
             transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-         
+
             transformer.transform(source, xResult);
 
         } catch (Exception e) {
@@ -336,11 +344,13 @@ public class Fruit {
         }
 
         return out.toByteArray();
-    }    
-</pre> 
+    }
+
+</code></pre> 
 <br> The final missing ingredient is the MagicNamespace: 
 <br> 
-<pre class="brush: java">package test;
+<pre><code class="language-java">
+package test;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -370,7 +380,7 @@ public class MagicNamespaceContext implements NamespaceContext {
 
     /**
      * Adds a namespace to the context. If the context doesn't exist
-     * 
+     *
      * @param prefix
      * @param uri
      */
@@ -416,10 +426,11 @@ public class MagicNamespaceContext implements NamespaceContext {
         return set.iterator();
     }
 }
-</pre> 
+</code></pre> 
 <br> and of course a test: 
 <br> 
-<pre class="brush: java">package test;
+<pre><code class="language-java">
+package test;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -431,7 +442,7 @@ import lotus.domino.NotesThread;
 import lotus.domino.Session;
 
 public class InitialTest {
-    
+
     public static void main(String[] args) throws NotesException {
         NotesThread.sinitThread();
         Session s = NotesFactory.createSession();
@@ -441,14 +452,14 @@ public class InitialTest {
         System.out.println("\n\n ****************** Test done ********************\n\n");
         NotesThread.stermThread();
     }
-    
+
     private static final String dbName = "XMLDocuments.nsf";
     private final Session s;
-    
+
     public InitialTest(Session s) {
         this.s = s;
     }
-    
+
     public void createDoc() throws NotesException {
         org.w3c.dom.Document style = DomHelper.INSTANCE.file2Dom("fruit.xsl");
         Database db = s.getDatabase(null, dbName);
@@ -460,7 +471,7 @@ public class InitialTest {
         d.recycle();
     }
 }
-</pre> 
+</code></pre> 
 <br> Still work in progress, but you get the idea.</div>
 					<hr />
 					<p>
@@ -471,12 +482,10 @@ Stephan H Wissel</a> on 01 September 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/xpages.html">XPages</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/09/rethinking-the-mimedocument-data-source.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Rethinking the MimeDocument data source" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/09/rethinking-the-mimedocument-data-source.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -585,8 +594,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2014/09/rethinking-the-mimedocument-data-source.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -598,6 +606,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -150,14 +151,14 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>the potential <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status">status codes</a> (we love 2xx)</li> 
 </ul> 
 <p>To handle all this, it smells like boilerplate or, if you are lucky, ready library. <a href="http://vertx.io/">vert.x</a> has the later. It provides the <a href="https://vertx.io/docs/vertx-web-api-contract/java/">API Contract</a> module that is designed to handle all this for you. You simply add the module to your <code>pom.xml</code> and load your json or yaml OpenApi specification file:</p> 
-<pre class="brush: xml">&lt;dependency&gt;
+<pre><code class="language-xml">&lt;dependency&gt;
  &lt;groupId&gt;io.vertx&lt;/groupId&gt;
  &lt;artifactId&gt;vertx-web-api-contract&lt;/artifactId&gt;
  &lt;version&gt;3.8.1&lt;/version&gt;
 &lt;/dependency&gt;
-</pre> 
+</code></pre> 
 <p>The <a href="https://vertx.io/docs/vertx-web-api-contract/java/#_openapi_3">documentation</a> shows the code to turn the OpenApi speccification into a Router factory:</p> 
-<pre class="brush: java">OpenAPI3RouterFactory.create(
+<pre><code class="language-java">OpenAPI3RouterFactory.create(
   vertx,
   "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml",
   ar -&gt; {
@@ -169,7 +170,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
       Throwable exception = ar.cause();
     }
   });
-</pre> 
+</code></pre> 
 <p>As you can see, you can load the spec from an URL (there's an auth option too). So while your API is evolving using <a href="https://www.apicur.io/">Apicurio</a> you can live load the latest and greated from the live preview (should make some interesting breakages ;-) ).</p> 
 <p>You then add your routes using <code>routerFactory.addHandlerByOperationId("awesomeOperation",this::awesomeOperationHandler)</code>. Vert.x doesn't use the path to match the handler, but the operationId. This allows you to update path information without breaking your code. There is a detailed <a href="https://how-to.vertx.io/web-and-openapi-howto/">how-to document</a> describing the steps.</p> 
 <h3>Generate a skeleton for vert.x</h3> 
@@ -184,7 +185,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 </ul> 
 <p>As a result a few lines of code will try to load handler classes for all routes presented in the OpenAPI specs.</p> 
 <h4>Starting the verticle</h4> 
-<pre class="brush: java">@Override
+<pre><code class="language-java">@Override
     public void start(final Promise&lt;Void&gt; startFuture) {
         // String fileName =
         // this.getClass().getResource(Constants.OPENAPI_FILE_NAME).getFile();
@@ -200,9 +201,9 @@ catch(e){window.attachEvent("onload", $buo_f)}
                     }
                 });
     }
-</pre> 
+</code></pre> 
 <h4>Getting all operationIds from the OpenAPI spec</h4> 
-<pre class="brush: java">/**
+<pre><code class="language-java">/**
      * Extracts the operationId from the openapi.json file to get a list of required
      * mount points
      *
@@ -228,9 +229,9 @@ catch(e){window.attachEvent("onload", $buo_f)}
         });
         return result;
     }
-</pre> 
+</code></pre> 
 <h4>Mounting routes</h4> 
-<pre class="brush: java">      private void mountHandlersAndListen(final OpenAPI3RouterFactory routerFactory, final Promise&lt;Void&gt; startFuture) {
+<pre><code class="language-java">      private void mountHandlersAndListen(final OpenAPI3RouterFactory routerFactory, final Promise&lt;Void&gt; startFuture) {
         final RouterFactoryOptions rfo = new RouterFactoryOptions();
         rfo.setMountNotImplementedHandler(true).setRequireSecurityHandlers(true);
 
@@ -260,9 +261,9 @@ catch(e){window.attachEvent("onload", $buo_f)}
         this.server.requestHandler(this.router).listen();
         startFuture.complete();
     }
-</pre> 
+</code></pre> 
 <h4>Load available handlers</h4> 
-<pre class="brush: java">      private void loadHandlers(final OpenAPI3RouterFactory routerFactory, final String id) {
+<pre><code class="language-java">      private void loadHandlers(final OpenAPI3RouterFactory routerFactory, final String id) {
         final String className = "com.somepackage.handlers."
                 + id.substring(0, 1).toUpperCase()
                 + id.substring(1).toLowerCase()
@@ -281,7 +282,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
             this.logger.warn("Could not load Handler:" + className);
         }
     }
-</pre> 
+</code></pre> 
 <h3>Conclusion</h3> 
 <p>Using this approach you don't need to touch your router Verticle. Once the OpenAPI spec is updated, the log will contain a warning about a missing class.<br> Implementing that class is the only action to get your new route operational.</p> 
 <p>As ususal YMMV!</p></div>
@@ -294,12 +295,10 @@ Stephan H Wissel</a> on 06 September 2019
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/vertx.html">vert.x</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2019/09/vertx-and-openapi.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Vert.x and OpenAPI" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2019/09/vertx-and-openapi.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -402,8 +401,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2019/09/vertx-and-openapi.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -415,6 +413,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

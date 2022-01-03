@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -141,91 +142,94 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <br> 
 <br> <b>Update:</b> I found a solution (and opened another can of worms)! The form I tried to export has quite a bit of "history" So in the table tag there is an attribute <code>r4spacing="true"</code>. With this attribute set I get the error message. The attribute tells the designer to use the fixed values provided in <code>refwidth="10.4778in"</code>. Once you remove the attribute "r4spacing" import works. Of course now the table rendering follows a different rule set, so it gets all messed up. Looks like another session in XSLT to clean this up. 
 <br> 
-<br> This is the agent we use for import:<pre class="brush: vb">Sub Initialize
-&nbsp; &nbsp; &nbsp; &nbsp; 'Exports DXL design elements from the base line code into a
-&nbsp; &nbsp; &nbsp; &nbsp; 'database. Can be new, might exist
-&nbsp; &nbsp; &nbsp; &nbsp; 
-&nbsp; &nbsp; &nbsp; &nbsp; Dim db As NotesDatabase
-&nbsp; &nbsp; &nbsp; &nbsp; Dim dCol As NotesDocumentCollection
-&nbsp; &nbsp; &nbsp; &nbsp; Dim newDB As NotesDatabase
-&nbsp; &nbsp; &nbsp; &nbsp; Dim doc As NotesDocument
-&nbsp; &nbsp; &nbsp; &nbsp; Dim rt As NotesRichTextItem
-&nbsp; &nbsp; &nbsp; &nbsp; Dim txtServerName As String
-&nbsp; &nbsp; &nbsp; &nbsp; Dim txtNewDBName As String
-&nbsp; &nbsp; &nbsp; &nbsp; 
-&nbsp; &nbsp; &nbsp; &nbsp; Dim s As New NotesSession
-&nbsp; &nbsp; &nbsp; &nbsp; Set db = s.CurrentDatabase
-&nbsp; &nbsp; &nbsp; &nbsp; txtServerName = db.Server
-&nbsp; &nbsp; &nbsp; &nbsp; 
-&nbsp; &nbsp; &nbsp; &nbsp; txtNewDBName = Inputbox("Create/Update db on "+txtServerName,"")
-&nbsp; &nbsp; &nbsp; &nbsp; If txtNewDBName = "" Then
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Exit Sub
-&nbsp; &nbsp; &nbsp; &nbsp; End If
-&nbsp; &nbsp; &nbsp; &nbsp; 
-&nbsp; &nbsp; &nbsp; &nbsp; Set newDB = New NotesDatabase(txtServerName,txtNewDBName)
-&nbsp; &nbsp; &nbsp; &nbsp; If Not newDB.IsOpen Then
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;'We need to create it!
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Call newDB.Create(txtServerName,txtNewDBName,True)
-&nbsp; &nbsp; &nbsp; &nbsp; Else
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;If Msgbox("This DB does exist, update it? (Exisiting elements will be overwritten)",36) &lt;&gt; 6 Then
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Exit Sub
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;End If
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-&nbsp; &nbsp; &nbsp; &nbsp; End If
-&nbsp; &nbsp; &nbsp; &nbsp; 
-&nbsp; &nbsp; &nbsp; &nbsp; 'Final check
-&nbsp; &nbsp; &nbsp; &nbsp; If Not newDB.IsOpen Then
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;'Something went wrong!
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Msgbox"Can't open the selected database, I'm sorry!"
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Exit Sub
-&nbsp; &nbsp; &nbsp; &nbsp; End If
-&nbsp; &nbsp; &nbsp; &nbsp; 
-&nbsp; &nbsp; &nbsp; &nbsp; Set dCol = db.UnprocessedDocuments
-&nbsp; &nbsp; &nbsp; &nbsp; Set doc = dCol.GetFirstDocument
-&nbsp; &nbsp; &nbsp; &nbsp; 
-&nbsp; &nbsp; &nbsp; &nbsp; Do Until doc Is Nothing
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;If doc.HasItem("Body") Then
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Set rt = doc.GetFirstItem("Body")
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; If doc.HasItem("Subject") Then
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Print "Working on " &amp; doc.subject(0)
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; End If
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Call ImportDXLfromRT(rt,newDB)
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;End If
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Set doc = dCol.GetNextDocument(doc)
-&nbsp; &nbsp; &nbsp; &nbsp; Loop
-&nbsp; &nbsp; &nbsp; &nbsp; 
-End Sub 
+<br> This is the agent we use for import:<pre><code class="language-vb">
+Sub Initialize
+    'Exports DXL design elements from the base line code into a
+    'database. Can be new, might exist
+
+    Dim db As NotesDatabase
+    Dim dCol As NotesDocumentCollection
+    Dim newDB As NotesDatabase
+    Dim doc As NotesDocument
+    Dim rt As NotesRichTextItem
+    Dim txtServerName As String
+    Dim txtNewDBName As String
+
+    Dim s As New NotesSession
+    Set db = s.CurrentDatabase
+    txtServerName = db.Server
+
+    txtNewDBName = Inputbox("Create/Update db on "+txtServerName,"")
+    If txtNewDBName = "" Then
+             Exit Sub
+    End If
+
+    Set newDB = New NotesDatabase(txtServerName,txtNewDBName)
+    If Not newDB.IsOpen Then
+             'We need to create it!
+             Call newDB.Create(txtServerName,txtNewDBName,True)
+    Else
+             If Msgbox("This DB does exist, update it? (Exisiting elements will be overwritten)",36) &lt;&gt; 6 Then
+                     Exit Sub
+             End If
+
+    End If
+
+    'Final check
+    If Not newDB.IsOpen Then
+             'Something went wrong!
+             Msgbox"Can't open the selected database, I'm sorry!"
+             Exit Sub
+    End If
+
+    Set dCol = db.UnprocessedDocuments
+    Set doc = dCol.GetFirstDocument
+
+    Do Until doc Is Nothing
+             If doc.HasItem("Body") Then
+                     Set rt = doc.GetFirstItem("Body")
+                     If doc.HasItem("Subject") Then
+                              Print "Working on " &amp; doc.subject(0)
+                     End If
+                     Call ImportDXLfromRT(rt,newDB)
+             End If
+             Set doc = dCol.GetNextDocument(doc)
+    Loop
+
+End Sub
 
 Sub ImportDXLfromRT(rt As NotesRichTextItem, db As NotesDatabase)
-&nbsp; &nbsp; &nbsp; &nbsp; Dim dxi As NotesDXLImporter
-&nbsp; &nbsp; &nbsp; &nbsp; 
-&nbsp; &nbsp; &nbsp; &nbsp; 
-&nbsp; &nbsp; &nbsp; &nbsp; On Error Goto Err_ImportDXLfromRT
-&nbsp; &nbsp; &nbsp; &nbsp; 
-&nbsp; &nbsp; &nbsp; &nbsp; Dim s As New NotesSession
-&nbsp; &nbsp; &nbsp; &nbsp; Set dxi = s.CreateDXLImporter
-&nbsp; &nbsp; &nbsp; &nbsp; 
-&nbsp; &nbsp; &nbsp; &nbsp; 'Set the import to ONLY import design elements
-&nbsp; &nbsp; &nbsp; &nbsp; dxi.ACLImportOption = DXLIMPORTOPTION_IGNORE
-&nbsp; &nbsp; &nbsp; &nbsp; dxi.DesignImportOption = DXLIMPORTOPTION_REPLACE_ELSE_CREATE
-&nbsp; &nbsp; &nbsp; &nbsp; dxi.DocumentImportOption = DXLIMPORTOPTION_IGNORE
-&nbsp; &nbsp; &nbsp; &nbsp; dxi.ReplaceDBProperties = False
-&nbsp; &nbsp; &nbsp; &nbsp; dxi.ReplicaRequiredForReplaceOrUpdate = False
-&nbsp; &nbsp; &nbsp; &nbsp; 
-&nbsp; &nbsp; &nbsp; &nbsp; 'Set the source to RT and the target to the db
-&nbsp; &nbsp; &nbsp; &nbsp; Call dxi.setInput(rt)
-&nbsp; &nbsp; &nbsp; &nbsp; Call dxi.setOutput(db)
-&nbsp; &nbsp; &nbsp; &nbsp; Call dxi.process
+Dim dxi As NotesDXLImporter
+
+    On Error Goto Err_ImportDXLfromRT
+
+    Dim s As New NotesSession
+    Set dxi = s.CreateDXLImporter
+
+    'Set the import to ONLY import design elements
+    dxi.ACLImportOption = DXLIMPORTOPTION_IGNORE
+    dxi.DesignImportOption = DXLIMPORTOPTION_REPLACE_ELSE_CREATE
+    dxi.DocumentImportOption = DXLIMPORTOPTION_IGNORE
+    dxi.ReplaceDBProperties = False
+    dxi.ReplicaRequiredForReplaceOrUpdate = False
+
+    'Set the source to RT and the target to the db
+    Call dxi.setInput(rt)
+    Call dxi.setOutput(db)
+    Call dxi.process
+
 Exit_ImportDXLfromRT:
-&nbsp; &nbsp; &nbsp; &nbsp; Exit Sub
-&nbsp; &nbsp; &nbsp; &nbsp; 
+Exit Sub
+
 Err_ImportDXLfromRT:
-&nbsp; &nbsp; &nbsp; &nbsp; 'Error from dxi
-&nbsp; &nbsp; &nbsp; &nbsp; Print Error$
-&nbsp; &nbsp; &nbsp; &nbsp; Msgboxdxi.log
-&nbsp; &nbsp; &nbsp; &nbsp; ResumeExit_ImportDXLfromRT
-&nbsp; &nbsp; &nbsp; &nbsp; 
+'Error from dxi
+Print Error$
+Msgboxdxi.log
+ResumeExit_ImportDXLfromRT
+
 End Sub
+</code>
+
 </pre> 
 <br> As usual YMMV</div>
 					<hr />
@@ -237,12 +241,10 @@ Stephan H Wissel</a> on 05 July 2005
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2005/07/i-need-a-dxl-xml-guru-advise.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="&lt;strike&gt;I need a&lt;/strike&gt; DXL/XML guru&amp;apos;s advise!" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2005/07/i-need-a-dxl-xml-guru-advise.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -344,8 +346,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2005/07/i-need-a-dxl-xml-guru-advise.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -357,6 +358,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -137,12 +138,13 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <br> Most of the Googles point to " <i>reading the inbox</i>" which is a distinct different task from: " <i>pulling out all your eMail</i>". When connecting to gMail using the <a href="https://code.google.com/p/java-gmail-imap/">enhanced IMAP classes</a> you can pull all "Folders" using <code>store.getDefaultFolder().list()</code>. There a particular folder is interesting: <code>[Gmail]</code>. In Notes speak I would say: it contains the system views, most notably "All documents", "Sent" and "Spam". 
 <br> To capture all documents going after that one view is sufficient. Google abandoned the idea of "folders" and replaced them with "labels". The idea there was: a document can be in one folder only, but can have many different labels. For other email systems that might hold true, but the way folders a implemented in Notes nicely fits with the idea of labels. 
 <br> Each message comes with a <code>getLabels()</code> function that directly maps (with a little attention) to a <code>NotesDocument.putInFolder(label)</code> call. The code isn't perfect, but can be a good <a href="/blog/downloads/2014/gmail2notes_src_20140115.zip">starting point</a> for your own adventure. 
-<br><pre class="brush: java">/** ========================================================================= *
+<br><pre><code class="language-java">
+/** ========================================================================= *
  * Copyright (C) 2014 Stephan H. Wissel                                       *
  *                                                                            *
- *  @author     Stephan H. Wissel &lt;stephan@wissel.net&gt;                        *   
+ *  @author     Stephan H. Wissel &lt;stephan@wissel.net&gt;                        *
  *                                                                            *
- * @version		0.1                                                           *
+ * @version     0.1                                                           *
  * ========================================================================== *
  *                                                                            *
  * Licensed under the  Apache License, Version 2.0  (the "License").  You may *
@@ -184,251 +186,251 @@ import com.sun.mail.gimap.GmailSSLStore;
 
 public class GMail2Notes {
 
-	public static int	MAX_TEST_COUNT	= 50;
+ public static int MAX_TEST_COUNT = 50;
 
-	public static void main(String[] args) throws NotesException, MessagingException {
+ public static void main(String[] args) throws NotesException, MessagingException {
 
-		if (args.length &lt; 3) {
-			System.out.println("GMail2Notes username@gmail.com password nsfFileName");
-			System.exit(1);
-		}
+  if (args.length &lt; 3) {
+   System.out.println("GMail2Notes username@gmail.com password nsfFileName");
+   System.exit(1);
+  }
 
-		System.out.println("Starting for " + args[0] + " to " + args[2]);
-		NotesThread.sinitThread();
-		lotus.domino.Session s = NotesFactory.createSession();
-		Database db = s.getDatabase("", args[2]);
-		GMail2Notes g2n = new GMail2Notes(args[0], args[1]);
-		g2n.addExcludedLabel("Spam");
-		g2n.addExcludedLabel("Trash");
-		int resultCount = g2n.importMessages(s, db, "All Mail");
-		System.out.print("Messages imported:");
-		System.out.println(resultCount);
-		NotesThread.stermThread();
-		System.out.println("Done");
-	}
+  System.out.println("Starting for " + args[0] + " to " + args[2]);
+  NotesThread.sinitThread();
+  lotus.domino.Session s = NotesFactory.createSession();
+  Database db = s.getDatabase("", args[2]);
+  GMail2Notes g2n = new GMail2Notes(args[0], args[1]);
+  g2n.addExcludedLabel("Spam");
+  g2n.addExcludedLabel("Trash");
+  int resultCount = g2n.importMessages(s, db, "All Mail");
+  System.out.print("Messages imported:");
+  System.out.println(resultCount);
+  NotesThread.stermThread();
+  System.out.println("Done");
+ }
 
-	private final String		userName;
-	private final String		passWord;
-	private GmailSSLStore		store			= null;
-	// set it to false for complete import
-	private boolean				isTestMode		= true;
+ private final String  userName;
+ private final String  passWord;
+ private GmailSSLStore  store   = null;
+ // set it to false for complete import
+ private boolean    isTestMode  = true;
 
-	// Labels we don not want to import
-	private final List&lt;String&gt;	excludedLabels	= new ArrayList&lt;String&gt;();
+ // Labels we don not want to import
+ private final List&lt;String&gt; excludedLabels = new ArrayList&lt;String&gt;();
 
-	public GMail2Notes(String usr, String pwd) {
-		this.userName = usr;
-		this.passWord = pwd;
-	}
+ public GMail2Notes(String usr, String pwd) {
+  this.userName = usr;
+  this.passWord = pwd;
+ }
 
-	/**
-	 * Add a folder name to the list we are not interested in
-	 * 
-	 * @param label
-	 */
-	public void addExcludedLabel(String label) {
-		this.excludedLabels.add(label);
-	}
+ /**
+  * Add a folder name to the list we are not interested in
+  *
+  * @param label
+  */
+ public void addExcludedLabel(String label) {
+  this.excludedLabels.add(label);
+ }
 
-	public List&lt;String&gt; getSystemFolderNames() throws MessagingException {
-		List&lt;String&gt; result = new ArrayList&lt;String&gt;();
-		GmailSSLStore store = this.getStore();
-		Folder[] folders = store.getFolder("[Gmail]").list();
-		for (Folder f : folders) {
-			result.add(f.getName());
-		}
-		return result;
-	}
+ public List&lt;String&gt; getSystemFolderNames() throws MessagingException {
+  List&lt;String&gt; result = new ArrayList&lt;String&gt;();
+  GmailSSLStore store = this.getStore();
+  Folder[] folders = store.getFolder("[Gmail]").list();
+  for (Folder f : folders) {
+   result.add(f.getName());
+  }
+  return result;
+ }
 
-	public int importMessages(lotus.domino.Session s, Database db, String systemFolderName) throws MessagingException {
-		int result = 0;
+ public int importMessages(lotus.domino.Session s, Database db, String systemFolderName) throws MessagingException {
+  int result = 0;
 
-		// The object to move message to
-		Mime2Doc md = new Mime2Doc();
+  // The object to move message to
+  Mime2Doc md = new Mime2Doc();
 
-		// Getting gMail ready
-		GmailFolder f = this.getSystemFolder(systemFolderName);
-		f.open(Folder.READ_ONLY);
-		Message[] messages = f.getMessages();
-		FetchProfile profile = new FetchProfile();
-		profile.add(GmailFolder.FetchProfileItem.CONTENT_INFO);
-		profile.add(GmailFolder.FetchProfileItem.LABELS);
-		profile.add(GmailFolder.FetchProfileItem.MSGID);
-		profile.add(GmailFolder.FetchProfileItem.SIZE);
+  // Getting gMail ready
+  GmailFolder f = this.getSystemFolder(systemFolderName);
+  f.open(Folder.READ_ONLY);
+  Message[] messages = f.getMessages();
+  FetchProfile profile = new FetchProfile();
+  profile.add(GmailFolder.FetchProfileItem.CONTENT_INFO);
+  profile.add(GmailFolder.FetchProfileItem.LABELS);
+  profile.add(GmailFolder.FetchProfileItem.MSGID);
+  profile.add(GmailFolder.FetchProfileItem.SIZE);
 
-		f.fetch(messages, profile);
-		int count = 0;
-		for (Message message : messages) {
-			result += this.importOneMessage(s, db, md, message);
+  f.fetch(messages, profile);
+  int count = 0;
+  for (Message message : messages) {
+   result += this.importOneMessage(s, db, md, message);
 
-			// For testing we don't run through all of them
-			count++;
-			if (this.isTestMode &amp;&amp; count &gt;= MAX_TEST_COUNT) {
-				break;
-			}
-		}
-		if (f.isOpen()) {
-			f.close(false);
-		}
-		this.cleanup();
-		System.out.println("Done");
+   // For testing we don't run through all of them
+   count++;
+   if (this.isTestMode &amp;&amp; count &gt;= MAX_TEST_COUNT) {
+    break;
+   }
+  }
+  if (f.isOpen()) {
+   f.close(false);
+  }
+  this.cleanup();
+  System.out.println("Done");
 
-		return result;
-	}
+  return result;
+ }
 
-	/**
-	 * We need a delivered date so documents don't show up in SEND
-	 * 
-	 * @param doc
-	 * @param sender
-	 */
-	private void adjustDeliveredDate(Document doc, Address sender) {
-		String senderName = sender.toString();
-		if (!senderName.equalsIgnoreCase((this.userName))) {
-			try {
-				Item PostedDate = doc.getFirstItem("PostedDate");
-				doc.copyItem(PostedDate, "DeliveredDate");
-				doc.save();
-				PostedDate.recycle();
-			} catch (NotesException e) {
-				e.printStackTrace();
-			}
-		}
+ /**
+  * We need a delivered date so documents don't show up in SEND
+  *
+  * @param doc
+  * @param sender
+  */
+ private void adjustDeliveredDate(Document doc, Address sender) {
+  String senderName = sender.toString();
+  if (!senderName.equalsIgnoreCase((this.userName))) {
+   try {
+    Item PostedDate = doc.getFirstItem("PostedDate");
+    doc.copyItem(PostedDate, "DeliveredDate");
+    doc.save();
+    PostedDate.recycle();
+   } catch (NotesException e) {
+    e.printStackTrace();
+   }
+  }
 
-	}
+ }
 
-	/**
-	 * Strips leading \ from messages
-	 * 
-	 * @param rawLabel
-	 * @return label Stripped from Backslash
-	 */
-	private String cleanLabel(String rawLabel) {
-		return (rawLabel.startsWith("\\") ? rawLabel.substring(1) : rawLabel).trim();
-	}
+ /**
+  * Strips leading \ from messages
+  *
+  * @param rawLabel
+  * @return label Stripped from Backslash
+  */
+ private String cleanLabel(String rawLabel) {
+  return (rawLabel.startsWith("\\") ? rawLabel.substring(1) : rawLabel).trim();
+ }
 
-	private void cleanup() {
-		if (this.store != null &amp;&amp; this.store.isConnected()) {
-			try {
-				this.store.close();
-			} catch (MessagingException e) {
-				e.printStackTrace();
-			}
-		}
-		this.store = null;
-	}
+ private void cleanup() {
+  if (this.store != null &amp;&amp; this.store.isConnected()) {
+   try {
+    this.store.close();
+   } catch (MessagingException e) {
+    e.printStackTrace();
+   }
+  }
+  this.store = null;
+ }
 
-	private GmailSSLStore getStore() throws MessagingException {
-		if (this.store != null) {
-			return this.store;
-		}
-		Properties props = System.getProperties();
-		props.setProperty("mail.imaps.connectiontimeout", "5000");
-		props.setProperty("mail.imaps.host", "imap.gmail.com");
-		props.setProperty("mail.imaps.partialfetch", "false");
-		props.setProperty("mail.imaps.port", "993");
-		props.setProperty("mail.imaps.timeout", "5000");
-		props.setProperty("mail.mime.base64.ignoreerrors", "true");
-		props.setProperty("mail.store.protocol", "gimaps");
+ private GmailSSLStore getStore() throws MessagingException {
+  if (this.store != null) {
+   return this.store;
+  }
+  Properties props = System.getProperties();
+  props.setProperty("mail.imaps.connectiontimeout", "5000");
+  props.setProperty("mail.imaps.host", "imap.gmail.com");
+  props.setProperty("mail.imaps.partialfetch", "false");
+  props.setProperty("mail.imaps.port", "993");
+  props.setProperty("mail.imaps.timeout", "5000");
+  props.setProperty("mail.mime.base64.ignoreerrors", "true");
+  props.setProperty("mail.store.protocol", "gimaps");
 
-		Session session = Session.getDefaultInstance(props, null);
-		this.store = (GmailSSLStore) session.getStore("gimaps");
-		this.store.connect(this.userName, this.passWord);
-		// Ready for connection
-		return this.store;
-	}
+  Session session = Session.getDefaultInstance(props, null);
+  this.store = (GmailSSLStore) session.getStore("gimaps");
+  this.store.connect(this.userName, this.passWord);
+  // Ready for connection
+  return this.store;
+ }
 
-	/**
-	* can be: All Mail, Drafts, Important, Sent Mail, Spam, Starred, Trash
-	**/
-	private GmailFolder getSystemFolder(String folderName) throws MessagingException {
-		GmailSSLStore store = this.getStore();
-		Folder folder = store.getFolder("[Gmail]").getFolder(folderName);
-		return (GmailFolder) folder;
+ /**
+ * can be: All Mail, Drafts, Important, Sent Mail, Spam, Starred, Trash
+ **/
+ private GmailFolder getSystemFolder(String folderName) throws MessagingException {
+  GmailSSLStore store = this.getStore();
+  Folder folder = store.getFolder("[Gmail]").getFolder(folderName);
+  return (GmailFolder) folder;
 
-	}
+ }
 
-	private int importOneMessage(lotus.domino.Session s, Database db, Mime2Doc md, Message message) {
-		int result = 0;
-		try {
-			GmailMessage g = (GmailMessage) message;
-			Address sender = g.getSender();
-			String[] labels = g.getLabels();
-			System.out.print(g.getMessageID());
-			if (labels != null) {
-				System.out.print(", ");
-				System.out.print(Arrays.toString(labels));
-			}
+ private int importOneMessage(lotus.domino.Session s, Database db, Mime2Doc md, Message message) {
+  int result = 0;
+  try {
+   GmailMessage g = (GmailMessage) message;
+   Address sender = g.getSender();
+   String[] labels = g.getLabels();
+   System.out.print(g.getMessageID());
+   if (labels != null) {
+    System.out.print(", ");
+    System.out.print(Arrays.toString(labels));
+   }
 
-			if (this.processThisMessage(labels)) {
-				result = 1;
-				Document doc = db.createDocument();
-				InputStream in = g.getMimeStream();
-				md.importMail(s, in, doc);
-				this.moveDocToFolders(doc, labels);
-				this.adjustDeliveredDate(doc, sender);
-				System.out.println(" - processed");
-			} else {
-				System.out.println(" - skipped");
-			}
-		} catch (Exception e) {
-			// TODO: record the message for follow-up
-			e.printStackTrace();
-		}
-		return result;
-	}
+   if (this.processThisMessage(labels)) {
+    result = 1;
+    Document doc = db.createDocument();
+    InputStream in = g.getMimeStream();
+    md.importMail(s, in, doc);
+    this.moveDocToFolders(doc, labels);
+    this.adjustDeliveredDate(doc, sender);
+    System.out.println(" - processed");
+   } else {
+    System.out.println(" - skipped");
+   }
+  } catch (Exception e) {
+   // TODO: record the message for follow-up
+   e.printStackTrace();
+  }
+  return result;
+ }
 
-	/**
-	 * Moves doc to folders as needed
-	 * 
-	 * @param doc
-	 * @param labels
-	 */
-	private void moveDocToFolders(Document doc, String[] labels) {
-		if (labels != null) {
-			for (String label : labels) {
-				this.movetoMatchingFolder(doc, label);
-			}
-		}
-	}
+ /**
+  * Moves doc to folders as needed
+  *
+  * @param doc
+  * @param labels
+  */
+ private void moveDocToFolders(Document doc, String[] labels) {
+  if (labels != null) {
+   for (String label : labels) {
+    this.movetoMatchingFolder(doc, label);
+   }
+  }
+ }
 
-	private void movetoMatchingFolder(Document doc, String folderCandidate) {
-		// TODO handle the SENT folder, Draft folder
-		if (folderCandidate != null &amp;&amp; !folderCandidate.trim().equals("")) {
-			try {
-				String realFolder = this.cleanLabel(folderCandidate);
-				if (realFolder.equalsIgnoreCase("inbox")) {
-					doc.putInFolder("($Inbox)");
-				} else if (realFolder.equalsIgnoreCase("drafts")) {
-					// TODO handle Drafts
-				} else if (realFolder.equalsIgnoreCase("sent")) {
-					// TODO handle SENT
-				} else {
-					doc.putInFolder(realFolder, true);
-				}
-			} catch (NotesException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+ private void movetoMatchingFolder(Document doc, String folderCandidate) {
+  // TODO handle the SENT folder, Draft folder
+  if (folderCandidate != null &amp;&amp; !folderCandidate.trim().equals("")) {
+   try {
+    String realFolder = this.cleanLabel(folderCandidate);
+    if (realFolder.equalsIgnoreCase("inbox")) {
+     doc.putInFolder("($Inbox)");
+    } else if (realFolder.equalsIgnoreCase("drafts")) {
+     // TODO handle Drafts
+    } else if (realFolder.equalsIgnoreCase("sent")) {
+     // TODO handle SENT
+    } else {
+     doc.putInFolder(realFolder, true);
+    }
+   } catch (NotesException e) {
+    e.printStackTrace();
+   }
+  }
+ }
 
-	private boolean processThisMessage(String[] messageLabels) {
-		boolean result = true;
+ private boolean processThisMessage(String[] messageLabels) {
+  boolean result = true;
 
-		// If the message has no labels we do process it
-		if (messageLabels != null &amp;&amp; messageLabels.length &lt; 1) {
-			for (String rawLabel : messageLabels) {
-				String cleanLabel = this.cleanLabel(rawLabel);
-				if (this.excludedLabels.contains(cleanLabel)) {
-					result = false;
-					break;
-				}
-			}
-		}
-		return result;
-	}
+  // If the message has no labels we do process it
+  if (messageLabels != null &amp;&amp; messageLabels.length &lt; 1) {
+   for (String rawLabel : messageLabels) {
+    String cleanLabel = this.cleanLabel(rawLabel);
+    if (this.excludedLabels.contains(cleanLabel)) {
+     result = false;
+     break;
+    }
+   }
+  }
+  return result;
+ }
 
-}</pre> 
+}</code></pre> 
 <br> As usual YMMV</div>
 					<hr />
 					<p>
@@ -439,12 +441,10 @@ Stephan H Wissel</a> on 14 January 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/01/gmail2notes-in-less-than-300-lines.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="GMail2Notes in less than 300 lines" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/01/gmail2notes-in-less-than-300-lines.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -550,8 +550,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2014/01/gmail2notes-in-less-than-300-lines.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -563,6 +562,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

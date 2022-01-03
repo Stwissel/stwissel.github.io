@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -196,12 +197,10 @@ Stephan H Wissel</a> on 17 April 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/cloudcomputing.html">Cloud Computing</a>  <a href="/blog/categories/ibmnotes.html">IBM Notes</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/04/you-want-to-move-to-domino-you-need-a-plan.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="You want to move to Domino? You need a plan!" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/04/you-want-to-move-to-domino-you-need-a-plan.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -233,12 +232,10 @@ Stephan H Wissel</a> on 17 April 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/xpages.html">XPages</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/04/domino-design-pattern-secret-documents.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Domino Design Pattern: Secret documents" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/04/domino-design-pattern-secret-documents.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -250,16 +247,18 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 <br> One of the most unpleasant restrictions is: " <i>No customer agents or scripts will be executed on server </i>", so no agent, no DOLS tasks. However you can run an agent (or other code) <a href="http://www-10.lotus.com/ldd/bhwiki.nsf/dx/Using_server-based_agents_in_a_SmartCloud_Notes_hybrid_environment">on an on-premises server</a>. The interesting question is: when and how to trigger such code. Looking at the <a href="http://www-10.lotus.com/ldd/dominowiki.nsf/dx/The_basics_of_iNotes_customization">basic iNotes customization</a> article you can find the <code>Custom_Scene_PreSubmit_Lite</code> JavaScript function. This could be the place to launch such a trigger. More on that in the next installment. 
 <br> This article outlines the receiving end - the stuff that runs on your on-premises server. Instead of running agents, I'll outline a plug-in that allows to process the document submitted. The interface between SCN and this service is a JSON submission in the form of: 
 <br> 
-<pre class="brush: js">{
+<pre><code class="language-js">
+{
   "userName": "TestUser@acme.com",
   "action": "DemoTask",
   "unid": "32char-unid"
 }
-</pre> 
+</code></pre> 
 <br> Once the plug-in receives this data, processing can commence. Of course the server (that's the ID the plug-in runs with) needs to have access to the mail file at the task required level. Let's get started: 
 <br> In a plugin project we define a new servlet: 
 <br> 
-<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre><code class="language-xml">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;?eclipse version="3.4"?&gt;
 &lt;plugin&gt;
    &lt;extension
@@ -271,10 +270,11 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
       &lt;/servlet&gt;
    &lt;/extension&gt;
 &lt;/plugin&gt;
-</pre> 
+</code></pre> 
 <br> Then our servlet looks like this: 
 <br> 
-<pre class="brush: java">package com.notessensei.cloudproxy;
+<pre><code class="language-java">
+package com.notessensei.cloudproxy;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -292,68 +292,319 @@ import lotus.domino.NotesException;
 
 public class TaskServlet extends HttpServlet {
 
-	private static final long		serialVersionUID	= 1L;
+ private static final long  serialVersionUID = 1L;
 
-	// Number of threads allowed to run concurrently for data sync
-	private static final int		THREADPOOLSIZE		= 16;
+ // Number of threads allowed to run concurrently for data sync
+ private static final int  THREADPOOLSIZE  = 16;
 
-	// The background executor for talking to the cloud
-	private final ExecutorService	service				= Executors.newFixedThreadPool(THREADPOOLSIZE);
+ // The background executor for talking to the cloud
+ private final ExecutorService service    = Executors.newFixedThreadPool(THREADPOOLSIZE);
 
-	// The Cache where we keep our user lookup objects, handle with care!
-	private final UserCache			userCache			= new UserCache();
+ // The Cache where we keep our user lookup objects, handle with care!
+ private final UserCache   userCache   = new UserCache();
 
-	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		// Takes in a JSON String and makes a task object
-		InputStream in = req.getInputStream();
-		CloudNotesTask it = CloudNotesTask.load(in);
-		String result;
+ @Override
+ protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+  // Takes in a JSON String and makes a task object
+  InputStream in = req.getInputStream();
+  CloudNotesTask it = CloudNotesTask.load(in);
+  String result;
 
-		if (it != null) {
-			it.setUserCache(this.userCache);
-			DocumentTaskFactory.getDocumentTask(it);
-			this.service.execute(it);
-			resp.setStatus(HttpServletResponse.SC_OK);
-			result = "{\"status\" : \"task accepted\"}";
-		} else {
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			result = "{\"status\" : \"task failed\"}";
-		}
+  if (it != null) {
+   it.setUserCache(this.userCache);
+   DocumentTaskFactory.getDocumentTask(it);
+   this.service.execute(it);
+   resp.setStatus(HttpServletResponse.SC_OK);
+   result = "{\"status\" : \"task accepted\"}";
+  } else {
+   resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+   result = "{\"status\" : \"task failed\"}";
+  }
 
-		// Prepare the reply back
-		resp.setContentType("application/json");
-		PrintWriter out = resp.getWriter();
-		out.println(result);
-		out.close();
+  // Prepare the reply back
+  resp.setContentType("application/json");
+  PrintWriter out = resp.getWriter();
+  out.println(result);
+  out.close();
 
-	}
+ }
 
-	/**
-	 * Get rid of all Notes objects
-	 * 
-	 * @param morituri
-	 *            = the one designated to die, read your Caesar!
-	 */
-	public static void shred(final Base... morituri) {
-		for (Base obsoleteObject : morituri) {
-			if (obsoleteObject != null) {
-				try {
-					obsoleteObject.recycle();
-				} catch (NotesException e) {
-					// We don't care we want go get
-					// rid of it anyway
-				} finally {
-					obsoleteObject = null;
-				}
-			}
-		}
-	}
+ /**
+  * Get rid of all Notes objects
+  *
+  * @param morituri
+  *            = the one designated to die, read your Caesar!
+  */
+ public static void shred(final Base... morituri) {
+  for (Base obsoleteObject : morituri) {
+   if (obsoleteObject != null) {
+    try {
+     obsoleteObject.recycle();
+    } catch (NotesException e) {
+     // We don't care we want go get
+     // rid of it anyway
+    } finally {
+     obsoleteObject = null;
+    }
+   }
+  }
+ }
 }
-</pre> 
-<br></div>
+</code></pre> ## 
+<br> The two interesting pieces are the CloudNotesTask and the UserCache. In my sample I use some Apache licensed Google libraries <a href="https://code.google.com/p/google-gson/">gson</a> and <a href="https://code.google.com/p/guava-libraries/">guava</a>. They make Java live much easier. From the guava library the Cache object is used, that automatically retrieves data when requested. The calling class just queries the cache and data acquisition is completely transparent. Look for yourself: 
+<br> 
+<pre><code class="language-java">
+package com.notessensei.cloudproxy;
+
+import java.util.Vector;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
+import lotus.domino.Directory;
+import lotus.domino.DirectoryNavigator;
+import lotus.domino.Name;
+import lotus.domino.Session;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+
+/**
+ * Keeps the information about the user and the mail file
+ * @author stw
+ */
+public class UserCache {
+
+ private final static String     LOOKUP_VIEW_NAME = "($Users)";
+ private final static String     MAILSERVER_FIELD = "MailServer";
+ private final static String     MAILFILE_FIELD = "MailFile";
+
+ // TODO CHECK the size and validity of the cache lifespan
+ private final static int     MAX_CACHE_ENTRIES = 1000;
+ private final static int     EXPIRES_AFTER = 8;
+ private final static TimeUnit    UNIT = TimeUnit.HOURS;
+
+ private final LoadingCache&lt;String&gt;,&lt;String&gt; cachedUsers;
+ private final Vector&lt;String&gt; serverFields;
+ private Session session = null;
+
+ public UserCache() {
+       // Fields to retrieve;
+    this.serverFields = new Vector&lt;String:&gt;();
+       this.serverFields.add(MAILSERVER_FIELD);
+ this.serverFields.add(MAILFILE_FIELD);
+  // Get users from the database
+  UserLoader loader = new UserLoader();
+   this.cachedUsers = CacheBuilder.newBuilder().maximumSize(MAX_CACHE_ENTRIES).recordStats()
+                                  .expireAfterAccess(EXPIRES_AFTER, UNIT)
+          .build(loader);
+ }
+
+ public String getDBUrl(Session s, String user) {
+  // Crude trick, might fire back at some time
+  this.session = s;
+  try {
+    return this.cachedUsers.get(user);
+  } catch (ExecutionException e) {
+    // TODO Auto-generated catch block
+     e.printStackTrace();
+   } return null;
+  }
+  /**
+   * This is the class that actually talks to the directory
+  */
+   private class UserLoader extends CacheLoaderlt;String&gt;,&lt;String&gt; {
+     @Override public String load(String user) throws Exception {
+       if (session == null || !session.isValid()) {
+        throw new Exception("Session was null or invalid");
+         }
+    // TODO: verify that this works!
+     Vector&lt;String&gt;userVector = new Vector&lt;&gt;(); userVector.add(user); Directory dir = session.getDirectory(); DirectoryNavigator nav = dir.lookupNames(LOOKUP_VIEW_NAME, userVector, serverFields, false); if (!nav.isNameLocated()) { throw new ExecutionException(new Throwable("Can't find user " + user)); } // Now assemble the result StringBuilder result = new StringBuilder(); result.append("notes://"); String serverName = nav.getFirstItemValue().get(0).toString(); String dbName = nav.getNextItemValue().get(0).toString(); Name name = session.createName(serverName); result.append(name.getCommon()); result.append("/"); result.append(dbName.replace("\\", "/")); TaskServlet.shred(name, nav, dir); return result.toString(); } } }
+</code></pre> 
+<br> The next piece is the task, which uses a callback to process an individual document: 
+<br> 
+<pre><code class="language-java">
+package com.notessensei.cloudproxy;
+
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+import lotus.domino.Database;
+import lotus.domino.Document;
+import lotus.domino.NotesException;
+import lotus.domino.NotesFactory;
+import lotus.domino.NotesThread;
+import lotus.domino.Session;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+public class CloudNotesTask implements Runnable {
+
+ public static CloudNotesTask load(InputStream in) {
+  Gson gson = new GsonBuilder().create();
+  CloudNotesTask result = gson.fromJson(new InputStreamReader(in), CloudNotesTask.class);
+  return result;
+ }
+
+ /**
+  * Just for testing the tasks
+  *
+  * @param args
+  *            UserName, Action, unid
+  */
+ public static void main(String args[]) {
+
+  CloudNotesTask it = new CloudNotesTask();
+  it.setUserName((args.length &lt; 1) ? "TestUser" : args[0]);
+  it.setAction((args.length &lt; 2) ? "DemoTask" : args[1]);
+  it.setUnid((args.length &lt; 3) ? "32char-unid" : args[2]);
+  System.out.println(it.toJson());
+
+ }
+
+ private String   userName = null;
+ private String   action  = null;
+ private String   unid  = null;
+ private UserCache  userCache = null;
+ private IDocumentTask callback = null;
+
+ public final String getAction() {
+  return this.action;
+ }
+
+ public final String getUnid() {
+  return this.unid;
+ }
+
+ public final String getUserName() {
+  return this.userName;
+ }
+
+ public void run() {
+  if (!areWeGoodToGo()) {
+   return;
+  }
+
+  NotesThread.sinitThread();
+
+  try {
+   Session s = NotesFactory.createSession();
+
+   String dbURL = this.getDBUrl(s, this.userName);
+
+   if (dbURL == null || dbURL.trim().equals("")) {
+    // No database to go to found
+    return;
+   }
+
+   try {
+    Database database = (Database) s.resolve(dbURL);
+    Document doc = database.getDocumentByUNID(getUnid());
+
+    this.callback.processDocument(s, doc, this);
+
+    TaskServlet.shred(doc, database);
+   } catch (NotesException e) {
+    // TODO FIX THE ERROR HANDLING - PLEASE!!!!
+    e.printStackTrace();
+   }
+  } catch (NotesException e1) {
+   // TODO FIX THE ERROR HANDLING - PLEASE!!!!
+   e1.printStackTrace();
+  }
+  NotesThread.stermThread();
+ }
+
+ public final void setAction(String action) {
+  this.action = action;
+ }
+
+ /**
+  * @param callback
+  *            the callback to set
+  */
+ public final void setCallback(IDocumentTask callback) {
+  this.callback = callback;
+ }
+
+ public final void setUnid(String unid) {
+  this.unid = unid;
+ }
+
+ public void setUserCache(UserCache userCache) {
+  this.userCache = userCache;
+ }
+
+ public final void setUserName(String userName) {
+  this.userName = userName;
+ }
+
+ public String toJson() {
+  GsonBuilder gb = new GsonBuilder();
+  gb.setPrettyPrinting();
+  gb.disableHtmlEscaping();
+  Gson gson = gb.create();
+  return gson.toJson(this);
+ }
+
+ /**
+  * Checks if we have a valid task object and return if we have all we need
+  * Does NOT check if the user or the eMail actually exists in the directory
+  *
+  * @return
+  */
+ private boolean areWeGoodToGo() {
+  return ((this.userName != null) &amp;&amp; (this.action != null) &amp;&amp; (this.unid != null) &amp;&amp; (this.callback != null));
+ }
+
+ private String getDBUrl(Session s, String user) {
+  if (this.userCache == null) {
+   // This should NEVER happen (unless you test it)
+   this.userCache = new UserCache();
+  }
+
+  return this.userCache.getDBUrl(s, user);
+ }
+
+}
+</code></pre> 
+<br> Finally the interface and factory that does the actual work on the document: 
+<br> 
+<pre><code class="language-java">
+package com.notessensei.cloudproxy;
+
+/**
+ * Provides the implementations to process the documents when triggered from a
+ * task
+ */
+public class DocumentTaskFactory {
+
+ public static IDocumentTask getDocumentTask(CloudNotesTask task) {
+  // TODO: Implement Task Classes based on the nature of the task
+  System.out.println(task.toJson());
+  return null;
+ }
+
+}
+
+===============================
+
+package com.notessensei.cloudproxy;
+import lotus.domino.Document;
+import lotus.domino.Session;
+
+/**
+ * Processes a document when triggered from a cloud task
+ */
+public interface IDocumentTask {
+
+ public void processDocument(Session session, Document document, CloudNotesTask task);
+
+}
+</code></pre> 
+<br> As usual: YMMV</div>
 					<hr />
- <a href="/blog/2014/04/smartcloud-notes-little-agent-helper.html">Read more</a>
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 17 April 2014
@@ -362,12 +613,10 @@ Stephan H Wissel</a> on 17 April 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/04/smartcloud-notes-little-agent-helper.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="SmartCloud Notes little agent helper" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/04/smartcloud-notes-little-agent-helper.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -381,42 +630,56 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
  <li>List of provided field names</li> 
 </ol> So here we go: 
 <br> 
-<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre>
+<code class="language-xml">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;xp:view xmlns:xp="http://www.ibm.com/xsp/core"&gt;
-	&lt;xp:scriptBlock id="scriptBlock1"&gt;
-		&lt;xp:this.value&gt;&lt;![CDATA[#{javascript:mustache.getFormFields(database, "Memo,Person", false);}]]&gt;&lt;/xp:this.value&gt;
-	&lt;/xp:scriptBlock&gt;
-	&lt;h1&gt;Mustache and CKEdit demo&lt;/h1&gt;
-	&lt;xp:inputRichText id="inputRichText1"&gt;
-		&lt;xp:this.dojoAttributes&gt;
-			&lt;xp:dojoAttribute name="extraPlugins" value="mustache"&gt;
-			&lt;/xp:dojoAttribute&gt;		
-		&lt;/xp:this.dojoAttributes&gt;
-	&lt;/xp:inputRichText&gt;
+ &lt;xp:scriptBlock id="scriptBlock1"&gt;
+  &lt;xp:this.value&gt;&lt;![CDATA[#{javascript:mustache.getFormFields(database, "Memo,Person", false);}]]&gt;&lt;/xp:this.value&gt;
+ &lt;/xp:scriptBlock&gt;
+ &lt;h1&gt;Mustache and CKEdit demo&lt;/h1&gt;
+ &lt;xp:inputRichText id="inputRichText1"&gt;
+  &lt;xp:this.dojoAttributes&gt;
+   &lt;xp:dojoAttribute name="extraPlugins" value="mustache"&gt;
+   &lt;/xp:dojoAttribute&gt;  
+  &lt;/xp:this.dojoAttributes&gt;
+ &lt;/xp:inputRichText&gt;
 &lt;/xp:view&gt;
-</pre> 
+</code></pre> 
 <br> The big change here is the replacement of the EL Expression <code>mustache.sampleData</code> with a SSJS expression, so we can hand over all needed parameters. The pattern is the same for the other variations, so I won't repeat it further onwards. The interesting part is the Java method. Since a form might contain subforms you are interested it, I use an array like sting, that I'll split and a boolean parameter to include system fields. Of course one could vary the approach and automatically figure out the subforms in use (have fun with that once it is conditionally computed) or first present a list of forms and then the respective fields. Also, not to depend on some magic, I add the database dependency as parameter. So you have options to play with. 
 <br> 
-<pre class="brush: java">@SuppressWarnings("unchecked")
-    public String getFormFields(Database db, String formNameString, boolean includeSystemFields) {
-		StringBuilder result = new StringBuilder();
-		// Get a sorted set first
-		Set
- 
- <string>
-  
-  
-   fieldNames = new TreeSet
-  
-  
-  <string>
-   
-    (); String[] formNames = formNameString.split(","); for (String formName : formNames) { try { Form form = db.getForm(formName); if (form != null) { Vector fields = form.getFields(); for (int i = 0; i &lt; fields.size(); i++) { String curField = fields.get(i).toString(); if (includeSystemFields || !curField.startsWith("$")) { fieldNames.add(curField); } } } form.recycle(); } catch (NotesException e) { // Too bad } } result.append(this.preText); // Now the content for (String f : fieldNames) { this.add(result, f); } result.append(this.postText); return result.toString(); } 
-  
-  </string>
- 
- 
- </string></pre> 
+<pre><code class="language-java">
+@SuppressWarnings("unchecked")
+public String getFormFields(Database db, String formNameString, boolean includeSystemFields) {
+    StringBuilder result = new StringBuilder();
+    // Get a sorted set first
+    Set&lt;String&gt; fieldNames = new TreeSet&lt;&gt;();
+    String[] formNames = formNameString.split(",");
+    for (String formName : formNames) {
+       try {
+            Form form = db.getForm(formName);
+            if (form != null) {
+                Vector fields = form.getFields();
+                for (int i = 0; i &lt; fields.size(); i++) {
+                    String curField = fields.get(i).toString();
+                    if (includeSystemFields || !curField.startsWith("$")) {
+                        fieldNames.add(curField);
+                    }
+                }
+            }
+            form.recycle();
+        } catch (NotesException e) {
+            // Too bad
+        }
+    }
+    result.append(this.preText);
+    // Now the content
+    for (String f : fieldNames) {
+        this.add(result, f);
+    }
+    result.append(this.postText); return result.toString();
+}
+</code></pre> 
 <br></div>
 					<hr />
  <a href="/blog/2014/04/mustache-and-ckeditor-round-two.html">Read more</a>
@@ -428,12 +691,10 @@ Stephan H Wissel</a> on 14 April 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/xpages.html">XPages</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/04/mustache-and-ckeditor-round-two.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Mustache and CKEditor - Round two" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/04/mustache-and-ckeditor-round-two.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -454,12 +715,10 @@ Stephan H Wissel</a> on 09 April 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/ibmlotus.html">IBM - Lotus</a>  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotus.html">Lotus</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/04/lotus-de-la-mancha.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Lotus de la Mancha" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/04/lotus-de-la-mancha.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -469,29 +728,29 @@ categories:  <a href="/blog/categories/ibmlotus.html">IBM - Lotus</a>  <a href="
 					<div>In the beginning there was <a href="http://en.wikipedia.org/wiki/WordStar">WordStar</a> and <a href="http://en.wikipedia.org/wiki/Comma-separated_values">CSV</a>. The possibility of (then printed) personalized mass-communication had arrived in the form of <a href="http://en.wikipedia.org/wiki/Mail_merge">mail-merge</a>. For Notes eMails that is still a challenge (the latest version of <a href="http://www.openoffice.org/">OpenOffice</a> now seems to have a reasonable eMail-Merge, but that's off topic here) since creating the template message with variables to be filled is kind of fuzzy (a.k.a usually out of the reach of mere mortal users). 
 <br> XPages, Mustache and <a href="http://ckeditor.com/">CKEditor</a> to the rescue! The CKEditor shipping with XPages can be <a href="http://openntf.org/XSnippets.nsf/snippet.xsp?id=rich-text-editor-nsf-custom-plugin-extension">easily customized</a>, so adding <a href="http://www.kuba.co.uk/blog.php?blog_id=15">a dropdown</a> that inserts Mustache markup shouldn't be too hard. To allow easy reuse of the code, I created a bean than contains all needed components. Add it to a page and simply call the bean functions. The first sample, using only uses static therefore is quite simple: 
 <br> 
-<pre class="brush: xml">
- 
+<pre><code class="language-xml">
  <!--?xml version="1.0" encoding="UTF-8"?-->
 &lt;xp:view xmlns:xp="http://www.ibm.com/xsp/core"&gt;
-	&lt;xp:scriptBlock id="scriptBlock1" value="#{mustache.sampleData}"&gt;
-	&lt;/xp:scriptBlock&gt;
-	&lt;h1&gt;Mustache and CKEdit demo&lt;/h1&gt;
-	&lt;xp:inputRichText id="inputRichText1"&gt;
-		&lt;xp:this.dojoAttributes&gt;
-			&lt;xp:dojoAttribute name="extraPlugins" value="mustache"&gt;
-			&lt;/xp:dojoAttribute&gt;		
-		&lt;/xp:this.dojoAttributes&gt;
-	&lt;/xp:inputRichText&gt;
+ &lt;xp:scriptBlock id="scriptBlock1" value="#{mustache.sampleData}"&gt;
+ &lt;/xp:scriptBlock&gt;
+ &lt;h1&gt;Mustache and CKEdit demo&lt;/h1&gt;
+ &lt;xp:inputRichText id="inputRichText1"&gt;
+  &lt;xp:this.dojoAttributes&gt;
+   &lt;xp:dojoAttribute name="extraPlugins" value="mustache"&gt;
+   &lt;/xp:dojoAttribute&gt;  
+  &lt;/xp:this.dojoAttributes&gt;
+ &lt;/xp:inputRichText&gt;
 &lt;/xp:view&gt;
-</pre> 
+</code></pre> 
 <br> The variable <code>mustache</code> is configured as a managed bean in <code>faces-config.xml</code>: 
 <br> 
-<pre class="brush: xml">&lt;managed-bean&gt;
-	&lt;managed-bean-name&gt;mustache&lt;/managed-bean-name&gt;
-	&lt;managed-bean-class&gt;com.notessensei.xpages.MustacheWrapper&lt;/managed-bean-class&gt;
-	&lt;managed-bean-scope&gt;session&lt;/managed-bean-scope&gt;
+<pre><code class="language-xml">
+&lt;managed-bean&gt;
+ &lt;managed-bean-name&gt;mustache&lt;/managed-bean-name&gt;
+ &lt;managed-bean-class&gt;com.notessensei.xpages.MustacheWrapper&lt;/managed-bean-class&gt;
+ &lt;managed-bean-scope&gt;session&lt;/managed-bean-scope&gt;
 &lt;/managed-bean&gt;
-</pre> 
+</code></pre> 
 <br> While it seems a little overkill to move the JavaScript into a Java function, we will see that the bean, once completed, is quite useful and keeps what we need in one place.</div>
 					<hr />
  <a href="/blog/2014/04/ckeditor-and-mustache-become-friends.html">Read more</a>
@@ -503,12 +762,10 @@ Stephan H Wissel</a> on 09 April 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/xpages.html">XPages</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/04/ckeditor-and-mustache-become-friends.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="CKEditor and Mustache become friends" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/04/ckeditor-and-mustache-become-friends.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -527,12 +784,10 @@ Stephan H Wissel</a> on 01 April 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/software.html">Software</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/04/mongodb-to-switch-to-ibm-storage-backend.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="MongoDB to switch to IBM storage backend" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/04/mongodb-to-switch-to-ibm-storage-backend.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -605,12 +860,10 @@ Stephan H Wissel</a> on 01 April 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/04/communicate-with-a-german.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Communicate with a German" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/04/communicate-with-a-german.html";
 						</script>
 					</p>
-
 				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/2014/03/index.html"><i class="icon-hand-left"></i>By Date: March 2014</a>
@@ -796,8 +1049,7 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>
 		</div>
 	</footer>
 
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -809,6 +1061,7 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

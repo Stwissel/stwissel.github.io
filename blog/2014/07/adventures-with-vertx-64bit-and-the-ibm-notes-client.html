@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -165,7 +166,8 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <br> vert.x 3.x is at the edge of new and uses <a href="http://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html">Lamda expressions</a>, so just using Notes' Java 6 runtime was not an option. The Java 8 JRE was due to be installed. Luckily that is <a href="http://www.webupd8.org/2012/09/install-oracle-java-8-in-ubuntu-via-ppa.html">rather easy</a>. 
 <br>The class is rather simple, even after including <code>Notes.jar</code>, getting it to run (more below) not so much: 
 <br> 
-<pre class="brush: java">package com.notessensei.vertx.notes;
+<pre><code class="language-java">
+package com.notessensei.vertx.notes;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -180,52 +182,54 @@ import lotus.domino.NotesThread;
 import lotus.domino.Session;
 
 public class Demo {
-	public static void main(String[] args) throws IOException {
-		new Demo();
-		int quit = 0;
-		while (quit != 113) { // Wait for a keypress
-			System.out.println("Press q&lt;Enter&gt; to stop the verticle");
-			quit = System.in.read();
-		}
-		System.out.println("Veticle terminated");
-		System.exit(0);
-	}
+ public static void main(String[] args) throws IOException {
+  new Demo();
+  int quit = 0;
+  while (quit != 113) { // Wait for a keypress
+   System.out.println("Press q&lt;Enter&gt; to stop the verticle");
+   quit = System.in.read();
+  }
+  System.out.println("Veticle terminated");
+  System.exit(0);
+ }
 
-	private static final int listenport = 8111;
+ private static final int listenport = 8111;
 
-	public Demo() {
-		Vertx vertx = Vertx.factory.createVertx();
-		HttpServerOptions options = new HttpServerOptions();
-		options.setPort(listenport);
-		vertx.createHttpServer(options)
-				.requestHandler(new Handler&lt;HttpServerRequest&gt;() {
-					public void handle(HttpServerRequest req) {
-						HttpServerResponse resp = req.response();
-						resp.headers().set("Content-Type",
-								"text/plain; charset=UTF-8");
-						StringBuilder b = new StringBuilder();
-						try {
-							NotesThread.sinitThread();
-							Session s = NotesFactory.createSession();
-							b.append(s.getUserName());
-							NotesThread.stermThread();
-						} catch (Exception e) {
-							e.printStackTrace();
-							b.append(e.getMessage());
-						}
-						resp.writeStringAndEnd(b.toString());
-					}
-				}).listen();
-	}
+ public Demo() {
+  Vertx vertx = Vertx.factory.createVertx();
+  HttpServerOptions options = new HttpServerOptions();
+  options.setPort(listenport);
+  vertx.createHttpServer(options)
+    .requestHandler(new Handler&lt;HttpServerRequest&gt;() {
+     public void handle(HttpServerRequest req) {
+      HttpServerResponse resp = req.response();
+      resp.headers().set("Content-Type",
+        "text/plain; charset=UTF-8");
+      StringBuilder b = new StringBuilder();
+      try {
+       NotesThread.sinitThread();
+       Session s = NotesFactory.createSession();
+       b.append(s.getUserName());
+       NotesThread.stermThread();
+      } catch (Exception e) {
+       e.printStackTrace();
+       b.append(e.getMessage());
+      }
+      resp.writeStringAndEnd(b.toString());
+     }
+    }).listen();
+ }
 }
-</pre> 
-<br> Starting the verticle looked promising, but once I pointed my browser to <code>http://localhost:8111/</code> the fun began. 
+</code></pre> 
+<br> Starting the verticle looked promising, but once I pointed my browser to <code>
+ <http: localhost:8111 /></code> the fun began. 
 <br>The first error I had to deal with was: <span style="color : red; font-family : courier, monospace; display : block">SEVERE: java.lang.UnsatisfiedLinkError: no lsxbe in java.library.path</span> That was actually <a href="http://www.lbenitez.com/2009/02/atlas-for-mac-is-here.html">nothing new</a>, to fix these 2 environment parameters needed to be set: 
 <br> <code>DYLD_LIBRARY_PATH=/opt/ibm/notes</code> and <code>LD_LIBRARY_PATH=/opt/ibm/notes</code>. 
 <br> This can be done in the run configuration in Eclipse or in the script that later will run the ready program. After adding them I get the next error: <span style="color : red; font-family : courier, monospace; display : block">SEVERE: java.lang.UnsatisfiedLinkError: /opt/ibm/notes/liblsxbe.so: /opt/ibm/notes/liblsxbe.so: wrong ELF class: ELFCLASS32 (Possible cause: architecture word width mismatch)</span> Now I do like <a href="http://fc02.deviantart.net/fs71/f/2011/217/3/f/high_elf_female_avatar_by_graysun_d-d45lit4.jpg">elfs</a>, just not the <a href="http://hd.wallpaperswide.com/thumbs/world_of_warcraft_blood_elf-t2.jpg">wrong type</a>. The error actually says: the native library is 32 Bit, the JVM is 64, this ain't working. The Notes client on all platforms Checking with <a href="https://github.com/jesse-gallagher">Jesse</a> I learned, that there is a switch to tell Java to do 32 Bit: <code>-d32</code>, while <a href="http://nathantfreeman.wordpress.com/">NTF</a> asserted using server code you could run pure 64Bit. Trying the <code>-d32</code>, I was greeted with yet another error: <span style="color : red; font-family : courier, monospace; display : block">Error: This Java instance does not support a 32-bit JVM. Please install the desired version.</span> That only seems to work on Windows. So, downloaded the 32Bit version, expanded into a directory in /opt and created a new JVM configuration in Eclipse pointing to it. And horray! It works. So now I have a local web server that can talk to my local Notes client and I can read data from all the NSF I have access to. 
 <br> There are a few moving parts. For Java projects I highly recommend using <a href="http://maven.apache.org/">Apache Maven</a> since it can take care of getting all the needed libraries for you. My maven <code>pom.xml</code> file for this project looks like this: 
 <br> 
-<pre class="brush: xml">&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+<pre><code class="language-xml">
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
   &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
@@ -242,48 +246,49 @@ public class Demo {
     &lt;/dependency&gt;
   &lt;/dependencies&gt;
 &lt;/project&gt;
-</pre> 
+</code></pre> 
 <br> The classpath for the project: 
 <br> 
-<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre><code class="language-xml">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;classpath&gt;
-	&lt;classpathentry kind="src" output="target/classes" path="src/main/java"&gt;
-		&lt;attributes&gt;
-			&lt;attribute name="optional" value="true"/&gt;
-			&lt;attribute name="maven.pomderived" value="true"/&gt;
-		&lt;/attributes&gt;
-	&lt;/classpathentry&gt;
-	&lt;classpathentry excluding="**" kind="src" output="target/classes" path="src/main/resources"&gt;
-		&lt;attributes&gt;
-			&lt;attribute name="maven.pomderived" value="true"/&gt;
-		&lt;/attributes&gt;
-	&lt;/classpathentry&gt;
-	&lt;classpathentry kind="src" output="target/test-classes" path="src/test/java"&gt;
-		&lt;attributes&gt;
-			&lt;attribute name="optional" value="true"/&gt;
-			&lt;attribute name="maven.pomderived" value="true"/&gt;
-		&lt;/attributes&gt;
-	&lt;/classpathentry&gt;
-	&lt;classpathentry excluding="**" kind="src" output="target/test-classes" path="src/test/resources"&gt;
-		&lt;attributes&gt;
-			&lt;attribute name="maven.pomderived" value="true"/&gt;
-		&lt;/attributes&gt;
-	&lt;/classpathentry&gt;
-	&lt;classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER"&gt;
-		&lt;attributes&gt;
-			&lt;attribute name="maven.pomderived" value="true"/&gt;
-		&lt;/attributes&gt;
-	&lt;/classpathentry&gt;
-	&lt;classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/&gt;
-	&lt;classpathentry kind="lib" path="/opt/ibm/notes/jvm/lib/ext/Notes.jar"/&gt;
-	&lt;classpathentry kind="output" path="target/classes"/&gt;
+ &lt;classpathentry kind="src" output="target/classes" path="src/main/java"&gt;
+  &lt;attributes&gt;
+   &lt;attribute name="optional" value="true"/&gt;
+   &lt;attribute name="maven.pomderived" value="true"/&gt;
+  &lt;/attributes&gt;
+ &lt;/classpathentry&gt;
+ &lt;classpathentry excluding="**" kind="src" output="target/classes" path="src/main/resources"&gt;
+  &lt;attributes&gt;
+   &lt;attribute name="maven.pomderived" value="true"/&gt;
+  &lt;/attributes&gt;
+ &lt;/classpathentry&gt;
+ &lt;classpathentry kind="src" output="target/test-classes" path="src/test/java"&gt;
+  &lt;attributes&gt;
+   &lt;attribute name="optional" value="true"/&gt;
+   &lt;attribute name="maven.pomderived" value="true"/&gt;
+  &lt;/attributes&gt;
+ &lt;/classpathentry&gt;
+ &lt;classpathentry excluding="**" kind="src" output="target/test-classes" path="src/test/resources"&gt;
+  &lt;attributes&gt;
+   &lt;attribute name="maven.pomderived" value="true"/&gt;
+  &lt;/attributes&gt;
+ &lt;/classpathentry&gt;
+ &lt;classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER"&gt;
+  &lt;attributes&gt;
+   &lt;attribute name="maven.pomderived" value="true"/&gt;
+  &lt;/attributes&gt;
+ &lt;/classpathentry&gt;
+ &lt;classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/&gt;
+ &lt;classpathentry kind="lib" path="/opt/ibm/notes/jvm/lib/ext/Notes.jar"/&gt;
+ &lt;classpathentry kind="output" path="target/classes"/&gt;
 &lt;/classpath&gt;
-</pre> 
-<br> Next stop: add the <a href="http://www.openntf.org/p/OpenNTF%20Domino%20API">OpenNTF Domino API</a> and then have a look what havoc I can wreck with that environment* 
+</code></pre> 
+<br> Next stop: add the <a href="http://www.openntf.org/p/OpenNTF%20Domino%20API">OpenNTF Domino API</a> and then have a look what havoc I can wreck with that environment\* 
 <br> 
 <br> 
 <br> <b>Update</b>: Attributed Jesse for the <code>-d32</code> switch and Nathan for the 64Bit tests 
-<br> * No Domino servers have been harmed when running this code.</div>
+<br> <b> No Domino servers have been harmed when running this code.</b></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -293,12 +298,10 @@ Stephan H Wissel</a> on 17 July 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/07/adventures-with-vertx-64bit-and-the-ibm-notes-client.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Adventures with vert.x, 64Bit and the IBM Notes client" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/07/adventures-with-vertx-64bit-and-the-ibm-notes-client.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -404,8 +407,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2014/07/adventures-with-vertx-64bit-and-the-ibm-notes-client.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -417,6 +419,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

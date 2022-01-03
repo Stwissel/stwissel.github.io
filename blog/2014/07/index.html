@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -158,12 +159,10 @@ Stephan H Wissel</a> on 24 July 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/workflow.html">Workflow</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/07/workflow-for-beginners-standards-concepts-and-confusion.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Workflow for beginners, Standards, Concepts and Confusion" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/07/workflow-for-beginners-standards-concepts-and-confusion.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -193,12 +192,10 @@ Stephan H Wissel</a> on 20 July 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/07/warriors-of-light.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Warriors of Light" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/07/warriors-of-light.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -217,7 +214,8 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>
 <br> vert.x 3.x is at the edge of new and uses <a href="http://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html">Lamda expressions</a>, so just using Notes' Java 6 runtime was not an option. The Java 8 JRE was due to be installed. Luckily that is <a href="http://www.webupd8.org/2012/09/install-oracle-java-8-in-ubuntu-via-ppa.html">rather easy</a>. 
 <br>The class is rather simple, even after including <code>Notes.jar</code>, getting it to run (more below) not so much: 
 <br> 
-<pre class="brush: java">package com.notessensei.vertx.notes;
+<pre><code class="language-java">
+package com.notessensei.vertx.notes;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -232,46 +230,47 @@ import lotus.domino.NotesThread;
 import lotus.domino.Session;
 
 public class Demo {
-	public static void main(String[] args) throws IOException {
-		new Demo();
-		int quit = 0;
-		while (quit != 113) { // Wait for a keypress
-			System.out.println("Press q&lt;Enter&gt; to stop the verticle");
-			quit = System.in.read();
-		}
-		System.out.println("Veticle terminated");
-		System.exit(0);
-	}
+ public static void main(String[] args) throws IOException {
+  new Demo();
+  int quit = 0;
+  while (quit != 113) { // Wait for a keypress
+   System.out.println("Press q&lt;Enter&gt; to stop the verticle");
+   quit = System.in.read();
+  }
+  System.out.println("Veticle terminated");
+  System.exit(0);
+ }
 
-	private static final int listenport = 8111;
+ private static final int listenport = 8111;
 
-	public Demo() {
-		Vertx vertx = Vertx.factory.createVertx();
-		HttpServerOptions options = new HttpServerOptions();
-		options.setPort(listenport);
-		vertx.createHttpServer(options)
-				.requestHandler(new Handler&lt;HttpServerRequest&gt;() {
-					public void handle(HttpServerRequest req) {
-						HttpServerResponse resp = req.response();
-						resp.headers().set("Content-Type",
-								"text/plain; charset=UTF-8");
-						StringBuilder b = new StringBuilder();
-						try {
-							NotesThread.sinitThread();
-							Session s = NotesFactory.createSession();
-							b.append(s.getUserName());
-							NotesThread.stermThread();
-						} catch (Exception e) {
-							e.printStackTrace();
-							b.append(e.getMessage());
-						}
-						resp.writeStringAndEnd(b.toString());
-					}
-				}).listen();
-	}
+ public Demo() {
+  Vertx vertx = Vertx.factory.createVertx();
+  HttpServerOptions options = new HttpServerOptions();
+  options.setPort(listenport);
+  vertx.createHttpServer(options)
+    .requestHandler(new Handler&lt;HttpServerRequest&gt;() {
+     public void handle(HttpServerRequest req) {
+      HttpServerResponse resp = req.response();
+      resp.headers().set("Content-Type",
+        "text/plain; charset=UTF-8");
+      StringBuilder b = new StringBuilder();
+      try {
+       NotesThread.sinitThread();
+       Session s = NotesFactory.createSession();
+       b.append(s.getUserName());
+       NotesThread.stermThread();
+      } catch (Exception e) {
+       e.printStackTrace();
+       b.append(e.getMessage());
+      }
+      resp.writeStringAndEnd(b.toString());
+     }
+    }).listen();
+ }
 }
-</pre> 
-<br> Starting the verticle looked promising, but once I pointed my browser to <code>http://localhost:8111/</code> the fun began. 
+</code></pre> 
+<br> Starting the verticle looked promising, but once I pointed my browser to <code>
+ <http: localhost:8111 /></code> the fun began. 
 <br></div>
 					<hr />
  <a href="/blog/2014/07/adventures-with-vertx-64bit-and-the-ibm-notes-client.html">Read more</a>
@@ -283,12 +282,10 @@ Stephan H Wissel</a> on 17 July 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/07/adventures-with-vertx-64bit-and-the-ibm-notes-client.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Adventures with vert.x, 64Bit and the IBM Notes client" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/07/adventures-with-vertx-64bit-and-the-ibm-notes-client.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -318,12 +315,10 @@ Stephan H Wissel</a> on 13 July 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/afterhours.html">After hours</a>  <a href="/blog/categories/cycling.html">Cycling</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/07/cycle-where.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Cycle where?" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/07/cycle-where.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -334,15 +329,17 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>  <a href
 <br> Only more than a decade later (1998) SGML's offspring <a href="http://en.wikipedia.org/wiki/XML">XML</a> took centre stage. With broad support for schemas, transformation and tooling the de facto standard for application neutral (almost) human readable data formats was established - and the world was good. 
 <br> But <a href="http://www.yourperfectsmile.co.uk/wp-content/uploads/2013/07/Brunett-large.jpg">bracket phobia</a> and a heavy toll, especially on browsers, for processing led to to rise of <a href="http://en.wikipedia.org/wiki/JSON">JSON</a> (starting ca. 2002), which rapidly became the standard for browser-server communication. It it native to JavaScript, very light compared to XML and fast to process. However it lacks (as time of writing) support for an approved schema and transformation language (like XSLT). 
 <br> This leads to the common scenario that you need both: XML for server to server communication and JSON for in-process and browser to server communication. While they look very similar, XML and JSON are different enough to make transition difficult. XML knows elements and attributes, while JSON only knows key/value pairs. A JSON snippet like this: 
-<pre class="brush: js">{ "name" : "Peter Pan",
+<pre><code class="language-js">
+{ "name" : "Peter Pan",
   "passport" : "none",
   "girlfriend" : "Tinkerbell",
   "followers" : [{"name" : "Frank"},{"name" : "Paul"}]
 }
-</pre> 
+</code></pre> 
 <br> can be expressed in XML in various ways: 
 <br> 
-<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre><code class="language-xml">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;person name="Peter Pan" passport="none"&gt;
     &lt;girfriend name="Tinkerbell" /&gt;
     &lt;followers&gt;
@@ -350,10 +347,11 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>  <a href
         &lt;person name="Paul" /&gt;
     &lt;/followers&gt;
 &lt;/person&gt;
-</pre> 
+</code></pre> 
 <br> .or. 
 <br> 
-<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre><code class="language-xml">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;person&gt;
     &lt;name&gt;Peter Pan&lt;/name&gt;
     &lt;passport&gt;none&lt;/passport&gt;
@@ -371,16 +369,17 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>  <a href
         &lt;/person&gt;
     &lt;/followers&gt;
 &lt;/person&gt;
-</pre> 
+</code></pre> 
 <br> .or. 
 <br> 
-<pre class="brush: xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre><code class="language-xml">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;person name="Peter Pan" passport="none"&gt;
     &lt;person name="Tinkerbell" role="girfriend" /&gt;
     &lt;person name="Frank" role="follower" /&gt;
     &lt;person name="Paul" role="follower" /&gt;
 &lt;/person&gt;
-</pre> 
+</code></pre> 
 <br> (and many others) The JSON object doesn't need a "root name", the XML does. The other way around is easier: each attribute simply becomes a key/value pair. Some XML purist see attributes as evil, I think they do have their place to make relations clearer (is-a vs. has-a) and XML less verbose. So transforming back and forth between XML and JSON needs a "neutral" format. In my <a href="http://www.entwicklercamp.de/EC14/Track3Session4">XML Session</a> at <a href="http://www.entwicklercamp.de/">Entwicklercamp 2014</a> I demoed how to use a Java class as this neutral format. With the help of the right libraries, that's flexible and efficient.</div>
 					<hr />
  <a href="/blog/2014/07/from-xml-to-json-and-back.html">Read more</a>
@@ -392,12 +391,10 @@ Stephan H Wissel</a> on 12 July 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/software.html">Software</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/07/from-xml-to-json-and-back.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="From XML to JSON and back" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/07/from-xml-to-json-and-back.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -424,12 +421,10 @@ Stephan H Wissel</a> on 09 July 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/software.html">Software</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/07/the-folly-of-root-cause-analysis.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="The folly of root cause analysis" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/07/the-folly-of-root-cause-analysis.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -477,12 +472,10 @@ Stephan H Wissel</a> on 04 July 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/software.html">Software</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/07/documents-vsemails.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Documents vs eMails" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/07/documents-vsemails.html";
 						</script>
 					</p>
-
 				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/2014/06/index.html"><i class="icon-hand-left"></i>By Date: June 2014</a>
@@ -668,8 +661,7 @@ categories:  <a href="/blog/categories/software.html">Software</a>
 		</div>
 	</footer>
 
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -681,6 +673,7 @@ categories:  <a href="/blog/categories/software.html">Software</a>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

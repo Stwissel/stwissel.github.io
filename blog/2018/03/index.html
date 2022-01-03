@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -140,22 +141,22 @@ catch(e){window.attachEvent("onload", $buo_f)}
 </ul> 
 <h3>Preparing the certificate</h3> 
 <p>In Salesforce setup open <a href="https://help.salesforce.com/articleView?id=security_keys_about.htm&amp;type=5">Certificate and Key management</a>.<br> Create or pick a key. Note down the name. For this article I will use <em>YourCertNameHere</em>. Open the key and click on <em>Download Certificate</em>.<br> The cert will be downloaded in crt format. We use this file to extract the <strong>public</strong> key that Heroku will use to verify the signature. To get the key use:</p> 
-<pre class="brush: bash">openssl x509 -pubkey -noout -in YourCertNameHere.crt
-</pre> 
+<pre><code class="language-bash">openssl x509 -pubkey -noout -in YourCertNameHere.crt
+</code></pre> 
 <p>The String we need is between the BEGIN and END lines, excluding the lines. You can store it into a file or create a Heroku environment variable.<br> Since it is a public key, you don't need to guard it as fiercly as your private keys.</p> 
 <h3>The APEX code</h3> 
 <p>Before making a call-out to Heroku, you need to componse the signed JWT token. That's done in just a few lines:</p> 
-<pre class="brush: java">public static String getJWTBearer(String subject, String keyName) {
+<pre><code class="language-java">public static String getJWTBearer(String subject, String keyName) {
     Auth.JWT jwt = new Auth.JWT();
     jwt.setSub(subject);
     Auth.JWS myJws = new Auth.JWS(jwt, keyName);
     return myJws.getCompactSerialization();
 }
-</pre> 
+</code></pre> 
 <p>You might opt to add additional claims beside the subject, when your use case does require that.<br> The header value gets added to the <code>Authorization</code> header as <code>Bearer</code> authorization.</p> 
 <h3>Java code</h3> 
 <p>I'm using the <a href="https://github.com/jwtk/jjwt">jjwt</a> library which is available on <a href="https://search.maven.org/#artifactdetails%7Cio.jsonwebtoken%7Cjjwt%7C0.9.0%7Cjar">Maven Central</a>.<br> It makes it simple to retrieve a claim. An expired claim or an invalid signature will throw an error, so wrap it into a try/catch.</p> 
-<pre class="brush: java">import java.security.Key;
+<pre><code class="language-java">import java.security.Key;
 import java.security.KeyFactory;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
@@ -173,7 +174,7 @@ public class JwtVerifier {
 		return Jwts.parser().setSigningKey(realKey).parseClaimsJws(token).getBody();
 	}
 }
-</pre> 
+</code></pre> 
 <p>The only catch in the code was the need for <code>MimeDecoder</code> instead of a standard <code>Decoder</code> for Base64 decoding.<br> The subject, typically the user, can be retrieved using <code>claims.getSubject()</code></p> 
 <p>Next stop, for another blog entry: the NodeJS equivalent.</p> 
 <p>As usual YMMV!</p></div>
@@ -186,12 +187,10 @@ Stephan H Wissel</a> on 23 March 2018
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2018/03/salesforce-heroku-jwt.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Authenticate from Salesforce to Heroku with JWT" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2018/03/salesforce-heroku-jwt.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -219,9 +218,9 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 <p><code>openssl pkcs12 -export -out fullchain.pkcs12 -in fullchain.pem</code></p> 
 <h3>Prepare a Java JSK keystore</h3> 
 <p>You can't just create an empty keystore, so create a new temp key and specify a new keystore, then delete that key. That gives you the <a href="https://docs.oracle.com/cd/E35976_01/server.740/es_admin/src/tadm_ssl_convert_pem_to_jks.html">empty keystore</a>:</p> 
-<pre class="brush: bash">keytool -genkey -keyalg RSA -alias sfdcsec -keystore sfdcsec.ks
+<pre><code class="language-bash">keytool -genkey -keyalg RSA -alias sfdcsec -keystore sfdcsec.ks
 keytool -delete -alias sfdcsec -keystore sfdcsec.ks
-</pre> 
+</code></pre> 
 <h3>Import pkcs12 into JKS</h3> 
 <p>Almost final steps. Don't forget your passwords</p> 
 <p><code>keytool -v -importkeystore -srckeystore fullchain.pkcs12 -destkeystore sfdcsec.ks -deststoretype JKS</code></p> 
@@ -239,12 +238,10 @@ Stephan H Wissel</a> on 22 March 2018
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2018/03/letsencrypt-java-keystore.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Using LetsEncrypt certificates in your JKS" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2018/03/letsencrypt-java-keystore.html";
 						</script>
 					</p>
-
 				</article>
 				<article class="well well-raised">
 					<h1>
@@ -252,9 +249,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 					</h1>
 					<hr />
 					<div><h3>Scenario</h3> 
-<p>You have this nice application running in your (cloud or on premises) environment and then <a href="http://ec.europa.eu/justice/smedataprotect/index_en.htm">a big scare</a> hits. Suddenly you need to remove or mask different streams of data depending on all sorts of conditions your legal department is <strike>
-  torturing
- </strike> advising you.</p> 
+<p>You have this nice application running in your (cloud or on premises) environment and then <a href="http://ec.europa.eu/justice/smedataprotect/index_en.htm">a big scare</a> hits. Suddenly you need to remove or mask different streams of data depending on all sorts of conditions your legal department is <strike>torturing</strike> advising you.</p> 
 <p>Until your applications natively can do that, you might resort to a content filter that sits as a proxy between you and the application (technically it is a <a href="https://en.wikipedia.org/wiki/Reverse_proxy">reverse proxy</a>, but that's fine print).</p> 
 <p>To explore the feasibility of such an approach I created <a href="https://stwissel.github.io/SampleProxy/">SampleProxy</a> based on work of <a href="https://github.com/vietj/vertx-http-proxy">Julien Viet</a> using <a href="http://vertx.io">vert.x</a> as my runtime environment.</p> 
 <h3>Requirements</h3> 
@@ -296,12 +291,10 @@ Stephan H Wissel</a> on 04 March 2018
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2018/03/a-filtering-proxy-server-with-vertx.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="A filtering proxy server with vert.x" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2018/03/a-filtering-proxy-server-with-vertx.html";
 						</script>
 					</p>
-
 				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/2018/02/index.html"><i class="icon-hand-left"></i>By Date: February 2018</a>
@@ -487,8 +480,7 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 		</div>
 	</footer>
 
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -500,6 +492,7 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

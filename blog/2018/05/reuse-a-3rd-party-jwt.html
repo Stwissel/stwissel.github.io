@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -147,14 +148,14 @@ catch(e){window.attachEvent("onload", $buo_f)}
 </ol> 
 <p><img src="/blog/images/2018/jwtFlow.png" alt="Authentication Flow for 3rd party JWT"></p><h3>Create your certificate for Salesforce</h3> 
 <p>Salesforce uses a X509 certificate to validate the signatures. The various formats can be a little pain, since <a href="">PKCS</a> has many flavors. To save yourself some pain, here is the script to generate what you need. Please note the script prompts for input:</p> 
-<pre class="brush: bash">openssl genrsa -des3 -passout pass:somepass -out server.pass.key 2048
+<pre><code class="language-bash">openssl genrsa -des3 -passout pass:somepass -out server.pass.key 2048
 openssl rsa -passin pass:somepass -in server.pass.key -out temp.key
 rm server.pass.key
 openssl req -new -key temp.key -out server.csr
 openssl x509 -req -sha256 -days 365 -in server.csr -signkey temp.key -out server.crt
 openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in temp.key -out server.key
 rm temp.key
-</pre> 
+</code></pre> 
 <h3>Configure Salesforce</h3> 
 <p>In Salesforce you use the <em>App Manager</em> to create a new <em>Connected App</em>:</p> 
 <ul> 
@@ -170,7 +171,7 @@ rm temp.key
 <p>I will show you the essential functions, storing and retrieving variables securely and wrapping a web API around is left to the reader. I wrote the sample using <a href="http://vertx.io">Eclipse vert.x</a> in case you wonder where the <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">JsonObject</a> comes from.</p> 
 <h4>Extracting the user from the 3rd party JWT</h4> 
 <p>Typically the user is stored in the <code>subject</code> property of the JWT Claim. Depending on the signature (symmetric encryption or public key), you need a different function to obtain the key, the extraction works the same:</p> 
-<pre class="brush: java">public String extractSubjectFromJWT(final String incomingJWT) throws SignatureException {
+<pre><code class="language-java">public String extractSubjectFromJWT(final String incomingJWT) throws SignatureException {
         // Depending on production or demo mode we work with different keys
         if (this.isX509Key()) {
             Key key;
@@ -186,10 +187,10 @@ rm temp.key
             return Jwts.parser().setSigningKey(key).parseClaimsJws(incomingJWT).getBody().getSubject();
         }
     }
-</pre> 
+</code></pre> 
 <h4>Generate the Salesforce compliant JWT key</h4> 
 <p>The key requires the user as <code>subject</code>, the login URL as <code>audience</code> and the Consumer Key as <code>issuer</code>. The key must be the X509 private key. The validity needs to be 5 min into the future.</p> 
-<pre class="brush: java">public String createJwt(final String subject) throws Exception {
+<pre><code class="language-java">public String createJwt(final String subject) throws Exception {
 
         final String keyString = System.getenv("SFDC_KEY");
         final KeyFactory kf = KeyFactory.getInstance("RSA");
@@ -211,10 +212,10 @@ rm temp.key
 
         return compactJws;
     }
-</pre> 
+</code></pre> 
 <h4>Exchange the JWT for a OAuth session token</h4> 
 <p>Salesforce requires to POST a http form (yep, form not JSON) to the authentication endpoint <code>/services/oauth2/token</code> and returns JSON if when it is successful or fails:</p> 
-<pre class="brush: java">private void handleAuth(final Message&lt;JsonObject&gt; incoming) {
+<pre><code class="language-java">private void handleAuth(final Message&lt;JsonObject&gt; incoming) {
 
         // Create a web client to post to Salesforce
         final WebClientOptions wco = new WebClientOptions();
@@ -246,7 +247,7 @@ rm temp.key
         incoming.reply(result);
 
     }
-</pre> 
+</code></pre> 
 <p>As usual: YMMV</p></div>
 					<hr />
 					<p>
@@ -257,12 +258,10 @@ Stephan H Wissel</a> on 03 May 2018
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/categories/salesforce.html">Salesforce</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2018/05/reuse-a-3rd-party-jwt.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Reuse a 3rd Party Json Web Token (JWT) for Salesforce authentication" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2018/05/reuse-a-3rd-party-jwt.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -366,8 +365,7 @@ check it out and tell me what Ayou think of it.a feedback is always appreciated<
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2018/05/reuse-a-3rd-party-jwt.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -379,6 +377,7 @@ check it out and tell me what Ayou think of it.a feedback is always appreciated<
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

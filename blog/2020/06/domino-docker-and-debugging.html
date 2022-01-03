@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -155,7 +156,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Create a volume using <code>docker volume create keep_data</code></li> 
  <li>Run the instance once to setup the domino</li> 
 </ul> 
-<pre class="brush: bash">docker run -it -e "ServerName=Server1" \
+<pre><code class="language-bash">docker run -it -e "ServerName=Server1" \
     -e "OrganizationName=MyOrg" \
     -e "AdminFirstName=Doctor" \
     -e "AdminLastName=Notes" \
@@ -167,10 +168,10 @@ catch(e){window.attachEvent("onload", $buo_f)}
     --stop-timeout=60 \
     --name server1 \
     hclcom/domino:11.0.1
-</pre> 
+</code></pre> 
 <p>We shut down the instance once you have confirmed it works. We don't need it thereafter, we only need the volume and image. Of course there's no harm keeping it around</p><h3>The application image</h3> 
 <p>Docker is like <a href="http://quotegeek.com/quotes-from-movies/shrek/7316/">Ogres</a>, so for our application we build another layer. Big advantage of this approach: when a newer Domino image becomes available (I heared 12.0 will be awesome), we only need to change one line in our own <a href="https://docs.docker.com/engine/reference/builder/">dockerfile</a> and nothing in the Domino image</p> 
-<pre class="brush: bash">############################################################################
+<pre><code class="language-bash">############################################################################
 # Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
 # Copyright HCL Corporation 2020 - APACHE 2.0 see LICSENSE
@@ -206,7 +207,7 @@ EXPOSE 1352 80 389 8880 8889 8890 8000
 ENTRYPOINT ["/domino_docker_entrypoint.sh"]
 
 USER notes
-</pre> 
+</code></pre> 
 <p>Let us break down what that docker file does:</p> 
 <ul> 
  <li>It is based on the Domino image <code>hclcom/domino:11.0.1</code> we built in the previous step</li> 
@@ -217,7 +218,7 @@ USER notes
 </ul> 
 <h3>The scripts</h3> 
 <p>The most interesting one is the <code>post_startup_script</code> than runs once Domino is up and running. It will run the Java application, waiting for the debugger to be ready:</p> 
-<pre class="brush: bash">#!/bin/sh
+<pre><code class="language-bash">#!/bin/sh
 # Starts the vert.x tasks that talks to Domino
 export DEBUG=true
 export DOMINO_HOME=/opt/hcl/domino/notes/latest/linux
@@ -234,7 +235,7 @@ export LOG_DIR=$NOTESDATA/logs
 cd $NOTESDATA
 echo "Java will start in debug mode"
 $JAVA_HOME/bin/java -jar -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=y $V_PATH &gt; $LOG_DIR/vertx.log 2&gt;&amp;1 &amp;
-</pre> 
+</code></pre> 
 <p>Let us break this down:</p> 
 <ul> 
  <li>The <code>export</code> statements establish where to find what</li> 
@@ -249,7 +250,7 @@ $JAVA_HOME/bin/java -jar -agentlib:jdwp=transport=dt_socket,server=y,address=800
 <h3>Building and starting the new image</h3> 
 <p>Build the image based on the docker file: <code>docker build --tag hclcom/keep:debug</code></p> 
 <p>We are reusing the volume created for a vanilla Domino server, so all the configuration is completed, IDs and names.nsf exist. We now create a new instance based on the new image</p> 
-<pre class="brush: bash">#!/bin/bash
+<pre><code class="language-bash">#!/bin/bash
 # Start my local domino server for debug
 docker run -it \
  -h myserver.domino.local \
@@ -264,7 +265,7 @@ docker run -it \
  --stop-timeout=60 \
  --name Server1Debug \
  hclcom/keep:debug
-</pre> 
+</code></pre> 
 <p>Lots of steps. However once setup, you can simply restart the instance using <a href="https://www.docker.com/products/docker-desktop">Docker desktop</a> whenever your Java has changed. There are a few Gremlins building the whole thing on Windows, running seems to be fine. This might be the time to give <a href="https://devblogs.microsoft.com/commandline/wsl2-will-be-generally-available-in-windows-10-version-2004/">WSL</a> another look.</p> 
 <p>As usual YMMV. Next stop: more automation building production ready images</p></div>
 					<hr />
@@ -276,12 +277,10 @@ Stephan H Wissel</a> on 30 June 2020
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/docker.html">Docker</a>  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/categories/hclnotes.html">HCL Notes</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2020/06/domino-docker-and-debugging.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Domino Docker and Debugging" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2020/06/domino-docker-and-debugging.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -385,8 +384,7 @@ categories:  <a href="/blog/categories/docker.html">Docker</a>  <a href="/blog/c
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2020/06/domino-docker-and-debugging.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -398,6 +396,7 @@ categories:  <a href="/blog/categories/docker.html">Docker</a>  <a href="/blog/c
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

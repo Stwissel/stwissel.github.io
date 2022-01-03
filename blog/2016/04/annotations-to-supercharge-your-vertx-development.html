@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -140,7 +141,8 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <br> Java annotations to the rescue! If you are new to annotations, go and check out <a href="">this tutorial</a> to get up to speed. For my project I defined three of them, with one being able to be applied multiple times. 
 <h3>CastleRequest</h3> A class annotated with CastleRequest registers its handler with the EventBus, so the class can be sent over the EventBus and get encoded/decode appropriately. A special value for the annotation is "self" which indicates, that the class itself implements the <a href="http://vertx.io/docs/apidocs/io/vertx/core/eventbus/MessageCodec.html">MessageCodec</a> interface 
 <br> 
-<pre 'brush:="" java'="">@Documented
+<pre><code class="language-java">
+@Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 public @interface CastleRequest {
@@ -149,10 +151,11 @@ public @interface CastleRequest {
   // Special value: self = class implements the MessageCodec interface
   String value();
 }
-</pre> 
+</code></pre> 
 <h3>CastleRoute</h3> This annotation can be assigned multiple times, so 2 annotation interfaces are needed 
 <br> 
-<pre 'brush:="" java'="">@Documented
+<pre><code class="language-java">
+@Documented
 @Repeatable(CastleRoutes.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
@@ -162,19 +165,21 @@ public @interface CastleRoute {
   String mimetype() default "any";
   String method() default "any";
 }
-</pre> 
+</code></pre> 
 <br> and the repeatability annotation (new with Java8): 
 <br> 
-<pre 'brush:="" java'="">@Documented
+<pre><code class="language-java">
+@Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 public @interface CastleRoutes {
   CastleRoute[] value();
 }
-</pre> 
+</code></pre> 
 <h3>CastleVerticle</h3> Classes marked with this annotation are loaded as verticles. They can implement listeners to the whole spectrum of vert.x listening capabilities 
 <br> 
-<pre 'brush:="" java'="">@Documented
+<pre><code class="language-java">
+@Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 public @interface CastleVerticle {
@@ -182,10 +187,11 @@ public @interface CastleVerticle {
   int instances() default 0;
   boolean multithreaded() default false;
 }
-</pre><h3>Loading it all</h3> With a little glue code (see below), all Verticles, Routes and Codecs get loaded by looking up the annotations. You add a new file or remove one: no additional action is required. 
+</code></pre><h3>Loading it all</h3> With a little glue code (see below), all Verticles, Routes and Codecs get loaded by looking up the annotations. You add a new file or remove one: no additional action is required. 
 <br> Since traversing all classes is expensive, we have one method that does that once calling the 3 different annotation processors once for each class 
 <br> 
-<pre 'brush:="" java'="">private void loadClassesByAnnotation(final Router router) {
+<pre><code class="language-java">
+private void loadClassesByAnnotation(final Router router) {
     try {
       // Get the classes from the current loader to check for more
       final ClassPath classPath = ClassPath.from(this.getClass().getClassLoader());
@@ -205,48 +211,49 @@ public @interface CastleVerticle {
     }
  }
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
-  private void loadCodecByAnnotation(final Class candidate) {
-    EventBus eventBus = this.vertx.eventBus();
-    final Annotation[] annotation = candidate.getAnnotationsByType(CastleRequest.class);
-    // Registering all Codecs
-    for (int i = 0; i &lt; annotation.length; i++) {
-      try {
-        final CastleRequest cr = (CastleRequest) annotation[i];
-        final String codecClassName = cr.value();
-        Object codecCandidate;
-        if (codecClassName.equalsIgnoreCase("self")) {
-          // The object contains its own message codec
-          codecCandidate = candidate.newInstance();
-        } else {
-          codecCandidate = Class.forName(codecClassName).newInstance();
-        }
-        if (codecCandidate instanceof MessageCodec) {
-          MessageCodec messageCodec = (MessageCodec) codecCandidate;
-          eventBus.registerDefaultCodec(candidate, messageCodec);
-        } else {
-          this.logger.error("Class with CastleRequest Annotation has wrong codec type:" + codecClassName);
-        }
-      } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-        this.logger.error(e);
-      }
-    }
-  }
+@SuppressWarnings({ "rawtypes", "unchecked" })
+private void loadCodecByAnnotation(final Class candidate) {
+EventBus eventBus = this.vertx.eventBus();
+final Annotation[] annotation = candidate.getAnnotationsByType(CastleRequest.class);
+// Registering all Codecs
+for (int i = 0; i &lt; annotation.length; i++) {
+try {
+final CastleRequest cr = (CastleRequest) annotation[i];
+final String codecClassName = cr.value();
+Object codecCandidate;
+if (codecClassName.equalsIgnoreCase("self")) {
+// The object contains its own message codec
+codecCandidate = candidate.newInstance();
+} else {
+codecCandidate = Class.forName(codecClassName).newInstance();
+}
+if (codecCandidate instanceof MessageCodec) {
+MessageCodec messageCodec = (MessageCodec) codecCandidate;
+eventBus.registerDefaultCodec(candidate, messageCodec);
+} else {
+this.logger.error("Class with CastleRequest Annotation has wrong codec type:" + codecClassName);
+}
+} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+this.logger.error(e);
+}
+}
+}
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  private void loadRouteByAnnotation(final Class candidate) {
-    final Annotation[] annotation = candidate.getAnnotationsByType(CastleRoute.class);
-    for (int i = 0; i &lt; annotation.length; i++) {
-      try {
-        final CastleRoute cr = (CastleRoute) annotation[i];
-        // We got a class that shall be used as a router
-        if (CastleRouteHandler.class.isAssignableFrom(candidate)) {
-          // If a class has multiple routes assigned we might load them more
-          // than once but that's acceptable
-          final Class
+@SuppressWarnings({ "unchecked", "rawtypes" })
+private void loadRouteByAnnotation(final Class candidate) {
+final Annotation[] annotation = candidate.getAnnotationsByType(CastleRoute.class);
+for (int i = 0; i &lt; annotation.length; i++) {
+try {
+final CastleRoute cr = (CastleRoute) annotation[i];
+// We got a class that shall be used as a router
+if (CastleRouteHandler.class.isAssignableFrom(candidate)) {
+// If a class has multiple routes assigned we might load them more
+// than once but that's acceptable
+final Class
+
  
- <castleroutehandler>
-  
+  <castleroutehandler>
+   
   
    toBeloaded = candidate;
           CastleRouteHandler crh = toBeloaded.newInstance();
@@ -264,74 +271,74 @@ public @interface CastleVerticle {
   }
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
-  private void loadVerticleByAnnotation(final Class candidate) {
-    final Annotation[] annotation = candidate.getAnnotationsByType(CastleVerticle.class);
-    for (int i = 0; i &lt; annotation.length; i++) {
-      if (Verticle.class.isAssignableFrom(candidate)) {
-        final CastleVerticle cv = (CastleVerticle) annotation[i];
-        final String verticleID = candidate.getName();
-        final DeploymentOptions options = new DeploymentOptions();
-        if (cv.type().equalsIgnoreCase("worker")) {
-          options.setWorker(true);
-        }
-        // Overwrite the instances if number is specified
-        if (cv.instances() &gt; 0) {
-          options.setInstances(cv.instances());
-        }
-        options.setMultiThreaded(cv.multithreaded());
-        this.vertx.deployVerticle(verticleID, options, result -&gt; {
-          if (result.succeeded()) {
-            this.logger.info(verticleID + " started as " + result.result());
-            this.localVerticles.add(result.result());
-          } else {
-            this.logger.error(result.cause());
-          }
-        });
-      } else {
-        this.logger.error("Class with CastleVerticle Annotation has wrong type:" + candidate.getName());
-      }
-    }
-  }
+private void loadVerticleByAnnotation(final Class candidate) {
+final Annotation[] annotation = candidate.getAnnotationsByType(CastleVerticle.class);
+for (int i = 0; i &lt; annotation.length; i++) {
+if (Verticle.class.isAssignableFrom(candidate)) {
+final CastleVerticle cv = (CastleVerticle) annotation[i];
+final String verticleID = candidate.getName();
+final DeploymentOptions options = new DeploymentOptions();
+if (cv.type().equalsIgnoreCase("worker")) {
+options.setWorker(true);
+}
+// Overwrite the instances if number is specified
+if (cv.instances() &gt; 0) {
+options.setInstances(cv.instances());
+}
+options.setMultiThreaded(cv.multithreaded());
+this.vertx.deployVerticle(verticleID, options, result -&gt; {
+if (result.succeeded()) {
+this.logger.info(verticleID + " started as " + result.result());
+this.localVerticles.add(result.result());
+} else {
+this.logger.error(result.cause());
+}
+});
+} else {
+this.logger.error("Class with CastleVerticle Annotation has wrong type:" + candidate.getName());
+}
+}
+}
 
 public interface CastleRouteHandler {
-	public String getDescription();
-	// Return the actual route
-	public String getRoute();
-	// The methods that needs to be overwritten in each instance
-	// One for each method we do support
-	public void handleDelete(final RoutingContext ctx);
-	public void handleGet(final RoutingContext ctx);
-	public void handleHead(final RoutingContext ctx);
-	public void handleOptions(final RoutingContext ctx);
-	public void handlePost(final RoutingContext ctx);
-	public void handlePut(final RoutingContext ctx);
-	public void handlePatch(final RoutingContext ctx);
-	// initialize the actual route
-	public AbstractCastleRouteHandler init(final Vertx vertx, final Router router, final String method, final String route, String mimetype, String description);
+public String getDescription();
+// Return the actual route
+public String getRoute();
+// The methods that needs to be overwritten in each instance
+// One for each method we do support
+public void handleDelete(final RoutingContext ctx);
+public void handleGet(final RoutingContext ctx);
+public void handleHead(final RoutingContext ctx);
+public void handleOptions(final RoutingContext ctx);
+public void handlePost(final RoutingContext ctx);
+public void handlePut(final RoutingContext ctx);
+public void handlePatch(final RoutingContext ctx);
+// initialize the actual route
+public AbstractCastleRouteHandler init(final Vertx vertx, final Router router, final String method, final String route, String mimetype, String description);
 }
 
 public AbstractCastleRouteHandler init(final Vertx vertx, final Router router, final String method, final String route,
-      final String mimetype, final String description) {
-    this.vertx = vertx;
-    this.description = description;
-    this.route = route;
-    this.logger.info("Loading " + this.getClass().getName() + " for " + this.getRoute() + " .. " + description);
-    Route localRoute = null;
-    if ("any".equalsIgnoreCase(method) || "GET".equalsIgnoreCase(method)) {
-      localRoute = router.get(route).handler(this::handleGet);
-    }
-    if ("any".equalsIgnoreCase(method) || "POST".equalsIgnoreCase(method)) {
-      localRoute = router.post(route).handler(this::handlePost);
-    }
-    if ("any".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method)) {
-      localRoute = router.put(route).handler(this::handlePut);
-    }
-    if ("any".equalsIgnoreCase(method) || "PATCH".equalsIgnoreCase(method)) {
-      localRoute = router.put(route).handler(this::handlePatch);
-    }
-    if ("any".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method)) {
-      localRoute = router.delete(route).handler(this::handleDelete);
-    }
+final String mimetype, final String description) {
+this.vertx = vertx;
+this.description = description;
+this.route = route;
+this.logger.info("Loading " + this.getClass().getName() + " for " + this.getRoute() + " .. " + description);
+Route localRoute = null;
+if ("any".equalsIgnoreCase(method) || "GET".equalsIgnoreCase(method)) {
+localRoute = router.get(route).handler(this::handleGet);
+}
+if ("any".equalsIgnoreCase(method) || "POST".equalsIgnoreCase(method)) {
+localRoute = router.post(route).handler(this::handlePost);
+}
+if ("any".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method)) {
+localRoute = router.put(route).handler(this::handlePut);
+}
+if ("any".equalsIgnoreCase(method) || "PATCH".equalsIgnoreCase(method)) {
+localRoute = router.put(route).handler(this::handlePatch);
+}
+if ("any".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method)) {
+localRoute = router.delete(route).handler(this::handleDelete);
+}
 
     if (localRoute != null &amp;&amp; !"any".equalsIgnoreCase(mimetype)) {
       localRoute.consumes(mimetype);
@@ -342,11 +349,11 @@ public AbstractCastleRouteHandler init(final Vertx vertx, final Router router, f
     router.options(route).handler(this::handleHead);
 
     return this;
-  }
 
- 
- 
- </castleroutehandler></pre> 
+}
+
+
+  </castleroutehandler></code></pre> 
 <br> Left as an exercise to the reader: runs the analysis at compile time instead of runtime. 
 <br>As usual: YMMV</div>
 					<hr />
@@ -358,12 +365,10 @@ Stephan H Wissel</a> on 02 April 2016
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/vertx.html">vert.x</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2016/04/annotations-to-supercharge-your-vertx-development.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Annotations to supercharge your vert.x development" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2016/04/annotations-to-supercharge-your-vertx-development.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -460,8 +465,7 @@ categories:  <a href="/blog/categories/vertx.html">vert.x</a>
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2016/04/annotations-to-supercharge-your-vertx-development.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -473,6 +477,7 @@ categories:  <a href="/blog/categories/vertx.html">vert.x</a>
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -171,7 +172,8 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <p>I consider configuration setting code too. So we have web.xml, server.xml (only the local one, the Bluemix server.xml is <b>automagic</b>), your Java code and the replication from/to local and couchDB</p> 
 <h4>Local server.xml</h4> In Eclipse you configure a new liberty server, and then edit the server.xml. In the directory where the server.xml can be found, add a directory <code>lib</code> that will contain the jars to make everything work. I will list the jars, that are current at the time of writing this, but at any time you can peek at the Bluemix server.xml to see what is there (Sai mentioned, his team was contemplating local magic as well). 
 <br> 
-<pre class="brush: xml">&lt;server description="stw local test server"&gt;
+<pre><code class="language-xml">
+&lt;server description="stw local test server"&gt;
   &lt;include location="local-variables.xml" /&gt;
   &lt;!-- Enable features --&gt;
   &lt;featureManager&gt;
@@ -210,26 +212,29 @@ catch(e){window.attachEvent("onload", $buo_f)}
     &lt;classloader commonLibraryRef="couchdb-lib" /&gt;
   &lt;/webApplication&gt;
 &lt;/server&gt;
-</pre> 
+</code></pre> 
 <br> You want to make sure that you have the <a href="https://dl.dropboxusercontent.com/u/865725/BlueMixEktorpLibsMarch2015.zip">exact</a> versions of the Java classes in the lib directory. 
 <h4>web.xml</h4> The web.xml is easy, it needs to map to the jndiName you created in the server.xml, which needs to be the name you gave your Cloudant Blumix instance for the automagic to work. 
 <br> 
-<pre class="brush: xml">&lt;resource-env-ref&gt;
+<pre><code class="language-xml">
+&lt;resource-env-ref&gt;
 	&lt;resource-env-ref-name&gt;couchdb/smartpollscouch&lt;/resource-env-ref-name&gt;
 	&lt;resource-env-ref-type&gt;org.ektorp.CouchDbInstance&lt;/resource-env-ref-type&gt;
 &lt;/resource-env-ref&gt;
-</pre> 
+</code></pre> 
 <br> 
 <h4>local-variables.xml</h4> 
-<pre class="brush: xml">&lt;server&gt;
+<pre><code class="language-xml">
+&lt;server&gt;
   &lt;variable name='cloud.services.smartpollscouch.connection.username' value='localuser'/&gt;
   &lt;variable name='cloud.services.smartpollscouch.connection.password' value='localpassword'/&gt;
   &lt;variable name='cloud.services.smartpollscouch.connection.url' value='http://localhost:5984'/&gt;
 &lt;/server&gt;
-</pre> 
+</code></pre> 
 <h4>Java Class</h4> Of course you could read the web.xml and look for the name there, but the simplest way is just to specify the name: 
 <br> 
-<pre class="brush: java">public class Couch() {
+<pre><code class="language-java">
+public class Couch() {
 	public final static String COUCH_JAVANAME = "java:comp/env/couchdb/smartpollscouch";
     public final static String DBNAME         = "smartpolls";
     
@@ -239,18 +244,19 @@ catch(e){window.attachEvent("onload", $buo_f)}
         return db;
     }
 }
-</pre> 
+</code></pre> 
 <br> You then simply call <code>Couch.getDB();</code> to access the database. Following these steps you get a valid connection both in Bluemix as well as in your local instance. The final step is replication. 
 <h4>Replication</h4> Replication (or in newspeak: sync) in Cloudant/CouchDB is always one way. To get a full sync you issue 2 commands, one each for each direction. The easiest one is in the Fauxton UI of your local CouchDB, but you can <code>POST</code> to localhost too. The format would be: 
 <br> <code>curl http://localuser:localpassword@localhost:5984/_replicator -X POST -k -H 'Content-type: application/json' --data @replicateToServer.json</code> 
 <br> The JSON file would look like this: 
 <br> 
-<pre class="brush: js">{
+<pre><code class="language-js">
+{
 	"source": "smartpolls",
 	"target": "https://cloudantuser:cloudantpassword@cloudanturl_from_VACAP/smartpolls",
 	"connection_timeout": 60000
 }
-</pre> 
+</code></pre> 
 <br>To pull from the server, you just swap source and target. 
 <br>As usual YMMV</div>
 					<hr />
@@ -262,12 +268,10 @@ Stephan H Wissel</a> on 02 March 2015
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/bluemix.html">Bluemix</a>  <a href="/blog/categories/couchdb.html">CouchDB</a>  <a href="/blog/categories/java.html">Java</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Develop local, deploy (cloud) global - Java and CouchDB" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -382,8 +386,7 @@ categories:  <a href="/blog/categories/bluemix.html">Bluemix</a>  <a href="/blog
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -395,6 +398,7 @@ categories:  <a href="/blog/categories/bluemix.html">Bluemix</a>  <a href="/blog
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";

@@ -45,6 +45,7 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
 <link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
 <link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
@@ -55,7 +56,7 @@ ga('send', 'pageview');
 
 <meta name="Revisit-After" content="90 Days" />
 </head>
-<body>
+<body class="line-numbers">
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 			<a class="btn btn-navbar" data-toggle="collapse"
@@ -170,7 +171,8 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li>Create the Angular.js app and its <a href="https://docs.angularjs.org/guide/concepts">Controllers</a></li> 
 </ol> Of course, no application is complete with a nice set of challenges. The biggest here was the flat list for the time line. I tried to adjust the CSS to accommodate a hierarchical list, where the outer elements are the date containing all messages arrived at that day, but there was too much CSS. So I decided to tweak the output a little.The JSON emitted from Notes now looks like this: 
 <br> 
-<pre class="brush: js">{ "messagecount": 23, "messages": [
+<pre><code class="language-js">
+{ "messagecount": 23, "messages": [
     {"date": "11 Oct. 2014", "events": [
          {"time": "17:05","sender": "John Doe","message": "message 1"}
     ]},
@@ -179,15 +181,16 @@ catch(e){window.attachEvent("onload", $buo_f)}
        {"time": "14:00","sender": "Mogli Bear","message": "message 3"},
        {"time": "10:00","sender": "F. Zappa","message":"message 4"}
     ]
-}]}</pre> 
+}]}</code></pre> 
 <br> In my page template I defined the Angular app and controller on the body level: 
 <br> 
-<pre class="brush: html">&lt;body class="skin-blue" ng-app="inbox" ng-controller="dayController as dc"&gt;&gt;</pre> 
+<pre><code class="language-html">&lt;body class="skin-blue" ng-app="inbox" ng-controller="dayController as dc"&gt;&gt;</code></pre> 
 <br> This was necessary to be able to have the message count displayed in the upper right hand corner: 
 <br> <code>&lt;span class="label label-success"&gt;{{dc.messagecount}}&lt;/span&gt;</code>. 
 <br> The template pieces are short, this is the main page (excerpt, download link below): 
 <br> 
-<pre class="brush: html">&lt;section class="content"&gt;
+<pre><code class="language-html">
+&lt;section class="content"&gt;
 	&lt;div class="row"&gt;
 		&lt;div class="col-md-12"&gt;
 			&lt;ul class="timeline"&gt;
@@ -198,10 +201,11 @@ catch(e){window.attachEvent("onload", $buo_f)}
 		&lt;/div&gt;
 	&lt;/div&gt;
 &lt;/section&gt;
-</pre> 
+</code></pre> 
 <br> The interesting part in the above template are the <code>ng-repeat-start</code> and <code>ng-repeat-end</code> statements. What they do: for every date in the JSON, they will create two <code>&lt;li&gt;</code> entries: one for the date and one for the first message. Angular then needs to be convinced to expand that into all messages. More on that below. The individual message entries use this template: 
 <br> 
-<pre class="brush: html">&lt;i class="fa fa-envelope bg-blue"&gt;&lt;/i&gt;
+<pre><code class="language-html">
+&lt;i class="fa fa-envelope bg-blue"&gt;&lt;/i&gt;
 &lt;div class="timeline-item"&gt;
 	&lt;span class="time"&gt;&lt;i class="fa fa-clock-o"&gt;&lt;/i&gt;{{event.time}}&lt;/span&gt;
     &lt;h3 class="timeline-header"&gt;&lt;a href="mailto:noreply"&gt;{{event.sender}}&lt;/a&gt; sent you an eMail&lt;/h3&gt;
@@ -214,9 +218,10 @@ catch(e){window.attachEvent("onload", $buo_f)}
        &lt;a class="btn btn-danger btn-xs"&gt;Delete&lt;/a&gt;
     &lt;/div&gt;
 &lt;/div&gt;
-</pre> 
+</code></pre> 
 <br> So far so good, now the final moving piece is the Angular app code. A little word of warning: the following code is a <b>ugly hack</b>. For production quality you would separate out the data fetching into a <a href="https://docs.angularjs.org/guide/concepts#service">service</a> and you add tests and error handling. Anyway, learning and poking around doesn't need this, so here you go: 
-<pre class="brush: js">		angular.module('inbox', ['ngSanitize'])
+<pre><code class="language-js">
+		angular.module('inbox', ['ngSanitize'])
 			.controller('dayController', ['$http',dayMessages])
 			.directive('timeLineStart', timeStartAccess)
 			.directive('timeLineEnd', ['$compile',timeEndAccess])
@@ -265,7 +270,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
 				templateUrl : "demotimeline.html"
 			};
 		}
-</pre> 
+</code></pre> 
 <br> The interestin part is the <code>link</code> function in the timeEndAccess function. Since we have an outer loop over the date creating one li element per date, instead of one per message for that date, the function replaces that with a loop over the messages for that day. Seems to work quite nicely. The template contains Angular code, so it needs to compile, that's what <code>$compile</code> does for us. You can try for yourself, to run the Demo: 
 <ol> 
  <li>Download the <a href="http://almsaeedstudio.com/">Admin LTE template</a> and expand it</li> 
@@ -282,12 +287,10 @@ Stephan H Wissel</a> on 30 September 2014
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
-						<div class="shariff" data-lang="en" data-url="https://www.wissel.net/blog/2014/09/put-an-angular-face-on-your-inbox.html" data-services="[&quot;whatsapp&quot;,&quot;facebook&quot;,&quot;twitter&quot;,&quot;mail&quot;]" data-title="Put an angular face on your inbox" data-twitter-via="@notessensei"></div>
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2014/09/put-an-angular-face-on-your-inbox.html";
 						</script>
 					</p>
-
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
@@ -393,8 +396,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 	<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2014/09/put-an-angular-face-on-your-inbox.html";
 	</script>
-		<script type="text/javascript" src="/blog/js/jquery-1.8.2.min.js"></script>
-	<script type="text/javascript" src="/blog/js/shariff.min.js"></script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
     <script type="text/javascript" src="/blog/js2/shCore.js"></script>
@@ -406,6 +408,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
     <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
     <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
     <script type="text/javascript" src="/blog/js2/admonition.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		_uacct = "UA-72033-1";
