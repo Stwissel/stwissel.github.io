@@ -39,15 +39,13 @@ ga('send', 'pageview');
 <link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/shCore.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/shThemeMidnight.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
-<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
 <link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
-<link href='//fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css' />
-<link href='//fonts.googleapis.com/css?family=Ubuntu:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css' />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Raleway&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
 
@@ -96,17 +94,7 @@ ga('send', 'pageview');
 			</div>
 		</header>
 
-    <script> 
-var $buoop = {notify:{e:-0.01,f:-0.01,o:-0.01,s:-0.01,c:-0.01},insecure:true,unsupported:true,api:5}; 
-function $buo_f(){ 
- var e = document.createElement("script"); 
- e.src = "//browser-update.org/update.min.js"; 
- document.body.appendChild(e);
-};
-try {document.addEventListener("DOMContentLoaded", $buo_f,false)}
-catch(e){window.attachEvent("onload", $buo_f)}
-</script>
-
+     
     <ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2018/">2018</a> <span class="divider">/</span></li>
@@ -149,7 +137,7 @@ catch(e){window.attachEvent("onload", $buo_f)}
  <li><a href="https://en.wikipedia.org/wiki/Facade_pattern">Facade pattern</a></li> 
  <li><a href="https://en.wikipedia.org/wiki/Factory_method_pattern">Factory pattern</a></li> 
 </ul> 
-<p>Besides those, you want to know <a href="https://trailhead.salesforce.com/en/search?keywords=%22Apex%20Enterprise%20Patterns%22">Apex Enterprise Patterns</a>. Go Trailhead and learn.</p><h3>The details</h3> 
+<p>Besides those, you want to know <a href="https://trailhead.salesforce.com/en/search?keywords=%22Apex%20Enterprise%20Patterns%22">Apex Enterprise Patterns</a>. Go Trailhead and learn</p><h3>The details</h3> 
 <p>The Apex controller isn't used to retrieve records, that's the job of the <a href="https://developer.salesforce.com/docs/atlas.en-us.lightning.meta/lightning/data_service.htm">Lightning Data Service</a>. It is however used for auxiliary information, like the computation of the risk score or check which part of your component should be rendered or or or. Most of the functionality is needed elsewhere too (like compute risk score in a trigger), so coding it into a <a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_classes_annotation_AuraEnabled.htm"><code>@AuraEnabled</code></a> static method doesn't make much sense.</p> 
 <p>Therefore the Apex controller is implemented as a <a href="https://en.wikipedia.org/wiki/Facade_pattern">Facade</a>. No actual logic is implemented, but execution is delegated to specific classes (sample below).</p> 
 <p>The controller shouldn't contain logic to pick the concrete class, since each new country you start business in would require a change to the controller. Picking the right class is left to a <a href="https://en.wikipedia.org/wiki/Factory_method_pattern">factory</a>. A common approach for factories is to have a factory class with one factory method. You can design that class static or to be instantiated, depending on the amount of context your factory needs. In my case I used a static <code>RiskAssessmentFactory</code> class with a single static method <code>RiskAssessor getRiskAssessor(String countryId)</code> that would return....</p> 
@@ -165,28 +153,28 @@ catch(e){window.attachEvent("onload", $buo_f)}
 <h3>A sample</h3> 
 <p>Fair warning: that code is typed here, probably not ready for copy and paste.</p> 
 <pre><code class="language-java">public interface RiskAssessor {
-	RiskAssessor setMetadata(CountryRiskConfig_mdt countryMetadata);
-	int isoRisk(ProjectPlan__c theProject);
-	String countryRiskLevel(ProjectPlan__c theProject);
-	RiskResult(String projectPlanId);
+ RiskAssessor setMetadata(CountryRiskConfig_mdt countryMetadata);
+ int isoRisk(ProjectPlan__c theProject);
+ String countryRiskLevel(ProjectPlan__c theProject);
+ RiskResult(String projectPlanId);
 }
 
 public class RiskAssessmentFactory {
-	static RiskAssessor getRiskAssessor(String countryId) {
-		RiskAssessor result;
-		CountryRiskConfig_mdt countryMetadata = getCountryMeta(countryId);
-		if (countryMetadata.CustomRiskClass != null) {
-			result = (RiskAssessor) Type.forName(countryMetadata.CustomRiskClass).newInstance();
-		} else {
-			result = new RiskAssessorDefault;
-		}
-		result.setMetadata(countryMetadata);
-		return result;
-	}
+ static RiskAssessor getRiskAssessor(String countryId) {
+  RiskAssessor result;
+  CountryRiskConfig_mdt countryMetadata = getCountryMeta(countryId);
+  if (countryMetadata.CustomRiskClass != null) {
+   result = (RiskAssessor) Type.forName(countryMetadata.CustomRiskClass).newInstance();
+  } else {
+   result = new RiskAssessorDefault;
+  }
+  result.setMetadata(countryMetadata);
+  return result;
+ }
 }
 
 public virtual class RiskAssessorDefault implements RiskAssessor {
-	// TODO: implement interfaces here
+ // TODO: implement interfaces here
 }
 </code></pre> 
 <p>The <code>RiskAssessorDefault</code> class is defined using the <code>virtual</code> keyword, so you can subclass it as need arises. To be clear: the subclassing helps to avoid duplicate code, it doesn't break the need for interfaces.</p> 
@@ -309,15 +297,6 @@ categories:  <a href="/blog/categories/apex.html">Apex</a>  <a href="/blog/categ
 		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
-    <script type="text/javascript" src="/blog/js2/shCore.js"></script>
-    <script type="text/javascript" src="/blog/js2/shBrushJava.js"></script>
-    <script type="text/javascript" src="/blog/js2/shBrushJScript.js"></script>
-    <script type="text/javascript" src="/blog/js2/shBrushXml.js"></script>
-    <script type="text/javascript" src="/blog/js2/shBrushBash.js"></script>
-    <script type="text/javascript" src="/blog/js2/shBrushPlain.js"></script>
-    <script type="text/javascript" src="/blog/js2/shBrushVb.js"></script>
-    <script type="text/javascript" src="/blog/js2/shBrushCss.js"></script>
-    <script type="text/javascript" src="/blog/js2/admonition.js"></script>
     <script type="text/javascript" src="/blog/js2/prism.js"></script>
 	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
 	<script type="text/javascript">
@@ -325,11 +304,6 @@ categories:  <a href="/blog/categories/apex.html">Apex</a>  <a href="/blog/categ
 		urchinTracker();
 	</script>
 	<script type="text/javascript" src="//feeds.feedburner.com/~s/Wisselnet?i=https://wissel.net/blog" charset="utf-8"></script>
-    <script type="text/javascript">
-    $(document).ready(function() {
-            SyntaxHighlighter.all();
-    });
-    </script>
 
 		<script src="/blog/js2/mustache.js"></script>
 	<script src="/blog/js2/blogcomments.js"></script>
