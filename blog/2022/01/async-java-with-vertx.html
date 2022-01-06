@@ -141,7 +141,25 @@ ga('send', 'pageview');
         }
     });
 }
-</code></pre><p>The main difference: an async function does not throw errors, but return successed or failures.<br> A failure will always return a <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html"><code>Throwable</code></a>,<br> even if you only provided a String as error explanation. When the body of your method might throw something,<br> you wrap it in a try/catch as you are used to. Calling such a method is slightly different. In classic Java you code:</p> 
+</code></pre><h3>Update</h3> 
+<p><a href="https://www.linkedin.com/in/pmlopes/">Paulo Lopes</a>, one of the Redhat vert.x core maintainers, suggested to restructure the method to make it clearer (and eliminate a lambda). Here is his take:</p> 
+<pre><code class="language-java">Future&lt;String&gt; someResult() {
+  // we promise that we will write something in the future
+  Promise&lt;String&gt; promise = Promise.promise();
+
+  // Working code goes here (it can be an asynchronous call too...)
+  if (someCondition) {
+    promise.fail("It didn't work"); // Could use a Throwable too
+  } else {
+    promise.complete("It worked");
+  }
+
+  // we return the future (read-side) of the promise
+  return promise.future();
+}
+</code></pre> 
+<p>His comment: <em>It doesn't make much of a difference in terms of executed code, it's more of a readability pattern. You now read the code as if it was sequentially which makes it easier to reason (for some of us)</em></p> 
+<p>The main difference: an async function does not throw errors, but return successed or failures.<br> A failure will always return a <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html"><code>Throwable</code></a>,<br> even if you only provided a String as error explanation. When the body of your method might throw something, you wrap it in a try/catch as you are used to. Calling such a method is slightly different. In classic Java you code:</p> 
 <pre><code class="language-java">try {
     System.out.println(someResult());
 } catch (Exception e) {
