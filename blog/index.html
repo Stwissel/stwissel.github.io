@@ -100,6 +100,47 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2022/01/async-java-with-vertx.html">Async Java with vert.x</a></small></h1>
+					<hr />
+					<div><p>I wrote about <a href="/blog/2020/11/streams-and-functional-programming-in-java.html">more modern</a> Java syntax <a href="/blog/2021/01/collecting-java-streams.html">and streams</a> before.<br> There is more to it. <a href="https://en.wikipedia.org/wiki/Non-blocking_I/O_%28Java%29">Non Blocking I/O</a> and <a href="https://en.wikipedia.org/wiki/Event_loop">Event Loops</a> allow for<br> <a href="https://www.quora.com/Why-is-Node-js-so-much-faster?share=1">better performance</a>. It's not a magic bullet, some readjustment is required</p> 
+<h2>Adjusting methods, exceptions and return values</h2> 
+<p>Initially it might look daunting, but the adjustments are not too big. Let's look at some examples. A classic Java method looks like this:</p> 
+<pre><code class="language-java">String someResult throws DidnWorkException {
+    // Working code goes here
+    if (someCondition) {
+        throw new DidnWorkException();
+    }
+    return "It worked";
+}
+</code></pre> 
+<p>Its asynchronous counter-part looks like this:</p> 
+<pre><code class="language-java">Future&lt;String&gt; someResult() {
+    return Future.future(promise -&gt; {
+        // Working code goes here
+        if (someCondition) {
+            promise.fail("It didn't work"); // Could use a Throwable too
+        } else {
+            promise.complete("It worked");
+        }
+    });
+}
+</code></pre></div>
+					<hr />
+ <a href="/blog/2022/01/async-java-with-vertx.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 06 January 2022
+<span class="divider">|</span>
+<a href="/blog/2022/01/async-java-with-vertx.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/categories/singapore.html">Singapore</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2022/01/async-java-with-vertx.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2021/12/deploying-your-frontend-as-webjar.html">Deploying your frontend as webJar</a></small></h1>
 					<hr />
 					<div><p>In an API driven world back-end and front-end are clearly separated and might live on different servers alltogether. However for smaller applications serving static files happens from the same place as your backend lives</p> 
@@ -588,44 +629,6 @@ categories:  <a href="/blog/categories/software.html">Software</a>
 						</script>
 					</p></p>
 				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2020/12/software-distribution.html">Software distribution</a></small></h1>
-					<hr />
-					<div><p>Just download the binaries and run the installer. Would you need anything else for software distribution?</p> 
-<h3>The rise of the AppStore</h3> 
-<p>Mobile devices showed us the trend. Your Android device will load new apps from <a href="https://play.google.com/">Google Play</a> or Huawei's <a href="https://appgallery.huawei.com/">AppGallery</a> (or any of the <a href="https://fossbytes.com/10-google-play-store-alternatives/">alternatives</a>). On iOS, padOS, watchOS or tvOS, it is Apple's <a href="https://www.apple.com/app-store/">AppStore</a>.</p> 
-<p>In the middle tier, Windows and macOS, the success is a mixed bag. Despite all attempts (Apple I'm looking at you), the bulk of apps are still "download and install". So each app has to implement its own update check (Unless you use <a href="https://brew.sh/">Homebrew</a> with its heritage in Linux).</p> 
-<p>In the enterprise this "poll request" approach is supplemented or surplanted by a push approach using tools like <a href="https://www.jamf.com/">jamf</a> (Mac only) or <a href="https://www.hcltechsw.com/products/bigfix/home">BigFix</a> (cross platform).</p> 
-<h3>Servers and components</h3> 
-<p>On Windows there is <a href="https://docs.microsoft.com/en-us/windows-server/administration/windows-server-update-services/get-started/windows-server-update-services-wsus">Windows Server Update Services</a>, which keeps your servers neat and updated and can <a href="https://www.itprotoday.com/security/publishing-third-party-updates-wsus">update 3rd party software too</a>.</p> 
-<p>On <a href="https://www.linuxfoundation.org/">Linux</a> package managers have been established for quite a while any you find most software in <a href="https://en.wikipedia.org/wiki/RPM_Package_Manager">rpm</a>, <a href="https://en.wikipedia.org/wiki/Deb_(file_format)">deb</a> or <a href="https://snapcraft.io/">Snap</a> format. Local package managers can be set up to install packages automatically based on criteria (e.g critical updates)</p> 
-<p>For Docker there is <a href="https://hub.docker.com/">the Hub</a>, for Java based packages <a href="https://search.maven.org/">Maven central</a> and for JavaScript based applications the <a href="https://www.npmjs.com/">NPM registry</a></p> 
-<p>In the enterprise environment, you can find <a href="https://jfrog.com/artifactory/">Artifactory</a> or <a href="https://www.sonatype.com/nexus/repository-pro">Nexus Repository</a> as well as cloud based solutions like <a href="https://azure.microsoft.com/en-us/services/devops/artifacts/">Azure Artifacts</a>, <a href="https://aws.amazon.com/codeartifact/">AWS CodeArtifact</a> or <a href="https://www.digitalocean.com/docs/container-registry/">DigitalOcean Container Registry</a></p> 
-<h3>Your application?</h3> 
-<p>With the ready availabily of repositories (App stores are nothing more than repositories with UI and billing), what does that demand from your app?</p> 
-<p>In short: <strong>make it easy to accquire and update your code</strong></p> 
-<ul> 
- <li>on mobile swallow the frog and publish to an app store</li> 
- <li>on desktops: if your main customers are individuals, the app store might save you the headache of a good update strategy. When companies are your target: make it jamf / WSUS friendly</li> 
- <li>on servers: a package repository, inlcuding the ability to deploy to a corporate repository is a must. This applies to updates too</li> 
- <li>components: you need a registry. Should you consider none of the established public ones as suitable, provide your own</li> 
-</ul> 
-<p>Of course, you can consider <em>retro</em> a charm and be left behind</p> 
-<p>As usual YMMV</p></div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 14 December 2020
-<span class="divider">|</span>
-<a href="/blog/2020/12/software-distribution.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/software.html">Software</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2020/12/software-distribution.html";
-						</script>
-					</p></p>
-				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/all.html" title="That's a loooong list!">Older entries<i class="icon-hand-right"></i></a>
 					</li>
@@ -776,6 +779,7 @@ categories:  <a href="/blog/categories/software.html">Software</a>
 						<li ><a href="/blog/2019/">2019</a></li>
 						<li ><a href="/blog/2020/">2020</a></li>
 						<li ><a href="/blog/2021/">2021</a></li>
+						<li ><a href="/blog/2022/">2022</a></li>
 						<li ><a href="/blog/all.html" title="That's a long list!">Complete archive</a></li>
 					</ul>
 				</aside>

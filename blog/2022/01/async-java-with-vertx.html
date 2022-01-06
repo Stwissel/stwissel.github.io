@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Async Java with vert.x - NotesSensei's Blog</title>
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-72033-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible"  content="chrome=1" />
+<meta http-equiv="Content-Language" content="en" />
+<meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
+<meta property="og:title"     content="wissel.net - Async Java with vert.x" />
+<meta property="og:type"      content="blog" />
+<meta property="og:url"       content="https://wissel.net/blog/2022/01/async-java-with-vertx.html" />
+<meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
+<meta property="og:site_name" content="wissel.net" />
+<meta name="viewport"         content="width=device-width, initial-scale=1.0" />
+<meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Async Java with vert.x" />
+<meta name="Author"           content="Stephan H. Wissel" />
+<meta name="ICBM"             content="1.2994, 103.8425" />
+<meta name="Copyright"        content="2002,2020 Stephan H. Wissel - Creative commons licence" />
+<meta name="twitter:site"     content="@notessensei" />
+<meta name="twitter:card"     content="summary" />
+<meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
+<meta name="description"
+	content="Async Java with vert.x - I wrote about more modern Java syntax and streams before. There is more to it. Non Blocking I/O and Event Loops allow for better performance. It&#39;s not a magic bullet, some readjustment is required Adjusting methods, exceptions and return values Initially it might look daunting, but the adjustments a" />
+<meta name="Keywords"
+	content="Domino,Singapore," />
+<meta name="Abstract"
+	content="Async Java with vert.x - I wrote about more modern Java syntax and streams before. There is more to it. Non Blocking I/O and Event Loops allow for better performance. It&#39;s not a magic bullet, some readjustment is required Adjusting methods, exceptions and return values Initially it might look daunting, but the adjustments a" />
+<!--[if lt IE 9]>
+		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Raleway&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
+
+
+<link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="https://feeds.feedburner.com/Wisselnetfeed" />
+
+<meta name="Revisit-After" content="90 Days" />
+</head>
+<body class="line-numbers">
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<a class="btn btn-navbar" data-toggle="collapse"
+				data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+				class="icon-bar"></span> <span class="icon-bar"></span>
+			</a> <a class="brand" href="/">wissel.net</a>
+			<div class="nav-collapse">
+				<ul class="nav">
+					<li><a href="/index.html">Home</a></li>
+					<li class="active"><a href="/blog/">Blog</a></li>
+					<li><a href="/blog/series.html">Series</a></li>
+					<li><a href="/blog/downloads/">Downloads</a></li>
+					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
+					<li><a href="/blog/imprint.html">About / Imprint</a></li>
+				</ul>
+				<form action="//www.google.com/cse" id="cse-search-box"
+					class="navbar-search pull-right">
+					<div>
+						<input type="hidden" name="cx"
+							value="partner-pub-4562257798204150:muo14ionenw" /> <input
+							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
+							name="q" class="search-query span2" placeholder="Search" />
+						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+<div class="navbar-spacer"></div>
+
+	<div class="container">
+    		<br />
+		<header>
+			<div id="mainsmall"  class="hero-unit">
+				<h2>wissel.net</h2>
+				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+			</div>
+		</header>
+
+     
+    <ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2022/">2022</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2022/01/">January</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/domino.html">Domino</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/singapore.html">Singapore</a>
+  </li>
+</ul>
+
+		<div class="row-fluid">
+			<div class="span12">
+				
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2021/12/deploying-your-frontend-as-webjar.html"><i class="icon-hand-left"></i>Deploying your frontend as webJar</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+				<article class="well well-raised">
+					<h1><small>Async Java with vert.x</small></h1>
+					<hr />
+					<div><p>I wrote about <a href="/blog/2020/11/streams-and-functional-programming-in-java.html">more modern</a> Java syntax <a href="/blog/2021/01/collecting-java-streams.html">and streams</a> before.<br> There is more to it. <a href="https://en.wikipedia.org/wiki/Non-blocking_I/O_%28Java%29">Non Blocking I/O</a> and <a href="https://en.wikipedia.org/wiki/Event_loop">Event Loops</a> allow for<br> <a href="https://www.quora.com/Why-is-Node-js-so-much-faster?share=1">better performance</a>. It's not a magic bullet, some readjustment is required</p> 
+<h2>Adjusting methods, exceptions and return values</h2> 
+<p>Initially it might look daunting, but the adjustments are not too big. Let's look at some examples. A classic Java method looks like this:</p> 
+<pre><code class="language-java">String someResult throws DidnWorkException {
+    // Working code goes here
+    if (someCondition) {
+        throw new DidnWorkException();
+    }
+    return "It worked";
+}
+</code></pre> 
+<p>Its asynchronous counter-part looks like this:</p> 
+<pre><code class="language-java">Future&lt;String&gt; someResult() {
+    return Future.future(promise -&gt; {
+        // Working code goes here
+        if (someCondition) {
+            promise.fail("It didn't work"); // Could use a Throwable too
+        } else {
+            promise.complete("It worked");
+        }
+    });
+}
+</code></pre><p>The main difference: an async function does not throw errors, but return successed or failures.<br> A failure will always return a <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html"><code>Throwable</code></a>,<br> even if you only provided a String as error explanation. When the body of your method might throw something,<br> you wrap it in a try/catch as you are used to. Calling such a method is slightly different. In classic Java you code:</p> 
+<pre><code class="language-java">try {
+    System.out.println(someResult());
+} catch (Exception e) {
+    logger.error(e);
+}
+</code></pre> 
+<p>while the async call looks like this:</p> 
+<pre><code class="language-java">someResult()
+  .onFailure(logger::error)  //Java8 style shortcut for (e -&gt; logger.error(e))
+  .onSuccess(System.out::println);
+</code></pre> 
+<p>There are <a href="https://vertx.io/docs/apidocs/io/vertx/core/Future.html">more variations</a> available what to do with a returned Future:</p> 
+<ul> 
+ <li><code>otherwise</code>: return a value or call a function when the future failed</li> 
+ <li><code>recover</code>: call a future instead of the failed one and return its value</li> 
+ <li><code>onComplete</code>: run code when it is done, regardless of success or failure</li> 
+</ul> 
+<p>There are a few more. Future functions can <a href="https://vertx.io/docs/vertx-core/java/#_future_composition">be chained</a> using<br> <code>compose</code> or <a href="https://vertx.io/docs/vertx-core/java/#_future_coordination">run in parallel</a> using <a href="https://vertx.io/docs/apidocs/io/vertx/core/CompositeFuture.html">CompositeFuture</a></p> 
+<p>One common pattern with Futures: Only check if a future succeeded or failed and not requiring a return value to look at.<br> In this case we use a <code>Future&lt;Void&gt;</code> <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Void.html">Void</a> is a <code>java.lang</code> class.</p> 
+<h3>More samples</h3> 
+<p>Chaining multiple Futures (looks like <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">JavaScript promises</a>, isn't it?):</p> 
+<pre><code class="language-java">myFirstMethod()
+   .compose(v -&gt; mySecondMethod())
+   .compose(secondResult -&gt; thirdMethod(someVal, secondResult))
+   .compose(this::numberFour)
+   .onSuccess(System.out::println)
+   .onFailure(logger::error);
+</code></pre> 
+<p>The first call <code>myFirstMethod()</code> returns a <code>Future&lt;Void&gt;</code>. By convention we use <code>v</code> to indicate that it either returns <code>Void</code> or we don't need the actual result, but only the fact of success or failure. The <code>::</code> syntax takes a little while to get used to.</p> 
+<p>When the sequence of a Future execution doesn't matter, e.g. calling a few independent services, but we only continue when they are all done, <a href="https://vertx.io/docs/apidocs/io/vertx/core/CompositeFuture.html">CompositeFuture</a> is our friend. Lets say we have a series of services we need to call and assemble the result as a <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">JsonObject</a>:</p> 
+<pre><code class="language-java">Future&lt;JsonObject&gt; callAllServices(List&lt;Supplier&lt;Future&lt;JsonObject&gt;&gt; services) {
+    return Future.future(promise -&gt; {
+        List&lt;Future&lt;JsonObject&gt;&gt; list = services.stream()
+                                                .forEach(Supplier::get)
+                                                .collect(Collectors.toList());
+        CompositeFuture.all(list)
+           .onFailure(promise::fail)
+           .onSuccess(v -&gt; {
+                final JsonObject result = new JsonObject();
+                list.stream().forEach(r -&gt; result.mergeIn(r.result()));
+                promise.complete(result);
+           });
+    });
+}
+</code></pre> 
+<p>The method will call all Suppliers and return a result when <strong>all</strong> services return successful. When your business logic allows to live with available service only, the method looks slightly different (look carefully):</p> 
+<pre><code class="language-java">Future&lt;JsonObject&gt; callAvailableServices(List&lt;Supplier&lt;Future&lt;JsonObject&gt;&gt; services) {
+    return Future.future(promise -&gt; {
+        List&lt;Future&lt;JsonObject&gt;&gt; list = services.stream()
+                                                .forEach(Supplier::get)
+                                                .collect(Collectors.toList());
+        CompositeFuture.any(list)
+           .onFailure(promise::fail)
+           .onSuccess(v -&gt; {
+                final JsonObject result = new JsonObject();
+                list.stream().filter(Future::succeeded)
+                    .forEach(r -&gt; result.mergeIn(r.result()));
+                promise.complete(result);
+           });
+    });
+}
+</code></pre> 
+<p>The difference is the call to <code>CompositeFuture.any</code> and filtering out results with <code>.filter(Future::succeeded)</code>. On lesson learned. Using Streams and Futures and composition: actual work lives best in distinct functions that implement <a href="https://www.baeldung.com/java-8-functional-interfaces">common interfaces</a></p> 
+<p>The dense syntax takes a while to get used to and there <a href="https://vertx.io/docs/vertx-core/java/#_future_results">is more to learn</a>, so YMMV</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 06 January 2022
+<span class="divider">|</span>
+<a href="/blog/2022/01/async-java-with-vertx.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/categories/singapore.html">Singapore</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2022/01/async-java-with-vertx.html";
+						</script>
+					</p>
+				</article>
+				<a name="comments"></a>
+				<div class="well well-raised" style="text-align : center">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_5f447370-6e85-11ec-b6b7-31691e9a39a5" type="button">
+		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
+	            </button>
+	            </div>
+				<div id="commentform_5f447370-6e85-11ec-b6b7-31691e9a39a5"  class="collapse"></div>
+				<div class="well well-raised">
+					<h4>Comments</h4>
+					<ol id="commentList">
+						<li id="nocomments">
+							<h5>No comments yet, be the first to comment</h5>
+						</li>
+					</ol>
+				</div>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2021/12/deploying-your-frontend-as-webjar.html"><i class="icon-hand-left"></i>Deploying your frontend as webJar</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+			</div>
+		</div>
+		<ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2022/">2022</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2022/01/">January</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/domino.html">Domino</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/singapore.html">Singapore</a>
+  </li>
+</ul>
+
+	</div>
+	<footer>
+		<div class="container">
+			<div class="row">
+				<div class="span2">
+					<h4>About Me</h4>
+					<p>
+						I work as "Solution Director Innovation" for HCL Software. I'm based in Singapore.
+						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
+					</p>
+					<a href="//stackoverflow.com/users/131021/stwissel">
+					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
+				</a>
+				</div>
+				<div class="span2">
+					<h4>Contact</h4>
+					<ul>
+						<li><a href="https://www.twitter.com/notessensei">Twitter</a></li>
+						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+						<li><a href="https://www.xing.com/profile/StephanH_Wissel">XING</a></li>
+						<li><a href="http://notessensei.spreadshirt.com/">NotesSensei's Spreadshirt shop</a></li>
+						<li><a href="http://about.me/stephan.wissel/#" title="Another identity site, nothing much here">About Me</a></li>
+					</ul>
+				</div>
+				<div class="span8">
+					<h4>Disclaimer</h4>
+					<p>This site is in no way affiliated, endorsed, sanctioned,
+						supported, nor enlightened by my current or previous employers.
+						I may be an employee, but the opinions, theories, facts, etc.
+						presented here are my own and are in now way given in any official
+						capacity. In short, these are my words and this is my site, not
+						my current or former employers' - and don't even begin to think otherwise.</p>
+					<p>
+						<b>&copy; 2003 - 2022 Stephan H. Wissel - some rights reserved</b> as
+						listed here: <a rel="license"
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
+							alt="Creative Commons License" style="border-width: 0"
+							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
+						Unless otherwise labeled by its originating author, the content
+						found on this site is made available under the terms of an <a
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
+							target="_blank"
+							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
+							Creative Commons License</a>, with the exception that no rights are
+						granted -- since they are not mine to grant -- in any logo,
+						graphic design, trademarks or trade names of any type. Code
+						samples and code downloads on this site are, unless otherwise
+						labeled, made available under an <a
+							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
+							2.0</a> license. Other license models are available on written
+						request and written confirmation.
+					</p>
+				</div>
+			</div>
+		</div>
+	</footer>
+
+	<script type="text/javascript">
+		var permaLink = "https://wissel.net/blog/2022/01/async-java-with-vertx.html";
+	</script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
+	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
+	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
+	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		_uacct = "UA-72033-1";
+		urchinTracker();
+	</script>
+	<script type="text/javascript" src="//feeds.feedburner.com/~s/Wisselnet?i=https://wissel.net/blog" charset="utf-8"></script>
+
+		<script src="/blog/js2/mustache.js"></script>
+	<script src="/blog/js2/blogcomments.js"></script>
+	<script type="text/javascript" src="/blog/js2/Markdown.Converter.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Sanitizer.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Editor.js"></script>
+	<script type="text/javascript" src="//www.google.com/recaptcha/api.js"></script>
+	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+	<script type="text/javascript">
+		var onloadCallback = function() {
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "5f447370-6e85-11ec-b6b7-31691e9a39a5");
+ 		};
+	</script>
+
+</body>
+</html>
