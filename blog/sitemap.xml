@@ -6,7 +6,122 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 09 Mar 2022 13:54:32 +0000</pubdate>
+	<pubdate>Sat, 07 May 2022 21:02:40 +0000</pubdate>
+<item>
+	<title>Yes No Maybe Boolean deserialization with Jackson</title>
+	<description>&lt;p&gt;The &lt;a href="https://en.wikipedia.org/wiki/Robustness_principle"&gt;Robustness principle&lt;/a&gt; demands: be lenient in what you accept and strict in what you emit. I was facing this challenge when deserializing boolean values.&lt;/p&gt; 
+&lt;h3&gt;What is true&lt;/h3&gt; 
+&lt;p&gt;Glancing at data, we can spot, mostly easily what looks trueish:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;true&lt;/li&gt; 
+ &lt;li&gt;"&lt;strong&gt;T&lt;/strong&gt;rue"&lt;/li&gt; 
+ &lt;li&gt;"&lt;strong&gt;Y&lt;/strong&gt;es"&lt;/li&gt; 
+ &lt;li&gt;1&lt;/li&gt; 
+ &lt;li&gt;"&lt;strong&gt;S&lt;/strong&gt;i"&lt;/li&gt; 
+ &lt;li&gt;"&lt;strong&gt;J&lt;/strong&gt;a"&lt;/li&gt; 
+ &lt;li&gt;"&lt;strong&gt;A&lt;/strong&gt;ctive"&lt;/li&gt; 
+ &lt;li&gt;"&lt;strong&gt;i&lt;/strong&gt;sActive"&lt;/li&gt; 
+ &lt;li&gt;"&lt;strong&gt;e&lt;/strong&gt;nabled"&lt;/li&gt; 
+ &lt;li&gt;"&lt;strong&gt;o&lt;/strong&gt;n"&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;The last three options aren't as clear cut, they depend on your use case. Using a simple class, lets try to deserialize from &lt;a href="https://www.json.org/json-en.html"&gt;JSON&lt;/a&gt; to an instance of a &lt;a href="https://www.java.com/"&gt;Java&lt;/a&gt; class instance using &lt;a href="https://github.com/FasterXML/jackson"&gt;Jackson&lt;/a&gt;.&lt;/p&gt; 
+&lt;p&gt;Java doesn't have native support for JSON, so we need to rely on libraries like &lt;a href="https://github.com/FasterXML/jackson"&gt;Jackson&lt;/a&gt;, &lt;a href="https://github.com/google/gson"&gt;Google GSON&lt;/a&gt; (or any other listed on the &lt;a href="https://www.json.org/json-en.html"&gt;JSON&lt;/a&gt; page). I choose Jackson, since it is the library underpinning the &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html"&gt;JsonObject&lt;/a&gt; of the &lt;a href="https://vertx.io/"&gt;Eclipse Vert.x&lt;/a&gt; Framework I'm fond of. Over at &lt;a href="https://www.baeldung.com/"&gt;Baeldung&lt;/a&gt; you will find more &lt;a href="https://www.baeldung.com/jackson-object-mapper-tutorial"&gt;generic Jackson tutorials&lt;/a&gt;.&lt;/p&gt; 
+&lt;p&gt;Let's look at a simple Java class (Yes, Java14 will make it &lt;a href="https://vladmihalcea.com/java-records-guide/"&gt;less verbose&lt;/a&gt;), that sports &lt;code&gt;fromJson()&lt;/code&gt; and &lt;code&gt;toJson()&lt;/code&gt; as well as convenient overwrite of &lt;code&gt;compareTo()&lt;/code&gt; and &lt;code&gt;toString()&lt;/code&gt;&lt;/p&gt; 
+&lt;pre&gt;&lt;code class="language-java"&gt;package com.notessensei.blogsamples;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.vertx.core.json.JsonObject;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Component {
+
+  public static Component fromJson(final JsonObject source) {
+    return source.mapTo(Component.class);
+  }
+
+  private String name;
+  private boolean active = false;
+
+  public Component() {
+    // Default empty constructor required
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public boolean getActive() {
+    return active;
+  }
+
+  public void setActive(boolean isActive) {
+    this.active = isActive;
+  }
+
+  public JsonObject toJson() {
+    return JsonObject.mapFrom(this);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof Component) {
+      return this.toString().equals(obj.toString());
+    }
+    return super.equals(obj);
+  }
+
+  @Override
+  public String toString() {
+    return this.toJson().encode();
+  }
+
+}
+&lt;/code&gt;&lt;/pre&gt; 
+&lt;p&gt;Trying to instantiate a class instance with the following JSON will work:&lt;/p&gt; 
+&lt;pre&gt;&lt;code class="language-json"&gt;{
+  "name" : "Heater",
+  "active" : false
+}
+
+{
+  "name" : "Aircon",
+}
+
+{
+  "name" : "Fridge",
+  "active" : true,
+  "PowerConsumption" : {
+    "unit" : "kw",
+    "measure" : 7
+  }
+}
+
+&lt;/code&gt;&lt;/pre&gt; 
+&lt;p&gt;However it will fail with those:&lt;/p&gt; 
+&lt;pre&gt;&lt;code class="language-json"&gt;{
+  "name" : "System1",
+  "active" : "on"
+}
+
+{
+  "name" : "System2",
+  "active" : "yes"
+}
+&lt;/code&gt;&lt;/pre&gt; 
+&lt;p&gt;You get the charming error &lt;em&gt;Cannot deserialize value of type &lt;code&gt;boolean&lt;/code&gt; from String "yes": only "true"/"True"/"TRUE" or "false"/"False"/"FALSE" recognized`&lt;/em&gt;. Interestingly numbers work.&lt;/p&gt; 
+&lt;p&gt;On a side note: &lt;a href="https://github.com/FasterXML/jackson"&gt;Jackson&lt;/a&gt; uses the presence of getters/setters to decide (de)serialization and needs &lt;code&gt;getActive&lt;/code&gt; and &lt;code&gt;setActive&lt;/code&gt; or &lt;code&gt;isActive&lt;/code&gt;. When you name your variable &lt;code&gt;isActive&lt;/code&gt; Eclipse would generate &lt;code&gt;setActive&lt;/code&gt; and &lt;code&gt;isActive&lt;/code&gt; instead of &lt;code&gt;getIsActive&lt;/code&gt; / &lt;code&gt;isIsActive&lt;/code&gt; and &lt;code&gt;setIsActive&lt;/code&gt;. So simply avoid the &lt;code&gt;is...&lt;/code&gt; prefix for internal variables.&lt;/p&gt;</description>
+	<link>2022/05/yes-no-maybe-booleans.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>f7d5b920-ce05-11ec-a659-7f18fb299d1b</guid>
+	<pubDate>07 May 2022</pubDate>
+
+</item>
 <item>
 	<title>The Quest for a software documentation system</title>
 	<description>&lt;p&gt;Software documentation is a thankless business and never complete. Picking the right system can make or break your documentation success&lt;/p&gt; 
@@ -412,37 +527,6 @@ const streamOneDb = (couchDBURL, resultCallback) =&amp;gt; {
 	<author>Stephan H. Wissel</author>
 	<guid>3c572e40-2e5f-11ec-a72e-eb1375b3050a</guid>
 	<pubDate>16 October 2021</pubDate>
-
-</item>
-<item>
-	<title>Reading Resources from JAR Files</title>
-	<description>&lt;p&gt;One interesting challenge I &lt;a href="https://www.theprojectthatshallnotbenamed.com/"&gt;encountered&lt;/a&gt; is the need or ability to make an Java application extensible by providing additional classes and configuation. Ideally extension should happen by dropping a properly crafted JAR file into a specified location and restard the server. Along the line I learned about Java's classpath. This is what is to be shared here.&lt;/p&gt; 
-&lt;h3&gt;Act one: onto the classpath&lt;/h3&gt; 
-&lt;p&gt;When you start off with Java, you would expect, that you simply can set the &lt;a href="https://docs.oracle.com/javase/tutorial/essential/environment/paths.html"&gt;classpath&lt;/a&gt; varible either using an environment variable or the &lt;code&gt;java -cp&lt;/code&gt; parameter. Then you learn the &lt;a href="https://stackoverflow.com/questions/11922681/differences-between-java-cp-and-java-jar"&gt;hard way&lt;/a&gt;, that &lt;code&gt;java -jar&lt;/code&gt; and &lt;code&gt;java -cp&lt;/code&gt; are mutually exclusive. After a short flirt with &lt;a href="https://product.hubspot.com/blog/the-fault-in-our-jars-why-we-stopped-building-fat-jars"&gt;fatJAR&lt;/a&gt;, you end up with a directory structure like this:&lt;/p&gt; 
-&lt;p&gt;&lt;img src="/blog/images/2021/ApplicationDirectoryStructure.png" alt="Directory Structure"&gt;&lt;/p&gt; 
-&lt;p&gt;The secreingredient to make this work is the manifest file inside the &lt;code&gt;myApp.jar&lt;/code&gt;. It needs to be told to put all jar files in &lt;code&gt;libs&lt;/code&gt; onto the classpath too. In &lt;a href="https://maven.apache.org/"&gt;maven&lt;/a&gt;, it looks like this:&lt;/p&gt; 
-&lt;pre&gt;&lt;code class="language-xml"&gt;&amp;lt;plugin&amp;gt;
-    &amp;lt;groupId&amp;gt;org.apache.maven.plugins&amp;lt;/groupId&amp;gt;
-    &amp;lt;artifactId&amp;gt;maven-jar-plugin&amp;lt;/artifactId&amp;gt;
-    &amp;lt;version&amp;gt;${maven.jar.plugin.version}&amp;lt;/version&amp;gt;
-    &amp;lt;configuration&amp;gt;
-        &amp;lt;archive&amp;gt;
-            &amp;lt;manifest&amp;gt;
-                &amp;lt;mainClass&amp;gt;com.hcl.domino.keep.Launch&amp;lt;/mainClass&amp;gt;
-            &amp;lt;/manifest&amp;gt;
-            &amp;lt;manifestEntries&amp;gt;
-                &amp;lt;Class-Path&amp;gt;.&amp;lt;/Class-Path&amp;gt;
-                &amp;lt;Class-Path&amp;gt;libs/*&amp;lt;/Class-Path&amp;gt;
-            &amp;lt;/manifestEntries&amp;gt;
-        &amp;lt;/archive&amp;gt;
-    &amp;lt;/configuration&amp;gt;
-&amp;lt;/plugin&amp;gt;
-&lt;/code&gt;&lt;/pre&gt; 
-&lt;p&gt;Now, that all JARS are successfully availble on the classspath, we can try to retrieve them.&lt;/p&gt;</description>
-	<link>2021/04/reading-resources-from-jar-files.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>ce4a84f0-a8d6-11eb-af9d-1184c78a15d1</guid>
-	<pubDate>29 April 2021</pubDate>
 
 </item>
 

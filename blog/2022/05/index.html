@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>NotesSensei's Blog by month: By Date: March 2022</title>
+<title>NotesSensei's Blog by month: By Date: May 2022</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -102,54 +102,150 @@ ga('send', 'pageview');
 		<div class="row-fluid">
 			<div class="span9">
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2022/01/index.html"><i class="icon-hand-left"></i>By Date: January 2022</a>
+					<li><a href="/blog/2022/03/index.html"><i class="icon-hand-left"></i>By Date: March 2022</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
 					<span class="divider">|</span>
-					<li><a href="/blog/2022/05/index.html">By Date: May 2022<i class="icon-hand-right"></i></a>
+					<li><a href="/blog/categories/afterhours.html">After hours<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 
 				<div class="well well-raised">
-					<h1>By Date: March 2022</h1>
+					<h1>By Date: May 2022</h1>
 				</div>
 				<article class="well well-raised">
 					<h1>
-						<small><a href="/blog/2022/03/quest-for-software-documentation-system.html">The Quest for a software documentation system</a></small>
+						<small><a href="/blog/2022/05/yes-no-maybe-booleans.html">Yes No Maybe Boolean deserialization with Jackson</a></small>
 					</h1>
 					<hr />
-					<div><p>Software documentation is a thankless business and never complete. Picking the right system can make or break your documentation success</p> 
-<h3>Contenders</h3> 
-<p>We have a number of options commonly used, each with strengh and weaknesses.</p> 
+					<div><p>The <a href="https://en.wikipedia.org/wiki/Robustness_principle">Robustness principle</a> demands: be lenient in what you accept and strict in what you emit. I was facing this challenge when deserializing boolean values.</p> 
+<h3>What is true</h3> 
+<p>Glancing at data, we can spot, mostly easily what looks trueish:</p> 
 <ul> 
- <li><a href="https://www.xml.com/articles/2017/01/19/what-dita/">DITA</a>: The OASIS Open Darwin Information Typing Architecture. Extremly powerful, especially the concept of single source definition: You define an item once and just reference it. XML based, suitable for complex documentation, but with a super steep learning curve, effectively prohibit community contributions</li> 
- <li><a href="https://jekyllrb.com">jekyll</a>: Markdown driven template engine, best known for driving <a href="https://pages.github.com">GitHub Pages</a>. With the <a href="https://just-the-docs.github.io/just-the-docs/">Just-the-docs</a> template it makes documentation creation a simple task in your repository's <code>/doc</code> directory. Running site generation and hosting is build into github, so no GitHub action or other CI/CD pipeline needed. Lacks good tooling for multi-version documentation</li> 
- <li><a href="https://maven.apache.org/plugins/maven-site-plugin/">Maven sites</a>: a good option when Java is your language. Tightly coupled to the build process it produces full reporting and JavaDoc. Can be a pain to setup</li> 
- <li><a href="https://readthedocs.org">Read the docs</a>: Great destination for OpenSource documentation or your <a href="https://readthedocs.com">corporate documentation</a> if the build server can reach it. Uses the <a href="https://www.mkdocs.org">MKDocs</a> rendering engine</li> 
- <li>and <a href="https://document360.com/blog/software-documentation-tools/">many</a>, did I say <a href="https://www.process.st/software-documentation/">many more</a></li> 
+ <li>true</li> 
+ <li>"<strong>T</strong>rue"</li> 
+ <li>"<strong>Y</strong>es"</li> 
+ <li>1</li> 
+ <li>"<strong>S</strong>i"</li> 
+ <li>"<strong>J</strong>a"</li> 
+ <li>"<strong>A</strong>ctive"</li> 
+ <li>"<strong>i</strong>sActive"</li> 
+ <li>"<strong>e</strong>nabled"</li> 
+ <li>"<strong>o</strong>n"</li> 
 </ul> 
-<p>I found the tools quite impressive and somehow wanting at the same time. So taking a step back, it is worth to look at requirements</p></div>
+<p>The last three options aren't as clear cut, they depend on your use case. Using a simple class, lets try to deserialize from <a href="https://www.json.org/json-en.html">JSON</a> to an instance of a <a href="https://www.java.com/">Java</a> class instance using <a href="https://github.com/FasterXML/jackson">Jackson</a>.</p> 
+<p>Java doesn't have native support for JSON, so we need to rely on libraries like <a href="https://github.com/FasterXML/jackson">Jackson</a>, <a href="https://github.com/google/gson">Google GSON</a> (or any other listed on the <a href="https://www.json.org/json-en.html">JSON</a> page). I choose Jackson, since it is the library underpinning the <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">JsonObject</a> of the <a href="https://vertx.io/">Eclipse Vert.x</a> Framework I'm fond of. Over at <a href="https://www.baeldung.com/">Baeldung</a> you will find more <a href="https://www.baeldung.com/jackson-object-mapper-tutorial">generic Jackson tutorials</a>.</p> 
+<p>Let's look at a simple Java class (Yes, Java14 will make it <a href="https://vladmihalcea.com/java-records-guide/">less verbose</a>), that sports <code>fromJson()</code> and <code>toJson()</code> as well as convenient overwrite of <code>compareTo()</code> and <code>toString()</code></p> 
+<pre><code class="language-java">package com.notessensei.blogsamples;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.vertx.core.json.JsonObject;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Component {
+
+  public static Component fromJson(final JsonObject source) {
+    return source.mapTo(Component.class);
+  }
+
+  private String name;
+  private boolean active = false;
+
+  public Component() {
+    // Default empty constructor required
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public boolean getActive() {
+    return active;
+  }
+
+  public void setActive(boolean isActive) {
+    this.active = isActive;
+  }
+
+  public JsonObject toJson() {
+    return JsonObject.mapFrom(this);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof Component) {
+      return this.toString().equals(obj.toString());
+    }
+    return super.equals(obj);
+  }
+
+  @Override
+  public String toString() {
+    return this.toJson().encode();
+  }
+
+}
+</code></pre> 
+<p>Trying to instantiate a class instance with the following JSON will work:</p> 
+<pre><code class="language-json">{
+  "name" : "Heater",
+  "active" : false
+}
+
+{
+  "name" : "Aircon",
+}
+
+{
+  "name" : "Fridge",
+  "active" : true,
+  "PowerConsumption" : {
+    "unit" : "kw",
+    "measure" : 7
+  }
+}
+
+</code></pre> 
+<p>However it will fail with those:</p> 
+<pre><code class="language-json">{
+  "name" : "System1",
+  "active" : "on"
+}
+
+{
+  "name" : "System2",
+  "active" : "yes"
+}
+</code></pre> 
+<p>You get the charming error <em>Cannot deserialize value of type <code>boolean</code> from String "yes": only "true"/"True"/"TRUE" or "false"/"False"/"FALSE" recognized`</em>. Interestingly numbers work.</p> 
+<p>On a side note: <a href="https://github.com/FasterXML/jackson">Jackson</a> uses the presence of getters/setters to decide (de)serialization and needs <code>getActive</code> and <code>setActive</code> or <code>isActive</code>. When you name your variable <code>isActive</code> Eclipse would generate <code>setActive</code> and <code>isActive</code> instead of <code>getIsActive</code> / <code>isIsActive</code> and <code>setIsActive</code>. So simply avoid the <code>is...</code> prefix for internal variables.</p></div>
 					<hr />
- <a href="/blog/2022/03/quest-for-software-documentation-system.html">Read more</a>
+ <a href="/blog/2022/05/yes-no-maybe-booleans.html">Read more</a>
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 09 March 2022
+Stephan H Wissel</a> on 07 May 2022
 <span class="divider">|</span>
-<a href="/blog/2022/03/quest-for-software-documentation-system.html#comments">Comments (0)</a>
+<a href="/blog/2022/05/yes-no-maybe-booleans.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/software.html">Software</a> 
+categories:  <a href="/blog/categories/java.html">Java</a> 
 
 						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2022/03/quest-for-software-documentation-system.html";
+							var permaLink = "https://wissel.net/blog/2022/05/yes-no-maybe-booleans.html";
 						</script>
 					</p>
 				</article>
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2022/01/index.html"><i class="icon-hand-left"></i>By Date: January 2022</a>
+					<li><a href="/blog/2022/03/index.html"><i class="icon-hand-left"></i>By Date: March 2022</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
 					<span class="divider">|</span>
-					<li><a href="/blog/2022/05/index.html">By Date: May 2022<i class="icon-hand-right"></i></a>
+					<li><a href="/blog/categories/afterhours.html">After hours<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 
