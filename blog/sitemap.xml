@@ -6,7 +6,7 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Sat, 07 May 2022 21:02:40 +0000</pubdate>
+	<pubdate>Sun, 08 May 2022 07:26:53 +0000</pubdate>
 <item>
 	<title>Yes No Maybe Boolean deserialization with Jackson</title>
 	<description>&lt;p&gt;The &lt;a href="https://en.wikipedia.org/wiki/Robustness_principle"&gt;Robustness principle&lt;/a&gt; demands: be lenient in what you accept and strict in what you emit. I was facing this challenge when deserializing boolean values.&lt;/p&gt; 
@@ -26,7 +26,7 @@
 &lt;/ul&gt; 
 &lt;p&gt;The last three options aren't as clear cut, they depend on your use case. Using a simple class, lets try to deserialize from &lt;a href="https://www.json.org/json-en.html"&gt;JSON&lt;/a&gt; to an instance of a &lt;a href="https://www.java.com/"&gt;Java&lt;/a&gt; class instance using &lt;a href="https://github.com/FasterXML/jackson"&gt;Jackson&lt;/a&gt;.&lt;/p&gt; 
 &lt;p&gt;Java doesn't have native support for JSON, so we need to rely on libraries like &lt;a href="https://github.com/FasterXML/jackson"&gt;Jackson&lt;/a&gt;, &lt;a href="https://github.com/google/gson"&gt;Google GSON&lt;/a&gt; (or any other listed on the &lt;a href="https://www.json.org/json-en.html"&gt;JSON&lt;/a&gt; page). I choose Jackson, since it is the library underpinning the &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html"&gt;JsonObject&lt;/a&gt; of the &lt;a href="https://vertx.io/"&gt;Eclipse Vert.x&lt;/a&gt; Framework I'm fond of. Over at &lt;a href="https://www.baeldung.com/"&gt;Baeldung&lt;/a&gt; you will find more &lt;a href="https://www.baeldung.com/jackson-object-mapper-tutorial"&gt;generic Jackson tutorials&lt;/a&gt;.&lt;/p&gt; 
-&lt;p&gt;Let's look at a simple Java class (Yes, Java14 will make it &lt;a href="https://vladmihalcea.com/java-records-guide/"&gt;less verbose&lt;/a&gt;), that sports &lt;code&gt;fromJson()&lt;/code&gt; and &lt;code&gt;toJson()&lt;/code&gt; as well as convenient overwrite of &lt;code&gt;compareTo()&lt;/code&gt; and &lt;code&gt;toString()&lt;/code&gt;&lt;/p&gt; 
+&lt;p&gt;Let's look at a simple Java class (Yes, Java14 will make it &lt;a href="https://vladmihalcea.com/java-records-guide/"&gt;less verbose&lt;/a&gt;), that sports &lt;code&gt;fromJson()&lt;/code&gt; and &lt;code&gt;toJson()&lt;/code&gt; as well as convenient overwrite of &lt;code&gt;equals()&lt;/code&gt; and &lt;code&gt;toString()&lt;/code&gt;&lt;/p&gt; 
 &lt;pre&gt;&lt;code class="language-java"&gt;package com.notessensei.blogsamples;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -85,33 +85,32 @@ public class Component {
 &lt;/code&gt;&lt;/pre&gt; 
 &lt;p&gt;Trying to instantiate a class instance with the following JSON will work:&lt;/p&gt; 
 &lt;pre&gt;&lt;code class="language-json"&gt;{
-  "name" : "Heater",
-  "active" : false
+  "name": "Heater",
+  "active": false
 }
-
-{
-  "name" : "Aircon",
+&lt;/code&gt;&lt;/pre&gt; 
+&lt;pre&gt;&lt;code class="language-json"&gt;{
+  "name": "Aircon"
 }
-
-{
-  "name" : "Fridge",
-  "active" : true,
-  "PowerConsumption" : {
-    "unit" : "kw",
-    "measure" : 7
+&lt;/code&gt;&lt;/pre&gt; 
+&lt;pre&gt;&lt;code class="language-json"&gt;{
+  "name": "Fridge",
+  "active": true,
+  "PowerConsumption": {
+    "unit": "kw",
+    "measure": 7
   }
 }
-
 &lt;/code&gt;&lt;/pre&gt; 
 &lt;p&gt;However it will fail with those:&lt;/p&gt; 
 &lt;pre&gt;&lt;code class="language-json"&gt;{
-  "name" : "System1",
-  "active" : "on"
+  "name": "System1",
+  "active": "on"
 }
-
-{
-  "name" : "System2",
-  "active" : "yes"
+&lt;/code&gt;&lt;/pre&gt; 
+&lt;pre&gt;&lt;code class="language-json"&gt;{
+  "name": "System2",
+  "active": "yes"
 }
 &lt;/code&gt;&lt;/pre&gt; 
 &lt;p&gt;You get the charming error &lt;em&gt;Cannot deserialize value of type &lt;code&gt;boolean&lt;/code&gt; from String "yes": only "true"/"True"/"TRUE" or "false"/"False"/"FALSE" recognized`&lt;/em&gt;. Interestingly numbers work.&lt;/p&gt; 
