@@ -6,7 +6,32 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Sun, 22 May 2022 16:11:50 +0000</pubdate>
+	<pubdate>Mon, 06 Jun 2022 11:01:56 +0000</pubdate>
+<item>
+	<title>Dance the OAuth with me</title>
+	<description>&lt;p&gt;&lt;a href="https://www.oauth.com"&gt;OAuth&lt;/a&gt; and its cousin &lt;a href="https://openid.net"&gt;OICD&lt;/a&gt; are the ubiquitous methods to &lt;a href="https://openid.net/gainpoc/"&gt;gain&lt;/a&gt; identity and authorization information. Since it is a &lt;a href="https://www.lexico.com/en/definition/menage_a_trois"&gt;m??nage ?? trois&lt;/a&gt; between a user, an &lt;a href="https://en.wikipedia.org/wiki/Identity_provider"&gt;Identity provider (IdP)&lt;/a&gt; and an application, refered to as "Service provider", it is hard to trouble shoot.&lt;/p&gt; 
+&lt;h2&gt;A play in five acts&lt;/h2&gt; 
+&lt;p&gt;In the recent &lt;a href="https://opensource.hcltechsw.com/domino-keep-docs/"&gt;Project KEEP&lt;/a&gt; we build an IdP into the API, so you have the choice of just using Domino or using an external IdP.&lt;/p&gt; 
+&lt;p&gt;To ensure it works as expected several dependent HTTPS calls were needed. Each call would harvest some information into environment variables for the following step&lt;/p&gt; 
+&lt;h3&gt;Act 0 - initial setup&lt;/h3&gt; 
+&lt;p&gt;Store several variables into the environment:&lt;/p&gt; 
+&lt;ul&gt; 
+ &lt;li&gt;&lt;code&gt;UserName&lt;/code&gt;: the user you will simulate to approve&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;Password&lt;/code&gt;: their password&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;HOST&lt;/code&gt;: The starting URL for the first call&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;state&lt;/code&gt;: a random string, need to stay the same through the sequence&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;client_id&lt;/code&gt;: The application configured as service provider&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;client_secret&lt;/code&gt;: The service provider "password"&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;scope&lt;/code&gt;: the scope (or a subset) you have configured for the service provider&lt;/li&gt; 
+ &lt;li&gt;&lt;code&gt;redirect_uri&lt;/code&gt;: one of the redirection URIs you have configured for the service provider&lt;/li&gt; 
+&lt;/ul&gt; 
+&lt;p&gt;As you can see: an OAuth flow contains basic authentication calls, so you need to ensure proper &lt;a href="https://en.wikipedia.org/wiki/Transport_Layer_Security"&gt;TLS&lt;/a&gt; connections.&lt;/p&gt;</description>
+	<link>2022/06/dance-the-oauth-with-me.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>d4acca20-e579-11ec-b9b8-f1cad397bc73</guid>
+	<pubDate>06 June 2022</pubDate>
+
+</item>
 <item>
 	<title>Yes No Maybe Boolean deserialization with Jackson</title>
 	<description>&lt;p&gt;The &lt;a href="https://en.wikipedia.org/wiki/Robustness_principle"&gt;Robustness principle&lt;/a&gt; demands: be lenient in what you accept and strict in what you emit. I was facing this challenge when deserializing boolean values.&lt;/p&gt; 
@@ -489,43 +514,6 @@ notifications
 	<author>Stephan H. Wissel</author>
 	<guid>476bcff0-32da-11ec-97e7-f363621f1794</guid>
 	<pubDate>22 October 2021</pubDate>
-
-</item>
-<item>
-	<title>Streaming CouchDB data</title>
-	<description>&lt;p&gt;I'm a confessing fan of &lt;a href="http://couchdb.apache.org/"&gt;CouchDB&lt;/a&gt;, &lt;a href="https://en.wikipedia.org/wiki/Stream_(computing)"&gt;stream programming&lt;/a&gt; and the &lt;a href="https://www.npmjs.com/package/nano"&gt;official CouchDB NodeJS library&lt;/a&gt;. Nano supports returning data as &lt;a href="https://nodejs.org/api/stream.html"&gt;NodeJS Stream&lt;/a&gt;, so you can &lt;a href="https://www.codemag.com/article/1803071/Getting-Started-with-Node-Streams"&gt;pipe it away&lt;/a&gt;. Most examples use file streams or &lt;a href="https://nodejs.org/api/process.html#process_process_stdout"&gt;&lt;code&gt;process.stdout&lt;/code&gt;&lt;/a&gt;, while my goal was to process individual documents that are part of the stream&lt;/p&gt; 
-&lt;h3&gt;You can't walk into the same stream a second time&lt;/h3&gt; 
-&lt;p&gt;This old Buddhist saying holds true for NodeJS streams too. So any processing needs to happen in the chain of the stream. Let's start with the simple example of reading all documents from a couchDB:&lt;/p&gt; 
-&lt;pre&gt;&lt;code class="language-javascript"&gt;const Nano = require("nano");
-const nano = Nano(couchDBURL);
-nano.listAsStream({ include_docs: true }).pipe(process.stdout);
-&lt;/code&gt;&lt;/pre&gt; 
-&lt;p&gt;This little snippet will read out all documents in your couchDB. You need to supply the &lt;code&gt;couchDBURL&lt;/code&gt; value, e.g. &lt;code&gt;http://localhost:5984/test&lt;/code&gt;. On a closer look, we see that the data returned arrives in continious buffers that don't match JSON document boundaries, so processing one document after the other needs extra work.&lt;/p&gt; 
-&lt;p&gt;A &lt;a href="https://strongloop.com/strongblog/practical-examples-of-the-new-node-js-streams-api/"&gt;blog entry&lt;/a&gt; in the StrongLoop blog provides the first clue what to do. To process CouchDB stream data we need both a &lt;a href="https://nodejs.org/api/stream.html#stream_class_stream_transform"&gt;Transform stream&lt;/a&gt; to chop incoming data into line by line and a &lt;a href="https://nodejs.org/api/stream.html#stream_implementing_a_writable_stream"&gt;writable stream&lt;/a&gt; for our results.&lt;/p&gt; 
-&lt;p&gt;Our code, finally will look like this:&lt;/p&gt; 
-&lt;pre&gt;&lt;code class="language-javascript"&gt;const Nano = require("nano");
-const { Writable, Transform } = require("stream");
-
-const streamOneDb = (couchDBURL, resultCallback) =&amp;gt; {
-  const nano = Nano(couchDBURL);
-  nano
-    .listAsStream({ include_docs: true })
-    .on("error", (e) =&amp;gt; console.error("error", e))
-    .pipe(lineSplitter())
-    .pipe(jsonMaker())
-    .pipe(documentWriter(resultCallback));
-};
-&lt;/code&gt;&lt;/pre&gt; 
-&lt;p&gt;Let's have a closer look at the new functions, the first two implement &lt;code&gt;transform&lt;/code&gt;, the last one &lt;code&gt;writable&lt;/code&gt;:&lt;/p&gt; 
-&lt;ul&gt; 
- &lt;li&gt;&lt;code&gt;lineSplitter&lt;/code&gt;, as the name implies, cuts the buffer into separate lines for processing. As far as I could tell, CouchDB documents always returned on one line&lt;/li&gt; 
- &lt;li&gt;&lt;code&gt;jsonMaker&lt;/code&gt;, extracts the documents and discards the wrapper with document count that surrounds them&lt;/li&gt; 
- &lt;li&gt;&lt;code&gt;documentWriter&lt;/code&gt;, writing out the JSON object using a callback&lt;/li&gt; 
-&lt;/ul&gt;</description>
-	<link>2021/10/streaming-couchdb-data.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>3c572e40-2e5f-11ec-a72e-eb1375b3050a</guid>
-	<pubDate>16 October 2021</pubDate>
 
 </item>
 
