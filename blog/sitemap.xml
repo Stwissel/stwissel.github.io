@@ -6,7 +6,50 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Mon, 06 Jun 2022 11:49:55 +0000</pubdate>
+	<pubdate>Wed, 08 Jun 2022 08:07:31 +0000</pubdate>
+<item>
+	<title>Case insensitive deserialization</title>
+	<description>&lt;p&gt;Growing up in Windows with &lt;a href="https://en.wikipedia.org/wiki/BASIC"&gt;BASIC&lt;/a&gt; you learn case doesn't matter, so &lt;code&gt;Color&lt;/code&gt; is the same as &lt;code&gt;COLOR&lt;/code&gt; or &lt;code&gt;cOLOR&lt;/code&gt; when it comes to variable names. Same applies to &lt;code&gt;@Formula&lt;/code&gt; or item names in Notes documents.&lt;/p&gt; 
+&lt;p&gt;On the other side, &lt;a href="https://en.wikipedia.org/wiki/Linux"&gt;Linux&lt;/a&gt;, &lt;a href="https://en.wikipedia.org/wiki/Java_(programming_language)"&gt;Java&lt;/a&gt;, &lt;a href="https://en.wikipedia.org/wiki/JavaScript"&gt;JavaScript&lt;/a&gt; and &lt;a href="https://www.json.org/json-en.html"&gt;JSON&lt;/a&gt; are very much case sensitive.&lt;/p&gt; 
+&lt;p&gt;This poses a challenge when deserializing (handcrafted) JSON files.&lt;/p&gt; 
+&lt;h2&gt;The Task at hand&lt;/h2&gt; 
+&lt;p&gt;Deserialization of JSON into a Java class instance &lt;a href="https://www.baeldung.com/jackson-deserialization"&gt;can be done&lt;/a&gt; using &lt;a href="https://github.com/FasterXML/jackson"&gt;jackson&lt;/a&gt;. This is also what the &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html"&gt;JsonObject&lt;/a&gt; in &lt;a href="https://vertx.io"&gt;vert.x&lt;/a&gt; uses when you call &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html#mapTo-java.lang.Class-"&gt;&lt;code&gt;json.mapTo(SomeClass)&lt;/code&gt;&lt;/a&gt;. Not using vert.x? You can use the &lt;a href="https://www.baeldung.com/jackson-object-mapper-tutorial"&gt;&lt;code&gt;ObjectMapper&lt;/code&gt;&lt;/a&gt;. Let's look at a sample Java class&lt;/p&gt; 
+&lt;pre&gt;&lt;code class="language-java"&gt;import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.vertx.core.json.JsonObject;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class JsonTest {
+
+  public static fromJson(final JsonObject source) {
+    return source.mapTo(JsonTest.class);
+  }
+
+  private String color;
+  private String shape;
+  private int answer;
+  private boolean pretty;
+
+  /* GETTERS and SETTERS omitted for brevity
+     Let your IDE add them for you */
+}
+&lt;/code&gt;&lt;/pre&gt; 
+&lt;p&gt;Now you want to deserialize a good JSON, which works as expected:&lt;/p&gt; 
+&lt;pre&gt;&lt;code class="language-json"&gt;{
+  "color": "Red",
+  "shape": "round",
+  "answer": 11,
+  "pretty": true
+}
+&lt;/code&gt;&lt;/pre&gt; 
+&lt;p&gt;but the very moment your JSON isn't following proper capitalization, deserialization will fail. We need to fix that.&lt;/p&gt;</description>
+	<link>2022/06/case-insensitive-deserialization.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>77851ba0-e6f9-11ec-8a41-85f9122bc611</guid>
+	<pubDate>08 June 2022</pubDate>
+
+</item>
 <item>
 	<title>Dance the OAuth with me</title>
 	<description>&lt;p&gt;&lt;a href="https://www.oauth.com"&gt;OAuth&lt;/a&gt; and its cousin &lt;a href="https://openid.net"&gt;OICD&lt;/a&gt; are the ubiquitous methods to &lt;a href="https://openid.net/gainpoc/"&gt;gain&lt;/a&gt; identity and authorization information. Since it is a &lt;a href="https://www.lexico.com/en/definition/menage_a_trois"&gt;m??nage ?? trois&lt;/a&gt; between a user, an &lt;a href="https://en.wikipedia.org/wiki/Identity_provider"&gt;Identity provider (IdP)&lt;/a&gt; and an application, refered to as "Service provider", it is hard to trouble shoot.&lt;/p&gt; 
@@ -449,72 +492,6 @@ export JAVA_HOME=`/usr/libexec/java_home -v 11.0`
 	<author>Stephan H. Wissel</author>
 	<guid>f5e53190-58c6-11ec-a5a2-1d9fd86b9254</guid>
 	<pubDate>09 December 2021</pubDate>
-
-</item>
-<item>
-	<title>Java Streams filters with side effects</title>
-	<description>&lt;p&gt;Once you get used to &lt;a href="/blog/2020/11/streams-and-functional-programming-in-java.html"&gt;stream programming&lt;/a&gt; and the pattern of &lt;a href="/blog/2021/01/collecting-java-streams.html"&gt;create, select, manipulate and collect&lt;/a&gt; your code will never look the same&lt;/p&gt; 
-&lt;h3&gt;Putting side effects to good (?) use&lt;/h3&gt; 
-&lt;p&gt;The pure teachings tell us, &lt;a href="https://www.baeldung.com/java-stream-filter-lambda"&gt;filters&lt;/a&gt; should select objects for processing and &lt;strong&gt;not&lt;/strong&gt; have any side effects or do processing on their own. But ignoring the teachings could produce clean code (I probably will roast in debug hell for this). Let's look at an example:&lt;/p&gt; 
-&lt;pre&gt;&lt;code class="language-java"&gt;final Collection&amp;lt;MyNotification&amp;gt; notifications = getNotifications();
-final Iterator&amp;lt;MyNotification&amp;gt; iter = notifications.iterator();
-
-while(iter.hasNext()) {
-  MyNotification n = iter.next();
-
-  if (n.priority == Priority.high) {
-    sendHighPriority(n);
-  } else if (n.groupNotification) {
-    sendGroupNotification(n);
-  } else if (n.special &amp;amp;&amp;amp; !n.delay &amp;gt; 30) {
-    sendSpecial(n);
-  } else if (!n.special) {
-    sendStandard(n);
-  } else {
-    reportWrongNotification(n);
-  }
-}
-&lt;/code&gt;&lt;/pre&gt; 
-&lt;p&gt;This gets messy very fast and all selection logic is confined to the if conditions in one function (which initially looks like a good idea). How about rewriting the code &lt;a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html"&gt;Stream&lt;/a&gt; style? It will be more boiler plate, but better segregation:&lt;/p&gt; 
-&lt;pre&gt;&lt;code class="language-java"&gt;final Stream&amp;lt;MyNotification&amp;gt; notifications = getNotifications();
-
-notifications
-  .filter(this::highPriority)
-  .filter(this::groupSend)
-  .filter(this::specialNoDelay)
-  .filter(this::standard)
-  .forEach(this::reportWrongNotification);
-&lt;/code&gt;&lt;/pre&gt; 
-&lt;p&gt;The filter functions would look like this:&lt;/p&gt; 
-&lt;pre&gt;&lt;code class="language-java"&gt;boolean highPriority(final MyNotification n) {
-  if (n.priority == Priority.high) {
-    sendHighPriority(n);
-    return false; // No further processing required
-  }
-  return true; // Furhter processing required
-}
-
-boolean groupSend(final MyNotification n) {
-  if (n.groupNotification) {
-    sendGroupNotification(n);
-    return false; // No further processing required
-  }
-  return true; // Furhter processing required
-}
-&lt;/code&gt;&lt;/pre&gt; 
-&lt;p&gt;You get the idea. With proper JavaDoc method headers, this code looks more maintainable.&lt;br&gt; We can push this a little further (as explored on &lt;a href="https://stackoverflow.com/questions/69670736/how-to-apply-a-collection-of-filters-to-a-java-stream"&gt;Stackoverflow&lt;/a&gt;). Imagin the number of process steps might vary and you don't want to update that code for every variation. You could do something like this:&lt;/p&gt; 
-&lt;pre&gt;&lt;code class="language-java"&gt;final Stream&amp;lt;MyNotification&amp;gt; notifications = getNotifications();
-final Stream&amp;lt;Predicate&amp;lt;MyNotifications&amp;gt;&amp;gt; filters = getFilters();
-
-notifications
-  .filter(filters.reduce(f -&amp;gt; true, Predicate::and))
-  .forEach(this::reportWrongNotification);
-&lt;/code&gt;&lt;/pre&gt; 
-&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
-	<link>2021/10/java-streams-filters-with-side-effects.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>476bcff0-32da-11ec-97e7-f363621f1794</guid>
-	<pubDate>22 October 2021</pubDate>
 
 </item>
 

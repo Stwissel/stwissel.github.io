@@ -115,6 +115,61 @@ ga('send', 'pageview');
 				</div>
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2022/06/case-insensitive-deserialization.html">Case insensitive deserialization</a></small>
+					</h1>
+					<hr />
+					<div><p>Growing up in Windows with <a href="https://en.wikipedia.org/wiki/BASIC">BASIC</a> you learn case doesn't matter, so <code>Color</code> is the same as <code>COLOR</code> or <code>cOLOR</code> when it comes to variable names. Same applies to <code>@Formula</code> or item names in Notes documents.</p> 
+<p>On the other side, <a href="https://en.wikipedia.org/wiki/Linux">Linux</a>, <a href="https://en.wikipedia.org/wiki/Java_(programming_language)">Java</a>, <a href="https://en.wikipedia.org/wiki/JavaScript">JavaScript</a> and <a href="https://www.json.org/json-en.html">JSON</a> are very much case sensitive.</p> 
+<p>This poses a challenge when deserializing (handcrafted) JSON files.</p> 
+<h2>The Task at hand</h2> 
+<p>Deserialization of JSON into a Java class instance <a href="https://www.baeldung.com/jackson-deserialization">can be done</a> using <a href="https://github.com/FasterXML/jackson">jackson</a>. This is also what the <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">JsonObject</a> in <a href="https://vertx.io">vert.x</a> uses when you call <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html#mapTo-java.lang.Class-"><code>json.mapTo(SomeClass)</code></a>. Not using vert.x? You can use the <a href="https://www.baeldung.com/jackson-object-mapper-tutorial"><code>ObjectMapper</code></a>. Let's look at a sample Java class</p> 
+<pre><code class="language-java">import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.vertx.core.json.JsonObject;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class JsonTest {
+
+  public static fromJson(final JsonObject source) {
+    return source.mapTo(JsonTest.class);
+  }
+
+  private String color;
+  private String shape;
+  private int answer;
+  private boolean pretty;
+
+  /* GETTERS and SETTERS omitted for brevity
+     Let your IDE add them for you */
+}
+</code></pre> 
+<p>Now you want to deserialize a good JSON, which works as expected:</p> 
+<pre><code class="language-json">{
+  "color": "Red",
+  "shape": "round",
+  "answer": 11,
+  "pretty": true
+}
+</code></pre> 
+<p>but the very moment your JSON isn't following proper capitalization, deserialization will fail. We need to fix that.</p></div>
+					<hr />
+ <a href="/blog/2022/06/case-insensitive-deserialization.html">Read more</a>
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 08 June 2022
+<span class="divider">|</span>
+<a href="/blog/2022/06/case-insensitive-deserialization.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2022/06/case-insensitive-deserialization.html";
+						</script>
+					</p>
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2022/06/dance-the-oauth-with-me.html">Dance the OAuth with me</a></small>
 					</h1>
 					<hr />

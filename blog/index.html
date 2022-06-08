@@ -100,6 +100,59 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2022/06/case-insensitive-deserialization.html">Case insensitive deserialization</a></small></h1>
+					<hr />
+					<div><p>Growing up in Windows with <a href="https://en.wikipedia.org/wiki/BASIC">BASIC</a> you learn case doesn't matter, so <code>Color</code> is the same as <code>COLOR</code> or <code>cOLOR</code> when it comes to variable names. Same applies to <code>@Formula</code> or item names in Notes documents.</p> 
+<p>On the other side, <a href="https://en.wikipedia.org/wiki/Linux">Linux</a>, <a href="https://en.wikipedia.org/wiki/Java_(programming_language)">Java</a>, <a href="https://en.wikipedia.org/wiki/JavaScript">JavaScript</a> and <a href="https://www.json.org/json-en.html">JSON</a> are very much case sensitive.</p> 
+<p>This poses a challenge when deserializing (handcrafted) JSON files.</p> 
+<h2>The Task at hand</h2> 
+<p>Deserialization of JSON into a Java class instance <a href="https://www.baeldung.com/jackson-deserialization">can be done</a> using <a href="https://github.com/FasterXML/jackson">jackson</a>. This is also what the <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">JsonObject</a> in <a href="https://vertx.io">vert.x</a> uses when you call <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html#mapTo-java.lang.Class-"><code>json.mapTo(SomeClass)</code></a>. Not using vert.x? You can use the <a href="https://www.baeldung.com/jackson-object-mapper-tutorial"><code>ObjectMapper</code></a>. Let's look at a sample Java class</p> 
+<pre><code class="language-java">import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.vertx.core.json.JsonObject;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class JsonTest {
+
+  public static fromJson(final JsonObject source) {
+    return source.mapTo(JsonTest.class);
+  }
+
+  private String color;
+  private String shape;
+  private int answer;
+  private boolean pretty;
+
+  /* GETTERS and SETTERS omitted for brevity
+     Let your IDE add them for you */
+}
+</code></pre> 
+<p>Now you want to deserialize a good JSON, which works as expected:</p> 
+<pre><code class="language-json">{
+  "color": "Red",
+  "shape": "round",
+  "answer": 11,
+  "pretty": true
+}
+</code></pre> 
+<p>but the very moment your JSON isn't following proper capitalization, deserialization will fail. We need to fix that.</p></div>
+					<hr />
+ <a href="/blog/2022/06/case-insensitive-deserialization.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 08 June 2022
+<span class="divider">|</span>
+<a href="/blog/2022/06/case-insensitive-deserialization.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2022/06/case-insensitive-deserialization.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2022/06/dance-the-oauth-with-me.html">Dance the OAuth with me</a></small></h1>
 					<hr />
 					<div><p><a href="https://www.oauth.com">OAuth</a> and its cousin <a href="https://openid.net">OICD</a> are the ubiquitous methods to <a href="https://openid.net/gainpoc/">gain</a> identity and authorization information. Since it is a <a href="https://www.lexico.com/en/definition/menage_a_trois">m��nage �� trois</a> between a user, an <a href="https://en.wikipedia.org/wiki/Identity_provider">Identity provider (IdP)</a> and an application, refered to as "Service provider", it is hard to trouble shoot.</p> 
@@ -628,81 +681,6 @@ categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/c
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2021/12/factory-based-dependency-injection.html";
-						</script>
-					</p></p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2021/10/java-streams-filters-with-side-effects.html">Java Streams filters with side effects</a></small></h1>
-					<hr />
-					<div><p>Once you get used to <a href="/blog/2020/11/streams-and-functional-programming-in-java.html">stream programming</a> and the pattern of <a href="/blog/2021/01/collecting-java-streams.html">create, select, manipulate and collect</a> your code will never look the same</p> 
-<h3>Putting side effects to good (?) use</h3> 
-<p>The pure teachings tell us, <a href="https://www.baeldung.com/java-stream-filter-lambda">filters</a> should select objects for processing and <strong>not</strong> have any side effects or do processing on their own. But ignoring the teachings could produce clean code (I probably will roast in debug hell for this). Let's look at an example:</p> 
-<pre><code class="language-java">final Collection&lt;MyNotification&gt; notifications = getNotifications();
-final Iterator&lt;MyNotification&gt; iter = notifications.iterator();
-
-while(iter.hasNext()) {
-  MyNotification n = iter.next();
-
-  if (n.priority == Priority.high) {
-    sendHighPriority(n);
-  } else if (n.groupNotification) {
-    sendGroupNotification(n);
-  } else if (n.special &amp;&amp; !n.delay &gt; 30) {
-    sendSpecial(n);
-  } else if (!n.special) {
-    sendStandard(n);
-  } else {
-    reportWrongNotification(n);
-  }
-}
-</code></pre> 
-<p>This gets messy very fast and all selection logic is confined to the if conditions in one function (which initially looks like a good idea). How about rewriting the code <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html">Stream</a> style? It will be more boiler plate, but better segregation:</p> 
-<pre><code class="language-java">final Stream&lt;MyNotification&gt; notifications = getNotifications();
-
-notifications
-  .filter(this::highPriority)
-  .filter(this::groupSend)
-  .filter(this::specialNoDelay)
-  .filter(this::standard)
-  .forEach(this::reportWrongNotification);
-</code></pre> 
-<p>The filter functions would look like this:</p> 
-<pre><code class="language-java">boolean highPriority(final MyNotification n) {
-  if (n.priority == Priority.high) {
-    sendHighPriority(n);
-    return false; // No further processing required
-  }
-  return true; // Furhter processing required
-}
-
-boolean groupSend(final MyNotification n) {
-  if (n.groupNotification) {
-    sendGroupNotification(n);
-    return false; // No further processing required
-  }
-  return true; // Furhter processing required
-}
-</code></pre> 
-<p>You get the idea. With proper JavaDoc method headers, this code looks more maintainable.<br> We can push this a little further (as explored on <a href="https://stackoverflow.com/questions/69670736/how-to-apply-a-collection-of-filters-to-a-java-stream">Stackoverflow</a>). Imagin the number of process steps might vary and you don't want to update that code for every variation. You could do something like this:</p> 
-<pre><code class="language-java">final Stream&lt;MyNotification&gt; notifications = getNotifications();
-final Stream&lt;Predicate&lt;MyNotifications&gt;&gt; filters = getFilters();
-
-notifications
-  .filter(filters.reduce(f -&gt; true, Predicate::and))
-  .forEach(this::reportWrongNotification);
-</code></pre> 
-<p>As usual YMMV</p></div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 22 October 2021
-<span class="divider">|</span>
-<a href="/blog/2021/10/java-streams-filters-with-side-effects.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2021/10/java-streams-filters-with-side-effects.html";
 						</script>
 					</p></p>
 				</article>
