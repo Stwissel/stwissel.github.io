@@ -122,14 +122,14 @@ ga('send', 'pageview');
 					<div>Tim (we miss you) and <a href="https://www.linkedin.com/profile/view?id=16014400">Jesse</a> had the idea to store <a href="https://frostillic.us/f.nsf/posts/an-extended-document-data-source-to-support-mimebeans">beans in Mime documents</a>, which became an <a href="http://openntf.org/main.nsf/project.xsp?r=project/mimeDominoDocument%20Data%20Source/summary">OpenNTF project</a>. 
 <br> I love that idea and was musing how to make it more "domino like". In its binary format, a serialized bean can't be used for showing view data, nor can one be sure that it can be transported or deserialized other than through the same class version as the creator (this is why <code>Serialized</code> wants to have a serialid). 
 <br> With a little extra work, that becomes actually quite easy: Enter <a href="http://www.vogella.com/tutorials/JAXB/article.html">JAXB</a>. Serializing a bean to XML (I hear howling from the JSON camp) allows for a number of interesting options: 
-<ul> 
- <li>The MIME data generated in the document becomes human readable</li> 
- <li>If the class changes a litte de-serialization will still work, if it changes a lot it can be deserialized to an <a href="http://docs.oracle.com/javase/7/docs/api/org/w3c/dom/Document.html">XML Document</a></li> 
- <li>Values can be extracted using XPath to write them into the MIME header and/or regular Notes items - making it accessible for use in views</li> 
- <li>Since XML is text, full text search will capture the content</li> 
- <li>Using a stylesheet a fully human readable version can be stored with the original MIME (good to eMail)</li> 
+<ul>
+ <li>The MIME data generated in the document becomes human readable</li>
+ <li>If the class changes a litte de-serialization will still work, if it changes a lot it can be deserialized to an <a href="http://docs.oracle.com/javase/7/docs/api/org/w3c/dom/Document.html">XML Document</a></li>
+ <li>Values can be extracted using XPath to write them into the MIME header and/or regular Notes items - making it accessible for use in views</li>
+ <li>Since XML is text, full text search will capture the content</li>
+ <li>Using a stylesheet a fully human readable version can be stored with the original MIME (good to eMail)</li>
 </ul> I haven't sorted out the details, but lets look at some of the building blocks. Who ever has seen me demo XPages will recognize the fruit class. The difference here: I added the XML annotations for a successful serialization: 
-<br> 
+<br>
 <pre><code class="language-java">
 package test;
 
@@ -195,9 +195,9 @@ private String smell;
     }
 
 }
-</code></pre> 
+</code></pre>
 <br> The function (probably in a manager class or instance) to turn that into a Document is quite short. The serialization of JAXB would allow to directly serialize it into a Stream or String, but we need the XML Document step to be able to apply the XPath. 
-<br> 
+<br>
 <pre><code class="language-java">
 public org.w3c.dom.Document getDocument(Fruit fruit) throws ParserConfigurationException, JAXBException {
   DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -209,7 +209,7 @@ public org.w3c.dom.Document getDocument(Fruit fruit) throws ParserConfigurationE
   m.marshal(fruit, doc);
   return doc;
  }
-</code></pre> 
+</code></pre>
 <br> The little catch here: There is a Document in the <code>lotus.domino</code> package as well as in the <code>org.w3c.dom</code> package. You need to take care not to confuse the two. Saving it into a document including the style sheet (to make it pretty) is short too. The function provides the stylesheet as a w3c Document and the list of fields to extract as a key (the field) - value (the XPath) map. Something like this: 
 <br><pre><code class="language-java">
        public boolean saveFruitXmlToDocument(lotus.domino.Session session s, lotus.domino.Document d, org.w3c.dom.Document xDoc, org.w3c.dom.Document style) {
@@ -334,9 +334,9 @@ Transformer transformer = null;
         return out.toByteArray();
     }
 
-</code></pre> 
+</code></pre>
 <br> The final missing ingredient is the MagicNamespace: 
-<br> 
+<br>
 <pre><code class="language-java">
 package test;
 
@@ -414,9 +414,9 @@ public class MagicNamespaceContext implements NamespaceContext {
         return set.iterator();
     }
 }
-</code></pre> 
+</code></pre>
 <br> and of course a test: 
-<br> 
+<br>
 <pre><code class="language-java">
 package test;
 
@@ -459,7 +459,7 @@ public class InitialTest {
         d.recycle();
     }
 }
-</code></pre> 
+</code></pre>
 <br> Still work in progress, but you get the idea.</div>
 					<hr />
 					<p>

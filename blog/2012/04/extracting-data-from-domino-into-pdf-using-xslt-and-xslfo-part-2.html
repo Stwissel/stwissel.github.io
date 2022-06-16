@@ -134,49 +134,49 @@ ga('send', 'pageview');
 					<h1><small>Extracting data from Domino into PDF using XSLT and XSL:FO (Part 2)</small></h1>
 					<hr />
 					<div>This entry is part of the series <a href="/blog/htdocs/DominoXSLT">Domino, XSL:FO and XSLT</a> that dives into the use of <a href="http://www.w3.org/TR/xslt/">XSLT</a> and <a href="http://www.w3.org/TR/xsl/">XSL:FO</a> in <a href="http://www-01.ibm.com/software/lotus/products/domino/">IBM Lotus Domino</a>. 
-<br> 
+<br>
 <br> In <a href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-1.html">Part 1</a> I discussed the process of getting data from Domino to PDF using only open standards. In this part I want to start backwards: If I have valid XSL:FO, how do I get the PDF output? In a later installment I will discuss what XSL:FO is capable of and how to create it using XSLT. Finally I will discuss how to extract XML from your data source (Domino or others). 
 <br> I choose the backwards approach since it is easier to understand walking from the desired output towards a stylesheet than creating a stylesheet if the result isn't clear. Bear with me for this approach. 
 <br> I will use <a href="http://xmlgraphics.apache.org/fop/index.html">Apache FOP</a> as my rendering engine. The <a href="http://xmlgraphics.apache.org/fop/quickstartguide.html">Quickstart</a> compresses the needed steps neatly into 1-2-3 (pun intended): 
-<ol> 
- <li><b>Download</b><br>This is the easy part. Pick one of the <a href="http://www.apache.org/dyn/closer.cgi/xmlgraphics/fop">mirror servers</a> and get fop-1.0-bin.zip (24M) - check if you read this later if there is a newer version. Extract it to a directory of your choice, we will import/copy what we need from there</li> 
+<ol>
+ <li><b>Download</b><br>This is the easy part. Pick one of the <a href="http://www.apache.org/dyn/closer.cgi/xmlgraphics/fop">mirror servers</a> and get fop-1.0-bin.zip (24M) - check if you read this later if there is a newer version. Extract it to a directory of your choice, we will import/copy what we need from there</li>
  <li><b>Configure</b><br>You have choices: 
-  <ul> 
-   <li>copy the Fop files into jvm/lib/ext (bad idea)</li> 
-   <li>import it into an NSF (twice: once for agents, once for XPages)</li> 
-   <li>create a plug-in (good for sidebar and XPages, not good for agents)</li> 
-  </ul> Having coined the term <a href="/blog/2008/12/xagents-web-agents-xpages-style.html&quot;">XAgent</a> I will stick to the XPages version with import into the NSF. Time permitting I'll add a plug-in approach to this little series.</li> 
- <li><b>Run</b><br> The FOP website provides a good overview on <a href="http://xmlgraphics.apache.org/fop/1.0/embedding.html">general Java use</a> as well as <a href="http://xmlgraphics.apache.org/fop/1.0/servlets.html">servlet specifics</a>. Using that information as template it is not too hard to implement a managed bean that takes a XMLDocument and an optional Stylesheet and returns the rendered PDF as result </li> 
+  <ul>
+   <li>copy the Fop files into jvm/lib/ext (bad idea)</li>
+   <li>import it into an NSF (twice: once for agents, once for XPages)</li>
+   <li>create a plug-in (good for sidebar and XPages, not good for agents)</li>
+  </ul> Having coined the term <a href="/blog/2008/12/xagents-web-agents-xpages-style.html&quot;">XAgent</a> I will stick to the XPages version with import into the NSF. Time permitting I'll add a plug-in approach to this little series.</li>
+ <li><b>Run</b><br> The FOP website provides a good overview on <a href="http://xmlgraphics.apache.org/fop/1.0/embedding.html">general Java use</a> as well as <a href="http://xmlgraphics.apache.org/fop/1.0/servlets.html">servlet specifics</a>. Using that information as template it is not too hard to implement a managed bean that takes a XMLDocument and an optional Stylesheet and returns the rendered PDF as result </li>
 </ol> Since our output will be rendered by a managed bean, we need to configure it in the faces-config.xml: 
-<div class="xml"> <span class="sc3"><span class="re1">&lt;faces-config<span class="re2">&gt;</span></span></span> 
- <br> &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean<span class="re2">&gt;</span></span></span> 
- <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-name<span class="re2">&gt;</span></span></span>PDF <span class="sc3"><span class="re1">&lt;/managed-bean-name<span class="re2">&gt;</span></span></span> 
- <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-class<span class="re2">&gt;</span></span></span>com.notessensei.fop.PDFReport <span class="sc3"><span class="re1">&lt;/managed-bean-class<span class="re2">&gt;</span></span></span> 
- <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-scope<span class="re2">&gt;</span></span></span>session <span class="sc3"><span class="re1">&lt;/managed-bean-scope<span class="re2">&gt;</span></span></span> 
- <br> &nbsp; <span class="sc3"><span class="re1">&lt;/managed-bean<span class="re2">&gt;</span></span></span> 
- <br> <span class="sc3"><span class="re1">&lt;faces-config<span class="re2">&gt;</span></span></span> 
+<div class="xml"><span class="sc3"><span class="re1">&lt;faces-config<span class="re2">&gt;</span></span></span>
+ <br> &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean<span class="re2">&gt;</span></span></span>
+ <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-name<span class="re2">&gt;</span></span></span>PDF <span class="sc3"><span class="re1">&lt;/managed-bean-name<span class="re2">&gt;</span></span></span>
+ <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-class<span class="re2">&gt;</span></span></span>com.notessensei.fop.PDFReport <span class="sc3"><span class="re1">&lt;/managed-bean-class<span class="re2">&gt;</span></span></span>
+ <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-scope<span class="re2">&gt;</span></span></span>session <span class="sc3"><span class="re1">&lt;/managed-bean-scope<span class="re2">&gt;</span></span></span>
+ <br> &nbsp; <span class="sc3"><span class="re1">&lt;/managed-bean<span class="re2">&gt;</span></span></span>
+ <br><span class="sc3"><span class="re1">&lt;faces-config<span class="re2">&gt;</span></span></span>
 </div> The <a href="/blog/2008/12/xagents-web-agents-xpages-style.html">XAgent</a> follows the usual pattern: 
-<div class="javascript"> <span class="kw2">var</span> exCon <span class="sy0">=</span> facesContext. <span class="me1">getExternalContext</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> <span class="kw2">var</span> response <span class="sy0">=</span> exCon. <span class="me1">getResponse</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> <span class="kw2">var</span> out <span class="sy0">=</span> response. <span class="me1">getOutputStream</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> response. <span class="me1">setContentType</span> <span class="br0">(</span> <span class="st0">"application/pdf"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> response. <span class="me1">setHeader</span> <span class="br0">(</span> <span class="st0">"Content-disposition"</span> <span class="sy0">,</span> <span class="st0">"inline; filename=result.pdf"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> response. <span class="me1">setHeader</span> <span class="br0">(</span> <span class="st0">"Cache-Control"</span> <span class="sy0">,</span> <span class="st0">"no-cache"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> <span class="co1">// In this example the text in sessionScope.longText will be rendered</span> 
- <br> <span class="kw2">var</span> written <span class="sy0">=</span> sessionScope. <span class="me1">longText</span> <span class="sy0">!=</span> <span class="st0">""</span> <span class="sy0">?</span> <span class="st0">"&lt;text&gt;"</span> <span class="sy0">+</span>sessionScope. <span class="me1">longText</span> <span class="sy0">+</span> <span class="st0">"&lt;/text&gt;"</span> <span class="sy0">:</span> <span class="kw2">null</span> <span class="sy0">;</span> 
- <br> <span class="co1">// Writes the default rendering out</span> 
- <br> PDF. <span class="me1">fopReportFromString</span> <span class="br0">(</span>out <span class="sy0">,</span>written <span class="sy0">,</span> <span class="kw2">null</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> <span class="co1">// Stop the page from further processing;</span> 
- <br> facesContext. <span class="me1">responseComplete</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> out. <span class="kw3">close</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
+<div class="javascript"><span class="kw2">var</span> exCon <span class="sy0">=</span> facesContext. <span class="me1">getExternalContext</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br><span class="kw2">var</span> response <span class="sy0">=</span> exCon. <span class="me1">getResponse</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br><span class="kw2">var</span> out <span class="sy0">=</span> response. <span class="me1">getOutputStream</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> response. <span class="me1">setContentType</span><span class="br0">(</span><span class="st0">"application/pdf"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> response. <span class="me1">setHeader</span><span class="br0">(</span><span class="st0">"Content-disposition"</span><span class="sy0">,</span><span class="st0">"inline; filename=result.pdf"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> response. <span class="me1">setHeader</span><span class="br0">(</span><span class="st0">"Cache-Control"</span><span class="sy0">,</span><span class="st0">"no-cache"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br><span class="co1">// In this example the text in sessionScope.longText will be rendered</span>
+ <br><span class="kw2">var</span> written <span class="sy0">=</span> sessionScope. <span class="me1">longText</span><span class="sy0">!=</span><span class="st0">""</span><span class="sy0">?</span><span class="st0">"&lt;text&gt;"</span><span class="sy0">+</span>sessionScope. <span class="me1">longText</span><span class="sy0">+</span><span class="st0">"&lt;/text&gt;"</span><span class="sy0">:</span><span class="kw2">null</span><span class="sy0">;</span>
+ <br><span class="co1">// Writes the default rendering out</span>
+ <br> PDF. <span class="me1">fopReportFromString</span><span class="br0">(</span>out <span class="sy0">,</span>written <span class="sy0">,</span><span class="kw2">null</span><span class="br0">)</span><span class="sy0">;</span>
+ <br><span class="co1">// Stop the page from further processing;</span>
+ <br> facesContext. <span class="me1">responseComplete</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> out. <span class="kw3">close</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
 </div> To get the Java class working I needed to import: 
-<ol> 
- <li>avalon-framework-4.2.0.jar</li> 
- <li>batik-all-1.7.jar</li> 
- <li>commons-io-1.3.1.jar</li> 
- <li>fop.jar</li> 
- <li>serializer-2.7.0.jar</li> 
- <li>xmlgraphics-commons-1.4.jar</li> 
+<ol>
+ <li>avalon-framework-4.2.0.jar</li>
+ <li>batik-all-1.7.jar</li>
+ <li>commons-io-1.3.1.jar</li>
+ <li>fop.jar</li>
+ <li>serializer-2.7.0.jar</li>
+ <li>xmlgraphics-commons-1.4.jar</li>
 </ol> The <a href="/blog/downloads/2012/PDFReport.java">class for the PDFReport</a> contains just some wrapper code to render "FO" or "XML with XSLT" into a PDF. It is demo code, you want to add more robust error handling. Next stop: more about FO 
 <br> As usual YMMV.</div>
 					<hr />
@@ -205,7 +205,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 					<ol id="commentList">
 						<li>
 							posted by <b>Jeroen</b> on <i>Wednesday 14 August 2013 AD</i>:<br /> 
-  I have been using FO to make PDF's since Notes version 5. Nowadays it is a servlet which enables you to post either a document reference or the raw data. The hard work is not so much the (java) code. It is the XSLT!!���
+  I have been using FO to make PDF's since Notes version 5. Nowadays it is a servlet which enables you to post either a document reference or the raw data. The hard work is not so much the (java) code. It is the XSLT!!﻿
  
 							<hr style="clear : both" />
 						</li> 						<li>

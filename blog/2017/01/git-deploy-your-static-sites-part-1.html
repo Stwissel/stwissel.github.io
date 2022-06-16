@@ -125,18 +125,18 @@ ga('send', 'pageview');
 					<div>When you, in principal, like the idea to <a href="/blog/2017/01/serving-single-page-applications-with-domino.html">serve SPA from the http server</a>, you will encounter the pressing question: <strike> where do babies come from </strike> how to get your application deployed onto the http server? This applies to nodeJS applications too, but that is part of another story for another time. 
 <br> On <a href="https://console.ng.bluemix.net/">Bluemix</a> that's easy: just use a <a href="https://hub.jazz.net/docs/deploy/#example">Pipeline</a>. 
 <br> For mere mortal environments there are several options: 
-<ul> 
- <li>Just FTP them - insecure unless you use sftp/scp. Big pain here: deleting obsolete files</li> 
- <li>Setup rsync. When done with a ssh certificate can be reasonably automated. Same pain applies: deleting obsolete files</li> 
- <li>Use a <a href="https://git-scm.com/">GIT</a> based deployment. This is what I will discuss further</li> 
+<ul>
+ <li>Just FTP them - insecure unless you use sftp/scp. Big pain here: deleting obsolete files</li>
+ <li>Setup rsync. When done with a ssh certificate can be reasonably automated. Same pain applies: deleting obsolete files</li>
+ <li>Use a <a href="https://git-scm.com/">GIT</a> based deployment. This is what I will discuss further</li>
 </ul> I like a repository based deployment since it fits nicely into a development based workflow. The various git gui tools provide insight what has changed between releases and if things go wrong, you can roll back to a previous version or you can wipe data and reestablish them from the repository. Designing the flow, I considered the following constraints: 
-<ul> 
- <li>The repositories would sit on the web server</li> 
- <li>Typically a repository would sit in <code>.git</code> inside the site directory. While you could protect that with access control, I decided I don't want to have it in separate directories</li> 
- <li>When pushing to the <code>master</code> branch, the site should get updated, not on any other branch. You can extend my approach to push other branches to other sites - so you get a test/demo/staging capability</li> 
- <li>Setting up a new site should be fast and reliable (including https - but that's part 2)</li> 
+<ul>
+ <li>The repositories would sit on the web server</li>
+ <li>Typically a repository would sit in <code>.git</code> inside the site directory. While you could protect that with access control, I decided I don't want to have it in separate directories</li>
+ <li>When pushing to the <code>master</code> branch, the site should get updated, not on any other branch. You can extend my approach to push other branches to other sites - so you get a test/demo/staging capability</li>
+ <li>Setting up a new site should be fast and reliable (including https - but that's part 2)</li>
 </ul> The "secret" ingredients here are <a href="https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks#Server-Side-Hooks">git-hooks</a>, in specific the <code>post-receive</code>. Hooks, in a nutshell are shell scripts that are triggered by events that happen to a git environment. I got inspired by <a href="http://nicolasgallagher.com/simple-git-deployment-strategy-for-static-sites/">this entry</a> but wanted to automate the setup.So I devised the following shell script: 
-<br> 
+<br>
 <pre><code class="language-bash">
 # !/bin/bash
 # Script to establish a git driven static site
@@ -175,7 +175,7 @@ echo "    git --work-tree=$WEBROOT/$SITENAME checkout --force" &gt;&gt; $HOOKNAM
 echo "fi" &gt;&gt; $HOOKNAME
 chmod +x $HOOKNAME
 echo Done creation of $SITENAME
-</code></pre> 
+</code></pre>
 <br> You need to adjust the path variables to your environment. Next stop: <!-- a href="2017/01/git-deploy-your-static-sites-part-1.html"  -->Create the nginx site with SSL. 
 <br> As usual: YMMV</div>
 					<hr />

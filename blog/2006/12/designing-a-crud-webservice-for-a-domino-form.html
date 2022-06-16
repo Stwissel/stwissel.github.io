@@ -125,14 +125,14 @@ ga('send', 'pageview');
 					<div>Domino 7 allows you to create web services easily. You can start with a WSDL file and have Domino generate the Stub Classes for you or you start with the Class File and get a ready made WSDL file. Unfortunately both approaches require that you code quite a bit. Domino doesn't provide a ready baked set of SOAP web services out of the box. You do have a kind of REST web service using ?ReadViewEntries, but that is read ony. 
 <br> A very likely candidate for a web service is the creation, update and deletion of documents with a given form (commonly refered as CRUD). Domino allows you to store any field in a document, even if it hasn't been defined anywhere making it very flexible and so difficult to understand if you are used to an RDBMS. 
 <br> It would be fairly easy to design a web service (after <a href="http://www.nsftools.com/" target="_blank" title="Julian Robichaux">Julian</a> has enlightened you <a href="http://www-128.ibm.com/developerworks/lotus/library/web-services1/" target="_blank" title="Webservice article part 1/3 on developer works">here</a>, <a href="http://www-128.ibm.com/developerworks/lotus/library/web-services2/" target="_blank" title="Webservice article 2/3 on developer works">here</a> and <a href="http://www-128.ibm.com/developerworks/lotus/library/web-services3/" target="_blank" title="Webservice article part 3/3 on developer works">here</a>), that allows an arbitrary number of field value pairs to be stored in a document. However this would defeat the principle of clear cut interfaces. More appropriate is to limit the possible input to the input fields defined in a form and giving back all fields including the computed ones. How to get there? 
-<br> 
-<ol> 
- <li>Export a domino form as DXL</li> 
- <li>Transform the DXL into WSDL using XSLT</li> 
- <li>Import the WSDL into a Domino Web Service</li> 
+<br>
+<ol>
+ <li>Export a domino form as DXL</li>
+ <li>Transform the DXL into WSDL using XSLT</li>
+ <li>Import the WSDL into a Domino Web Service</li>
 </ol> Creating the WSDL file first instead of Webservice code has a number of reasons. First it follows the "contract first" programming patterns, where the WSDL file is the "contract" and code has to stick to that interface, secondly it allows you to decide whether to use LotusScript or Java to implement the service. Last not least: Currently you can't easily export/import a web service design element in DXL. 
 <br>Exporting the form's DXL and transforming it is done with a few lines of LotusScript. The "meat" is in the stylesheet. 
-<br> 
+<br>
 <style>.lotusscript { font-family: sans-serif; font-size: 9pt; color: black; }
 .ls-comment { color: green; }
 .ls-quote { color: black; }
@@ -143,94 +143,31 @@ ga('send', 'pageview');
 .ls-function { color: blue; }
 .ls-class { color: black; }
 .ls-constant { color: purple; }
-</style> 
+</style>
 <pre>
- 
- <div class="lotusscript">
+ <div class="lotusscript"><font class="ls-statement">Sub</font><font class="ls-keyword">Initialize</font><font class="ls-statement">Dim</font> db
 
-<font class="ls-statement">Sub</font>
+<font class="ls-keyword">As</font><font class="ls-class">NotesDatabase</font><font class="ls-statement">Dim</font> rt
 
-<font class="ls-keyword">Initialize</font>
+<font class="ls-keyword">As</font><font class="ls-class">NotesRichTextItem</font><font class="ls-statement">Dim</font> exporter
 
-<font class="ls-statement">Dim</font> db
+<font class="ls-keyword">As</font><font class="ls-class">NotesDXLExporter</font><font class="ls-statement">Dim</font> transformer
 
-<font class="ls-keyword">As</font>
+<font class="ls-keyword">As</font><font class="ls-class">NotesXSLTransformer</font><font class="ls-statement">Dim</font> result
 
-<font class="ls-class">NotesDatabase</font>
+<font class="ls-keyword">As</font><font class="ls-keyword">String</font><font class="ls-statement">Dim</font> stream
 
-<font class="ls-statement">Dim</font> rt
+<font class="ls-keyword">As</font><font class="ls-class">NotesStream</font><font class="ls-statement">Dim</font> filename
 
-<font class="ls-keyword">As</font>
+<font class="ls-keyword">As</font><font class="ls-keyword">String</font><font class="ls-statement">Dim</font> formname
 
-<font class="ls-class">NotesRichTextItem</font>
+<font class="ls-keyword">As</font><font class="ls-keyword">String</font><font class="ls-statement">Dim</font> f
 
-<font class="ls-statement">Dim</font> exporter
+<font class="ls-keyword">As</font><font class="ls-class">NotesForm</font><font class="ls-statement">Dim</font> ncol
 
-<font class="ls-keyword">As</font>
+<font class="ls-keyword">As</font><font class="ls-class">NotesNoteCollection</font><font class="ls-comment">'Setup envionment</font><font class="ls-statement">On</font><font class="ls-function">Error</font><font class="ls-statement">Resume</font><font class="ls-statement">Next</font><font class="ls-statement">Dim</font> s
 
-<font class="ls-class">NotesDXLExporter</font>
-
-<font class="ls-statement">Dim</font> transformer
-
-<font class="ls-keyword">As</font>
-
-<font class="ls-class">NotesXSLTransformer</font>
-
-<font class="ls-statement">Dim</font> result
-
-<font class="ls-keyword">As</font>
-
-<font class="ls-keyword">String</font>
-
-<font class="ls-statement">Dim</font> stream
-
-<font class="ls-keyword">As</font>
-
-<font class="ls-class">NotesStream</font>
-
-<font class="ls-statement">Dim</font> filename
-
-<font class="ls-keyword">As</font>
-
-<font class="ls-keyword">String</font>
-
-<font class="ls-statement">Dim</font> formname
-
-<font class="ls-keyword">As</font>
-
-<font class="ls-keyword">String</font>
-
-<font class="ls-statement">Dim</font> f
-
-<font class="ls-keyword">As</font>
-
-<font class="ls-class">NotesForm</font>
-
-<font class="ls-statement">Dim</font> ncol
-
-<font class="ls-keyword">As</font>
-
-<font class="ls-class">NotesNoteCollection</font>
-
-<font class="ls-comment">'Setup envionment</font>
-
-<font class="ls-statement">On</font>
-
-<font class="ls-function">Error</font>
-
-<font class="ls-statement">Resume</font>
-
-<font class="ls-statement">Next</font>
-
-<font class="ls-statement">Dim</font> s
-
-<font class="ls-keyword">As</font>
-
-<font class="ls-keyword">New</font>
-
-<font class="ls-class">NotesSession</font>
-
-<font class="ls-statement">Set</font> db
+<font class="ls-keyword">As</font><font class="ls-keyword">New</font><font class="ls-class">NotesSession</font><font class="ls-statement">Set</font> db
 
 <font class="ls-operator">=</font> s
 
@@ -239,52 +176,12 @@ ga('send', 'pageview');
 <font class="ls-comment">'Get the source and destination</font>
 formname
 
-<font class="ls-operator">=</font>
-
-<font class="ls-function">Inputbox</font>
-
-<font class="ls-operator">(</font>
-
-<font class="ls-quote">"Please select the form name to export"</font>
-
-<font class="ls-operator">,</font>
-
-<font class="ls-quote">"DXL export"</font>
-
-<font class="ls-operator">,</font>
-
-<font class="ls-quote">"Memo"</font>
-
-<font class="ls-operator">)</font>
+<font class="ls-operator">=</font><font class="ls-function">Inputbox</font><font class="ls-operator">(</font><font class="ls-quote">"Please select the form name to export"</font><font class="ls-operator">,</font><font class="ls-quote">"DXL export"</font><font class="ls-operator">,</font><font class="ls-quote">"Memo"</font><font class="ls-operator">)</font>
 filename
 
-<font class="ls-operator">=</font>
+<font class="ls-operator">=</font><font class="ls-function">Inputbox</font><font class="ls-operator">(</font><font class="ls-quote">"Please select your destination file"</font><font class="ls-operator">,</font><font class="ls-quote">"DXL export"</font><font class="ls-operator">,</font><font class="ls-quote">"C:\temp\"</font><font class="ls-operator">+</font>formname
 
-<font class="ls-function">Inputbox</font>
-
-<font class="ls-operator">(</font>
-
-<font class="ls-quote">"Please select your destination file"</font>
-
-<font class="ls-operator">,</font>
-
-<font class="ls-quote">"DXL export"</font>
-
-<font class="ls-operator">,</font>
-
-<font class="ls-quote">"C:\temp\"</font>
-
-<font class="ls-operator">+</font>formname
-
-<font class="ls-operator">+</font>
-
-<font class="ls-quote">"wsdl"</font>
-
-<font class="ls-operator">)</font>
-
-<font class="ls-comment">'Retrieve the form -- will crash if the form name isn't valid</font>
-
-<font class="ls-statement">Set</font> f
+<font class="ls-operator">+</font><font class="ls-quote">"wsdl"</font><font class="ls-operator">)</font><font class="ls-comment">'Retrieve the form -- will crash if the form name isn't valid</font><font class="ls-statement">Set</font> f
 
 <font class="ls-operator">=</font> db
 
@@ -292,35 +189,23 @@ filename
 
 <font class="ls-operator">(</font>formname
 
-<font class="ls-operator">)</font>
-
-<font class="ls-statement">Set</font> ncol
+<font class="ls-operator">)</font><font class="ls-statement">Set</font> ncol
 
 <font class="ls-operator">=</font> db
 
 <font class="ls-operator">.</font>CreateNoteCollection
 
-<font class="ls-operator">(</font>
-
-<font class="ls-constant">False</font>
-
-<font class="ls-operator">)</font>
-
-<font class="ls-function">Call</font> ncol
+<font class="ls-operator">(</font><font class="ls-constant">False</font><font class="ls-operator">)</font><font class="ls-function">Call</font> ncol
 
 <font class="ls-operator">.</font>Add
 
 <font class="ls-operator">(</font>f
 
-<font class="ls-operator">)</font>
-
-<font class="ls-function">Call</font> ncol
+<font class="ls-operator">)</font><font class="ls-function">Call</font> ncol
 
 <font class="ls-operator">.</font>BuildCollection
 
-<font class="ls-comment">REM create the file</font>
-
-<font class="ls-statement">Set</font> stream
+<font class="ls-comment">REM create the file</font><font class="ls-statement">Set</font> stream
 
 <font class="ls-operator">=</font> s
 
@@ -328,21 +213,13 @@ filename
 
 <font class="ls-function">Call</font> stream
 
-<font class="ls-operator">.</font>
+<font class="ls-operator">.</font><font class="ls-function">Open</font><font class="ls-operator">(</font>filename
 
-<font class="ls-function">Open</font>
-
-<font class="ls-operator">(</font>filename
-
-<font class="ls-operator">)</font>
-
-<font class="ls-function">Call</font> stream
+<font class="ls-operator">)</font><font class="ls-function">Call</font> stream
 
 <font class="ls-operator">.</font>Truncate
 
-<font class="ls-comment">REM Export current database design as DXL into a new Notes document </font>
-
-<font class="ls-statement">Set</font> exporter
+<font class="ls-comment">REM Export current database design as DXL into a new Notes document </font><font class="ls-statement">Set</font> exporter
 
 <font class="ls-operator">=</font> s
 
@@ -360,92 +237,54 @@ filename
 
 <font class="ls-operator">(</font>ncol
 
-<font class="ls-operator">)</font>
-
-<font class="ls-function">Call</font> exporter
+<font class="ls-operator">)</font><font class="ls-function">Call</font> exporter
 
 <font class="ls-operator">.</font>SetOutput
 
 <font class="ls-operator">(</font>transformer
 
-<font class="ls-operator">)</font>
-
-<font class="ls-function">Call</font> transformer
+<font class="ls-operator">)</font><font class="ls-function">Call</font> transformer
 
 <font class="ls-operator">.</font>setOutput
 
 <font class="ls-operator">(</font>stream
 
-<font class="ls-operator">)</font>
-
-<font class="ls-function">Call</font> transformer
+<font class="ls-operator">)</font><font class="ls-function">Call</font> transformer
 
 <font class="ls-operator">.</font>SetStylesheet
 
-<font class="ls-operator">(</font>
-
-<font class="ls-quote">"C:\temp\Form2wsdl.xslt"</font>
-
-<font class="ls-operator">)</font>
+<font class="ls-operator">(</font><font class="ls-quote">"C:\temp\Form2wsdl.xslt"</font><font class="ls-operator">)</font>
 exporter
 
 <font class="ls-operator">.</font>ExitOnFirstFatalError
 
-<font class="ls-operator">=</font>
-
-<font class="ls-constant">False</font>
-
-<font class="ls-function">Print</font>
-
-<font class="ls-quote">"Conversion runs"</font>
-
-<font class="ls-function">Call</font> exporter
+<font class="ls-operator">=</font><font class="ls-constant">False</font><font class="ls-function">Print</font><font class="ls-quote">"Conversion runs"</font><font class="ls-function">Call</font> exporter
 
 <font class="ls-operator">.</font>Process
 
-<font class="ls-function">Print</font>
-
-<font class="ls-quote">"Conversion completed"</font>
+<font class="ls-function">Print</font><font class="ls-quote">"Conversion completed"</font>
 result
 
 <font class="ls-operator">=</font> exporter
 
-<font class="ls-operator">.</font>
+<font class="ls-operator">.</font><font class="ls-function">log</font><font class="ls-function">Call</font> stream
 
-<font class="ls-function">log</font>
+<font class="ls-operator">.</font><font class="ls-function">Close</font><font class="ls-function">Beep</font><font class="ls-function">Msgbox</font><font class="ls-operator">(</font>result
 
-<font class="ls-function">Call</font> stream
-
-<font class="ls-operator">.</font>
-
-<font class="ls-function">Close</font>
-
-<font class="ls-function">Beep</font>
-
-<font class="ls-function">Msgbox</font>
-
-<font class="ls-operator">(</font>result
-
-<font class="ls-operator">)</font>
-
-<font class="ls-statement">End</font>
-
-<font class="ls-statement">Sub</font>
-
- 
- </div></pre> 
-<div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;"> 
+<font class="ls-operator">)</font><font class="ls-statement">End</font><font class="ls-statement">Sub</font>
+ </div></pre>
+<div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;">
  <center>
    This LotusScript was converted to HTML using the <b><i>ls2html</i></b> routine, 
   <br>provided by Julian Robichaux at <a href="http://www.nsftools.com" target="_blank">nsftools.com</a>. 
- </center> 
-</div> To plan the XSLT you need to get an idea what is inside the WSDL file. The <a href="http://www.w3.org/TR/wsdl" target="_blank" title="The offfical WSDL definition">official definition</a> is rather difficult to digest, so you might want to go for some <a href="http://en.wikipedia.org/wiki/WSDL" target="_blank" title="What Wikipedia has to say about WSDL">alternate</a> <a href="http://xml.coverpages.org/wsdl.html" title="XMl Coverpages on Web services" target="_blank"> descriptions</a> or a <a href="http://www.w3schools.com/wsdl/default.asp" target="_blank" title="A short WSDL tutorial">tutorial first</a>. 
-<br> 
+ </center>
+</div> To plan the XSLT you need to get an idea what is inside the WSDL file. The <a href="http://www.w3.org/TR/wsdl" target="_blank" title="The offfical WSDL definition">official definition</a> is rather difficult to digest, so you might want to go for some <a href="http://en.wikipedia.org/wiki/WSDL" target="_blank" title="What Wikipedia has to say about WSDL">alternate</a><a href="http://xml.coverpages.org/wsdl.html" title="XMl Coverpages on Web services" target="_blank"> descriptions</a> or a <a href="http://www.w3schools.com/wsdl/default.asp" target="_blank" title="A short WSDL tutorial">tutorial first</a>. 
+<br>
 <br> A WSDL file consist of definitions for datatypes, messages, portTypes, bindings and service. To implement the CRUD Webservice we need to focus on the datatypes. The messages, portTypes and the service will follow the data type structure. 
-<br> 
+<br>
 <br> To simplify matters I will use the form alias and the field names to build a custom XML datastructure. Field names in Domino are suitable to be used as XML Tags, form names might or might not be suitable. I presume you will use some sensible alias (no spaces, no funny characters) otherwise that example won't work. First we setup the basic structure of the WSDL file to hold our results in the root tag of the XSLT file: 
-<br> 
-<br> 
+<br>
+<br>
 <pre>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;wsdl:definitions targetNamespace="urn:DefaultNamespace" xmlns="http://schemas.xmlsoap.org/wsdl/"
     xmlns:apachesoap="http://xml.apache.org/xml-soap" xmlns:impl="urn:DefaultNamespace"
@@ -486,11 +325,11 @@ result
     &lt;/wsdl:service&gt;
 &lt;/wsdl:definitions&gt;
 </pre> Now you need to gain access to the fields in a form. Looking at the DXL you see, that fields can be at any level of the DXL document. To get access to the fields you need a suitable XPath expression. Luckily that is easy: <b>&lt;xsl:apply-templates select="//a:field" /&gt;</b>. There are a number of decisions you have to make when designing the WSDL files. I'm not sure if my set (in brackets below) makes sense, so I leave that open to discussion: 
-<ul> 
- <li>Name the document "document" or use the form name (form name)</li> 
- <li>Use primitive data types, one set of custom data types or individual data types for all fields (individual data types)</li> 
- <li>Name the SOAP actions same for all documents like getDocument, saveDocument etc. or use the form name like get[formName], save[FormName] etc (use form name)</li> 
- <li>Return only a status code or return the document including computed fields (return document with computed fields)</li> 
+<ul>
+ <li>Name the document "document" or use the form name (form name)</li>
+ <li>Use primitive data types, one set of custom data types or individual data types for all fields (individual data types)</li>
+ <li>Name the SOAP actions same for all documents like getDocument, saveDocument etc. or use the form name like get[formName], save[FormName] etc (use form name)</li>
+ <li>Return only a status code or return the document including computed fields (return document with computed fields)</li>
 </ul> The full XSLT is available in the <a href="/blog/downloads" target="_top">downloads section</a>. Get it, try it and let me know how it goes. 
 <br> Next stop: generate the LotusScript. 
 <br></div>

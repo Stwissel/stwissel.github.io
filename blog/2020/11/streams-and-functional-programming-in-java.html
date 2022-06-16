@@ -119,16 +119,16 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Streams and Functional programming in Java</small></h1>
 					<hr />
-					<div><p>I'm late to the party embracing <a href="https://www.baeldung.com/java-8-streams">Streams</a> and <a href="https://www.baeldung.com/java-8-functional-interfaces">functional interfaces</a> in Java. Using them for a while taught me the beauty and how things fit together nicely</p> 
-<h3>Moving parts</h3> 
-<ul> 
- <li>At the beginning a class implementing the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html">Stream interface</a> emits items, that can be manipulated using <code>map</code> and <code>filter</code> operationf</li> 
- <li>The map and filter operations are supported by the Interfaces in <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/package-summary.html">java.util.function</a> (we get to the samples later)</li> 
- <li>At the end the result gets "collected", in its simplest form using <code>.forEach</code> or, more sophisticated using a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html">Collector</a> with many <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collectors.html">ready baked options</a></li> 
-</ul> 
-<h3>What's the big deal?</h3> 
-<p>short answer: clean, terse and clutter free code.</p> 
-<p>long answer: an example. Lets say you have a <code>mammal</code> class which gets subclassed by <code>cat</code> and <code>dog</code> (and others). You have a collection of these mamals and need to extract all dogs over weight 50. Weight is not a property of mammal. There might be null values in your collection. Classic code would look like this:</p> 
+					<div><p>I'm late to the party embracing <a href="https://www.baeldung.com/java-8-streams">Streams</a> and <a href="https://www.baeldung.com/java-8-functional-interfaces">functional interfaces</a> in Java. Using them for a while taught me the beauty and how things fit together nicely</p>
+<h3>Moving parts</h3>
+<ul>
+ <li>At the beginning a class implementing the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html">Stream interface</a> emits items, that can be manipulated using <code>map</code> and <code>filter</code> operationf</li>
+ <li>The map and filter operations are supported by the Interfaces in <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/package-summary.html">java.util.function</a> (we get to the samples later)</li>
+ <li>At the end the result gets "collected", in its simplest form using <code>.forEach</code> or, more sophisticated using a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html">Collector</a> with many <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collectors.html">ready baked options</a></li>
+</ul>
+<h3>What's the big deal?</h3>
+<p>short answer: clean, terse and clutter free code.</p>
+<p>long answer: an example. Lets say you have a <code>mammal</code> class which gets subclassed by <code>cat</code> and <code>dog</code> (and others). You have a collection of these mamals and need to extract all dogs over weight 50. Weight is not a property of mammal. There might be null values in your collection. Classic code would look like this:</p>
 <pre><code class="language-java">List&lt;Dog&gt; getHeavyDogs(final List&lt;Mammal&gt; mammals) {
     List&lt;Dog&gt; result = new ArrayList&lt;&gt;();
     for (int i = 0; i &lt; mammals.size(); i++) {
@@ -141,8 +141,8 @@ ga('send', 'pageview');
     }
     return result;
   }
-</code></pre> 
-<p>We all seen this type of code. In a functional and stream style this would look different. We have a little <a href="https://en.wikipedia.org/wiki/Duck_typing">duck typing</a> going on here. When a method looks like a functional interface, it can be used as this function. E.g. a method that takes one value and returns a boolean can be used as a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/Predicate.html">Predicate</a>, which comes in handy for filter operations. Another nifty syntax: you can address methods, both static and instance using the <code>::</code> (double colon) syntax. So when you could use a lambda <code>x -&gt; this.doSomething(x)</code> you can simply write <code>this::doSomething</code> and the compiler will sort it out (<code>System.out::println</code> anyone?)</p><p>Rewriting our example turns out like this:</p> 
+</code></pre>
+<p>We all seen this type of code. In a functional and stream style this would look different. We have a little <a href="https://en.wikipedia.org/wiki/Duck_typing">duck typing</a> going on here. When a method looks like a functional interface, it can be used as this function. E.g. a method that takes one value and returns a boolean can be used as a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/Predicate.html">Predicate</a>, which comes in handy for filter operations. Another nifty syntax: you can address methods, both static and instance using the <code>::</code> (double colon) syntax. So when you could use a lambda <code>x -&gt; this.doSomething(x)</code> you can simply write <code>this::doSomething</code> and the compiler will sort it out (<code>System.out::println</code> anyone?)</p><p>Rewriting our example turns out like this:</p>
 <pre><code class="language-java">List&lt;Dog&gt; getHeavyDogs(final List&lt;Mammal&gt; mammals) {
     return mammals.stream()
         .filter(Objects::nonNull)
@@ -151,18 +151,18 @@ ga('send', 'pageview');
         .filter(dog -&gt; dog.weight() &gt; 50)
         .collect(Collectors.toList());
   }
-</code></pre> 
-<p>Much cleaner, and it's Java without curly brackets. You could even skip the line with <code>Objects::nonNull</code> since <code>class::isInstance</code> always returns false for null values. I kept it here to introduce <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Objects.html">Objects</a>, a neat helper class.</p> 
-<p>Lets break it down:</p> 
-<ul> 
- <li><code>mammals.stream()</code> provides a stream of mammal instances</li> 
- <li><code>.filter(Objects::nonNull)</code> uses a static method to clear out <code>null</code> values</li> 
- <li><code>.filter(Dog.class::isInstance)</code> only items that are Dog instances get through</li> 
- <li><code>.map(Dog.class::cast)</code> cast the <code>mammal</code> into a dog. You are not limited by casts, any function can be used</li> 
- <li><code>.filter(dog -&gt; dog.weight() &gt; 50)</code> filter out the heavy dogs</li> 
- <li><code>.collect(Collectors.toList());</code> put the result into a list</li> 
-</ul> 
-<p>The DominoJNX API makes heavy use of streams, but that's another story for another time. There's more to functional interfaces, streams and collectors (sums, groups, computations etc), so never stop learning!</p> 
+</code></pre>
+<p>Much cleaner, and it's Java without curly brackets. You could even skip the line with <code>Objects::nonNull</code> since <code>class::isInstance</code> always returns false for null values. I kept it here to introduce <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Objects.html">Objects</a>, a neat helper class.</p>
+<p>Lets break it down:</p>
+<ul>
+ <li><code>mammals.stream()</code> provides a stream of mammal instances</li>
+ <li><code>.filter(Objects::nonNull)</code> uses a static method to clear out <code>null</code> values</li>
+ <li><code>.filter(Dog.class::isInstance)</code> only items that are Dog instances get through</li>
+ <li><code>.map(Dog.class::cast)</code> cast the <code>mammal</code> into a dog. You are not limited by casts, any function can be used</li>
+ <li><code>.filter(dog -&gt; dog.weight() &gt; 50)</code> filter out the heavy dogs</li>
+ <li><code>.collect(Collectors.toList());</code> put the result into a list</li>
+</ul>
+<p>The DominoJNX API makes heavy use of streams, but that's another story for another time. There's more to functional interfaces, streams and collectors (sums, groups, computations etc), so never stop learning!</p>
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>

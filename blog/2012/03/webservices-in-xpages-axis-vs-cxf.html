@@ -120,128 +120,128 @@ ga('send', 'pageview');
 					<h1><small>Webservices in XPages - AXIS vs. CXF</small></h1>
 					<hr />
 					<div>I wrote about using <a href="http://axis.apache.org/axis/">Apache AXIS</a> to connect to a web service <a href="/blog/2011/01/apache-axis-and-sharepoint-webservices.html">before</a>. It worked like a charm when you import the AXIS library into the NSF. In the past few days I tried to move this code into an extension library and I had initially very little success. Here is what I tried and what finally worked: 
-<br> 
-<ol> 
- <li>The AXIS libraries are provided as a plug-in in the Domino server, so my first take was to declare a dependency in my plug-in to that plug-in. To successfully create a Extension Library I had to declare dependencies to <code>com.ibm.commons</code> and <code>com.ibm.xsp.core</code> to be able to extend <code>com.ibm.commons.Extension</code>. Unfortunately the plug-ins expose Java commons logging, so the classloader complaint and didn't load the AXIS classes</li> 
- <li>Second attempt was to split the code into two plug-ins: one that depended on the AXIS plug-in and another one that depended on the former and <code>com.ibm.commons</code> and <code>com.ibm.xsp.core</code>. This didn't yield any better result</li> 
- <li>3rd test was to import the AXIS jars into a plug-in and only depend on <code>com.ibm.commons</code> and <code>com.ibm.xsp.core</code> but not the AXIS plug-in. Didn't work either</li> 
- <li>Finally I tried to switch from AXIS to the newer and more flexible <a href="http://cxf.apache.org/">Apache CXF</a>. CXF is able to provide transport over many protocols, not only SOAP and REST but JMS and others too. Initially I felt it was too complex for my little requirement, especially since the list of jar dependencies is quite long.<br> Turns out CXF is the optimal solution. I used CXF 2.5.2 and the provided <a href="http://cxf.apache.org/docs/wsdl-to-java.html">wsdl2java</a> utility. The command line I used is <code>[path-to-cxf-install]/bin/wsdl2java -frontend jaxws21 -client your.wsdl</code>. The <code>-client</code> parameter is optional, but generates a nice sample client that shows the call parameters for all web service methods.<br> I found I either need to include the WSDL file in the jar or point to the URL where the WSDL file is available online to get CXF to run. Now for the best part: <b>All</b> dependencies including CXF are available in Domino (I tested on 8.5.3), so other than the Java code generated I didn't had to import, depend etc. on anything (it actually might work even in a Java agent). So CXF is the way to go.</li> 
-</ol> <b>Update</b>: As <a href="">Bernd</a> pointed out in the comments, it is important to update the permissions ( [Notes program directroy]/jvm/lib/security/java.policy ): 
-<br> <code><b>grant { <br> permission java.lang.RuntimePermission "setContextClassLoader"; <br> permission java.lang.reflect.ReflectPermission "suppressAccessChecks"; <br>};</b></code> 
+<br>
+<ol>
+ <li>The AXIS libraries are provided as a plug-in in the Domino server, so my first take was to declare a dependency in my plug-in to that plug-in. To successfully create a Extension Library I had to declare dependencies to <code>com.ibm.commons</code> and <code>com.ibm.xsp.core</code> to be able to extend <code>com.ibm.commons.Extension</code>. Unfortunately the plug-ins expose Java commons logging, so the classloader complaint and didn't load the AXIS classes</li>
+ <li>Second attempt was to split the code into two plug-ins: one that depended on the AXIS plug-in and another one that depended on the former and <code>com.ibm.commons</code> and <code>com.ibm.xsp.core</code>. This didn't yield any better result</li>
+ <li>3rd test was to import the AXIS jars into a plug-in and only depend on <code>com.ibm.commons</code> and <code>com.ibm.xsp.core</code> but not the AXIS plug-in. Didn't work either</li>
+ <li>Finally I tried to switch from AXIS to the newer and more flexible <a href="http://cxf.apache.org/">Apache CXF</a>. CXF is able to provide transport over many protocols, not only SOAP and REST but JMS and others too. Initially I felt it was too complex for my little requirement, especially since the list of jar dependencies is quite long.<br> Turns out CXF is the optimal solution. I used CXF 2.5.2 and the provided <a href="http://cxf.apache.org/docs/wsdl-to-java.html">wsdl2java</a> utility. The command line I used is <code>[path-to-cxf-install]/bin/wsdl2java -frontend jaxws21 -client your.wsdl</code>. The <code>-client</code> parameter is optional, but generates a nice sample client that shows the call parameters for all web service methods.<br> I found I either need to include the WSDL file in the jar or point to the URL where the WSDL file is available online to get CXF to run. Now for the best part: <b>All</b> dependencies including CXF are available in Domino (I tested on 8.5.3), so other than the Java code generated I didn't had to import, depend etc. on anything (it actually might work even in a Java agent). So CXF is the way to go.</li>
+</ol><b>Update</b>: As <a href="">Bernd</a> pointed out in the comments, it is important to update the permissions ( [Notes program directroy]/jvm/lib/security/java.policy ): 
+<br><code><b>grant { <br> permission java.lang.RuntimePermission "setContextClassLoader"; <br> permission java.lang.reflect.ReflectPermission "suppressAccessChecks"; <br>};</b></code>
 <br>For testing I used a <a href="http://services.aonaware.com/DictService/DictService.asmx?WSDL">dictionary service</a> that returns the definitions found for a given word. My class (the part I had to write myself) is rather short: 
-<div class="java"> <span class="kw1">package</span> <span class="co2">demo</span> <span class="sy0">;</span> 
- <br> 
- <br> <span class="kw1">import</span> <span class="co2">java.io.ByteArrayOutputStream</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">java.io.IOException</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">java.io.OutputStream</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">java.io.OutputStreamWriter</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">java.net.URL</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">java.util.List</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">javax.xml.namespace.QName</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">com.aonaware.services.webservices.Definition</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">com.aonaware.services.webservices.DictService</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">com.aonaware.services.webservices.DictServiceSoap</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">com.aonaware.services.webservices.WordDefinition</span> <span class="sy0">;</span> 
- <br> 
- <br> <span class="kw1">public</span> <span class="kw1">class</span> Dict2Test <span class="br0">{</span> 
- <br> &nbsp; &nbsp; <span class="kw1">public</span> <span class="kw1">final</span> <span class="kw1">static</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> WORD_TO_LOOK_FOR <span class="sy0">=</span> <span class="st0">"Trust"</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; <span class="kw1">public</span> <span class="kw1">final</span> <span class="kw1">static</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> WSDL_URL <span class="sy0">=</span> <span class="st0">"http://services.aonaware.com/DictService/DictService.asmx?WSDL"</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; <span class="kw1">public</span> <span class="kw1">static</span> <span class="kw1">final</span> QName SERVICE_NAME <span class="sy0">=</span> <span class="kw1">new</span> QName <span class="br0">(</span> <span class="st0">"http://services.aonaware.com/webservices/"</span>, <span class="st0">"DictService"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> 
- <br> &nbsp; &nbsp; <span class="kw1">public</span> <span class="kw1">static</span> <span class="kw4">void</span> main <span class="br0">(</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> <span class="br0">[</span> <span class="br0">]</span> args <span class="br0">)</span> <span class="kw1">throws</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aioexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">IOException</span></a> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; Dict2Test dt <span class="sy0">=</span> <span class="kw1">new</span> Dict2Test <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Abytearrayoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">ByteArrayOutputStream</span></a> out <span class="sy0">=</span> <span class="kw1">new</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Abytearrayoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">ByteArrayOutputStream</span></a> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; dt. <span class="me1">getWordInfo</span> <span class="br0">(</span>out, WORD_TO_LOOK_FOR <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Asystem+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">System</span></a>. <span class="me1">out</span>. <span class="me1">println</span> <span class="br0">(</span>out. <span class="me1">toString</span> <span class="br0">(</span> <span class="br0">)</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; <span class="br0">}</span> 
- <br> 
- <br> &nbsp; &nbsp; <span class="kw1">public</span> <span class="kw4">void</span> getWordInfo <span class="br0">(</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">OutputStream</span></a> out, <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> theWord <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aoutputstreamwriter+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">OutputStreamWriter</span></a> w <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; DictService ds <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; DictServiceSoap dss <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; w <span class="sy0">=</span> <span class="kw1">new</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aoutputstreamwriter+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">OutputStreamWriter</span></a> <span class="br0">(</span>out <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">try</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ds <span class="sy0">=</span> <span class="kw1">new</span> DictService <span class="br0">(</span> <span class="kw1">new</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aurl+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">URL</span></a> <span class="br0">(</span>WSDL_URL <span class="br0">)</span>,SERVICE_NAME <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dss <span class="sy0">=</span> ds. <span class="me1">getDictServiceSoap</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; WordDefinition wd <span class="sy0">=</span> dss. <span class="me1">define</span> <span class="br0">(</span>theWord <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; List <span class="sy0">&lt;</span>Definition <span class="sy0">&gt;</span> allDef <span class="sy0">=</span> wd. <span class="me1">getDefinitions</span> <span class="br0">(</span> <span class="br0">)</span>. <span class="me1">getDefinition</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span>allDef. <span class="me1">isEmpty</span> <span class="br0">(</span> <span class="br0">)</span> <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span> <span class="br0">(</span> <span class="st0">"&lt;h1&gt;No definition found for "</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span> <span class="br0">(</span>theWord <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span> <span class="br0">(</span> <span class="st0">"&lt;/h1&gt;<span class="es0">\n</span>"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw1">else</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span> <span class="br0">(</span> <span class="st0">"&lt;h1&gt;You were looking for: "</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span> <span class="br0">(</span>theWord <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span> <span class="br0">(</span> <span class="st0">"&lt;/h1&gt;<span class="es0">\n</span>&lt;ul&gt;"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">for</span> <span class="br0">(</span>Definition oneD <span class="sy0">:</span> allDef <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span> <span class="br0">(</span> <span class="st0">"<span class="es0">\n</span>&lt;li&gt;"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span> <span class="br0">(</span>oneD. <span class="me1">getWordDefinition</span> <span class="br0">(</span> <span class="br0">)</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span> <span class="br0">(</span> <span class="st0">"&lt;/li&gt;"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span> <span class="br0">(</span> <span class="st0">"<span class="es0">\n</span>&lt;/ul&gt;"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw1">catch</span> <span class="br0">(</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Exception</span></a> e <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">try</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span> <span class="br0">(</span> <span class="st0">"&lt;h1&gt;"</span> <span class="sy0">+</span> e. <span class="me1">getMessage</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">+</span> <span class="st0">"&lt;/h1&gt;"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw1">catch</span> <span class="br0">(</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aioexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">IOException</span></a> e1 <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e1. <span class="me1">printStackTrace</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw1">finally</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">try</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">close</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw1">catch</span> <span class="br0">(</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aioexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">IOException</span></a> ex <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ex. <span class="me1">printStackTrace</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> 
- <br> &nbsp; &nbsp; <span class="br0">}</span> 
- <br> <span class="br0">}</span> 
+<div class="java"><span class="kw1">package</span><span class="co2">demo</span><span class="sy0">;</span>
+ <br>
+ <br><span class="kw1">import</span><span class="co2">java.io.ByteArrayOutputStream</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">java.io.IOException</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">java.io.OutputStream</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">java.io.OutputStreamWriter</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">java.net.URL</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">java.util.List</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">javax.xml.namespace.QName</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">com.aonaware.services.webservices.Definition</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">com.aonaware.services.webservices.DictService</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">com.aonaware.services.webservices.DictServiceSoap</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">com.aonaware.services.webservices.WordDefinition</span><span class="sy0">;</span>
+ <br>
+ <br><span class="kw1">public</span><span class="kw1">class</span> Dict2Test <span class="br0">{</span>
+ <br> &nbsp; &nbsp; <span class="kw1">public</span><span class="kw1">final</span><span class="kw1">static</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> WORD_TO_LOOK_FOR <span class="sy0">=</span><span class="st0">"Trust"</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; <span class="kw1">public</span><span class="kw1">final</span><span class="kw1">static</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> WSDL_URL <span class="sy0">=</span><span class="st0">"http://services.aonaware.com/DictService/DictService.asmx?WSDL"</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; <span class="kw1">public</span><span class="kw1">static</span><span class="kw1">final</span> QName SERVICE_NAME <span class="sy0">=</span><span class="kw1">new</span> QName <span class="br0">(</span><span class="st0">"http://services.aonaware.com/webservices/"</span>, <span class="st0">"DictService"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br>
+ <br> &nbsp; &nbsp; <span class="kw1">public</span><span class="kw1">static</span><span class="kw4">void</span> main <span class="br0">(</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a><span class="br0">[</span><span class="br0">]</span> args <span class="br0">)</span><span class="kw1">throws</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aioexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">IOException</span></a><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; Dict2Test dt <span class="sy0">=</span><span class="kw1">new</span> Dict2Test <span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Abytearrayoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">ByteArrayOutputStream</span></a> out <span class="sy0">=</span><span class="kw1">new</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Abytearrayoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">ByteArrayOutputStream</span></a><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; dt. <span class="me1">getWordInfo</span><span class="br0">(</span>out, WORD_TO_LOOK_FOR <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Asystem+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">System</span></a>. <span class="me1">out</span>. <span class="me1">println</span><span class="br0">(</span>out. <span class="me1">toString</span><span class="br0">(</span><span class="br0">)</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+ <br> &nbsp; &nbsp; <span class="kw1">public</span><span class="kw4">void</span> getWordInfo <span class="br0">(</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aoutputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">OutputStream</span></a> out, <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> theWord <span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aoutputstreamwriter+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">OutputStreamWriter</span></a> w <span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; DictService ds <span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; DictServiceSoap dss <span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; w <span class="sy0">=</span><span class="kw1">new</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aoutputstreamwriter+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">OutputStreamWriter</span></a><span class="br0">(</span>out <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">try</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ds <span class="sy0">=</span><span class="kw1">new</span> DictService <span class="br0">(</span><span class="kw1">new</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aurl+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">URL</span></a><span class="br0">(</span>WSDL_URL <span class="br0">)</span>,SERVICE_NAME <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dss <span class="sy0">=</span> ds. <span class="me1">getDictServiceSoap</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; WordDefinition wd <span class="sy0">=</span> dss. <span class="me1">define</span><span class="br0">(</span>theWord <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; List <span class="sy0">&lt;</span>Definition <span class="sy0">&gt;</span> allDef <span class="sy0">=</span> wd. <span class="me1">getDefinitions</span><span class="br0">(</span><span class="br0">)</span>. <span class="me1">getDefinition</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span>allDef. <span class="me1">isEmpty</span><span class="br0">(</span><span class="br0">)</span><span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span><span class="br0">(</span><span class="st0">"&lt;h1&gt;No definition found for "</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span><span class="br0">(</span>theWord <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span><span class="br0">(</span><span class="st0">"&lt;/h1&gt;<span class="es0">\n</span>"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw1">else</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span><span class="br0">(</span><span class="st0">"&lt;h1&gt;You were looking for: "</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span><span class="br0">(</span>theWord <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span><span class="br0">(</span><span class="st0">"&lt;/h1&gt;<span class="es0">\n</span>&lt;ul&gt;"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">for</span><span class="br0">(</span>Definition oneD <span class="sy0">:</span> allDef <span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span><span class="br0">(</span><span class="st0">"<span class="es0">\n</span>&lt;li&gt;"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span><span class="br0">(</span>oneD. <span class="me1">getWordDefinition</span><span class="br0">(</span><span class="br0">)</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span><span class="br0">(</span><span class="st0">"&lt;/li&gt;"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span><span class="br0">(</span><span class="st0">"<span class="es0">\n</span>&lt;/ul&gt;"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw1">catch</span><span class="br0">(</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Exception</span></a> e <span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">try</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">append</span><span class="br0">(</span><span class="st0">"&lt;h1&gt;"</span><span class="sy0">+</span> e. <span class="me1">getMessage</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">+</span><span class="st0">"&lt;/h1&gt;"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw1">catch</span><span class="br0">(</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aioexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">IOException</span></a> e1 <span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e1. <span class="me1">printStackTrace</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw1">finally</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">try</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; w. <span class="me1">close</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw1">catch</span><span class="br0">(</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aioexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">IOException</span></a> ex <span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ex. <span class="me1">printStackTrace</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br> &nbsp; &nbsp; <span class="br0">}</span>
+ <br><span class="br0">}</span>
 </div> To test the class I defined it as a managed bean in <code>faces-config.xml</code>: 
-<div class="xml"> <span class="sc3"><span class="re1">&lt;managed-bean<span class="re2">&gt;</span></span></span> 
- <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-name<span class="re2">&gt;</span></span></span>dictionary <span class="sc3"><span class="re1">&lt;/managed-bean-name<span class="re2">&gt;</span></span></span> 
- <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-class<span class="re2">&gt;</span></span></span>demo.Dict2Test <span class="sc3"><span class="re1">&lt;/managed-bean-class<span class="re2">&gt;</span></span></span> 
- <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-scope<span class="re2">&gt;</span></span></span>request <span class="sc3"><span class="re1">&lt;/managed-bean-scope<span class="re2">&gt;</span></span></span> 
- <br> <span class="sc3"><span class="re1">&lt;/managed-bean<span class="re2">&gt;</span></span></span> 
+<div class="xml"><span class="sc3"><span class="re1">&lt;managed-bean<span class="re2">&gt;</span></span></span>
+ <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-name<span class="re2">&gt;</span></span></span>dictionary <span class="sc3"><span class="re1">&lt;/managed-bean-name<span class="re2">&gt;</span></span></span>
+ <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-class<span class="re2">&gt;</span></span></span>demo.Dict2Test <span class="sc3"><span class="re1">&lt;/managed-bean-class<span class="re2">&gt;</span></span></span>
+ <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-scope<span class="re2">&gt;</span></span></span>request <span class="sc3"><span class="re1">&lt;/managed-bean-scope<span class="re2">&gt;</span></span></span>
+ <br><span class="sc3"><span class="re1">&lt;/managed-bean<span class="re2">&gt;</span></span></span>
 </div> and created an <a href="blog/d6plinks/shwl-7mgfbn">XAgent</a> with the following codein the BeforeRenderResponse event: 
-<div class="javascript"> <span class="kw2">var</span> proceedWithBeanCall <span class="sy0">=</span> <span class="kw2">true</span> <span class="sy0">;</span> 
- <br> <span class="kw2">var</span> x <span class="sy0">=</span> context. <span class="me1">getUrlParameter</span> <span class="br0">(</span> <span class="st0">"word"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> 
- <br> <span class="kw1">if</span> <span class="br0">(</span>x <span class="sy0">==</span> <span class="kw2">null</span> <span class="sy0">||</span> x <span class="sy0">==</span> <span class="st0">""</span> <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; x <span class="sy0">=</span> <span class="st0">"Parameter [word] missing, use ..XAgentDemo4?word=somevalue"</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; proceedWithBeanCall <span class="sy0">=</span> <span class="kw2">false</span> <span class="sy0">;</span> 
- <br> <span class="br0">}</span> 
- <br> 
- <br> <span class="co1">// The external context and the response object</span> 
- <br> <span class="kw2">var</span> exCon <span class="sy0">=</span> facesContext. <span class="me1">getExternalContext</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> <span class="kw2">var</span> response <span class="sy0">=</span> exCon. <span class="me1">getResponse</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> 
- <br> <span class="co1">// Deliver uncached result</span> 
- <br> response. <span class="me1">setContentType</span> <span class="br0">(</span> <span class="st0">"text/html"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> response. <span class="me1">setHeader</span> <span class="br0">(</span> <span class="st0">"Cache-Control"</span> <span class="sy0">,</span> <span class="st0">"no-cache"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> 
- <br> <span class="co1">// The Output Stream for Binary Output</span> 
- <br> <span class="kw2">var</span> out <span class="sy0">=</span> response. <span class="me1">getOutputStream</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> 
- <br> <span class="kw1">if</span> <span class="br0">(</span>proceedWithBeanCall <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; <span class="kw1">try</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dictionary. <span class="me1">getWordInfo</span> <span class="br0">(</span>out <span class="sy0">,</span> x <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw1">catch</span> <span class="br0">(</span>innerErr <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; x <span class="sy0">=</span> innerErr. <span class="me1">message</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; proceedWithBeanCall <span class="sy0">=</span> <span class="kw2">false</span> <span class="sy0">;</span> 
+<div class="javascript"><span class="kw2">var</span> proceedWithBeanCall <span class="sy0">=</span><span class="kw2">true</span><span class="sy0">;</span>
+ <br><span class="kw2">var</span> x <span class="sy0">=</span> context. <span class="me1">getUrlParameter</span><span class="br0">(</span><span class="st0">"word"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br>
+ <br><span class="kw1">if</span><span class="br0">(</span>x <span class="sy0">==</span><span class="kw2">null</span><span class="sy0">||</span> x <span class="sy0">==</span><span class="st0">""</span><span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; x <span class="sy0">=</span><span class="st0">"Parameter [word] missing, use ..XAgentDemo4?word=somevalue"</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; proceedWithBeanCall <span class="sy0">=</span><span class="kw2">false</span><span class="sy0">;</span>
+ <br><span class="br0">}</span>
+ <br>
+ <br><span class="co1">// The external context and the response object</span>
+ <br><span class="kw2">var</span> exCon <span class="sy0">=</span> facesContext. <span class="me1">getExternalContext</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br><span class="kw2">var</span> response <span class="sy0">=</span> exCon. <span class="me1">getResponse</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br>
+ <br><span class="co1">// Deliver uncached result</span>
+ <br> response. <span class="me1">setContentType</span><span class="br0">(</span><span class="st0">"text/html"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> response. <span class="me1">setHeader</span><span class="br0">(</span><span class="st0">"Cache-Control"</span><span class="sy0">,</span><span class="st0">"no-cache"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br>
+ <br><span class="co1">// The Output Stream for Binary Output</span>
+ <br><span class="kw2">var</span> out <span class="sy0">=</span> response. <span class="me1">getOutputStream</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br>
+ <br><span class="kw1">if</span><span class="br0">(</span>proceedWithBeanCall <span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; <span class="kw1">try</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dictionary. <span class="me1">getWordInfo</span><span class="br0">(</span>out <span class="sy0">,</span> x <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw1">catch</span><span class="br0">(</span>innerErr <span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; x <span class="sy0">=</span> innerErr. <span class="me1">message</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; proceedWithBeanCall <span class="sy0">=</span><span class="kw2">false</span><span class="sy0">;</span>
  <br> &nbsp; &nbsp; &nbsp; <span class="br0">}</span>&nbsp; 
- <br> <span class="br0">}</span> 
- <br> 
- <br> <span class="kw1">if</span> <span class="br0">(</span> <span class="sy0">!</span>proceedWithBeanCall <span class="br0">)</span> <span class="br0">{</span>&nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw2">var</span> w <span class="sy0">=</span> <span class="kw2">new</span> java. <span class="me1">io</span>. <span class="me1">OutputStreamWriter</span> <span class="br0">(</span>out <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; w. <span class="kw1">write</span> <span class="br0">(</span> <span class="st0">"&lt;h1&gt;Didn't work the way we wanted!&lt;/h1&gt;<span class="es0">\n</span>"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; w. <span class="kw1">write</span> <span class="br0">(</span> <span class="st0">"&lt;h2&gt;"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; w. <span class="kw1">write</span> <span class="br0">(</span>x <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; w. <span class="kw1">write</span> <span class="br0">(</span> <span class="st0">"&lt;/h2&gt;<span class="es0">\n</span>"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; w. <span class="kw3">close</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> <span class="br0">}</span> 
- <br> 
- <br> <span class="co1">// Done</span> 
- <br> facesContext. <span class="me1">responseComplete</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> out. <span class="kw3">close</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br><span class="br0">}</span>
+ <br>
+ <br><span class="kw1">if</span><span class="br0">(</span><span class="sy0">!</span>proceedWithBeanCall <span class="br0">)</span><span class="br0">{</span>&nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; <span class="kw2">var</span> w <span class="sy0">=</span><span class="kw2">new</span> java. <span class="me1">io</span>. <span class="me1">OutputStreamWriter</span><span class="br0">(</span>out <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; w. <span class="kw1">write</span><span class="br0">(</span><span class="st0">"&lt;h1&gt;Didn't work the way we wanted!&lt;/h1&gt;<span class="es0">\n</span>"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; w. <span class="kw1">write</span><span class="br0">(</span><span class="st0">"&lt;h2&gt;"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; w. <span class="kw1">write</span><span class="br0">(</span>x <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; w. <span class="kw1">write</span><span class="br0">(</span><span class="st0">"&lt;/h2&gt;<span class="es0">\n</span>"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; w. <span class="kw3">close</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br><span class="br0">}</span>
+ <br>
+ <br><span class="co1">// Done</span>
+ <br> facesContext. <span class="me1">responseComplete</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> out. <span class="kw3">close</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
 </div> Note the signature of the working method. By using the output stream as a parameter the function can be easily tested outside of XPages (see the main() function in the class) as well as integrated into XPages (the approach is called <a href="http://en.wikipedia.org/wiki/Dependency_injection">dependency injection</a>). 
 <br> As usual: YMMV</div>
 					<hr />

@@ -120,18 +120,18 @@ ga('send', 'pageview');
 					<h1><small>Reader fields (again)</small></h1>
 					<hr />
 					<div>Reader Fields and <a href="/blog/2009/02/workflow-and-document-access.html" title="Workflow and Document Access">how to handle them</a> to balance security and performance is a <a href="/blog/2008/10/access-protected-notes-documents-rdbms-style.html" title="Access protected Notes documents - RDBMS style">never ending topic</a>. Let us have a a closer look what actually happens. Let us assume we have a view with 500,000 document, where a particular user has access to 77 documents (which is not so uncommon in big organizations). In the first case the view is sorted by some criteria (case number, date or whatever) that scatters the 70 documents all over the database. 
-<br> 
-<img src="/blog/images/2009/ReaderProtectionScattered.png" alt="ReaderProtectionScattered.png"> 
+<br>
+<img src="/blog/images/2009/ReaderProtectionScattered.png" alt="ReaderProtectionScattered.png">
 <br> When the user e.g. opens that view from the web requesting the default 25 entries, the Domino server actually will more than 350,000 documents. It needs to instantiate a document object and evaluate access control rules for it. These are costly (read time and memory) operations. Performance will not meet any user expectation. Ironically this is hardly discovered by developers since they test with a few hundred documents and very often have universal access. With a little change of the view layout, the situation changes completely. We take the same view but categorize it by e.g. by @Unique(DocAuthors:DocReaders) which would list all documents for a specific reader (remember: an Author field includes Read Access Rights). 
-<br> 
-<img src="/blog/images/2009/ReaderProtectionCategorized.png" alt="ReaderProtectionCategorized.png"> 
+<br>
+<img src="/blog/images/2009/ReaderProtectionCategorized.png" alt="ReaderProtectionCategorized.png">
 <br> Now the Domino Server does an index search which is very fast going after a build index and reads exactly 25 documents. So with a little change in the view layout we removed 99.9929% of the document reads (bad news for hardware sellers). Looks good.... but you will say: wait a second. One user can have read access because her name is in a Reader/Author field, she might be member of a group or have a specific role, the single category only will show me <b>one</b> of that entries at a time.And you are right. To cover that a little more work is needed. There are two approaches to handle this problem. The first is from a functional angle, the second one involved code. The functional angle: The various reasons why a users can read a document typically translate into a business functionality. First there are "My Documents". That would be all the documents where a user is explicitly named for being the requestor, approver, reviewer etc., Then there are e.g. Revision Documents where the users has the role [Revisor] or Audit Document where the user has the role [Audit]. And then there are the documents that belong to my department, which translates into a group name. To reflect that in an UI you need to populate a dropdown box with the human values in the UI and the technical value in als result. And voila single category access will work. A UI could look like this: 
-<br> 
-<img src="/blog/images/2009/ApprovalCentral.png" alt="ApprovalCentral.png"> 
+<br>
+<img src="/blog/images/2009/ApprovalCentral.png" alt="ApprovalCentral.png">
 <br>(UI created with <a href="http://www.balsamiq.com/products/mockups">Balsamic Mockups</a>). I have tested this variation over-and-over by giving users both options and monitoring what they choose: access by business role as described here or (see below) flat anything. Business users pick the business role access in a high 90% range of cases for their daily work. 
 <br> The <b>code version</b>: Create a $$ViewTemplate for your view. Do not add a $$ViewBody field (or the embedded view element). Add a RichText field "Body" and a webQueryOpen agent. That wqo agent writes into that body field which effectively becomes our view display. For creative minds: you are not limited by a table display. The agent looks up all Roles/Groups/Names of the current user by leveraging @UserNameList and makes one call to getViewEntriesByKey. The trick here: a) use ViewEntries not Documents b) have the UNID in one column and use a LotusScript list not to output a document twice c) use a sorting Dojo Table to get the stuff sorted (optional). The nice side effect of the agent: you can output as many lines as you deem fit. 
 <br> Some sample code: 
-<br> 
+<br>
 <style>.lotusscript { font-family: sans-serif; font-size: 9pt; color: black; }
 .ls-comment { color: green; }
 .ls-quote { color: black; }
@@ -142,36 +142,15 @@ ga('send', 'pageview');
 .ls-function { color: blue; }
 .ls-class { color: black; }
 .ls-constant { color: purple; }
-</style> 
+</style>
 <pre>
- 
- <div class="lotusscript">
-
-  <font class="ls-statement">Sub</font>
+ <div class="lotusscript"><font class="ls-statement">Sub</font><font class="ls-keyword">Initialize</font><font class="ls-statement">Dim</font> s
   
-  <font class="ls-keyword">Initialize</font>
- 
-  <font class="ls-statement">Dim</font> s
+  <font class="ls-keyword">As</font><font class="ls-keyword">New</font><font class="ls-class">NotesSession</font><font class="ls-statement">Dim</font> doc
   
-  <font class="ls-keyword">As</font>
+  <font class="ls-keyword">As</font><font class="ls-class">NotesDocument</font><font class="ls-statement">Dim</font> db
   
-  <font class="ls-keyword">New</font>
-  
-  <font class="ls-class">NotesSession</font>
- 
-  <font class="ls-statement">Dim</font> doc
-  
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-class">NotesDocument</font>
- 
-  <font class="ls-statement">Dim</font> db
-  
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-class">NotesDatabase</font>
- 
-  <font class="ls-statement">Set</font> doc
+  <font class="ls-keyword">As</font><font class="ls-class">NotesDatabase</font><font class="ls-statement">Set</font> doc
   
   <font class="ls-operator">=</font> s
   
@@ -185,72 +164,34 @@ ga('send', 'pageview');
  
   <font class="ls-statement">Dim</font> rt
   
-  <font class="ls-keyword">As</font>
+  <font class="ls-keyword">As</font><font class="ls-class">NotesRichTextItem</font><font class="ls-statement">Set</font> rt
   
-  <font class="ls-class">NotesRichTextItem</font>
- 
-  <font class="ls-statement">Set</font> rt
+  <font class="ls-operator">=</font><font class="ls-keyword">New</font><font class="ls-class">NotesRichTextItem</font><font class="ls-operator">(</font>doc
   
-  <font class="ls-operator">=</font>
-  
-  <font class="ls-keyword">New</font>
-  
-  <font class="ls-class">NotesRichTextItem</font>
-  
-  <font class="ls-operator">(</font>doc
-  
-  <font class="ls-operator">,</font>
-  
-  <font class="ls-quote">"Body"</font>
-  
-  <font class="ls-operator">)</font>
- 
-  <font class="ls-function">Call</font> test1
+  <font class="ls-operator">,</font><font class="ls-quote">"Body"</font><font class="ls-operator">)</font><font class="ls-function">Call</font> test1
   
   <font class="ls-operator">(</font>doc
   
   <font class="ls-operator">,</font> rt
   
-  <font class="ls-operator">)</font>
+  <font class="ls-operator">)</font><font class="ls-comment">'Just one test</font><font class="ls-statement">Dim</font> v
   
-  <font class="ls-comment">'Just one test</font>
- 
-  <font class="ls-statement">Dim</font> v
+  <font class="ls-keyword">As</font><font class="ls-class">NotesView</font><font class="ls-statement">Dim</font> catList
   
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-class">NotesView</font>
- 
-  <font class="ls-statement">Dim</font> catList
-  
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-keyword">Variant</font>
- 
-  <font class="ls-statement">Set</font> v
+  <font class="ls-keyword">As</font><font class="ls-keyword">Variant</font><font class="ls-statement">Set</font> v
   
   <font class="ls-operator">=</font> db
   
   <font class="ls-operator">.</font>GetView
   
-  <font class="ls-operator">(</font>
-  
-  <font class="ls-quote">"catByAccess"</font>
-  
-  <font class="ls-operator">)</font>
+  <font class="ls-operator">(</font><font class="ls-quote">"catByAccess"</font><font class="ls-operator">)</font>
  catList
   
   <font class="ls-operator">=</font> doc
   
   <font class="ls-operator">.</font>GetItemValue
   
-  <font class="ls-operator">(</font>
-  
-  <font class="ls-quote">"UserNameList"</font>
-  
-  <font class="ls-operator">)</font>
- 
-  <font class="ls-function">Call</font> RenderViewToRT
+  <font class="ls-operator">(</font><font class="ls-quote">"UserNameList"</font><font class="ls-operator">)</font><font class="ls-function">Call</font> RenderViewToRT
   
   <font class="ls-operator">(</font>v
   
@@ -258,123 +199,49 @@ ga('send', 'pageview');
   
   <font class="ls-operator">,</font> catList
   
-  <font class="ls-operator">)</font>
-
-  <font class="ls-statement">End</font>
-  
-  <font class="ls-statement">Sub</font>
-
- 
+  <font class="ls-operator">)</font><font class="ls-statement">End</font><font class="ls-statement">Sub</font>
  </div>
-
- 
- <div class="lotusscript">
-
-  <font class="ls-statement">Sub</font> RenderViewToRT
+ <div class="lotusscript"><font class="ls-statement">Sub</font> RenderViewToRT
   
   <font class="ls-operator">(</font>v
   
-  <font class="ls-keyword">As</font>
+  <font class="ls-keyword">As</font><font class="ls-class">NotesView</font><font class="ls-operator">,</font> rt
   
-  <font class="ls-class">NotesView</font>
+  <font class="ls-keyword">As</font><font class="ls-class">NotesRichTextItem</font><font class="ls-operator">,</font> catList
   
-  <font class="ls-operator">,</font> rt
+  <font class="ls-keyword">As</font><font class="ls-keyword">Variant</font><font class="ls-operator">)</font><font class="ls-comment">'catlist is an array with the list of categories to lookup</font><font class="ls-statement">Dim</font> i
   
-  <font class="ls-keyword">As</font>
+  <font class="ls-keyword">As</font><font class="ls-keyword">Integer</font><font class="ls-statement">Dim</font> k
   
-  <font class="ls-class">NotesRichTextItem</font>
+  <font class="ls-keyword">As</font><font class="ls-keyword">Integer</font><font class="ls-statement">Dim</font> m
   
-  <font class="ls-operator">,</font> catList
+  <font class="ls-keyword">As</font><font class="ls-keyword">Integer</font><font class="ls-statement">Dim</font> vec
   
-  <font class="ls-keyword">As</font>
+  <font class="ls-keyword">As</font><font class="ls-class">NotesViewEntryCollection</font><font class="ls-statement">Dim</font> ve
   
-  <font class="ls-keyword">Variant</font>
+  <font class="ls-keyword">As</font><font class="ls-class">NotesViewEntry</font><font class="ls-statement">Dim</font> colVals
   
-  <font class="ls-operator">)</font>
- 
-  <font class="ls-comment">'catlist is an array with the list of categories to lookup</font>
- 
-  <font class="ls-statement">Dim</font> i
+  <font class="ls-keyword">As</font><font class="ls-keyword">Variant</font><font class="ls-statement">Dim</font> curVal
   
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-keyword">Integer</font>
- 
-  <font class="ls-statement">Dim</font> k
-  
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-keyword">Integer</font>
- 
-  <font class="ls-statement">Dim</font> m
-  
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-keyword">Integer</font>
- 
-  <font class="ls-statement">Dim</font> vec
-  
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-class">NotesViewEntryCollection</font>
- 
-  <font class="ls-statement">Dim</font> ve
-  
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-class">NotesViewEntry</font>
- 
-  <font class="ls-statement">Dim</font> colVals
-  
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-keyword">Variant</font>
- 
-  <font class="ls-statement">Dim</font> curVal
-  
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-keyword">Variant</font>
- 
-  <font class="ls-statement">On</font>
-  
-  <font class="ls-function">Error</font>
-  
-  <font class="ls-keyword">Goto</font> Err_RenderViewToRT
+  <font class="ls-keyword">As</font><font class="ls-keyword">Variant</font><font class="ls-statement">On</font><font class="ls-function">Error</font><font class="ls-keyword">Goto</font> Err_RenderViewToRT
  
   <font class="ls-function">Call</font> rt
   
   <font class="ls-operator">.</font>AppendText
   
-  <font class="ls-operator">(</font>
-  
-  <font class="ls-quote">|&lt;table class="data"&gt;|</font>
-  
-  <font class="ls-operator">)</font>
- 
-  <font class="ls-function">Call</font> rt
+  <font class="ls-operator">(</font><font class="ls-quote">|&lt;table class="data"&gt;|</font><font class="ls-operator">)</font><font class="ls-function">Call</font> rt
   
   <font class="ls-operator">.</font>AddNewline
   
   <font class="ls-operator">(</font>1
   
-  <font class="ls-operator">)</font>
- 
-  <font class="ls-comment">'One lookup at a time</font>
- 
-  <font class="ls-statement">For</font> i
+  <font class="ls-operator">)</font><font class="ls-comment">'One lookup at a time</font><font class="ls-statement">For</font> i
   
   <font class="ls-operator">=</font> 0
   
-  <font class="ls-statement">To</font>
+  <font class="ls-statement">To</font><font class="ls-function">Ubound</font><font class="ls-operator">(</font>catList
   
-  <font class="ls-function">Ubound</font>
-  
-  <font class="ls-operator">(</font>catList
-  
-  <font class="ls-operator">)</font>
-  
-  <font class="ls-statement">Step</font> 1
+  <font class="ls-operator">)</font><font class="ls-statement">Step</font> 1
   
   <font class="ls-statement">Set</font> vec
   
@@ -386,53 +253,25 @@ ga('send', 'pageview');
   
   <font class="ls-operator">(</font>i
   
-  <font class="ls-operator">)</font>
-  
-  <font class="ls-operator">)</font>
-  
-  <font class="ls-statement">If</font> vec
+  <font class="ls-operator">)</font><font class="ls-operator">)</font><font class="ls-statement">If</font> vec
   
   <font class="ls-operator">.</font>Count
   
   <font class="ls-operator">&gt;</font> 0
   
-  <font class="ls-statement">Then</font>
-   
-  <font class="ls-function">Call</font> rt
+  <font class="ls-statement">Then</font><font class="ls-function">Call</font> rt
   
   <font class="ls-operator">.</font>AppendText
   
-  <font class="ls-operator">(</font>
-  
-  <font class="ls-quote">|&lt;tr class="success"&gt;&lt;td colspan="7"&gt;|</font>
-  
-  <font class="ls-operator">+</font>
-  
-  <font class="ls-function">Cstr</font>
-  
-  <font class="ls-operator">(</font>vec
+  <font class="ls-operator">(</font><font class="ls-quote">|&lt;tr class="success"&gt;&lt;td colspan="7"&gt;|</font><font class="ls-operator">+</font><font class="ls-function">Cstr</font><font class="ls-operator">(</font>vec
   
   <font class="ls-operator">.</font>Count
   
-  <font class="ls-operator">)</font>
-  
-  <font class="ls-operator">+</font>
-  
-  <font class="ls-quote">| entries found for |</font>
-  
-  <font class="ls-operator">+</font>catList
+  <font class="ls-operator">)</font><font class="ls-operator">+</font><font class="ls-quote">| entries found for |</font><font class="ls-operator">+</font>catList
   
   <font class="ls-operator">(</font>i
   
-  <font class="ls-operator">)</font>
-  
-  <font class="ls-operator">+</font>
-  
-  <font class="ls-quote">|&lt;/td&gt;&lt;/tr&gt;|</font>
-  
-  <font class="ls-operator">)</font>
-   
-  <font class="ls-statement">Set</font> ve
+  <font class="ls-operator">)</font><font class="ls-operator">+</font><font class="ls-quote">|&lt;/td&gt;&lt;/tr&gt;|</font><font class="ls-operator">)</font><font class="ls-statement">Set</font> ve
   
   <font class="ls-operator">=</font> vec
   
@@ -440,35 +279,21 @@ ga('send', 'pageview');
    
   <font class="ls-statement">Do</font> Until ve
   
-  <font class="ls-operator">Is</font>
-  
-  <font class="ls-constant">Nothing</font>
-    
-  <font class="ls-function">Call</font> rt
+  <font class="ls-operator">Is</font><font class="ls-constant">Nothing</font><font class="ls-function">Call</font> rt
   
   <font class="ls-operator">.</font>AppendText
   
-  <font class="ls-operator">(</font>
-  
-  <font class="ls-quote">|&lt;tr&gt;|</font>
-  
-  <font class="ls-operator">)</font>    
+  <font class="ls-operator">(</font><font class="ls-quote">|&lt;tr&gt;|</font><font class="ls-operator">)</font>    
     
   <font class="ls-statement">For</font> k
   
   <font class="ls-operator">=</font> 0
   
-  <font class="ls-statement">To</font>
-  
-  <font class="ls-function">Ubound</font>
-  
-  <font class="ls-operator">(</font>ve
+  <font class="ls-statement">To</font><font class="ls-function">Ubound</font><font class="ls-operator">(</font>ve
   
   <font class="ls-operator">.</font>ColumnValues
   
-  <font class="ls-operator">)</font>
-  
-  <font class="ls-statement">Step</font> 1
+  <font class="ls-operator">)</font><font class="ls-statement">Step</font> 1
      colVals
   
   <font class="ls-operator">=</font> ve
@@ -477,41 +302,19 @@ ga('send', 'pageview');
   
   <font class="ls-operator">(</font>k
   
-  <font class="ls-operator">)</font>
-     
-  <font class="ls-function">Call</font> rt
+  <font class="ls-operator">)</font><font class="ls-function">Call</font> rt
   
   <font class="ls-operator">.</font>AppendText
   
-  <font class="ls-operator">(</font>
+  <font class="ls-operator">(</font><font class="ls-quote">"&lt;td&gt;"</font><font class="ls-operator">)</font><font class="ls-statement">If</font><font class="ls-function">Isarray</font><font class="ls-operator">(</font>colVals
   
-  <font class="ls-quote">"&lt;td&gt;"</font>
-  
-  <font class="ls-operator">)</font>
-     
-  <font class="ls-statement">If</font>
-  
-  <font class="ls-function">Isarray</font>
-  
-  <font class="ls-operator">(</font>colVals
-  
-  <font class="ls-operator">)</font>
-  
-  <font class="ls-statement">Then</font>
-      
-  <font class="ls-statement">For</font> m
+  <font class="ls-operator">)</font><font class="ls-statement">Then</font><font class="ls-statement">For</font> m
   
   <font class="ls-operator">=</font> 0
   
-  <font class="ls-statement">To</font>
+  <font class="ls-statement">To</font><font class="ls-function">Ubound</font><font class="ls-operator">(</font>colVals
   
-  <font class="ls-function">Ubound</font>
-  
-  <font class="ls-operator">(</font>colVals
-  
-  <font class="ls-operator">)</font>
-       
-  <font class="ls-function">Call</font> rt
+  <font class="ls-operator">)</font><font class="ls-function">Call</font> rt
   
   <font class="ls-operator">.</font>AppendText
   
@@ -519,25 +322,13 @@ ga('send', 'pageview');
   
   <font class="ls-operator">(</font>m
   
-  <font class="ls-operator">)</font>
-  
-  <font class="ls-operator">)</font>
-       
-  <font class="ls-function">Call</font> rt
+  <font class="ls-operator">)</font><font class="ls-operator">)</font><font class="ls-function">Call</font> rt
   
   <font class="ls-operator">.</font>AppendText
   
-  <font class="ls-operator">(</font>
-  
-  <font class="ls-quote">"&lt;br /&gt;"</font>
-  
-  <font class="ls-operator">)</font> 
+  <font class="ls-operator">(</font><font class="ls-quote">"&lt;br /&gt;"</font><font class="ls-operator">)</font> 
       
-  <font class="ls-statement">Next</font>
-      
-  <font class="ls-statement">Else</font>
-      
-  <font class="ls-function">Call</font> rt
+  <font class="ls-statement">Next</font><font class="ls-statement">Else</font><font class="ls-function">Call</font> rt
   
   <font class="ls-operator">.</font>AppendText
   
@@ -545,31 +336,15 @@ ga('send', 'pageview');
   
   <font class="ls-operator">)</font>      
      
-  <font class="ls-statement">End</font>
-  
-  <font class="ls-statement">If</font>
-     
-  <font class="ls-function">Call</font> rt
+  <font class="ls-statement">End</font><font class="ls-statement">If</font><font class="ls-function">Call</font> rt
   
   <font class="ls-operator">.</font>AppendText
   
-  <font class="ls-operator">(</font>
-  
-  <font class="ls-quote">"&lt;/td&gt;"</font>
-  
-  <font class="ls-operator">)</font>
-    
-  <font class="ls-statement">Next</font>
-    
-  <font class="ls-function">Call</font> rt
+  <font class="ls-operator">(</font><font class="ls-quote">"&lt;/td&gt;"</font><font class="ls-operator">)</font><font class="ls-statement">Next</font><font class="ls-function">Call</font> rt
   
   <font class="ls-operator">.</font>AppendText
   
-  <font class="ls-operator">(</font>
-  
-  <font class="ls-quote">|&lt;/tr&gt;|</font>
-  
-  <font class="ls-operator">)</font>    
+  <font class="ls-operator">(</font><font class="ls-quote">|&lt;/tr&gt;|</font><font class="ls-operator">)</font>    
     
   <font class="ls-statement">Set</font> ve
   
@@ -579,51 +354,19 @@ ga('send', 'pageview');
   
   <font class="ls-operator">(</font>ve
   
-  <font class="ls-operator">)</font>
-   
-  <font class="ls-statement">Loop</font>
-  
-  <font class="ls-statement">Else</font>
-   
-  <font class="ls-comment">'This is for demo only --- in production this info is useless</font>
-   
-  <font class="ls-function">Call</font> rt
+  <font class="ls-operator">)</font><font class="ls-statement">Loop</font><font class="ls-statement">Else</font><font class="ls-comment">'This is for demo only --- in production this info is useless</font><font class="ls-function">Call</font> rt
   
   <font class="ls-operator">.</font>AppendText
   
-  <font class="ls-operator">(</font>
-  
-  <font class="ls-quote">|&lt;tr class="failure"&gt;&lt;td colspan="7"&gt;No data found for |</font>
-  
-  <font class="ls-operator">+</font>catList
+  <font class="ls-operator">(</font><font class="ls-quote">|&lt;tr class="failure"&gt;&lt;td colspan="7"&gt;No data found for |</font><font class="ls-operator">+</font>catList
   
   <font class="ls-operator">(</font>i
   
-  <font class="ls-operator">)</font>
-  
-  <font class="ls-operator">+</font>
-  
-  <font class="ls-quote">|&lt;/td&gt;&lt;/tr&gt;|</font>
-  
-  <font class="ls-operator">)</font>
-  
-  <font class="ls-statement">End</font>
-  
-  <font class="ls-statement">If</font>
- 
-  <font class="ls-statement">Next</font>
- 
-  <font class="ls-function">Call</font> rt
+  <font class="ls-operator">)</font><font class="ls-operator">+</font><font class="ls-quote">|&lt;/td&gt;&lt;/tr&gt;|</font><font class="ls-operator">)</font><font class="ls-statement">End</font><font class="ls-statement">If</font><font class="ls-statement">Next</font><font class="ls-function">Call</font> rt
   
   <font class="ls-operator">.</font>AppendText
   
-  <font class="ls-operator">(</font>
-  
-  <font class="ls-quote">"&lt;/table&gt;"</font>
-  
-  <font class="ls-operator">)</font>
- 
-  <font class="ls-function">Call</font> rt
+  <font class="ls-operator">(</font><font class="ls-quote">"&lt;/table&gt;"</font><font class="ls-operator">)</font><font class="ls-function">Call</font> rt
   
   <font class="ls-operator">.</font>AddNewline
   
@@ -633,59 +376,15 @@ ga('send', 'pageview');
  
 Exit_RenderViewToRT
   
-  <font class="ls-operator">:</font>
- 
-  <font class="ls-statement">Exit</font>
-  
-  <font class="ls-statement">Sub</font>
+  <font class="ls-operator">:</font><font class="ls-statement">Exit</font><font class="ls-statement">Sub</font>
  
 Err_RenderViewToRT
   
-  <font class="ls-operator">:</font>
- 
-  <font class="ls-function">Print</font>
-  
-  <font class="ls-function">Error$</font>
-  
-  <font class="ls-operator">&amp;</font>
-  
-  <font class="ls-quote">" in line "</font>
-  
-  <font class="ls-operator">&amp;</font>
-  
-  <font class="ls-function">Cstr</font>
-  
-  <font class="ls-operator">(</font>
-  
-  <font class="ls-function">Erl</font>
-  
-  <font class="ls-operator">)</font>
- 
-  <font class="ls-function">Call</font> rt
+  <font class="ls-operator">:</font><font class="ls-function">Print</font><font class="ls-function">Error$</font><font class="ls-operator">&amp;</font><font class="ls-quote">" in line "</font><font class="ls-operator">&amp;</font><font class="ls-function">Cstr</font><font class="ls-operator">(</font><font class="ls-function">Erl</font><font class="ls-operator">)</font><font class="ls-function">Call</font> rt
   
   <font class="ls-operator">.</font>AppendText
   
-  <font class="ls-operator">(</font>
-  
-  <font class="ls-function">Error$</font>
-  
-  <font class="ls-operator">&amp;</font>
-  
-  <font class="ls-quote">" in line "</font>
-  
-  <font class="ls-operator">&amp;</font>
-  
-  <font class="ls-function">Cstr</font>
-  
-  <font class="ls-operator">(</font>
-  
-  <font class="ls-function">Erl</font>
-  
-  <font class="ls-operator">)</font>
-  
-  <font class="ls-operator">)</font>
- 
-  <font class="ls-function">Call</font> rt
+  <font class="ls-operator">(</font><font class="ls-function">Error$</font><font class="ls-operator">&amp;</font><font class="ls-quote">" in line "</font><font class="ls-operator">&amp;</font><font class="ls-function">Cstr</font><font class="ls-operator">(</font><font class="ls-function">Erl</font><font class="ls-operator">)</font><font class="ls-operator">)</font><font class="ls-function">Call</font> rt
   
   <font class="ls-operator">.</font>AddNewline
   
@@ -695,29 +394,25 @@ Err_RenderViewToRT
  
   <font class="ls-statement">Resume</font> Exit_RenderViewToRT
  
-  <font class="ls-statement">End</font>
-  
-  <font class="ls-statement">Sub</font>
-
- 
- </div></pre> 
-<div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;"> 
+  <font class="ls-statement">End</font><font class="ls-statement">Sub</font>
+ </div></pre>
+<div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;">
  <center>
    This LotusScript was converted to HTML using the <b><i>ls2html</i></b> routine, 
   <br>provided by Julian Robichaux at <a href="http://www.nsftools.com" target="_blank">nsftools.com</a>. 
- </center> 
+ </center>
 </div> To make that all work you need a few fields on your $$Viewtemplate.. form: 
-<ol> 
- <li><b>QUERY_STRING</b>:Text, Single Value, Editable: to capture the Query String</li> 
- <li><b>UserNameList</b>:Names, MultiValue, computed:<br> tmpUsedHere := @DbColumn("Notes":"Cache";"";"LookforGroupsAndRoles";1); tmpThisUser := @Trim(@Replace(@UserNamesList;"*";"")); @Keywords(tmpUsedHere;tmpThisUser)</li> 
- <li><b></b>:</li> 
-</ol> You can <a href="/blog/downloads/">Download some sample code</a> 
+<ol>
+ <li><b>QUERY_STRING</b>:Text, Single Value, Editable: to capture the Query String</li>
+ <li><b>UserNameList</b>:Names, MultiValue, computed:<br> tmpUsedHere := @DbColumn("Notes":"Cache";"";"LookforGroupsAndRoles";1); tmpThisUser := @Trim(@Replace(@UserNamesList;"*";"")); @Keywords(tmpUsedHere;tmpThisUser)</li>
+ <li><b></b>:</li>
+</ol> You can <a href="/blog/downloads/">Download some sample code</a>
 <br>(Note: in this sample there is no processing of the UNIDs). YMMV 
-<br> <b>Update:</b> Some more links to the topic on developer works: 
-<ul> 
- <li><a href="http://www.ibm.com/developerworks/lotus/library/reader-names/">Using and understanding Reader Names fields in IBM Lotus Notes and Domino</a></li> 
- <li><a href="http://www.ibm.com/developerworks/lotus/library/notes7-application-performance2/">Lotus Notes/Domino 7 application performance: Part 2: Optimizing database views</a></li> 
- <li><a href="http://www.ibm.com/developerworks/lotus/performance/"></a>List of all performance related articles</li> 
+<br><b>Update:</b> Some more links to the topic on developer works: 
+<ul>
+ <li><a href="http://www.ibm.com/developerworks/lotus/library/reader-names/">Using and understanding Reader Names fields in IBM Lotus Notes and Domino</a></li>
+ <li><a href="http://www.ibm.com/developerworks/lotus/library/notes7-application-performance2/">Lotus Notes/Domino 7 application performance: Part 2: Optimizing database views</a></li>
+ <li><a href="http://www.ibm.com/developerworks/lotus/performance/"></a>List of all performance related articles</li>
 </ul></div>
 					<hr />
 					<p>

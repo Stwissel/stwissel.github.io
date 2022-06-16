@@ -118,11 +118,11 @@ ga('send', 'pageview');
 						<small><a href="/blog/2018/11/supercharge-sfdx-with-ui-licious.html">Supercharge SFDX with Ui-licious</a></small>
 					</h1>
 					<hr />
-					<div><p>You <a href="https://developer.salesforce.com/tools/sfdxcli">drank the Coolaid</a> and you are all in and really love your <a href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_scratch_orgs.htm">Scratch Orgs</a>. Just a few things drive you crazy.</p> 
-<h3>When the API doesn't expose a setting</h3> 
-<p>Your application is querying the OutOfOffice objects. Unfortunately they only exist when the Chatter settings have enabled them. To my best knowledge there is no API or config setting to achieve that from the command line. So automated testing in a scratch org won't work.</p> 
-<h3>Ui-licious to the rescue</h3> 
-<p><a href="https://uilicious.com/">Ui-licious</a> is a UI testing service that uses JavaScript as its scripting language. This makes an easy read and edit. A script that can set the missing OOO setting is short and simple (if you agree <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe">iFrames</a> are easy to handle). You can (almost) read it out aloud:</p> 
+					<div><p>You <a href="https://developer.salesforce.com/tools/sfdxcli">drank the Coolaid</a> and you are all in and really love your <a href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_scratch_orgs.htm">Scratch Orgs</a>. Just a few things drive you crazy.</p>
+<h3>When the API doesn't expose a setting</h3>
+<p>Your application is querying the OutOfOffice objects. Unfortunately they only exist when the Chatter settings have enabled them. To my best knowledge there is no API or config setting to achieve that from the command line. So automated testing in a scratch org won't work.</p>
+<h3>Ui-licious to the rescue</h3>
+<p><a href="https://uilicious.com/">Ui-licious</a> is a UI testing service that uses JavaScript as its scripting language. This makes an easy read and edit. A script that can set the missing OOO setting is short and simple (if you agree <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe">iFrames</a> are easy to handle). You can (almost) read it out aloud:</p>
 <pre><code class="language-javascript">// URL Provided by data object from the command line
 I.goTo(DATA.result.url);
 I.must.see("Chatter Settings");
@@ -137,12 +137,12 @@ UI.context("#" + iframeId, () =&gt; {
     I.select("Users can set Out of Office messages");
     I.click("Save");
 })
-</code></pre> 
-<p>The interesting piece in the above is <code>DATA.result.url</code> which is an JSON object that needs to be handed over to the Ui-licious. A small command script in tandem with SFDX does the trick. The beauty here: we directly can reuse the output of an sfdx command as input for the <code>uilicious-cli</code>.</p> 
+</code></pre>
+<p>The interesting piece in the above is <code>DATA.result.url</code> which is an JSON object that needs to be handed over to the Ui-licious. A small command script in tandem with SFDX does the trick. The beauty here: we directly can reuse the output of an sfdx command as input for the <code>uilicious-cli</code>.</p>
 <pre><code class="language-bash">sfdx force:org:open -r -p lightning/setup/CollaborationSettings/home --json &gt; local.json
 uilicious-cli  run "ProjectName" "ScriptName" --dataFile local.json -u uiliciousUser -p uiliciousPassword
-</code></pre> 
-<p>It probably would be part of a larger CI script, but you get the idea! You might not store the output in a file, but use bash to capture it in memory and use <code>--dataObject</code> instead. Full details are in <a href="https://docs.uilicious.com/cli/test_data.html">the documentation</a>.</p> 
+</code></pre>
+<p>It probably would be part of a larger CI script, but you get the idea! You might not store the output in a file, but use bash to capture it in memory and use <code>--dataObject</code> instead. Full details are in <a href="https://docs.uilicious.com/cli/test_data.html">the documentation</a>.</p>
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>
@@ -163,24 +163,24 @@ categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/
 						<small><a href="/blog/2018/11/cleaning-up-an-apex-codebase-with-pmd.html">Cleaning up an APEX codebase with PMD</a></small>
 					</h1>
 					<hr />
-					<div><p>You inherit a large code base, it is perfect, a work of beauty. Then you wake up to the ping of your <a href="https://pmd.github.io">PMD</a> run completion and find multiple thousands of rule violation (and you haven't even started to assert test assertions). Here is how to fix that.</p> 
-<h3>Divide and conquer</h3> 
-<p><a href="https://www.investopedia.com/terms/b/boil-the-ocean.asp">Boiling the ocean</a> and fix all issues in one go is hardly an option. So you need to strategize. PMD gives you a hint: every rule has a <a href="https://pmd.github.io/pmd-6.9.0/pmd_userdocs_configuring_rules.html#message-and-priority-overriding">priority</a> property, where you can specify how important this rule is. The higher the number, the less important the rule. You can run PMD using the <code>min -[somenumber]</code> parameter which will ignore rules with a higher value.</p> 
-<p>Next step is to decide what rules constitute your priority 1 and 2 buckets. I strongly recommend to make them mandatory fixes before the next deployment, so pick the rules carefully. The candidates I suggest are around performance and security:</p> 
-<h4>Priority 1</h4> 
-<ul> 
- <li>ApexXSSFromURLParam</li> 
- <li>ApexSOQLInjection</li> 
- <li>ApexOpenRedirect</li> 
- <li>ApexInsecureEndpoint</li> 
- <li>AvoidDmlStatementsInLoops</li> 
- <li>AvoidSoqlInLoops</li> 
-</ul> 
-<h4>Priority 2</h4> 
-<ul> 
- <li>ApexCRUDViolation</li> 
- <li>ApexSharingViolations</li> 
-</ul> 
+					<div><p>You inherit a large code base, it is perfect, a work of beauty. Then you wake up to the ping of your <a href="https://pmd.github.io">PMD</a> run completion and find multiple thousands of rule violation (and you haven't even started to assert test assertions). Here is how to fix that.</p>
+<h3>Divide and conquer</h3>
+<p><a href="https://www.investopedia.com/terms/b/boil-the-ocean.asp">Boiling the ocean</a> and fix all issues in one go is hardly an option. So you need to strategize. PMD gives you a hint: every rule has a <a href="https://pmd.github.io/pmd-6.9.0/pmd_userdocs_configuring_rules.html#message-and-priority-overriding">priority</a> property, where you can specify how important this rule is. The higher the number, the less important the rule. You can run PMD using the <code>min -[somenumber]</code> parameter which will ignore rules with a higher value.</p>
+<p>Next step is to decide what rules constitute your priority 1 and 2 buckets. I strongly recommend to make them mandatory fixes before the next deployment, so pick the rules carefully. The candidates I suggest are around performance and security:</p>
+<h4>Priority 1</h4>
+<ul>
+ <li>ApexXSSFromURLParam</li>
+ <li>ApexSOQLInjection</li>
+ <li>ApexOpenRedirect</li>
+ <li>ApexInsecureEndpoint</li>
+ <li>AvoidDmlStatementsInLoops</li>
+ <li>AvoidSoqlInLoops</li>
+</ul>
+<h4>Priority 2</h4>
+<ul>
+ <li>ApexCRUDViolation</li>
+ <li>ApexSharingViolations</li>
+</ul>
 <p>Thereafter you decide on priority 3 onwards. Strong candidates for level 3 are all the rules that ensure code is maintainable and avoid errors, like deep nesting or cyclomatic complexity (a fancy word for "messy code")</p></div>
 					<hr />
  <a href="/blog/2018/11/cleaning-up-an-apex-codebase-with-pmd.html">Read more</a>
@@ -202,19 +202,19 @@ categories:  <a href="/blog/categories/apex.html">Apex</a>  <a href="/blog/categ
 						<small><a href="/blog/2018/11/backing-up-salesforce-meta-data.html">Backing up Salesforce Meta data</a></small>
 					</h1>
 					<hr />
-					<div><p><strong>Clicks not code</strong> makes the Salesforce Admin a <a href="https://www.salesforce.com/video/193372/">super hero</a>, but might send jitters through the compliance and change management team's combined spines. How can you track all of these changes?</p> 
-<h3>Tracking changes</h3> 
-<p>Salesforce does record, when <a href="https://developer.salesforce.com/docs/atlas.en-us.securityImplGuide.meta/securityImplGuide/admin_monitorsetup.htm">configured</a>, changes in setup for 180 days. The format is a log that isn't actionable (e.g. rollback). An alternative to the build in function is <a href="https://bluecanvas.io/">BlueCanvas</a> that stores meta data automatically into a git repository. It's part of their developer focused solution that also handles the deployment and rollback of source code</p> 
-<h3>Downloading meta data</h3> 
-<p>When you are not ready (or haven't allocated a budget yet) to fully automate this, there's a do-it-yourself alternative. A few steps:</p> 
-<ul> 
- <li>Make sure you have Java8 installed</li> 
- <li>Deploy the Salesforce <a href="https://developer.salesforce.com/docs/atlas.en-us.daas.meta/daas/meta_development.htm">Ant Migration tool</a></li> 
- <li>Download and deploy into your path <a href="https://github.com/kgalant/PackageBuilder/blob/master/PackageBuilder.jar">PackageBuilder.jar</a> developer by my colleague Kim Galant</li> 
- <li>create a <code>build.properties</code> file (see below)</li> 
- <li>create a <code>build.xml</code> file (see below)</li> 
- <li>run the <code>fetchSrc.sh</code> shell command (see below)</li> 
-</ul> 
+					<div><p><strong>Clicks not code</strong> makes the Salesforce Admin a <a href="https://www.salesforce.com/video/193372/">super hero</a>, but might send jitters through the compliance and change management team's combined spines. How can you track all of these changes?</p>
+<h3>Tracking changes</h3>
+<p>Salesforce does record, when <a href="https://developer.salesforce.com/docs/atlas.en-us.securityImplGuide.meta/securityImplGuide/admin_monitorsetup.htm">configured</a>, changes in setup for 180 days. The format is a log that isn't actionable (e.g. rollback). An alternative to the build in function is <a href="https://bluecanvas.io/">BlueCanvas</a> that stores meta data automatically into a git repository. It's part of their developer focused solution that also handles the deployment and rollback of source code</p>
+<h3>Downloading meta data</h3>
+<p>When you are not ready (or haven't allocated a budget yet) to fully automate this, there's a do-it-yourself alternative. A few steps:</p>
+<ul>
+ <li>Make sure you have Java8 installed</li>
+ <li>Deploy the Salesforce <a href="https://developer.salesforce.com/docs/atlas.en-us.daas.meta/daas/meta_development.htm">Ant Migration tool</a></li>
+ <li>Download and deploy into your path <a href="https://github.com/kgalant/PackageBuilder/blob/master/PackageBuilder.jar">PackageBuilder.jar</a> developer by my colleague Kim Galant</li>
+ <li>create a <code>build.properties</code> file (see below)</li>
+ <li>create a <code>build.xml</code> file (see below)</li>
+ <li>run the <code>fetchSrc.sh</code> shell command (see below)</li>
+</ul>
 <p>PackageBuilder will, when called with no instructions read ALL meta data and create one or more <code>package.xml</code> files. Once created you can use ANT to retrieve the data</p></div>
 					<hr />
  <a href="/blog/2018/11/backing-up-salesforce-meta-data.html">Read more</a>
@@ -236,22 +236,22 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 						<small><a href="/blog/2018/11/lightning-mini-forms.html">Lightning Mini Forms</a></small>
 					</h1>
 					<hr />
-					<div><p>One of my favorite lightning features is the <a href="https://trailhead.salesforce.com/en/content/learn/modules/lightning_app_builder">Lightning App Builder</a>. It allows to tailor Salesforce for a given set of users, to show what they need, how they need it.</p> 
-<p>In the page editor the endless scrolling page, record details followed by related lists, we got to love, can be broken down into multiple tabs. For related lists, the OOTB controls already allow to just pick one. Placed multiple times on a page, the layout can fit a specific audience's precise need, avoiding information overload.</p> 
-<p>However there's no control to break down the record details. The OOTB record details control will faithfully reproduce the assigned page layout with all sections. Custom controls to the rescue!</p> 
-<h3>Design options</h3> 
-<p>There are two options to consider: where to pull design information from and how to render it. For the later you can consider <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:recordEditForm/example">lightning:recordEdit|ViewForm</a> or <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:recordForm">lightning:recordForm</a>. Both can be argued for.</p> 
-<p>The <code>lightning:recordForm</code> only needs the fields / layout options supplied and will take care of all rendering. However you are limited to one or two columns - just like page layouts.</p> 
-<p>The <code>lightning:record[Edit|View]Form</code> requires coding the fields, probably using an <a href="https://developer.salesforce.com/docs/component-library/bundle/aura:iteration/example">aura:iteration</a>, but leaves you with the freedom of layout. Typically you would use a <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:layoutItem/specification">lightning:layoutItem</a> and its <code>size</code> property to determine the number of columns (with 12 / size = number of columns).</p> 
-<p>To keep it simple I'll stick to the <code>lightning:recordForm</code> for now.</p> 
-<p>Next question: where to provision the list of fields from? When you want an universally usable mini form, you can't hardcode them, but provide them using a design property, so they can be provided in the page editor after you dragged the component onto the page.</p> 
-<p>Still you need to decide what attributes you provide:</p> 
-<ul> 
- <li>List of field names</li> 
- <li>Name of a field set</li> 
- <li>Name of a section in a page layout</li> 
-</ul> 
-<p>I'll start with the first one and relegate the other two approaches to future posts.</p> 
+					<div><p>One of my favorite lightning features is the <a href="https://trailhead.salesforce.com/en/content/learn/modules/lightning_app_builder">Lightning App Builder</a>. It allows to tailor Salesforce for a given set of users, to show what they need, how they need it.</p>
+<p>In the page editor the endless scrolling page, record details followed by related lists, we got to love, can be broken down into multiple tabs. For related lists, the OOTB controls already allow to just pick one. Placed multiple times on a page, the layout can fit a specific audience's precise need, avoiding information overload.</p>
+<p>However there's no control to break down the record details. The OOTB record details control will faithfully reproduce the assigned page layout with all sections. Custom controls to the rescue!</p>
+<h3>Design options</h3>
+<p>There are two options to consider: where to pull design information from and how to render it. For the later you can consider <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:recordEditForm/example">lightning:recordEdit|ViewForm</a> or <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:recordForm">lightning:recordForm</a>. Both can be argued for.</p>
+<p>The <code>lightning:recordForm</code> only needs the fields / layout options supplied and will take care of all rendering. However you are limited to one or two columns - just like page layouts.</p>
+<p>The <code>lightning:record[Edit|View]Form</code> requires coding the fields, probably using an <a href="https://developer.salesforce.com/docs/component-library/bundle/aura:iteration/example">aura:iteration</a>, but leaves you with the freedom of layout. Typically you would use a <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:layoutItem/specification">lightning:layoutItem</a> and its <code>size</code> property to determine the number of columns (with 12 / size = number of columns).</p>
+<p>To keep it simple I'll stick to the <code>lightning:recordForm</code> for now.</p>
+<p>Next question: where to provision the list of fields from? When you want an universally usable mini form, you can't hardcode them, but provide them using a design property, so they can be provided in the page editor after you dragged the component onto the page.</p>
+<p>Still you need to decide what attributes you provide:</p>
+<ul>
+ <li>List of field names</li>
+ <li>Name of a field set</li>
+ <li>Name of a section in a page layout</li>
+</ul>
+<p>I'll start with the first one and relegate the other two approaches to future posts.</p>
 <p>To make this work you will need a custom lightning component. Let's call it <code>MiniForm</code>. We will only need <code>MiniForm.cmp</code>, <code>MiniFormController.js</code> and <code>MiniForm.design</code>. No helper or Apex will be harmed</p></div>
 					<hr />
  <a href="/blog/2018/11/lightning-mini-forms.html">Read more</a>

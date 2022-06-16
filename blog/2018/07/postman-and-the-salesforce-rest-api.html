@@ -125,13 +125,13 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Postman and the Salesforce REST API</small></h1>
 					<hr />
-					<div><p>The Salesforce API is a great way to access Salesforce data and can be used with tools like <a href="http://www.pocketsoap.com/osx/soqlx/">SoqlXplore</a> or the <a href="https://workbench.developerforce.com/">Salesforce Workbench</a>. The API uses OAuth and a Bearer Authentication, so some steps are required to make that work in Postman</p> 
-<h3>Prepare Salesforce</h3> 
-<p>You will need a <a href="https://help.salesforce.com/articleView?id=connected_app_overview.htm&amp;type=5">connected APP</a>. I usually create one that is pre-approved for my user profile(s), so I don't need to bother with the approval steps in Postman. However you could opt for self-approval and access the app once to approve its use, before you continue with the command line. Note down the <code>ClientId</code> and <code>ClientSecret</code> values.</p> 
-<h3>Prepare Postman</h3> 
-<p>Postman has great build in support for <a href="https://www.getpostman.com/docs/v6/postman/sending_api_requests/authorization">all sorts of authorization</a> interactively. However my goal here is to fully automate it, so you can run a <a href="http://blog.getpostman.com/2014/03/07/writing-automated-tests-for-apis-using-postman/">test suite</a> without manual intervention. First stop is the creation of one environment. You can have multiple environments to cater to different Salesforce instances.</p> 
-<p><strong>Important</strong> Never ever ever store the environment into version control. It would contain credentials -&gt; <strong>bad bad</strong> idea!</p> 
-<p>My environment variables look like this:</p> 
+					<div><p>The Salesforce API is a great way to access Salesforce data and can be used with tools like <a href="http://www.pocketsoap.com/osx/soqlx/">SoqlXplore</a> or the <a href="https://workbench.developerforce.com/">Salesforce Workbench</a>. The API uses OAuth and a Bearer Authentication, so some steps are required to make that work in Postman</p>
+<h3>Prepare Salesforce</h3>
+<p>You will need a <a href="https://help.salesforce.com/articleView?id=connected_app_overview.htm&amp;type=5">connected APP</a>. I usually create one that is pre-approved for my user profile(s), so I don't need to bother with the approval steps in Postman. However you could opt for self-approval and access the app once to approve its use, before you continue with the command line. Note down the <code>ClientId</code> and <code>ClientSecret</code> values.</p>
+<h3>Prepare Postman</h3>
+<p>Postman has great build in support for <a href="https://www.getpostman.com/docs/v6/postman/sending_api_requests/authorization">all sorts of authorization</a> interactively. However my goal here is to fully automate it, so you can run a <a href="http://blog.getpostman.com/2014/03/07/writing-automated-tests-for-apis-using-postman/">test suite</a> without manual intervention. First stop is the creation of one environment. You can have multiple environments to cater to different Salesforce instances.</p>
+<p><strong>Important</strong> Never ever ever store the environment into version control. It would contain credentials -&gt; <strong>bad bad</strong> idea!</p>
+<p>My environment variables look like this:</p>
 <pre><code class="language-javascript">{
  "CLIENT_ID" : "the ClientId from Salesforce",
  "CLIENT_SECRET" : "The ClientSecret from Salesforce",
@@ -139,16 +139,16 @@ ga('send', 'pageview');
     "PASSWORD" : "DontTell",
     "LOGIN_URL" : "https://login.salesforce.com/"
 }
-</code></pre> 
-<p>Providing the Login URL allows to reuse postman collections between Sandboxes, Developer Orgs or Production Orgs without the need to actually edit the postman entries. Next on the menu: getting a token</p><h3>Getting a token</h3> 
-<p>Your Postman URL will look like this: <code>{{LOGIN_URL}}/services/oauth2/token</code>. Depending on the environment you will use production or Sandbox. The request ist an unauthenticated <code>POST</code> with a single header of <code>Content-Type:application/x-www-form-urlencoded</code> The body you post looks like this:</p> 
+</code></pre>
+<p>Providing the Login URL allows to reuse postman collections between Sandboxes, Developer Orgs or Production Orgs without the need to actually edit the postman entries. Next on the menu: getting a token</p><h3>Getting a token</h3>
+<p>Your Postman URL will look like this: <code>{{LOGIN_URL}}/services/oauth2/token</code>. Depending on the environment you will use production or Sandbox. The request ist an unauthenticated <code>POST</code> with a single header of <code>Content-Type:application/x-www-form-urlencoded</code> The body you post looks like this:</p>
 <pre><code class="language-bash">grant_type:password
 client_id:{{CLIENT_ID}}
 client_secret:{{CLIENT_SECRET}}
 password:{{PASSWORD}}
 username:{{USER_ID}}
-</code></pre> 
-<p>PostMan replaces anything inside <code>{{ .... }}</code> with values from your environment. This approach allows you to share your Postman collections without disclosing what should be private. A successful response will look like this:</p> 
+</code></pre>
+<p>PostMan replaces anything inside <code>{{ .... }}</code> with values from your environment. This approach allows you to share your Postman collections without disclosing what should be private. A successful response will look like this:</p>
 <pre><code class="language-javascript">{
     "access_token": "some long string that you need in your authorization header",
     "instance_url": "https://yourdomain.my.salesforce.com",
@@ -157,8 +157,8 @@ username:{{USER_ID}}
     "issued_at": "1530761889707",
     "signature": "theThirdStringCheckSum"
 }
-</code></pre> 
-<p>All future call need go to the instance URL with the access token as bearer authorization. To make that easy we use PostMan's test script to capture that values into the environment:</p> 
+</code></pre>
+<p>All future call need go to the instance URL with the access token as bearer authorization. To make that easy we use PostMan's test script to capture that values into the environment:</p>
 <pre><code class="language-javascript">pm.test("Status code is 200", function () {
     pm.response.to.have.status(200);
 });
@@ -172,9 +172,9 @@ pm.test("Has a bearer token", function () {
 // Save the bearer
 pm.environment.set("Bearer", jsonData.access_token);
 pm.environment.set("Instance", jsonData.instance_url);
-</code></pre> 
-<h3>Getting the API version</h3> 
-<p>Our next stop is figuring out the current API version (<code>43.0</code> at the point of writing). To do this we send a <code>GET</code> request to<br> <code>{{Instance}}/services/data</code> with a header of <code>Authorization:Bearer {{Bearer}}</code>. This call will return an JSON array with available API versions from 20.0 - 43.0 (at time of writing). Again we use the testing capability to capture the latest version:</p> 
+</code></pre>
+<h3>Getting the API version</h3>
+<p>Our next stop is figuring out the current API version (<code>43.0</code> at the point of writing). To do this we send a <code>GET</code> request to<br><code>{{Instance}}/services/data</code> with a header of <code>Authorization:Bearer {{Bearer}}</code>. This call will return an JSON array with available API versions from 20.0 - 43.0 (at time of writing). Again we use the testing capability to capture the latest version:</p>
 <pre><code class="language-javascript">pm.test("Response time is less than 200ms", function () {
     pm.expect(pm.response.responseTime).to.be.below(200);
 });
@@ -186,9 +186,9 @@ pm.test("Status code is 200", function () {
 var jsonData = pm.response.json();
 var maxElements = jsonData.length - 1;
 pm.environment.set("service_url", jsonData[maxElements].url);
-</code></pre> 
-<p>Now we are ready to call more of the rest API. For example to get the list of all API endpoints you would send a <code>GET</code> request to <code>{{Instance}}{{service_url}}</code> with the familiar header of <code>Authorization:Bearer {{Bearer}}</code>.</p> 
-<p>Now you have all components in place to create more API calls and tests</p> 
+</code></pre>
+<p>Now we are ready to call more of the rest API. For example to get the list of all API endpoints you would send a <code>GET</code> request to <code>{{Instance}}{{service_url}}</code> with the familiar header of <code>Authorization:Bearer {{Bearer}}</code>.</p>
+<p>Now you have all components in place to create more API calls and tests</p>
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>

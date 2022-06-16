@@ -120,29 +120,29 @@ ga('send', 'pageview');
 					<h1><small>Generating a dynamic questionaire</small></h1>
 					<hr />
 					<div>A developer recently asked me how to generate dynamic questions. Dynamic as in: there is a general topic and then details. E.g. 
-<table style="border : 1px solid gray"> 
- <tbody> 
-  <tr> 
-   <th colspan="4">Please state the number of building blocks per shape</th> 
-  </tr> 
-  <tr> 
-   <th>Shape</th> 
-   <th>Red</th> 
-   <th>Blue</th> 
-   <th>Yellow</th> 
-  </tr> 
-  <tr> 
-   <td>Triangle</td> 
-   <td>5</td> 
-   <td>6</td> 
-   <td>4</td> 
-  </tr> 
-  <tr> 
-   <td colspan="4">[Button: add row]</td> 
-  </tr> 
- </tbody> 
+<table style="border : 1px solid gray">
+ <tbody>
+  <tr>
+   <th colspan="4">Please state the number of building blocks per shape</th>
+  </tr>
+  <tr>
+   <th>Shape</th>
+   <th>Red</th>
+   <th>Blue</th>
+   <th>Yellow</th>
+  </tr>
+  <tr>
+   <td>Triangle</td>
+   <td>5</td>
+   <td>6</td>
+   <td>4</td>
+  </tr>
+  <tr>
+   <td colspan="4">[Button: add row]</td>
+  </tr>
+ </tbody>
 </table> The filled in cells would have entry fields (not just text). So how would one do that in Domino 7 or 8 (so no XPages)? It is actually not that hard. Use a form "ConfigureQuestion" to capture all the parameters. I would have a text-area for the question (call it question) and one for the column headers (call it qdimensions). The nice trick: use a hidden regular field and construct the text-area with passthu html. The qdimensions field would be multi-value. Have a dropdown list (call it qType) with the data type. Use <a href="http://www.dojotoolkit.org/book/dojo-book-0-9/part-2-dijit/dijit-glance">dijit names</a> as alias. e.g. Text|dijit.form.TextBox. This way you will be able to generate properly validated stuff. Then have a field for width (qwidth), the first column text (qCol1) and question number (qnumber). Then have a hidden field that puts all together: 
-<br> <b> tmpCount := @Elements(qdimensions)+1;<br> tmpNum := "0":"1":"2":"3":"4":"5":"6":"7":"8":"9";<br> colCount := @Subset((tmpNum*+tmpNum);tmpCount);<br> tmpStart := "&lt;table id=\"qtable"+qnumber+"\"&gt; &lt;tr&gt; &lt;th colspan=\""+tmpCount+"\" &gt;"+question+"&lt;/th&gt; &lt;/tr&gt;&lt;tr&gt;";<br> tmpHeader := "&lt;th&gt;"+qdimensions+"&lt;/th&gt;"&lt;;br /&gt; tmpLineStart := "&lt;/tr&gt;&lt;tr&gt; &lt;td&gt;&lt;input type=\'text\' id=\"row1col1\" /&gt; &lt;/td&gt;" <br> tmpQuestions := "&lt;td&gt;&amp;ltinput type=\"text"\ dojotype=\""+qType+"\" title=\""+qdimentions+"\" id=\"row1col"+colCount+" /&gt; &lt;/td&gt;";<br> tmpLineEnd := "&lt;/tr&gt;"<br> tmpEnd := "&lt;tr&gt; &lt;th colspan=\""+tmpCount+"\" &gt;&lt;input type=\"button\" value=\"Add Row\" onClick=\"addRow('qtable"+qnumber+"')\" / &gt;&lt;/th&gt; &lt;/tr&gt;"<br> @Implode(tmpStart:tmpHeader:tmpLineStart:tmpQuestions:tmpLineEnd:tmpEnd;@NewLine)<br> </b> 
+<br><b> tmpCount := @Elements(qdimensions)+1;<br> tmpNum := "0":"1":"2":"3":"4":"5":"6":"7":"8":"9";<br> colCount := @Subset((tmpNum*+tmpNum);tmpCount);<br> tmpStart := "&lt;table id=\"qtable"+qnumber+"\"&gt; &lt;tr&gt; &lt;th colspan=\""+tmpCount+"\" &gt;"+question+"&lt;/th&gt; &lt;/tr&gt;&lt;tr&gt;";<br> tmpHeader := "&lt;th&gt;"+qdimensions+"&lt;/th&gt;"&lt;;br /&gt; tmpLineStart := "&lt;/tr&gt;&lt;tr&gt; &lt;td&gt;&lt;input type=\'text\' id=\"row1col1\" /&gt; &lt;/td&gt;" <br> tmpQuestions := "&lt;td&gt;&amp;ltinput type=\"text"\ dojotype=\""+qType+"\" title=\""+qdimentions+"\" id=\"row1col"+colCount+" /&gt; &lt;/td&gt;";<br> tmpLineEnd := "&lt;/tr&gt;"<br> tmpEnd := "&lt;tr&gt; &lt;th colspan=\""+tmpCount+"\" &gt;&lt;input type=\"button\" value=\"Add Row\" onClick=\"addRow('qtable"+qnumber+"')\" / &gt;&lt;/th&gt; &lt;/tr&gt;"<br> @Implode(tmpStart:tmpHeader:tmpLineStart:tmpQuestions:tmpLineEnd:tmpEnd;@NewLine)<br> </b>
 <br> The code is a rough outline, so cut and paste might not work and you also might need to work on the ids for the input fields. But you get the idea. The trick here: the multi-value field qDimensions creates as many th/td/input as we actually need. The questionnaire form would have an embedded view showing that hidden field as passthru html, so you get all questions rendered. A JavaScript function addRow(id) takes the ID of the table as parameter, so you know what table to use. Last stop: make the questions submit to an agent, so you can process all the fields.</div>
 					<hr />
 					<p>

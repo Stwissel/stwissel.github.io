@@ -131,20 +131,20 @@ ga('send', 'pageview');
 <br> Like a Demo? <a href="fictiousprotocol://doesn't.get.you.anywhere">Try it for youself</a>! 
 <br> So to replace a protocol handler application (in our case the Notes client) 
 <h3>Solution</h3>You need to do 2 things: 
-<ol> 
- <li>In your web enablement / data migration project capture all source and target mappings. For some stuff simple formulas (<a href="http://en.wikipedia.org/wiki/Regular_expression">regex</a>) might do, but in most cases a key value store is required. Playing with different web technologies on <a href="https://www.wissel.net/">wissel.net</a> and <a href="https://www.notessensei.com">notessensei.com</a>, but rendering the same content, I tested the hypothesis and found key value stores suitable.<br> In a nutshell: links <a href="http://www.nngroup.com/articles/web-pages-must-live-forever/">need to live forever</a>, come <a href="https://www.youtube.com/watch?v=_Jtpf8N5IDE">sing along</a></li> 
- <li>Create a replacement for the <code>notes://</code> URL handler (and the ndl file type), so any link starting with <code>notes://</code> will then be looked up in your key value store and rendered by the appropriate application.<br> The little special challenge here: when you web enable applications over a period of time, you still might have a Notes client, but that specific URL is gone. When you keep your NSF and just add the webUI, this won't be an issue. But it is a problem you will face when switching the platform</li> 
-</ol> 
+<ol>
+ <li>In your web enablement / data migration project capture all source and target mappings. For some stuff simple formulas (<a href="http://en.wikipedia.org/wiki/Regular_expression">regex</a>) might do, but in most cases a key value store is required. Playing with different web technologies on <a href="https://www.wissel.net/">wissel.net</a> and <a href="https://www.notessensei.com">notessensei.com</a>, but rendering the same content, I tested the hypothesis and found key value stores suitable.<br> In a nutshell: links <a href="http://www.nngroup.com/articles/web-pages-must-live-forever/">need to live forever</a>, come <a href="https://www.youtube.com/watch?v=_Jtpf8N5IDE">sing along</a></li>
+ <li>Create a replacement for the <code>notes://</code> URL handler (and the ndl file type), so any link starting with <code>notes://</code> will then be looked up in your key value store and rendered by the appropriate application.<br> The little special challenge here: when you web enable applications over a period of time, you still might have a Notes client, but that specific URL is gone. When you keep your NSF and just add the webUI, this won't be an issue. But it is a problem you will face when switching the platform</li>
+</ol>
 <h3>Denial</h3> Alternatively you can claim <a href="http://www.urbandictionary.com/define.php?term=ignorance+is+bliss">ignorance is bliss</a> and succumb to digital dementia. The usual aguments <b>not</b> to act: 
-<ul> 
- <li>the information is old, nobody needs it</li> 
- <li>we have great search in the new application, so users will find it</li> 
- <li>it is a waste of money and time</li> 
- <li>We have it archived, so what's the problem</li> 
- <li>We keep one machine with a client around, so users can look it up</li> 
+<ul>
+ <li>the information is old, nobody needs it</li>
+ <li>we have great search in the new application, so users will find it</li>
+ <li>it is a waste of money and time</li>
+ <li>We have it archived, so what's the problem</li>
+ <li>We keep one machine with a client around, so users can look it up</li>
 </ul> If that's the prevalent line of thought in the organisation, wecome to binary <a href="http://en.wikipedia.org/wiki/Lobotomy">lobodomy</a>, if not, read on.<h3>Implementation</h3> On Windows file extensions and protocols are stored in the Windows Registry. After properly uninstalling IBM (or Lotus) Notes, there are no entries for <code>notes://</code> and the Notes file extensions. For links to work, we don't need to look at nsf or ntf, since you would need a Notes client to open those. We only need to look at the notes:// protocol and the ndl extension. 
 <br> The easiest way is a small helper application that posts the original URL to a web server which then would process it. To get Windows to recognise the protocol, you need to add it to the registry. The following snippet defines the protocol <code>tango://</code> which you can adjust to <code>notes://</code> or whatever need you have: 
-<br> 
+<br>
 <pre><code class="language-bash">
 Windows Registry Editor Version 5.00
 
@@ -159,13 +159,13 @@ Windows Registry Editor Version 5.00
 
 [HKEY_CLASSES_ROOT\tango\shell\open\command]
 @="\"C:\\bat\\test.cmd\" \"%1\""
-</code></pre> 
+</code></pre>
 <br> There is a <a href="https://github.com/OpenNTF/WebDAVForDomino/blob/master/com.ibm.xsp.webdav/webDAVHelper/WebDocOpenSetup.nsi">sample</a> how to use the <a href="http://nsis.sourceforge.net/">NSIS installer</a> to deploy such a registry setting. Now all that is needed is a mechanism that launches your lookup to retrieve the new location. Presuming your new application would be web based, it makes sense to have the retrieval web based too. Details of such an application are subject to another time, I'll only consider how to call it for now. Your command file (in my case <code>C:\bat\test.cmd</code>) only needs 2 lines: 
-<br> 
+<br>
 <pre><code class="language-bash">
 @echo off
 start https://urlmapper.yourcompany.com/map?source=%1
-</code></pre> 
+</code></pre>
 <br> The application would then lookup the source in the key value store and either display an 404 error page (with the option to investigate), when you didn't find that link or use a <a href="http://en.wikipedia.org/wiki/HTTP_301">301 redirect</a> to open the new destination. Such a mapper application is useful not only for decommissioning a client based protocol (notes, sap, chat), but also for web revamps where URLs change in large numbers. It is important that the application reacts on http GET, since the launching of a browser only can take an URL, but not a payload for a POST command. 
 <br> You might wonder why I muse removing the Notes client? Well, I'm a Domino fan and like <a href="/blog/2014/09/put-an-angular-face-on-your-inbox.html">local browser access</a>, so I might get to the point fast where I want notes:// to point to an http(s):// URL instead 
 <br> As usual YMMV.</div>

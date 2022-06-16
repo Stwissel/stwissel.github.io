@@ -27,11 +27,11 @@ ga('send', 'pageview');
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
 <meta name="description"
-	content="Dance the OAuth with me - OAuth and its cousin OICD are the ubiquitous methods to gain identity and authorization information. Since it is a m��nage �� trois between a user, an Identity provider (IdP) and an application, refered to as &#39;Service provider&#39;, it is hard to trouble shoot. A play in five acts In the recent Project " />
+	content="Dance the OAuth with me - OAuth and its cousin OICD are the ubiquitous methods to gain identity and authorization information. Since it is a ménage à trois between a user, an Identity provider (IdP) and an application, refered to as &#39;Service provider&#39;, it is hard to trouble shoot. A play in five acts In the recent Project KE" />
 <meta name="Keywords"
 	content="WebDevelopment," />
 <meta name="Abstract"
-	content="Dance the OAuth with me - OAuth and its cousin OICD are the ubiquitous methods to gain identity and authorization information. Since it is a m��nage �� trois between a user, an Identity provider (IdP) and an application, refered to as &#39;Service provider&#39;, it is hard to trouble shoot. A play in five acts In the recent Project " />
+	content="Dance the OAuth with me - OAuth and its cousin OICD are the ubiquitous methods to gain identity and authorization information. Since it is a ménage à trois between a user, an Identity provider (IdP) and an application, refered to as &#39;Service provider&#39;, it is hard to trouble shoot. A play in five acts In the recent Project KE" />
 <!--[if lt IE 9]>
 		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
 <![endif]-->
@@ -119,44 +119,44 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Dance the OAuth with me</small></h1>
 					<hr />
-					<div><p><a href="https://www.oauth.com">OAuth</a> and its cousin <a href="https://openid.net">OICD</a> are the ubiquitous methods to <a href="https://openid.net/gainpoc/">gain</a> identity and authorization information. Since it is a <a href="https://www.lexico.com/en/definition/menage_a_trois">m��nage �� trois</a> between a user, an <a href="https://en.wikipedia.org/wiki/Identity_provider">Identity provider (IdP)</a> and an application, refered to as "Service provider", it is hard to trouble shoot.</p> 
-<h2>A play in five acts</h2> 
-<p>In the recent <a href="https://opensource.hcltechsw.com/domino-keep-docs/">Project KEEP</a> we build an IdP into the API, so you have the choice of just using Domino or using an external IdP.</p> 
-<p>To ensure it works as expected several dependent HTTPS calls were needed. Each call would harvest some information into environment variables for the following step</p> 
-<h3>Act 0 - initial setup</h3> 
-<p>Store several variables into the environment:</p> 
-<ul> 
- <li><code>UserName</code>: the user you will simulate to approve</li> 
- <li><code>Password</code>: their password</li> 
- <li><code>HOST</code>: The starting URL for the first call</li> 
- <li><code>state</code>: a random string, need to stay the same through the sequence</li> 
- <li><code>client_id</code>: The application configured as service provider</li> 
- <li><code>client_secret</code>: The service provider "password"</li> 
- <li><code>scope</code>: the scope (or a subset) you have configured for the service provider</li> 
- <li><code>redirect_uri</code>: one of the redirection URIs you have configured for the service provider</li> 
-</ul> 
-<p>An OAuth flow contains basic authentication calls, so you need to ensure proper <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a> connections.</p> 
-<p><img src="/blog/images/2022/OAuthDance.svg" alt="OAuth Dance"></p><h3>Act 1 - lay of the land</h3> 
-<p>Establish the end-points you have to deal with:</p> 
+					<div><p><a href="https://www.oauth.com">OAuth</a> and its cousin <a href="https://openid.net">OICD</a> are the ubiquitous methods to <a href="https://openid.net/gainpoc/">gain</a> identity and authorization information. Since it is a <a href="https://www.lexico.com/en/definition/menage_a_trois">ménage à trois</a> between a user, an <a href="https://en.wikipedia.org/wiki/Identity_provider">Identity provider (IdP)</a> and an application, refered to as "Service provider", it is hard to trouble shoot.</p>
+<h2>A play in five acts</h2>
+<p>In the recent <a href="https://opensource.hcltechsw.com/domino-keep-docs/">Project KEEP</a> we build an IdP into the API, so you have the choice of just using Domino or using an external IdP.</p>
+<p>To ensure it works as expected several dependent HTTPS calls were needed. Each call would harvest some information into environment variables for the following step</p>
+<h3>Act 0 - initial setup</h3>
+<p>Store several variables into the environment:</p>
+<ul>
+ <li><code>UserName</code>: the user you will simulate to approve</li>
+ <li><code>Password</code>: their password</li>
+ <li><code>HOST</code>: The starting URL for the first call</li>
+ <li><code>state</code>: a random string, need to stay the same through the sequence</li>
+ <li><code>client_id</code>: The application configured as service provider</li>
+ <li><code>client_secret</code>: The service provider "password"</li>
+ <li><code>scope</code>: the scope (or a subset) you have configured for the service provider</li>
+ <li><code>redirect_uri</code>: one of the redirection URIs you have configured for the service provider</li>
+</ul>
+<p>An OAuth flow contains basic authentication calls, so you need to ensure proper <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a> connections.</p>
+<p><img src="/blog/images/2022/OAuthDance.svg" alt="OAuth Dance"></p><h3>Act 1 - lay of the land</h3>
+<p>Establish the end-points you have to deal with:</p>
 <pre><code class="language-bash">curl --location --request GET "$HOST/.well-known/openid-configuration"
-</code></pre> 
-<p>Harvest from the JSON response (<a href="https://stedolan.github.io/jq/">JQ</a> is your friend):</p> 
-<ul> 
- <li><code>authorization_endpoint</code>: URL for the service provider to request authorization</li> 
- <li><code>token_endpoint</code>: URL where authorization can be exchanged for access tokens</li> 
-</ul> 
-<h3>Act 2 - ask nicely</h3> 
-<p>This call initiates the flow and ends with a <code>302</code> status code, sending you to the UI part for granting or revoking access</p> 
+</code></pre>
+<p>Harvest from the JSON response (<a href="https://stedolan.github.io/jq/">JQ</a> is your friend):</p>
+<ul>
+ <li><code>authorization_endpoint</code>: URL for the service provider to request authorization</li>
+ <li><code>token_endpoint</code>: URL where authorization can be exchanged for access tokens</li>
+</ul>
+<h3>Act 2 - ask nicely</h3>
+<p>This call initiates the flow and ends with a <code>302</code> status code, sending you to the UI part for granting or revoking access</p>
 <pre><code class="language-bash">curl --location -g --request GET "$authorization_endpoint?client_id=$client_id&amp;response_type=code&amp;state=$state&amp;scope=$scope&amp;redirect_uri=$redirect_uri"
-</code></pre> 
-<p>There won't be a body result, but a <code>Location</code> header, you can grab and use in a <code>GET</code> request to retrieve the consent UI. This part in IdP specific, so using a different IdP will change act 3.</p> 
-<h3>Act 3 - authenticate and consent</h3> 
-<p>Two calls are required. First authenticate with KEEP, then consent for the application to have access:</p> 
+</code></pre>
+<p>There won't be a body result, but a <code>Location</code> header, you can grab and use in a <code>GET</code> request to retrieve the consent UI. This part in IdP specific, so using a different IdP will change act 3.</p>
+<h3>Act 3 - authenticate and consent</h3>
+<p>Two calls are required. First authenticate with KEEP, then consent for the application to have access:</p>
 <pre><code class="language-bash">curl --location --request POST "$HOST/api/v1/authforoauthflow" \
 --header "Content-Type: application/json" \
 --data-raw "{'password' : \"$Password\",'username' : \"$UserName\",'scopes' : 'oauth'}"
-</code></pre> 
-<p>Harvest the <code>bearer</code> response from the JSON body. The publish you consent. This one is a classic HTML form post, so the header needs to be <code>application/x-www-form-urlencoded</code></p> 
+</code></pre>
+<p>Harvest the <code>bearer</code> response from the JSON body. The publish you consent. This one is a classic HTML form post, so the header needs to be <code>application/x-www-form-urlencoded</code></p>
 <pre><code class="language-bash">curl --location -g --request POST '{{authorization_endpoint}}/decision' \
 --header "Authorization: Bearer $bearer" \
 --header 'Content-Type: application/x-www-form-urlencoded' \
@@ -166,10 +166,10 @@ ga('send', 'pageview');
 --data-urlencode "client_id=$client_id" \
 --data-urlencode "redirect_uri=$redirect_uri" \
 --data-urlencode 'decision=allow'
-</code></pre> 
-<p>The JSON result will have only two values: <code>state</code> and <code>authorization_code</code>. Capture the <code>authorization_code</code>.</p> 
-<h3>Act 4 - gain access</h3> 
-<p>The <code>authorization_code</code> has a short livespan, so it needs to get exchanged for an access token and a refresh token. This call works <strong>once</strong>. A second call will fail without Act 3 being repeated. This call again is a classic HTML form post.</p> 
+</code></pre>
+<p>The JSON result will have only two values: <code>state</code> and <code>authorization_code</code>. Capture the <code>authorization_code</code>.</p>
+<h3>Act 4 - gain access</h3>
+<p>The <code>authorization_code</code> has a short livespan, so it needs to get exchanged for an access token and a refresh token. This call works <strong>once</strong>. A second call will fail without Act 3 being repeated. This call again is a classic HTML form post.</p>
 <pre><code class="language-bash">curl --location -g --request POST "$token_endpoint" \
 --header 'Content-Type: application/x-www-form-urlencoded' \
 --data-urlencode 'grant_type=authorization_code' \
@@ -177,9 +177,9 @@ ga('send', 'pageview');
 --data-urlencode "redirect_uri=$redirect_uri" \
 --data-urlencode "client_id=$client_id" \
 --data-urlencode "client_secret=$client_secret"
-</code></pre> 
-<p><strong>Note</strong> In bash environment variables only get resolved in double quotes, hence the mixed use of single and double quotes here.</p> 
-<p>The JSON result will contain the <code>access_token</code>, which is your KEEP compliant, short lived JWT and the <code>refresh_token</code> to get a new access token without the need for user interaction. To verify that it is working call this:</p> 
+</code></pre>
+<p><strong>Note</strong> In bash environment variables only get resolved in double quotes, hence the mixed use of single and double quotes here.</p>
+<p>The JSON result will contain the <code>access_token</code>, which is your KEEP compliant, short lived JWT and the <code>refresh_token</code> to get a new access token without the need for user interaction. To verify that it is working call this:</p>
 <pre><code class="language-bash">curl --location -g --request POST "$token_endpoint}}" \
 --header 'Content-Type: application/x-www-form-urlencoded' \
 --data-urlencode 'grant_type=refresh_token' \
@@ -187,12 +187,12 @@ ga('send', 'pageview');
 --data-urlencode "scope=$scope" \
 --data-urlencode "client_id=$client_id" \
 --data-urlencode "client_secret=$client_secret"
-</code></pre> 
-<p>Again the <code>access_token</code> is your KEEP JWT. The call will not issue a new refresh token.</p> 
-<h3><a href="https://www.merriam-webster.com/dictionary/epilogue">Epilogue</a></h3> 
-<p>In just five acts, you can manually retrace the steps the OAuth dance performs to gain access. There's a variation to it: instead of <code>client_id</code> and <code>client_secret</code> being posted in the request body, they can be supplied as basic authentication header:</p> 
+</code></pre>
+<p>Again the <code>access_token</code> is your KEEP JWT. The call will not issue a new refresh token.</p>
+<h3><a href="https://www.merriam-webster.com/dictionary/epilogue">Epilogue</a></h3>
+<p>In just five acts, you can manually retrace the steps the OAuth dance performs to gain access. There's a variation to it: instead of <code>client_id</code> and <code>client_secret</code> being posted in the request body, they can be supplied as basic authentication header:</p>
 <pre><code class="language-bash">curl -p "$client_id:$client_secret" ...
-</code></pre> 
+</code></pre>
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>

@@ -119,65 +119,65 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Collecting Java Streams</small></h1>
 					<hr />
-					<div><p>I wrote about <a href="/blog/2020/11/streams-and-functional-programming-in-java.html">Java Streams before</a>, sharing how they work for me and how, in conjunction with Java's <a href="https://www.baeldung.com/java-8-functional-interfaces">functional interfaces</a>, they enable us to write clean(er) code. I'd like to revisit my learnings, with some focus on the final step: what happens at the tail end of a stream operation</p> 
-<h3>Four activities</h3> 
-<p>There are four activities around Java Streams:</p> 
-<ul> 
- <li> <p><strong>Create</strong>: There are numerous possibilities to create a stream. The most prevalent, I found, is <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Collection.html#stream"><code>Collection.stream()</code></a> which returns a stream of anything in Java's collection framework: Collections, Lists, Sets etc.<br>There are more possibilities provided by the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html">Stream</a> interface, the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.Builder.html">StreamBuilder</a> interface, the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/StreamSupport.html">StreamSupport</a> utility class or Java NIO's <a href="https://docs.oracle.com/javase/8/docs/api/java/nio/file/Files.html">Files</a> (and probably some more)</p> </li> 
- <li> <p><strong>Select</strong>: You can <code>filter()</code>, <code>skip()</code>, <code>limit()</code>, <code>concat()</code>, <code>distinct()</code> or <code>sorted()</code>. All those methods don't change individual stream members, but determine what elements will be processed further. Selection and manipulation can happen multiple times after each other</p> </li> 
- <li> <p><strong>Manipulate</strong>: Replace each member of the stream with something else. That "something" can be the member itself with altered content. Methods that are fluent fit here nicely (like <code>stream().map(customer -&gt; customer.setStatus(newStatus))</code>. We use <code>map()</code> and <code>flatMap()</code> for this step. While it is perfectly fine to use <a href="https://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html">Lambda Expressions</a>, consider moving the Lambda body into its own function, to improve reading and debugging</p> </li> 
- <li> <p><strong>Collect</strong>: You can "collect" a stream once. After that it becomes inaccessible. The closest to classic loops here is the <code>forEach()</code> method, that allows you operate on the members as you are used to from the Java Collection framework.<br>Next are the convenience methods: <code>count()</code>, <code>findAny()</code>, <code>findFirst()</code>, <code>toArray()</code> and finally <code>reduce()</code> and <code>collect()</code>.<br>A typical way to use <code>collect()</code> is in conjunction with the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collectors.html">Collectors</a> static class, that provides the most commonly needed methods like <code>toSet()</code>, <code>toList()</code>, <code>joining()</code> or <code>groupingBy()</code>. Check the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collectors.html">JavaDoc</a>, there are 37 methods at your disposal.<br>However, sometimes, you might have different needs for your code, there <strong>custom collectors</strong> shine</p> </li> 
-</ul><p>For more details check out <a href="https://www.baeldung.com/java-8-streams">Baeldung's Java8 Stream Tutorial</a></p> 
-<h3>Custom Collectors</h3> 
-<p><a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html">Collector</a> is a Java interface, so nothing stops us, short of understanding it, to implement our own. The interface heavily relies on Java's functional interfaces.</p> 
-<p>The lifecycle of a collector:</p> 
-<ul> 
- <li>Internal result holder gets created: <code>supplier()</code> - <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/Supplier.html"><code>Supplier</code></a></li> 
- <li>Stream members get accepted: <code>accumulator()</code> - <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/BiConsumer.html"><code>BiConsumer</code></a></li> 
- <li>Results of parallel operations get merged: <code>combiner()</code> - <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/BinaryOperator.html"><code>BinaryOperator</code></a></li> 
- <li>(Optional) final transformation of internal result: <code>finisher()</code> - <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/Function.html"><code>Function</code></a></li> 
- <li>result is returned</li> 
-</ul> 
-<p>The <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html#of-java.util.function.Supplier-java.util.function.BiConsumer-java.util.function.BinaryOperator-java.util.stream.Collector.Characteristics...-"><code>Collector.of()</code></a> method makes it easy to quickly assemble your collector</p> 
-<h3>Examples</h3> 
-<p>I'm using the <a href="https://vertx.io/">Eclipse Vert.x</a> framework for some of the examples, in case you wonder where <a href="https://vertx.io/docs/apidocs/io/vertx/core/buffer/Buffer.html"><code>Buffer</code></a> or <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html"><code>JsonObject</code></a> come from.</p> 
-<h4>Have all tasks been completed?</h4> 
-<p>This collector returns true on either an empty stream or when all members are true</p> 
+					<div><p>I wrote about <a href="/blog/2020/11/streams-and-functional-programming-in-java.html">Java Streams before</a>, sharing how they work for me and how, in conjunction with Java's <a href="https://www.baeldung.com/java-8-functional-interfaces">functional interfaces</a>, they enable us to write clean(er) code. I'd like to revisit my learnings, with some focus on the final step: what happens at the tail end of a stream operation</p>
+<h3>Four activities</h3>
+<p>There are four activities around Java Streams:</p>
+<ul>
+ <li><p><strong>Create</strong>: There are numerous possibilities to create a stream. The most prevalent, I found, is <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Collection.html#stream"><code>Collection.stream()</code></a> which returns a stream of anything in Java's collection framework: Collections, Lists, Sets etc.<br>There are more possibilities provided by the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html">Stream</a> interface, the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.Builder.html">StreamBuilder</a> interface, the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/StreamSupport.html">StreamSupport</a> utility class or Java NIO's <a href="https://docs.oracle.com/javase/8/docs/api/java/nio/file/Files.html">Files</a> (and probably some more)</p></li>
+ <li><p><strong>Select</strong>: You can <code>filter()</code>, <code>skip()</code>, <code>limit()</code>, <code>concat()</code>, <code>distinct()</code> or <code>sorted()</code>. All those methods don't change individual stream members, but determine what elements will be processed further. Selection and manipulation can happen multiple times after each other</p></li>
+ <li><p><strong>Manipulate</strong>: Replace each member of the stream with something else. That "something" can be the member itself with altered content. Methods that are fluent fit here nicely (like <code>stream().map(customer -&gt; customer.setStatus(newStatus))</code>. We use <code>map()</code> and <code>flatMap()</code> for this step. While it is perfectly fine to use <a href="https://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html">Lambda Expressions</a>, consider moving the Lambda body into its own function, to improve reading and debugging</p></li>
+ <li><p><strong>Collect</strong>: You can "collect" a stream once. After that it becomes inaccessible. The closest to classic loops here is the <code>forEach()</code> method, that allows you operate on the members as you are used to from the Java Collection framework.<br>Next are the convenience methods: <code>count()</code>, <code>findAny()</code>, <code>findFirst()</code>, <code>toArray()</code> and finally <code>reduce()</code> and <code>collect()</code>.<br>A typical way to use <code>collect()</code> is in conjunction with the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collectors.html">Collectors</a> static class, that provides the most commonly needed methods like <code>toSet()</code>, <code>toList()</code>, <code>joining()</code> or <code>groupingBy()</code>. Check the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collectors.html">JavaDoc</a>, there are 37 methods at your disposal.<br>However, sometimes, you might have different needs for your code, there <strong>custom collectors</strong> shine</p></li>
+</ul><p>For more details check out <a href="https://www.baeldung.com/java-8-streams">Baeldung's Java8 Stream Tutorial</a></p>
+<h3>Custom Collectors</h3>
+<p><a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html">Collector</a> is a Java interface, so nothing stops us, short of understanding it, to implement our own. The interface heavily relies on Java's functional interfaces.</p>
+<p>The lifecycle of a collector:</p>
+<ul>
+ <li>Internal result holder gets created: <code>supplier()</code> - <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/Supplier.html"><code>Supplier</code></a></li>
+ <li>Stream members get accepted: <code>accumulator()</code> - <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/BiConsumer.html"><code>BiConsumer</code></a></li>
+ <li>Results of parallel operations get merged: <code>combiner()</code> - <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/BinaryOperator.html"><code>BinaryOperator</code></a></li>
+ <li>(Optional) final transformation of internal result: <code>finisher()</code> - <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/Function.html"><code>Function</code></a></li>
+ <li>result is returned</li>
+</ul>
+<p>The <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html#of-java.util.function.Supplier-java.util.function.BiConsumer-java.util.function.BinaryOperator-java.util.stream.Collector.Characteristics...-"><code>Collector.of()</code></a> method makes it easy to quickly assemble your collector</p>
+<h3>Examples</h3>
+<p>I'm using the <a href="https://vertx.io/">Eclipse Vert.x</a> framework for some of the examples, in case you wonder where <a href="https://vertx.io/docs/apidocs/io/vertx/core/buffer/Buffer.html"><code>Buffer</code></a> or <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html"><code>JsonObject</code></a> come from.</p>
+<h4>Have all tasks been completed?</h4>
+<p>This collector returns true on either an empty stream or when all members are true</p>
 <pre><code class="language-java"> public static Collector&lt;Boolean, Boolean, Boolean&gt; allTrueCollector() {
     return Collector.of(() -&gt; Boolean.TRUE,
                         Boolean::logicalAnd,
                         Boolean::logicalAnd);
   }
-</code></pre> 
-<p>Use:</p> 
+</code></pre>
+<p>Use:</p>
 <pre><code class="language-java">boolean amIdone = TaskSupplier.getTodayTasks().stream()
                               .map(t -&gt; t.completed())
                               .collect(CustomCollectors.allTrueCollector());
-</code></pre> 
-<p>The example is a little silly, you could achive the same result like this:</p> 
+</code></pre>
+<p>The example is a little silly, you could achive the same result like this:</p>
 <pre><code class="language-java">boolean amIdone = TaskSupplier.getTodayTasks().stream()
                               .filter(t -&gt; !t.completed())
                               .isEmpty();
-</code></pre> 
-<h4>Build up a Json Object result</h4> 
-<p>Your code retrieves different JsonObjects in a stream that need to be combined into a single result. E.g. searched against multiple data sources</p> 
+</code></pre>
+<h4>Build up a Json Object result</h4>
+<p>Your code retrieves different JsonObjects in a stream that need to be combined into a single result. E.g. searched against multiple data sources</p>
 <pre><code class="language-java">public static Collector&lt;JsonObject, JsonObject, JsonObject&gt; jsonCollector() {
     return Collector.of(JsonObject::new,
                         JsonObject::mergeIn,
                         JsonObject::mergeIn);
 
   }
-</code></pre> 
-<h4>You have your own collection type</h4> 
-<p>Example here uses <code>JsonArray</code> which is like an ArrayList for Json</p> 
+</code></pre>
+<h4>You have your own collection type</h4>
+<p>Example here uses <code>JsonArray</code> which is like an ArrayList for Json</p>
 <pre><code class="language-java">public static Collector&lt;JsonObject, JsonArray, JsonArray&gt; jsonObject2ArrayCollector() {
     return Collector.of(JsonArray::new,
                         JsonArray::add,
                         JsonArray::addAll);
   }
-</code></pre> 
-<h4>Total custom collector</h4> 
-<p>Go wild!</p> 
+</code></pre>
+<h4>Total custom collector</h4>
+<p>Go wild!</p>
 <pre><code class="language-java">public static Collector&lt;TaskEntries, DraftReport, PdfReport&gt; taskReportCollector(final Project project, final Team team) {
 
  Supplier&lt;DraftReport&gt; draft = DraftReportTemplates.someMethod(team);
@@ -189,7 +189,7 @@ ga('send', 'pageview');
                      draft -&gt; PdfGenerator.generate(team, draft));
 
   }
-</code></pre> 
+</code></pre>
 <p>Hope this gives you some ideas, as usual YMMV</p></div>
 					<hr />
 					<p>

@@ -122,11 +122,11 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Factory based dependency injection</small></h1>
 					<hr />
-					<div><p><a href="https://en.wikipedia.org/wiki/No_Man_Is_an_Island_(album)">No man is an island</a> and no code you write lives without dependencies (even your low-level assembly code depends on the processor's microcode). Testing (with) dependencies can be [insert expletive]</p> 
-<h3>Dependency injection to the rescue</h3> 
-<p>The general approach to make dependent code testable is <a href="https://en.wikipedia.org/wiki/Dependency_injection">Dependency injection</a>. Instead of calling out and create an instance of the dependency, the dependency is hand over as parameter. This could be in a constructor, a property setter or as method parameter.</p> 
-<p>A key requirement for successful dependency injection: the injected object gets injected as an <a href="https://docs.oracle.com/javase/tutorial/java/concepts/interface.html">Interface</a> rather than a concrete class. So <a href="https://amzn.to/3ozoD9k">do your homework</a> and build your apps around interfaces.</p> 
-<p>An example to illustrate how not to do, and how to change:</p> 
+					<div><p><a href="https://en.wikipedia.org/wiki/No_Man_Is_an_Island_(album)">No man is an island</a> and no code you write lives without dependencies (even your low-level assembly code depends on the processor's microcode). Testing (with) dependencies can be [insert expletive]</p>
+<h3>Dependency injection to the rescue</h3>
+<p>The general approach to make dependent code testable is <a href="https://en.wikipedia.org/wiki/Dependency_injection">Dependency injection</a>. Instead of calling out and create an instance of the dependency, the dependency is hand over as parameter. This could be in a constructor, a property setter or as method parameter.</p>
+<p>A key requirement for successful dependency injection: the injected object gets injected as an <a href="https://docs.oracle.com/javase/tutorial/java/concepts/interface.html">Interface</a> rather than a concrete class. So <a href="https://amzn.to/3ozoD9k">do your homework</a> and build your apps around interfaces.</p>
+<p>An example to illustrate how not to do, and how to change:</p>
 <pre><code class="language-java">public Optional&lt;Customer&gt; findCustomer(final String id) {
  // Some processing here, omitted for clarity
 
@@ -135,8 +135,8 @@ ga('send', 'pageview');
  return Optional.ofNullable(find.customerById(id));
 
 }
-</code></pre> 
-<p>When you try to test this function, you depend on the static method of the <code>CustomerDb</code> which is a pain to mock out. So one consideration could be to hand the <code>CustomerDb</code> as dependency. But this would violate "provide interface, not class". The conclusion, presuming <code>CustomerDbFind</code> is an interface will be:</p> 
+</code></pre>
+<p>When you try to test this function, you depend on the static method of the <code>CustomerDb</code> which is a pain to mock out. So one consideration could be to hand the <code>CustomerDb</code> as dependency. But this would violate "provide interface, not class". The conclusion, presuming <code>CustomerDbFind</code> is an interface will be:</p>
 <pre><code class="language-java">public Optional&lt;Customer&gt; findCustomer(final CustomerDbFind find, final String id) {
  // Some processing here, omitted for clarity
 
@@ -145,10 +145,10 @@ ga('send', 'pageview');
  return Optional.ofNullable(find.customerById(id));
 
 }
-</code></pre> 
-<p>This now allows to construct the dependency outside the method to test by implementing the interface or using a <a href="https://site.mockito.org">Mock library</a></p> 
-<h3>Not so fast</h3><p>Handing over all dependencies as method parameters can lead to parameter bloat and prevent methods to be used in <a href="https://www.baeldung.com/java-8-functional-interfaces">functional interfaces</a>, which by design don't allow adding additional parameters.</p> 
-<p>The solution we came up with, is to use a factory interface to provide all those global values (setup, flags, pools etc) in an default implemented interface that is retrieved from a <a href="https://www.baeldung.com/java-singleton">Singleton</a>. Bear with me on the details:</p> 
+</code></pre>
+<p>This now allows to construct the dependency outside the method to test by implementing the interface or using a <a href="https://site.mockito.org">Mock library</a></p>
+<h3>Not so fast</h3><p>Handing over all dependencies as method parameters can lead to parameter bloat and prevent methods to be used in <a href="https://www.baeldung.com/java-8-functional-interfaces">functional interfaces</a>, which by design don't allow adding additional parameters.</p>
+<p>The solution we came up with, is to use a factory interface to provide all those global values (setup, flags, pools etc) in an default implemented interface that is retrieved from a <a href="https://www.baeldung.com/java-singleton">Singleton</a>. Bear with me on the details:</p>
 <pre><code class="language-java">
 // The interface we get global objects from
 public interface GlobalFactory() {
@@ -178,8 +178,8 @@ public enum GlobalFactorySource() {
     this.gf = new GlobalFactory() {};
   }
 }
-</code></pre> 
-<p>Now we can refactor our method to be compliant with functional interfaces (one in, one out):</p> 
+</code></pre>
+<p>Now we can refactor our method to be compliant with functional interfaces (one in, one out):</p>
 <pre><code class="language-java">public Optional&lt;Customer&gt; findCustomer(final String id) {
  // Some processing here, omitted for clarity
 
@@ -188,16 +188,16 @@ public enum GlobalFactorySource() {
  return Optional.ofNullable(find.customerById(id));
 
 }
-</code></pre> 
-<p>This now can be used in <a href="https://stackify.com/streams-guide-java-8/">Java streams</a> like this:</p> 
+</code></pre>
+<p>This now can be used in <a href="https://stackify.com/streams-guide-java-8/">Java streams</a> like this:</p>
 <pre><code class="language-java">List&lt;Customer&gt; customers = customerIdList.stream()
                            .map(this::findCustomer)
                            .filter(Optional::isPresent)
                            .map(Optional::get)
                            .collect(Collectors.toList());
-</code></pre> 
-<h3>Onwards to testing</h3> 
-<p>In your unit test (in BeforeAll) you would overwrite the factory with something constructed or mocked:</p> 
+</code></pre>
+<h3>Onwards to testing</h3>
+<p>In your unit test (in BeforeAll) you would overwrite the factory with something constructed or mocked:</p>
 <pre><code class="language-java">GlobalFactory mockFactory = new GlobalFactory() {
 
   @Overwrite
@@ -215,7 +215,7 @@ Assertion.assertTrue(findCustomer.isPresent());
 
 // At the end
 GlobalFactorySource.INSTANCE.reset();
-</code></pre> 
+</code></pre>
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>

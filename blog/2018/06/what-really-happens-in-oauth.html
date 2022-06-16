@@ -122,19 +122,19 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>What really happens in OAuth</small></h1>
 					<hr />
-					<div><p>OAuth in its various versions is the gold standard for Authorization (and using<a href="http://openid.net/connect/">OpenID Connect</a> for Authentication as well). There are <a href="https://www.digitalocean.com/community/tutorials/an-introduction-to-oauth-2">plenty</a> <a href="http://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html">of</a> <a href="https://medium.com/@technospace/an-introduction-to-oauth-2-0-4c71b5fb19ff">introductions</a> <a href="https://www.slideshare.net/aaronpk/an-introduction-to-oauth2">around</a> <a href="https://www.slideshare.net/aaronpk/an-introduction-to-oauth2">explaining</a> <a href="https://aaronparecki.com/oauth-2-simplified/">OAuth</a>. My favorite HTTP tool <a href="https://www.getpostman.com/">Postman</a> makes it really simple to obtain access via OAuth.</p> 
-<p>Nevertheless all those explanations are quite high level, so I wondered what happens on the wire for the getToken part so I started digging. This is what I found. <em>Nota bene</em>: There is no inherit security in OAuth if you don't use <strong>https</strong>.</p> 
-<h3>The components</h3> 
-<ul> 
- <li>Authorization server: server to interact with to get an authorization</li> 
- <li>Client identifier (ClientID): "userid" of the application</li> 
- <li>Client Secret: "password" of the application</li> 
- <li>A user</li> 
-</ul> 
-<p>I'm not looking at the Resource Server here - it only comes into play before or after the actual token process.</p> 
-<h3>The Form-Post Flow</h3> 
-<p>There are <a href="https://auth0.com/docs/api-auth/which-oauth-flow-to-use">several flows</a> available to pick from. I'm looking at the Form-Post flow where user credentials are passed to the authentication server to obtain access and refresh tokens.</p> 
-<p>For this flow we need to post a HTTP form to the authorization server. The post has 2 parts: Header and body. A request looks like this:</p> 
+					<div><p>OAuth in its various versions is the gold standard for Authorization (and using<a href="http://openid.net/connect/">OpenID Connect</a> for Authentication as well). There are <a href="https://www.digitalocean.com/community/tutorials/an-introduction-to-oauth-2">plenty</a> <a href="http://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html">of</a> <a href="https://medium.com/@technospace/an-introduction-to-oauth-2-0-4c71b5fb19ff">introductions</a> <a href="https://www.slideshare.net/aaronpk/an-introduction-to-oauth2">around</a> <a href="https://www.slideshare.net/aaronpk/an-introduction-to-oauth2">explaining</a> <a href="https://aaronparecki.com/oauth-2-simplified/">OAuth</a>. My favorite HTTP tool <a href="https://www.getpostman.com/">Postman</a> makes it really simple to obtain access via OAuth.</p>
+<p>Nevertheless all those explanations are quite high level, so I wondered what happens on the wire for the getToken part so I started digging. This is what I found. <em>Nota bene</em>: There is no inherit security in OAuth if you don't use <strong>https</strong>.</p>
+<h3>The components</h3>
+<ul>
+ <li>Authorization server: server to interact with to get an authorization</li>
+ <li>Client identifier (ClientID): "userid" of the application</li>
+ <li>Client Secret: "password" of the application</li>
+ <li>A user</li>
+</ul>
+<p>I'm not looking at the Resource Server here - it only comes into play before or after the actual token process.</p>
+<h3>The Form-Post Flow</h3>
+<p>There are <a href="https://auth0.com/docs/api-auth/which-oauth-flow-to-use">several flows</a> available to pick from. I'm looking at the Form-Post flow where user credentials are passed to the authentication server to obtain access and refresh tokens.</p>
+<p>For this flow we need to post a HTTP form to the authorization server. The post has 2 parts: Header and body. A request looks like this:</p>
 <pre><code>POST /yourOAuthEndPoint HTTP/1.1
 Host: authserver.acme.com
 Accept-Encoding: gzip, deflate
@@ -148,28 +148,28 @@ grant_type=password
   &amp;password=password
   &amp;scope=openid+email+profile
   &amp;client_id=clientid
-</code></pre> 
-<p>Some remarks:</p> 
-<ul> 
- <li>The <code>Authorization</code> header is just as <a href="https://www.base64encode.org/">Base64</a>version of <code>clientid:clientsecret</code> - you have t replace it with your actual info</li> 
- <li>Content-Type must be <code>application/x-www-form-urlencoded</code></li> 
- <li>The body is just one line with no spaces, I split it only for readability</li> 
- <li>scope is a encoded list the + signs are actually spaces. Keeping that in mind you want to keep the server side scope names simple</li> 
- <li>You need to repeat the clientid as header value</li> 
-</ul> 
-<p>As a result you get back a JSON structure with authorization information. It can look like this:</p> 
+</code></pre>
+<p>Some remarks:</p>
+<ul>
+ <li>The <code>Authorization</code> header is just as <a href="https://www.base64encode.org/">Base64</a>version of <code>clientid:clientsecret</code> - you have t replace it with your actual info</li>
+ <li>Content-Type must be <code>application/x-www-form-urlencoded</code></li>
+ <li>The body is just one line with no spaces, I split it only for readability</li>
+ <li>scope is a encoded list the + signs are actually spaces. Keeping that in mind you want to keep the server side scope names simple</li>
+ <li>You need to repeat the clientid as header value</li>
+</ul>
+<p>As a result you get back a JSON structure with authorization information. It can look like this:</p>
 <pre><code>{
     "access_token": "wildStringForAccess",
     "refresh_token": "wildStringForRefreshingAccess",
     "token_type": "Bearer",
     "expires_in": 300
 }
-</code></pre> 
-<p>The result is easy to understand:</p> 
-<ul> 
- <li><code>expires_in</code>: Duration for the access token in seconds</li> 
- <li><code>token_type</code>: <code>Bearer</code> denotes that you call your resource server with a header value of <code>Authorization: Bearer wildStringForAccess</code></li> 
-</ul> 
+</code></pre>
+<p>The result is easy to understand:</p>
+<ul>
+ <li><code>expires_in</code>: Duration for the access token in seconds</li>
+ <li><code>token_type</code>: <code>Bearer</code> denotes that you call your resource server with a header value of <code>Authorization: Bearer wildStringForAccess</code></li>
+</ul>
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>

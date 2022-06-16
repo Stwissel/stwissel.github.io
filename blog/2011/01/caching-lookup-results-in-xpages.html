@@ -120,121 +120,121 @@ ga('send', 'pageview');
 					<h1><small>Caching Lookup results in XPages</small></h1>
 					<hr />
 					<div><a href="http://ntf.gbs.com/nathan/escape.nsf/d6plinks/NTFN-7FRG79">Nathan</a> and <a href="http://www.jmackey.net/groupwareinc/johnblog/johnblog.nsf/d6plinks/GROC-7GAFVQ">John</a> have shown before how a column value in an XPages view can contain the result from a lookup into another view (Notes or RDBMS). As you all know " <i>With great powers ....</i>". These lookups are executed <b>once per row</b> in the view. If there is a possibility, that the lookup key is repeating, it is a good idea to cache these values. Depending on your application this can be the one of the scopes: requestScope, viewScope, sessionScope or applicationScope. A very simple cache mechanism can look like this: 
-<div class="javascript"> <span class="kw2">var</span> myLookups <span class="sy0">=</span> <span class="br0">{</span> &nbsp; 
- <br> &nbsp; &nbsp; <span class="st0">"getColor"</span> <span class="sy0">:</span> <span class="kw2">function</span> <span class="br0">(</span>color <span class="sy0">,</span> <span class="kw3">name</span> <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> fruit <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span>requestScope. <span class="me1">fruit</span> <span class="sy0">!=</span> <span class="kw2">null</span> <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; fruit <span class="sy0">=</span> requestScope. <span class="me1">fruit</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw1">else</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; fruit <span class="sy0">=</span> <span class="kw2">new</span> java. <span class="me1">util</span>. <span class="me1">HashMap</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> 
+<div class="javascript"><span class="kw2">var</span> myLookups <span class="sy0">=</span><span class="br0">{</span> &nbsp; 
+ <br> &nbsp; &nbsp; <span class="st0">"getColor"</span><span class="sy0">:</span><span class="kw2">function</span><span class="br0">(</span>color <span class="sy0">,</span><span class="kw3">name</span><span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> fruit <span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span>requestScope. <span class="me1">fruit</span><span class="sy0">!=</span><span class="kw2">null</span><span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; fruit <span class="sy0">=</span> requestScope. <span class="me1">fruit</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw1">else</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; fruit <span class="sy0">=</span><span class="kw2">new</span> java. <span class="me1">util</span>. <span class="me1">HashMap</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span>fruit. <span class="me1">containsKey</span> <span class="br0">(</span>color <span class="br0">)</span> <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> result <span class="sy0">=</span> fruit. <span class="me1">get</span> <span class="br0">(</span>color <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">return</span> result <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span>fruit. <span class="me1">containsKey</span><span class="br0">(</span>color <span class="br0">)</span><span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> result <span class="sy0">=</span> fruit. <span class="me1">get</span><span class="br0">(</span>color <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">return</span> result <span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> lookResult <span class="sy0">=</span> <span class="sy0">@</span>DbLookup <span class="br0">(</span> <span class="sy0">@</span>DbName <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">,</span> <span class="st0">"Fruits"</span> <span class="sy0">,</span> color <span class="sy0">,</span> <span class="nu0">3</span> <span class="br0">)</span> <span class="sy0">;</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> lookResult <span class="sy0">=</span><span class="sy0">@</span>DbLookup <span class="br0">(</span><span class="sy0">@</span>DbName <span class="br0">(</span><span class="br0">)</span><span class="sy0">,</span><span class="st0">"Fruits"</span><span class="sy0">,</span> color <span class="sy0">,</span><span class="nu0">3</span><span class="br0">)</span><span class="sy0">;</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; fruit. <span class="me1">put</span> <span class="br0">(</span>color <span class="sy0">,</span>lookResult <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; requestScope. <span class="me1">fruit</span> <span class="sy0">=</span> fruit <span class="sy0">;</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; fruit. <span class="me1">put</span><span class="br0">(</span>color <span class="sy0">,</span>lookResult <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; requestScope. <span class="me1">fruit</span><span class="sy0">=</span> fruit <span class="sy0">;</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">return</span> <span class="sy0">@</span>Trim <span class="br0">(</span> <span class="sy0">@</span>Replace <span class="br0">(</span>lookResult <span class="sy0">,</span> <span class="kw3">name</span> <span class="sy0">,</span> <span class="st0">""</span> <span class="br0">)</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; <span class="br0">}</span> 
- <br> <span class="br0">}</span> 
-</div> The function can be called with <code>myLookups.getColor("red","Apple");</code> (the function returns all fruits of a given color except the current fruit handed over as the second parameter). If you have a lot of variables to cache a HashMap might not get the best result and you could consider using <a href="http://jakarta.apache.org/jcs/">JCS</a>. To test if it is working alter the function like this (Line 12+13):<div class="javascript"> 
- <ol> 
-  <li class="li1"> 
-   <div class="de1"> <span class="kw2">var</span> myLookups <span class="sy0">=</span> <span class="br0">{</span> &nbsp; 
-   </div></li> 
-  <li class="li1"> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">return</span><span class="sy0">@</span>Trim <span class="br0">(</span><span class="sy0">@</span>Replace <span class="br0">(</span>lookResult <span class="sy0">,</span><span class="kw3">name</span><span class="sy0">,</span><span class="st0">""</span><span class="br0">)</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; <span class="br0">}</span>
+ <br><span class="br0">}</span>
+</div> The function can be called with <code>myLookups.getColor("red","Apple");</code> (the function returns all fruits of a given color except the current fruit handed over as the second parameter). If you have a lot of variables to cache a HashMap might not get the best result and you could consider using <a href="http://jakarta.apache.org/jcs/">JCS</a>. To test if it is working alter the function like this (Line 12+13):<div class="javascript">
+ <ol>
+  <li class="li1">
+   <div class="de1"><span class="kw2">var</span> myLookups <span class="sy0">=</span><span class="br0">{</span> &nbsp; 
+   </div></li>
+  <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="st0">"getColor"</span> <span class="sy0">:</span> <span class="kw2">function</span> <span class="br0">(</span>color <span class="sy0">,</span> <span class="kw3">name</span> <span class="br0">)</span> <span class="br0">{</span> 
-   </div></li> 
-  <li class="li1"> 
+     &nbsp; &nbsp; <span class="st0">"getColor"</span><span class="sy0">:</span><span class="kw2">function</span><span class="br0">(</span>color <span class="sy0">,</span><span class="kw3">name</span><span class="br0">)</span><span class="br0">{</span>
+   </div></li>
+  <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> fruit <span class="sy0">;</span> 
-   </div></li> 
-  <li class="li1"> 
+     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> fruit <span class="sy0">;</span>
+   </div></li>
+  <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span>requestScope. <span class="me1">fruit</span> <span class="sy0">!=</span> <span class="kw2">null</span> <span class="br0">)</span> <span class="br0">{</span> 
-   </div></li> 
-  <li class="li1"> 
+     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span>requestScope. <span class="me1">fruit</span><span class="sy0">!=</span><span class="kw2">null</span><span class="br0">)</span><span class="br0">{</span>
+   </div></li>
+  <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; fruit <span class="sy0">=</span> requestScope. <span class="me1">fruit</span> <span class="sy0">;</span> 
-   </div></li> 
-  <li class="li1"> 
+     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; fruit <span class="sy0">=</span> requestScope. <span class="me1">fruit</span><span class="sy0">;</span>
+   </div></li>
+  <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw1">else</span> <span class="br0">{</span> 
-   </div></li> 
-  <li class="li1"> 
+     &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw1">else</span><span class="br0">{</span>
+   </div></li>
+  <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; fruit <span class="sy0">=</span> <span class="kw2">new</span> java. <span class="me1">util</span>. <span class="me1">HashMap</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
-   </div></li> 
-  <li class="li1"> 
+     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; fruit <span class="sy0">=</span><span class="kw2">new</span> java. <span class="me1">util</span>. <span class="me1">HashMap</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+   </div></li>
+  <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> 
-   </div></li> 
-  <li class="li1"> 
-   <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; 
-   </div></li> 
-  <li class="li1"> 
-   <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span>fruit. <span class="me1">containsKey</span> <span class="br0">(</span>color <span class="br0">)</span> <span class="br0">)</span> <span class="br0">{</span> 
-   </div></li> 
-  <li class="li1"> 
-   <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> result <span class="sy0">=</span> fruit. <span class="me1">get</span> <span class="br0">(</span>color <span class="br0">)</span> <span class="sy0">;</span> 
-   </div></li> 
-  <li class="li1"> 
-   <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; fruit. <span class="me1">put</span> <span class="br0">(</span>color <span class="sy0">,</span> result <span class="sy0">+</span> <span class="st0">" x"</span> <span class="br0">)</span> <span class="sy0">;</span> 
-   </div></li> 
-  <li class="li1"> 
-   <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">return</span> result <span class="sy0">+</span> <span class="st0">" x"</span> <span class="sy0">;</span> 
-   </div></li> 
-  <li class="li1"> 
-   <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> 
-   </div></li> 
-  <li class="li1"> 
+     &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+   </div></li>
+  <li class="li1">
    <div class="de1">
      &nbsp; &nbsp; &nbsp; &nbsp; 
-   </div></li> 
-  <li class="li1"> 
+   </div></li>
+  <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> lookResult <span class="sy0">=</span> <span class="sy0">@</span>DbLookup <span class="br0">(</span> <span class="sy0">@</span>DbName <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">,</span> <span class="st0">"Fruits"</span> <span class="sy0">,</span> color <span class="sy0">,</span> <span class="nu0">3</span> <span class="br0">)</span> <span class="sy0">;</span> 
-   </div></li> 
-  <li class="li1"> 
+     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span>fruit. <span class="me1">containsKey</span><span class="br0">(</span>color <span class="br0">)</span><span class="br0">)</span><span class="br0">{</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> result <span class="sy0">=</span> fruit. <span class="me1">get</span><span class="br0">(</span>color <span class="br0">)</span><span class="sy0">;</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; fruit. <span class="me1">put</span><span class="br0">(</span>color <span class="sy0">,</span> result <span class="sy0">+</span><span class="st0">" x"</span><span class="br0">)</span><span class="sy0">;</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">return</span> result <span class="sy0">+</span><span class="st0">" x"</span><span class="sy0">;</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+     &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+   </div></li>
+  <li class="li1">
    <div class="de1">
      &nbsp; &nbsp; &nbsp; &nbsp; 
-   </div></li> 
-  <li class="li1"> 
+   </div></li>
+  <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; fruit. <span class="me1">put</span> <span class="br0">(</span>color <span class="sy0">,</span>lookResult <span class="br0">)</span> <span class="sy0">;</span> 
-   </div></li> 
-  <li class="li1"> 
+     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> lookResult <span class="sy0">=</span><span class="sy0">@</span>DbLookup <span class="br0">(</span><span class="sy0">@</span>DbName <span class="br0">(</span><span class="br0">)</span><span class="sy0">,</span><span class="st0">"Fruits"</span><span class="sy0">,</span> color <span class="sy0">,</span><span class="nu0">3</span><span class="br0">)</span><span class="sy0">;</span>
+   </div></li>
+  <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; requestScope. <span class="me1">fruit</span> <span class="sy0">=</span> fruit <span class="sy0">;</span> 
-   </div></li> 
-  <li class="li1"> 
+     &nbsp; &nbsp; &nbsp; &nbsp; 
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+     &nbsp; &nbsp; &nbsp; &nbsp; fruit. <span class="me1">put</span><span class="br0">(</span>color <span class="sy0">,</span>lookResult <span class="br0">)</span><span class="sy0">;</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+     &nbsp; &nbsp; &nbsp; &nbsp; requestScope. <span class="me1">fruit</span><span class="sy0">=</span> fruit <span class="sy0">;</span>
+   </div></li>
+  <li class="li1">
    <div class="de1">
      &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-   </div></li> 
-  <li class="li1"> 
+   </div></li>
+  <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">return</span> <span class="sy0">@</span>Trim <span class="br0">(</span> <span class="sy0">@</span>Replace <span class="br0">(</span>lookResult <span class="sy0">,</span> <span class="kw3">name</span> <span class="sy0">,</span> <span class="st0">""</span> <span class="br0">)</span> <span class="br0">)</span> <span class="sy0">;</span> 
-   </div></li> 
-  <li class="li1"> 
+     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">return</span><span class="sy0">@</span>Trim <span class="br0">(</span><span class="sy0">@</span>Replace <span class="br0">(</span>lookResult <span class="sy0">,</span><span class="kw3">name</span><span class="sy0">,</span><span class="st0">""</span><span class="br0">)</span><span class="br0">)</span><span class="sy0">;</span>
+   </div></li>
+  <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="br0">}</span> 
-   </div></li> 
-  <li class="li1"> 
-   <div class="de1"> <span class="br0">}</span> 
-   </div></li> 
- </ol> 
+     &nbsp; &nbsp; <span class="br0">}</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1"><span class="br0">}</span>
+   </div></li>
+ </ol>
 </div> Every time the "Cache" is hit you will get one "x" more in the result. Once satisfied you can remove that test code. 
 <br> As usual YMMV</div>
 					<hr />

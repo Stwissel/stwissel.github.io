@@ -119,14 +119,14 @@ ga('send', 'pageview');
 					</h1>
 					<hr />
 					<div>When you upgrade a server there is always the possibility, that something goes wrong (you did a full backup,did you?) when running the new version. So you need to have a "Plan B" how to fall back to the original version. When upgrading from Domino 6.x to Domino 7.x or 8.x you can prepare a small script that allows to automate the fall-back and the fall-forward. This is what you need to do: 
-<br> 
-<br> Let us presume your Domino program files location is <i>D:\Domino</i> and your data location is <i>E:\Domino\data</i> 
-<ol> 
- <li>Shut down your Domino server</li> 
- <li>Copy the program directory: <pre>COPY D:\Domino\*.*D:\Domino6\*.* /S /E /V</pre></li> 
- <li>ZIP away all system templates in E:\Domino\data\*.ntf (We will restore the ones that are not provided in the update</li> 
- <li>Install Domino8 as update into D:\Domino and E:\Domino\Data</li> 
- <li>Unzip the templates from Step 3. <b>Do not overwrite exisiting files</b>. Older versions of Domino run fine with the new system templates but the new Domino servers <b>must have</b> the new templates.</li> 
+<br>
+<br> Let us presume your Domino program files location is <i>D:\Domino</i> and your data location is <i>E:\Domino\data</i>
+<ol>
+ <li>Shut down your Domino server</li>
+ <li>Copy the program directory: <pre>COPY D:\Domino\*.*D:\Domino6\*.* /S /E /V</pre></li>
+ <li>ZIP away all system templates in E:\Domino\data\*.ntf (We will restore the ones that are not provided in the update</li>
+ <li>Install Domino8 as update into D:\Domino and E:\Domino\Data</li>
+ <li>Unzip the templates from Step 3. <b>Do not overwrite exisiting files</b>. Older versions of Domino run fine with the new system templates but the new Domino servers <b>must have</b> the new templates.</li>
  <li>Create the file SwitchDomino.cmd in a convenient location (Desktop?) with the following content:<br> <pre>@ECHO OFF
 CLS
 NET STOP  "Lotus Domino Server (Dominodata)"   <font style="color : green">&lt;&lt;&lt;---- You need to check the exact name of your service</font>
@@ -145,11 +145,11 @@ RENAME D:\Domino8 Domino
 GOTO EXIT
 :EXIT
 NET START  "Lotus Domino Server (Dominodata)"
-</pre></li> 
- <li>Restart your server</li> 
+</pre></li>
+ <li>Restart your server</li>
 </ol> If you need to fall back you just execute the cmd and after a few minutes you switched versions. Caveat for R8: R8 can use the ODS48 format. Once you are there, there is no fast way back since you would need to use compact to revert to the previous ODS format which can take quite some time. 
 <br> Remark: You do data backup do you? 
-<br> 
+<br>
 <br>On Linux systems you play with symlinks, but that's a story for a different time.</div>
 					<hr />
 					<p>
@@ -171,7 +171,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 					</h1>
 					<hr />
 					<div>In a recent discussion a customer asked how much space could they save on their mail servers if they move all attachments to <a href="http://www-306.ibm.com/software/lotus/products/quickr/">Lotus Quickr</a> or an content management solution like <a href="http://www-306.ibm.com/software/data/commonstore/lotus/">IBM DB/2 CommonStore for Domino</a>. While you can inspect a database easily for size and number of documents it doesn't tell you how much of this size is attributed to attachments. Since altering the mail template to add an attachment view was out of the picture I whipped up a little script, that will scan an entire server and report back the size figures into a database: 
-<br> 
+<br>
 <style>.lotusscript { font-family: sans-serif; font-size: 9pt; color: black; }
 .ls-comment { color: green; }
 .ls-quote { color: gray; }
@@ -182,62 +182,19 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 .ls-function { color: blue; }
 .ls-class { color: red; }
 .ls-constant { color: purple; }
-</style> 
+</style>
 <pre>
- 
- <div class="lotusscript">
-
-  <font class="ls-comment">'ScanForSize: </font>
-
-  <font class="ls-keyword">Option</font>
+ <div class="lotusscript"><font class="ls-comment">'ScanForSize: </font><font class="ls-keyword">Option</font><font class="ls-keyword">Public</font><font class="ls-keyword">Option</font><font class="ls-keyword">Declare</font><font class="ls-statement">Use</font><font class="ls-quote">"SizeTools"</font><font class="ls-statement">Sub</font><font class="ls-keyword">Initialize</font><font class="ls-statement">Dim</font> s
   
-  <font class="ls-keyword">Public</font>
-
-  <font class="ls-keyword">Option</font>
+  <font class="ls-keyword">As</font><font class="ls-keyword">New</font><font class="ls-class">NotesSession</font><font class="ls-statement">Dim</font> db
   
-  <font class="ls-keyword">Declare</font>
-
-  <font class="ls-statement">Use</font>
+  <font class="ls-keyword">As</font><font class="ls-class">NotesDatabase</font><font class="ls-statement">Dim</font> curDB
   
-  <font class="ls-quote">"SizeTools"</font>
-
-  <font class="ls-statement">Sub</font>
+  <font class="ls-keyword">As</font><font class="ls-class">NotesDatabase</font><font class="ls-statement">Dim</font> dbDir
   
-  <font class="ls-keyword">Initialize</font>
-
-  <font class="ls-statement">Dim</font> s
+  <font class="ls-keyword">As</font><font class="ls-class">NotesDbDirectory</font><font class="ls-statement">Dim</font> serverName
   
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-keyword">New</font>
-  
-  <font class="ls-class">NotesSession</font>
-
-  <font class="ls-statement">Dim</font> db
-  
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-class">NotesDatabase</font>
-
-  <font class="ls-statement">Dim</font> curDB
-  
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-class">NotesDatabase</font>
-
-  <font class="ls-statement">Dim</font> dbDir
-  
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-class">NotesDbDirectory</font>
-
-  <font class="ls-statement">Dim</font> serverName
-  
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-keyword">String</font>
-
-  <font class="ls-statement">Set</font> db
+  <font class="ls-keyword">As</font><font class="ls-keyword">String</font><font class="ls-statement">Set</font> db
   
   <font class="ls-operator">=</font> s
   
@@ -247,124 +204,40 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
   
   <font class="ls-operator">.</font>Server
   
-  <font class="ls-operator">=</font>
-  
-  <font class="ls-quote">""</font>
-  
-  <font class="ls-statement">Then</font>
+  <font class="ls-operator">=</font><font class="ls-quote">""</font><font class="ls-statement">Then</font>
   serverName
   
-  <font class="ls-operator">=</font>
-  
-  <font class="ls-quote">"(local)"</font>
-
-  <font class="ls-statement">Else</font>
+  <font class="ls-operator">=</font><font class="ls-quote">"(local)"</font><font class="ls-statement">Else</font>
   serverName
   
   <font class="ls-operator">=</font> db
   
   <font class="ls-operator">.</font>Server
 
-  <font class="ls-statement">End</font>
-  
-  <font class="ls-statement">If</font>
+  <font class="ls-statement">End</font><font class="ls-statement">If</font>
  serverName
   
-  <font class="ls-operator">=</font>
+  <font class="ls-operator">=</font><font class="ls-function">Inputbox</font><font class="ls-operator">(</font><font class="ls-quote">"Please select the server to scan (local) for local"</font><font class="ls-operator">,</font><font class="ls-quote">"Server Scan"</font><font class="ls-operator">,</font>serverName
   
-  <font class="ls-function">Inputbox</font>
+  <font class="ls-operator">)</font><font class="ls-statement">If</font> serverName
   
-  <font class="ls-operator">(</font>
+  <font class="ls-operator">=</font><font class="ls-quote">""</font><font class="ls-statement">Then</font><font class="ls-statement">Exit</font><font class="ls-statement">Sub</font><font class="ls-statement">End</font><font class="ls-statement">If</font><font class="ls-statement">If</font> servername
   
-  <font class="ls-quote">"Please select the server to scan (local) for local"</font>
+  <font class="ls-operator">=</font><font class="ls-quote">"(local)"</font><font class="ls-statement">Then</font><font class="ls-statement">Set</font> dbDir
   
-  <font class="ls-operator">,</font>
+  <font class="ls-operator">=</font><font class="ls-keyword">New</font><font class="ls-class">NotesDbDirectory</font><font class="ls-operator">(</font><font class="ls-quote">""</font><font class="ls-operator">)</font><font class="ls-statement">Else</font><font class="ls-statement">Set</font> dbDir
   
-  <font class="ls-quote">"Server Scan"</font>
+  <font class="ls-operator">=</font><font class="ls-keyword">New</font><font class="ls-class">NotesDbDirectory</font><font class="ls-operator">(</font>serverName
   
-  <font class="ls-operator">,</font>serverName
-  
-  <font class="ls-operator">)</font>
-
-  <font class="ls-statement">If</font> serverName
-  
-  <font class="ls-operator">=</font>
-  
-  <font class="ls-quote">""</font>
-  
-  <font class="ls-statement">Then</font>
-  
-  <font class="ls-statement">Exit</font>
-  
-  <font class="ls-statement">Sub</font>
-
-  <font class="ls-statement">End</font>
-  
-  <font class="ls-statement">If</font>
-
-  <font class="ls-statement">If</font> servername
-  
-  <font class="ls-operator">=</font>
-  
-  <font class="ls-quote">"(local)"</font>
-  
-  <font class="ls-statement">Then</font>
-  
-  <font class="ls-statement">Set</font> dbDir
-  
-  <font class="ls-operator">=</font>
-  
-  <font class="ls-keyword">New</font>
-  
-  <font class="ls-class">NotesDbDirectory</font>
-  
-  <font class="ls-operator">(</font>
-  
-  <font class="ls-quote">""</font>
-  
-  <font class="ls-operator">)</font>
-
-  <font class="ls-statement">Else</font>
-  
-  <font class="ls-statement">Set</font> dbDir
-  
-  <font class="ls-operator">=</font>
-  
-  <font class="ls-keyword">New</font>
-  
-  <font class="ls-class">NotesDbDirectory</font>
-  
-  <font class="ls-operator">(</font>serverName
-  
-  <font class="ls-operator">)</font>
-
-  <font class="ls-statement">End</font>
-  
-  <font class="ls-statement">If</font>
-
-  <font class="ls-statement">Set</font> curDB
+  <font class="ls-operator">)</font><font class="ls-statement">End</font><font class="ls-statement">If</font><font class="ls-statement">Set</font> curDB
   
   <font class="ls-operator">=</font> dbdir
   
   <font class="ls-operator">.</font>GetFirstDatabase
   
-  <font class="ls-operator">(</font>
+  <font class="ls-operator">(</font><font class="ls-constant">TEMPLATE_CANDIDATE</font><font class="ls-operator">)</font><font class="ls-statement">Do</font> Until curDB
   
-  <font class="ls-constant">TEMPLATE_CANDIDATE</font>
-  
-  <font class="ls-operator">)</font>
-
-  <font class="ls-statement">Do</font> Until curDB
-  
-  <font class="ls-operator">Is</font>
-  
-  <font class="ls-constant">Nothing</font>
-  
-  <font class="ls-function">Print</font>
-  
-  <font class="ls-quote">"Working on "</font>
-  
-  <font class="ls-operator">&amp;</font> curDB
+  <font class="ls-operator">Is</font><font class="ls-constant">Nothing</font><font class="ls-function">Print</font><font class="ls-quote">"Working on "</font><font class="ls-operator">&amp;</font> curDB
   
   <font class="ls-operator">.</font>FilePath
   
@@ -374,100 +247,52 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
   
   <font class="ls-operator">,</font> db
   
-  <font class="ls-operator">)</font>
-  
-  <font class="ls-statement">Set</font> curDB
+  <font class="ls-operator">)</font><font class="ls-statement">Set</font> curDB
   
   <font class="ls-operator">=</font> dbDir
   
   <font class="ls-operator">.</font>GetNextDatabase
 
-  <font class="ls-statement">Loop</font>
-
-  <font class="ls-function">Msgbox</font>
-  
-  <font class="ls-quote">"Run completed"</font>
-
-  <font class="ls-statement">End</font>
-  
-  <font class="ls-statement">Sub</font>
-
-  <font class="ls-statement">Sub</font> countThis
+  <font class="ls-statement">Loop</font><font class="ls-function">Msgbox</font><font class="ls-quote">"Run completed"</font><font class="ls-statement">End</font><font class="ls-statement">Sub</font><font class="ls-statement">Sub</font> countThis
   
   <font class="ls-operator">(</font>curDB
   
-  <font class="ls-keyword">As</font>
+  <font class="ls-keyword">As</font><font class="ls-class">NotesDatabase</font><font class="ls-operator">,</font> reportDB
   
-  <font class="ls-class">NotesDatabase</font>
-  
-  <font class="ls-operator">,</font> reportDB
-  
-  <font class="ls-keyword">As</font>
-  
-  <font class="ls-class">NotesDatabase</font>
-  
-  <font class="ls-operator">)</font>
-
-  <font class="ls-statement">Dim</font> curSize
+  <font class="ls-keyword">As</font><font class="ls-class">NotesDatabase</font><font class="ls-operator">)</font><font class="ls-statement">Dim</font> curSize
   
   <font class="ls-keyword">As</font> DBSizeInfo
 
-  <font class="ls-statement">On</font>
+  <font class="ls-statement">On</font><font class="ls-function">Error</font><font class="ls-statement">Resume</font><font class="ls-statement">Next</font><font class="ls-statement">Set</font> curSize
   
-  <font class="ls-function">Error</font>
-  
-  <font class="ls-statement">Resume</font>
-  
-  <font class="ls-statement">Next</font>
-
-  <font class="ls-statement">Set</font> curSize
-  
-  <font class="ls-operator">=</font>
-  
-  <font class="ls-keyword">New</font> DBSizeInfo
+  <font class="ls-operator">=</font><font class="ls-keyword">New</font> DBSizeInfo
   
   <font class="ls-operator">(</font>curDB
   
-  <font class="ls-operator">)</font>
-
-  <font class="ls-function">Call</font> curSize
+  <font class="ls-operator">)</font><font class="ls-function">Call</font> curSize
   
   <font class="ls-operator">.</font>count
 
-  <font class="ls-comment">'We save only database information that has an attachment</font>
-
-  <font class="ls-statement">If</font> curSize
+  <font class="ls-comment">'We save only database information that has an attachment</font><font class="ls-statement">If</font> curSize
   
   <font class="ls-operator">.</font>AttachmentCount
   
   <font class="ls-operator">&gt;</font> 0
   
-  <font class="ls-statement">Then</font>
-  
-  <font class="ls-function">Call</font> curSize
+  <font class="ls-statement">Then</font><font class="ls-function">Call</font> curSize
   
   <font class="ls-operator">.</font>save
   
   <font class="ls-operator">(</font>reportDB
   
-  <font class="ls-operator">)</font>
-
-  <font class="ls-statement">End</font>
-  
-  <font class="ls-statement">If</font>
-
-  <font class="ls-statement">End</font>
-  
-  <font class="ls-statement">Sub</font>
-
- 
- </div></pre> 
-<div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;"> 
+  <font class="ls-operator">)</font><font class="ls-statement">End</font><font class="ls-statement">If</font><font class="ls-statement">End</font><font class="ls-statement">Sub</font>
+ </div></pre>
+<div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;">
  <center>
    This LotusScript was converted to HTML using the <b><i>ls2html</i></b> routine, 
   <br>provided by Julian Robichaux at <a href="http://www.nsftools.com" target="_blank">nsftools.com</a>. 
- </center> 
-</div> 
+ </center>
+</div>
 <br></div>
 					<hr />
  <a href="/blog/2007/10/how-much-attachments-are-on-your-servers.html">Read more</a>
@@ -490,9 +315,9 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 					</h1>
 					<hr />
 					<div>Ernest is following his late grandfather Ernst in his passion for chess. So today he participates a chess tournament organized by our Nee Soon South community club. When walking to the venue I encouraged him to battle well and also reassured him, that participating is more important than winning. He looked at me and said: "Dad, there is no lesson in victory but a thousand in defeat". That before 8am 
-<img src="/blog/images/emoticons/smile.gif"> 
+<img src="/blog/images/emoticons/smile.gif">
 <br> And 8am is so not his time. 
-<br> 
+<br>
 <img src="/blog/images/2014/ernestchess.jpg" border="0" width="569" height="527"></div>
 					<hr />
  <a href="/blog/2007/10/there-is-no-lesson-in-victory.html">Read more</a>
@@ -556,8 +381,8 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 					</h1>
 					<hr />
 					<div>I couldn't resist... 
-<br> 
-<br> <a href="http://www.funflip.com/" style="color:white;text-decoration:none;font:normal normal bold 9px/normal Tahoma;padding:70px 0px 0px 21px;text-align:left;display:block;width:268px;height:73px;background:url('http://www.funflip.com/_images/quiz/transformers/btns/289x143_optimus.jpg') no-repeat;">I AM<br><span style="font-size:24px;">70%</span><br><span style="font-size:12px;line-height:20px;">OPTIMUS PRIME</span></a> <a href="http://www.funflip.com/">Take the Transformers Quiz</a></div>
+<br>
+<br><a href="http://www.funflip.com/" style="color:white;text-decoration:none;font:normal normal bold 9px/normal Tahoma;padding:70px 0px 0px 21px;text-align:left;display:block;width:268px;height:73px;background:url('http://www.funflip.com/_images/quiz/transformers/btns/289x143_optimus.jpg') no-repeat;">I AM<br><span style="font-size:24px;">70%</span><br><span style="font-size:12px;line-height:20px;">OPTIMUS PRIME</span></a><a href="http://www.funflip.com/">Take the Transformers Quiz</a></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -577,67 +402,67 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>
 						<small><a href="/blog/2007/10/top-ten-signs-you-work-for-ibm-by-david-letterman.html">Top ten signs you work for IBM by David Letterman</a></small>
 					</h1>
 					<hr />
-					<div><table width="100%" border="0" cellspacing="0" cellpadding="0"> 
- <tbody> 
-  <tr valign="top"> 
-   <td width="2%"><b>10</b></td> 
-   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td> 
-   <td width="91%"> You lecture the neighborhood kids selling lemonade on ways to improve their process. </td> 
-  </tr> 
-  <tr valign="top"> 
-   <td width="2%"><b>9</b></td> 
-   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td> 
-   <td width="91%"> You get all excited when it's Saturday so you can wear shorts to work. </td> 
-  </tr> 
-  <tr valign="top"> 
-  </tr> 
-  <tr valign="top"> 
-   <td width="2%"><b>8</b></td> 
-   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td> 
-   <td width="91%"> You refer to the tomatoes grown in your garden as deliverables. </td> 
-  </tr> 
-  <tr valign="top"> 
-   <td width="2%"><b>7</b></td> 
-   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td> 
-   <td width="91%"> You find you really need Freelance to explain what you do for a living. </td> 
-  </tr> 
-  <tr valign="top"> 
-   <td width="2%"><b>6</b></td> 
-   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td> 
-   <td width="91%"> You normally eat out of vending machines and at the most expensive restaurant in town within the same week. </td> 
-  </tr> 
-  <tr valign="top"> 
-   <td width="2%"><b>5</b></td> 
-   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td> 
-   <td width="91%"> You think that "progressing an action plan" and "calendarizing a project" are acceptable English phrases. </td> 
-  </tr> 
-  <tr valign="top"> 
-   <td width="2%"><b>4</b></td> 
-   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td> 
-   <td width="91%"> You know the people at faraway hotels better than your next-door neighbors. </td> 
-  </tr> 
-  <tr valign="top"> 
-   <td width="2%"><b>3</b></td> 
-   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td> 
-   <td width="91%"> You ask your friends to "think outside the box" when making Friday night plans. </td> 
-  </tr> 
-  <tr valign="top"> 
-   <td width="2%"><b>2</b></td> 
-   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td> 
-   <td width="91%"> You think Einstein would have been more effective had he put his ideas into a matrix. </td> 
-  </tr> 
-  <tr valign="top"> 
-   <td colspan="2" width="9%"> &nbsp; </td> 
-   <td width="91%"> <i> <font color="#9F000F">And, the number one sign you work for IBM...</font> </i> </td> 
-  </tr> 
-  <tr valign="top"> 
-   <td width="2%"><b>1</b></td> 
-   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td> 
-   <td width="91%"> You think a "half-day" means leaving at 5 o'clock. </td> 
-  </tr> 
- </tbody> 
-</table> 
-<br> <b>Update</b>: This seems to be <a href="http://heyjethy.blogspot.com/2004/06/david-lettermans-top-ten-signs-you-may.html">old news</a>.</div>
+					<div><table width="100%" border="0" cellspacing="0" cellpadding="0">
+ <tbody>
+  <tr valign="top">
+   <td width="2%"><b>10</b></td>
+   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td>
+   <td width="91%"> You lecture the neighborhood kids selling lemonade on ways to improve their process. </td>
+  </tr>
+  <tr valign="top">
+   <td width="2%"><b>9</b></td>
+   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td>
+   <td width="91%"> You get all excited when it's Saturday so you can wear shorts to work. </td>
+  </tr>
+  <tr valign="top">
+  </tr>
+  <tr valign="top">
+   <td width="2%"><b>8</b></td>
+   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td>
+   <td width="91%"> You refer to the tomatoes grown in your garden as deliverables. </td>
+  </tr>
+  <tr valign="top">
+   <td width="2%"><b>7</b></td>
+   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td>
+   <td width="91%"> You find you really need Freelance to explain what you do for a living. </td>
+  </tr>
+  <tr valign="top">
+   <td width="2%"><b>6</b></td>
+   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td>
+   <td width="91%"> You normally eat out of vending machines and at the most expensive restaurant in town within the same week. </td>
+  </tr>
+  <tr valign="top">
+   <td width="2%"><b>5</b></td>
+   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td>
+   <td width="91%"> You think that "progressing an action plan" and "calendarizing a project" are acceptable English phrases. </td>
+  </tr>
+  <tr valign="top">
+   <td width="2%"><b>4</b></td>
+   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td>
+   <td width="91%"> You know the people at faraway hotels better than your next-door neighbors. </td>
+  </tr>
+  <tr valign="top">
+   <td width="2%"><b>3</b></td>
+   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td>
+   <td width="91%"> You ask your friends to "think outside the box" when making Friday night plans. </td>
+  </tr>
+  <tr valign="top">
+   <td width="2%"><b>2</b></td>
+   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td>
+   <td width="91%"> You think Einstein would have been more effective had he put his ideas into a matrix. </td>
+  </tr>
+  <tr valign="top">
+   <td colspan="2" width="9%"> &nbsp; </td>
+   <td width="91%"> <i> <font color="#9F000F">And, the number one sign you work for IBM...</font> </i> </td>
+  </tr>
+  <tr valign="top">
+   <td width="2%"><b>1</b></td>
+   <td width="7%"> <img src="/blog/images/2014/ibmgrayarrow.gif" border="0" alt="IBM" width="57" height="23"> </td>
+   <td width="91%"> You think a "half-day" means leaving at 5 o'clock. </td>
+  </tr>
+ </tbody>
+</table>
+<br><b>Update</b>: This seems to be <a href="http://heyjethy.blogspot.com/2004/06/david-lettermans-top-ten-signs-you-may.html">old news</a>.</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -658,7 +483,7 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>
 					</h1>
 					<hr />
 					<div>One of <a href="http://www.thinkgeek.com/tshirts/generic/991e/?cpg=cj">these</a>. 
-<br> <a href="http://www.thinkgeek.com/tshirts/generic/991e/zoom/"><img border="0" src="http://www.thinkgeek.com/images/products/front/wifi_shirt_anim.gif"></a></div>
+<br><a href="http://www.thinkgeek.com/tshirts/generic/991e/zoom/"><img border="0" src="http://www.thinkgeek.com/images/products/front/wifi_shirt_anim.gif"></a></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -681,9 +506,9 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>
 					<div>The day after the hotline operator called back. He confirmed, that it looks like a hardware problem and that I can come to the MIO service center to exchange the modem. This also was very necessary since the phone line stopped working this morning. It turns out, that the MIO service center is nowhere near any of the Singtel locations and I have to come to <a href="http://www.streetdirectory.com/asia_travel/search/?q=76+Playfair+Road">Playfair Road</a>. This is an industrial area off any sensible public transport. In the building no sign about Singtel or a service center. Singtel actually has outsourced the handling of MIO modem hardware problems to a 3rd party. The sign (printed on A4 paper), that this would be the place was sensible pasted behind the open door (if the door is closed you could read it). A rather bored receptionist told me I had to fill a form and queue up. 
 <br> Luckily the in-tray of the service was empty and I had to queue about 10 sec. The room where the service people were working is about the size of my study. With 4 engineers and 3 customers squeezing between shelfs and desks. Two engineers took care of me (maybe I looked scary &lt;&gt;). They were fast and friendly and I pitied them for the working mess. The engineer asked me if I had tried to disable the virus protection. So I explained that this is a rather bad idea to recommend such thing to a customer (how many systems stay switched off after such an advise) and that he probably is referring to the firewall. I explained that the problem is wireless and that I had confirmed the problem on Windows, Linux and Mac. 
 <br> He then shrugged and reached for a replacement modem. He configured it (with WEP instead of WPA) and made sure it worked with the ThinkPad. Asking about the reliability of the modems he answered rather evasive, which I could interpret (but that is my guess), that they have a lot of "fun". On my question: will everything work including voice I got a nod. Well, it doesn't. Voice doesn't work. So no mother-in-law calls for the time being. - Over to the hotline 
-<br> 
+<br>
 <br> OK - that was fast, only 5 minutes in the queue and a quick setting. If Singtel's online help would have matched the real software I could have figured that out myself. 
-<br> 
+<br>
 <br> All in all: a disappointing experience. 25$ in Taxi bills. In total more than 2.5h of my time and the clear impression: support is an afterthought.</div>
 					<hr />
 					<p>
@@ -773,9 +598,9 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 					</h1>
 					<hr />
 					<div>my Thai colleagues know how to throw a party. Over a thousand people showed up for the Lotus Notes 8 launch event. Having the Thai Idol finalists perform on stage might have helped a little 
-<img src="/blog/images/emoticons/smile.gif"> 
-<br> 
-<br> 
+<img src="/blog/images/emoticons/smile.gif">
+<br>
+<br>
 <img src="/blog/images/2014/notes8bkk.jpg" border="0" width="480" height="360" alt="Notes 8 in BKK" title="Notes 8 in BKK"></div>
 					<hr />
 					<p>

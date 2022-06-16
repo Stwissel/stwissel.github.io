@@ -143,9 +143,9 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 					<hr />
 					<div>I finally got it working, whoha! The plug-in installation script makes 2 assumptions about the Domino installation, that were not matched by my installation: first it assumes, that the Domino program directory is the parent directory of the data directory, second, that this is not a root directory. In my case the data directory was n:\Domino7 (instead of something like r:\Lotus\Domino\Data). I mounted the N: drive under c:\data, so my Domino data directory would be c:\data\Domino7. And reran the installation. Actually I flattened out the Websphere before, just to make sure the new attempt wouldn't be haunted by zombies. This time the plug-in.xml was created as expected. However neither the DSAPI filter nor the INI variable were configured. 
 <br>This time it was an easy fix. Edit the notes.ini and add: 
-<br> <tt>WebSpherePluginCfg=&lt;&lt;path-to&gt;&gt;\plugin-cfg.xml</tt> 
+<br><tt>WebSpherePluginCfg=&lt;&lt;path-to&gt;&gt;\plugin-cfg.xml</tt>
 <br>After that edit the Internet site document and add the DSAPI filter: 
-<br> <tt>C:\Java\IBM\WebSphere60\Plugins\bin\domino5_http.dll</tt> 
+<br><tt>C:\Java\IBM\WebSphere60\Plugins\bin\domino5_http.dll</tt>
 <br>The rest of the configuration is within the plugin-cfg.xml file and according to my tests are just fine. Mental note to self: keep the Domino data directory 2 levels deep and separate program and data directory only after the final installation. On Unix/Linux of course a symbolic link would do the trick. 
 <br>So it is time to develop some Webspino/Domisphere applications. Something like <a href="http://dominodav.sourceforge.net/">DominoWebDAV</a>. 
 <br>Next stop: Domino 7 and Websphere 6 on SUSE. &nbsp;</div>
@@ -170,32 +170,32 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 					<hr />
 					<div><br>Encouraged by <a href="/blog/2005/11/domino-654-and-websphere-601-on-windows.html">the ease</a> you can make Domino 6.5 and Websphere 6 to work together in all areas (HTTP, LDAP, Single SignOn) I tried my luck with Websphere 6 and Domino 7. Unfortunatly the Websphere plug-in installer doesn't offer Domino 7 as an option (nota bene: in R7 the location of a lot of Java stuff has moved like where to find Notes.jar). So I gave the 6.5 selection a shot. The LDAP integration worked smooth like silk, however the HTTP integration did not happen. The DSAPI filter entry wasn't created. So I peeped on the R6 installation and added the DSAPI filter name: 
 <br>domino5_http.dll. When I restarted the HTTP task I was greeted with an error message: 
-<br> 
-<br> <tt>ERROR: WebSpherePluginCfg variable not defined in notes.ini</tt> 
-<br> <tt>&nbsp; &nbsp; &nbsp; Define variable WebSpherePluginCfg=Location_Of_plugin-cfg.xml</tt> 
-<br> <tt>&nbsp; &nbsp; &nbsp; in notes.ini and restart the server</tt> 
-<br> 
-<br> <tt>ERROR: WebSphere HTTP DSAPI filter initialization failed. &nbsp;Return code = 3</tt> 
-<br> 
+<br>
+<br><tt>ERROR: WebSpherePluginCfg variable not defined in notes.ini</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; Define variable WebSpherePluginCfg=Location_Of_plugin-cfg.xml</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; in notes.ini and restart the server</tt>
+<br>
+<br><tt>ERROR: WebSphere HTTP DSAPI filter initialization failed. &nbsp;Return code = 3</tt>
+<br>
 <br>Hhm. A quick check on plugin-cfg.xml files showed, that there is only on in the Plugins/config/templates directory. That for sure doesn't fit into an active configuration. Luckily there is a <tt>Plugins/bin/configurewebserver1.bat</tt>command file which should do the trick. Unfortunatly it terminates with an error too. Well I won't let them quit to easy on me, so I had a look into the batch file. Websphere uses an amazing mix of batch files calling each other The parameters in the file look like this: 
-<br> 
-<br> <tt>"C:\Java\WebSphere60\AppServer\profiles\default/bin/wsadmin.bat" -conntype NONE -f "C:\Java\WebSphere60\AppServer\bin\configureWebserverDefinition.jacl" webserver1 DOMINO "N:\\" "N:\\Domino7\\names.nsf" 80 MAP_ALL "C:\\Java\\WebSphere60\\Plugins" unmanaged rohandaNode01 rohanda windows</tt> 
-<br> 
+<br>
+<br><tt>"C:\Java\WebSphere60\AppServer\profiles\default/bin/wsadmin.bat" -conntype NONE -f "C:\Java\WebSphere60\AppServer\bin\configureWebserverDefinition.jacl" webserver1 DOMINO "N:\\" "N:\\Domino7\\names.nsf" 80 MAP_ALL "C:\\Java\\WebSphere60\\Plugins" unmanaged rohandaNode01 rohanda windows</tt>
+<br>
 <br>The error stated the input parameters like: 
 <br>Input parameters: 
-<br> 
-<br> <tt>&nbsp; Web server name &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; - webserver1</tt> 
-<br> <tt>&nbsp; Web server type &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; - DOMINO</tt> 
-<br> <tt>&nbsp; Web server install location - </tt> <tt><b>N: N:\</b></tt> <tt>Domino7\names.nsf</tt> 
-<br> <tt>&nbsp; Web server config location &nbsp;- 80</tt> 
-<br> <tt>&nbsp; Web server port &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; - MAP_ALL</tt> 
-<br> <tt>&nbsp; Map Applications &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;- C:\Java\WebSphere60\Plugins</tt> 
-<br> <tt>&nbsp; Plugin install location &nbsp; &nbsp; - unmanaged</tt> 
-<br> <tt>&nbsp; Web server node type &nbsp; &nbsp; &nbsp; &nbsp;- unmanaged</tt> 
-<br> <tt>&nbsp; Web server node name &nbsp; &nbsp; &nbsp; &nbsp;- webserver1_node</tt> 
-<br> <tt>&nbsp; Web server host name &nbsp; &nbsp; &nbsp; &nbsp;- windows</tt> 
-<br> <tt>&nbsp; Web server operating system - </tt> <tt><b>...nothing here ...</b></tt> 
-<br> 
+<br>
+<br><tt>&nbsp; Web server name &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; - webserver1</tt>
+<br><tt>&nbsp; Web server type &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; - DOMINO</tt>
+<br><tt>&nbsp; Web server install location - </tt><tt><b>N: N:\</b></tt><tt>Domino7\names.nsf</tt>
+<br><tt>&nbsp; Web server config location &nbsp;- 80</tt>
+<br><tt>&nbsp; Web server port &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; - MAP_ALL</tt>
+<br><tt>&nbsp; Map Applications &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;- C:\Java\WebSphere60\Plugins</tt>
+<br><tt>&nbsp; Plugin install location &nbsp; &nbsp; - unmanaged</tt>
+<br><tt>&nbsp; Web server node type &nbsp; &nbsp; &nbsp; &nbsp;- unmanaged</tt>
+<br><tt>&nbsp; Web server node name &nbsp; &nbsp; &nbsp; &nbsp;- webserver1_node</tt>
+<br><tt>&nbsp; Web server host name &nbsp; &nbsp; &nbsp; &nbsp;- windows</tt>
+<br><tt>&nbsp; Web server operating system - </tt><tt><b>...nothing here ...</b></tt>
+<br>
 <br>So it looked like the "N:\\" wasn't such a good parameter. I replaced it with a wild guess: &nbsp; <tt>"c:\\Program Files\\Lotus\\Domino"</tt> and the installation batch file stated the right parameters and got very busy configuring the server. At this point I'm not sure if that wrong parameter is caused because of Domino7 or because the Domino server binaries are located on a different drive that the Domino data. Restarting the Domino still complained about the missing Websphereplugincfg. So back to square one and some peeping how it runs on the Domino6. There should be a plugin-cfg.xml in the <tt>C:\Java\WebSphere60\AppServer\profiles\default\config\cells\rohandaNode01Cell\nodes\rohandaNode01\servers\webserver1</tt>which isn't there. 
 <br>So another try.... stay tuned</div>
 					<hr />
@@ -239,10 +239,10 @@ categories:  <a href="/blog/categories/gonephisching.html">Gone Phisching</a>
 					</h1>
 					<hr />
 					<div><br>An old German folk song goes "Die Gedanken sind frei" (Thoughts are free). Not any more. With the introduction of "Intellectual property" the concept of owning immaterial things is hammered into our minds. Closer scrutiny reveals, that the various rights lumped together as IP didn't have that in mind. Copyrights, trademarks and patents are very different rights protecting very different things. Property rights were created for the fact, that if I own a thing, you can't own it. But if I tell you an idea I still have it and now it can travel. Ideas are not a scare resource, they get richer when they travel. However the term "Intellectual Property" creates the impression that it is a scare resource. &nbsp; 
-<br> <a href="http://www.linuxjournal.com/user/800285">Doc Searls</a> reminds us to <a href="http://www.linuxjournal.com/article/8673">watch the language</a>: " <i>While the </i> <a href="http://creativecommons.org/learn/licenses/"><i>one side</i></a> <i> talks about <b>licenses</b></i> <i> with verbs like copy, distribute, play, share and perform, the </i> <a href="http://www.riaa.org/Protect-Campaign-1.cfm"><i>other side</i></a> <i> </i> <a href="http://www.mpaa.org/Press/ScourQandA.htm"><i>talks</i></a> <i> about <b>rights</b></i> <i> with verbs like own, protect, safeguard, protect, secure, authorize, buy, sell, infringe, pirate, infringe, and steal.</i>" 
+<br><a href="http://www.linuxjournal.com/user/800285">Doc Searls</a> reminds us to <a href="http://www.linuxjournal.com/article/8673">watch the language</a>: " <i>While the </i><a href="http://creativecommons.org/learn/licenses/"><i>one side</i></a><i> talks about <b>licenses</b></i><i> with verbs like copy, distribute, play, share and perform, the </i><a href="http://www.riaa.org/Protect-Campaign-1.cfm"><i>other side</i></a><i> </i><a href="http://www.mpaa.org/Press/ScourQandA.htm"><i>talks</i></a><i> about <b>rights</b></i><i> with verbs like own, protect, safeguard, protect, secure, authorize, buy, sell, infringe, pirate, infringe, and steal.</i>" 
 <br>This is a substantial difference. The very nature of ideas is, that they cannot be owned because they are not physical. And spreading an idea from the originator doesn't make it dissappear there. So the mental model of "intelectual property" is flawed in its very nature. We rather should stick to discriminating trademarks from patents from copyrights and have a deep thought how far we want to push idea protection. The very fabric of learning and cultural exchange is based on the fact, that ideas are shared, explored, altered and shared again. When you look into the history of languages, there were attempts of special interest groups (priests, sects or ruling class) to restrict the usage of language. All this attempts failed in the long run. Either the restriction didn't work or the language faded away. 
 <br>An <a href="http://www.guardian.co.uk/comment/story/0,3604,1646125,00.html">article in "The Guardian"</a> sums it up nicely: 
-<br> <i>"This is madness. Ideas aren't things. They're much more valuable than that. Intellectual property - treating some ideas as if they were in some circumstances things that can be owned and traded - is itself no more than an idea that can be copied, modified and improved. It is this process of freely copying them and changing them that has given us the world of material abundance in which we live. If our ideas of intellectual property are wrong, we must change them, improve them and return them to their original purpose. When intellectual property rules diminish the supply of new ideas, they steal from all of us."</i> &nbsp;</div>
+<br><i>"This is madness. Ideas aren't things. They're much more valuable than that. Intellectual property - treating some ideas as if they were in some circumstances things that can be owned and traded - is itself no more than an idea that can be copied, modified and improved. It is this process of freely copying them and changing them that has given us the world of material abundance in which we live. If our ideas of intellectual property are wrong, we must change them, improve them and return them to their original purpose. When intellectual property rules diminish the supply of new ideas, they steal from all of us."</i> &nbsp;</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -264,7 +264,7 @@ categories:  <a href="/blog/categories/technology.html">Technology</a>
 					<hr />
 					<div>You might have wondered why I use this metaphor in the sidebar to describe what I offer. I always though to write a long rant about it. Now I don't need that anymore. <a href="http://www.codinghorror.com/blog/archives/000446.html">Jeff Atwood</a> points to a blog entry by <a href="http://www.softwarebyrob.com/articles/Software_Training_Sucks_Roll_it_Back.aspx">Rob Walling</a>: 
 <br>... a long text you want to read for yourself ... 
-<br> <b>The Bottom Line</b> 
+<br><b>The Bottom Line</b>
 <br>Training is critical to any company that writes software, and apprenticeship is the best way to bring new developers on board, make them feel at home, improve their skills, and keep them happy and growing. You'll keep experienced developers in touch with new approaches, compliment them by asking them to share their wealth of knowledge, and hopefully create a few friendships along the way. &nbsp;</div>
 					<hr />
 					<p>
@@ -306,10 +306,10 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>
 					</h1>
 					<hr />
 					<div>You have one guess.. 
-<br> 
-<br> 
-<img src="/blog/images/2014/bday43.gif" border="0" alt="bday43.gif" width="483" height="533"> 
-<br> 
+<br>
+<br>
+<img src="/blog/images/2014/bday43.gif" border="0" alt="bday43.gif" width="483" height="533">
+<br>
 <br> &gt; 
 <img src="/blog/images/emoticons/wink.gif"></div>
 					<hr />
@@ -415,21 +415,21 @@ categories:  <a href="/blog/categories/twins.html">Twins</a>
 					<hr />
 					<div>There is a <a href="http://www.sysinternals.com/blog/2005/10/sony-rootkits-and-digital-rights.html">very interesting story</a> at <a href="http://www.sysinternals.com/">sysinternals</a> about the hunting down of a root kit infection on a PC. A root kit basically is a piece of software, that hides itself from normal view on the PC and intercepts the functionality. Root kits are usually found in criminal context (hackers, maleware, Trojan horses) and are typically installed without the PC's owners consent. In this case consent wasn't given either but the culprit was a copy protected CD from Sony BMG. I'm sure the late founder of Bertelsman (BMG stands for Bertelsman Media Group) rotates in his grave for behaviour so much below his standards. Seems like Greed 2.0 in full swing. 
 <br>One comment suggest, the only way to fight this is with you purse strings. So it looks like Sony and its subsidiaries lost me as a customer. So no Sony TV, no Sony HiFi, no SonyEricsson phone, no Sony BMG CD/DVD and less Sony entertainment -- including the Aibo. &nbsp; 
-<br> 
+<br>
 <br>Update: 
 <br>The Sony Digital Restriction Management stint has stirred quite some response online. Some of the voices: 
-<br> <a href="<http://www.heise.de/newsticker/meldung/65602>">http://www.heise.de/newsticker/meldung/65602</a> 
-<br> <a href="<http://arstechnica.com/news.ars/post/20051101-5514.html>">http://arstechnica.com/news.ars/post/20051101-5514.html</a> 
-<br> <a href="<http://www.theregister.co.uk/2005/11/01/sony_rootkit_drm>/">http://www.theregister.co.uk/2005/11/01/sony_rootkit_drm</a> 
-<br> <a href="<http://forums.winxpcentral.com/showthread.php?t=15518>">http://forums.winxpcentral.com/showthread.php?t=15518</a> 
-<br> <a href="<http://www.osnews.com/story.php?news_id=12488>">http://www.osnews.com/story.php?news_id=12488</a> 
-<br> <a href="<http://www.freedom-to-tinker.com/?p=919>">http://www.freedom-to-tinker.com/?p=919</a> 
-<br> <a href="<http://sunbeltblog.blogspot.com/2005/10/sony-drm-acts-as-rootkit.html>">http://sunbeltblog.blogspot.com/2005/10/sony-drm-acts-as-rootkit.html</a> 
-<br> <a href="http://it.slashdot.org/article.pl?sid=05/10/31/2016223&amp;tid=172&amp;tid=158">http://it.slashdot.org/article.pl?sid=05/10/31/2016223&amp;tid=172&amp;tid=158</a> 
-<br> <a href="<http://news.com.com/Sony+CD+protection+sparks+security+concerns/2100-7355_3-5926657.html>">http://news.com.com/Sony+CD+protection+sparks+security+concerns/2100-7355_3-5926657.html</a> 
-<br> 
-<br>and much more: <a href="<http://www.google.com.sg/search?q=sony+drm+rootkit>">http://www.google.com.sg/search?q=sony+drm+rootkit</a> 
-<br> 
+<br><a href="<http://www.heise.de/newsticker/meldung/65602>">http://www.heise.de/newsticker/meldung/65602</a>
+<br><a href="<http://arstechnica.com/news.ars/post/20051101-5514.html>">http://arstechnica.com/news.ars/post/20051101-5514.html</a>
+<br><a href="<http://www.theregister.co.uk/2005/11/01/sony_rootkit_drm>/">http://www.theregister.co.uk/2005/11/01/sony_rootkit_drm</a>
+<br><a href="<http://forums.winxpcentral.com/showthread.php?t=15518>">http://forums.winxpcentral.com/showthread.php?t=15518</a>
+<br><a href="<http://www.osnews.com/story.php?news_id=12488>">http://www.osnews.com/story.php?news_id=12488</a>
+<br><a href="<http://www.freedom-to-tinker.com/?p=919>">http://www.freedom-to-tinker.com/?p=919</a>
+<br><a href="<http://sunbeltblog.blogspot.com/2005/10/sony-drm-acts-as-rootkit.html>">http://sunbeltblog.blogspot.com/2005/10/sony-drm-acts-as-rootkit.html</a>
+<br><a href="http://it.slashdot.org/article.pl?sid=05/10/31/2016223&amp;tid=172&amp;tid=158">http://it.slashdot.org/article.pl?sid=05/10/31/2016223&amp;tid=172&amp;tid=158</a>
+<br><a href="<http://news.com.com/Sony+CD+protection+sparks+security+concerns/2100-7355_3-5926657.html>">http://news.com.com/Sony+CD+protection+sparks+security+concerns/2100-7355_3-5926657.html</a>
+<br>
+<br>and much more: <a href="<http://www.google.com.sg/search?q=sony+drm+rootkit>">http://www.google.com.sg/search?q=sony+drm+rootkit</a>
+<br>
 <br>I'm curious how they will spin it. What really surprises me: Sony is known to be obsessed with quality control in whatever they make, how could this slip their attention (or didn't it?). In case you want to complain to Sony, why not use their <a href="http://cp.sonybmg.com/xcp/english/form8.html">online form</a>?</div>
 					<hr />
 					<p>

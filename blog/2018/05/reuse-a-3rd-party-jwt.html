@@ -122,20 +122,20 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Reuse a 3rd Party Json Web Token (JWT) for Salesforce authentication</small></h1>
 					<hr />
-					<div><h3>The scenario</h3> 
-<p>You run an app, could be a mobile native, a <a href="https://en.wikipedia.org/wiki/Single-page_application">SPA</a>, a <a href="https://en.wikipedia.org/wiki/Progressive_Web_Apps">PWA</a> or just an application with JavaScript logic, in your domain that needs to incorporate data from your Salesforce instance or one of your Salesforce communities.</p> 
-<p>Users have authenticated with your website and the app is using a <a href="https://www.jsonwebtoken.io/">JWT</a> Bearer Token to establish identity. You don't want to bother users with an additional authentication.</p> 
-<h3>What you need</h3> 
-<p>Salesforce has <a href="https://help.salesforce.com/articleView?id=remoteaccess_oauth_jwt_flow.htm&amp;type=5">very specific</a> requirements how a JWT must be formed to qualify for authentication. For example the token can be valid only for 5 minutes. It is very unlikely that your token matches the requirements.</p> 
-<p>Therefore you will need to extract the user identity from existing token, while checking that it isn't spoofed and create a new token that you present to Salesforce to obtain the session token. So you need:</p> 
-<ol> 
- <li>The key that can be used to verify the existing token. This could be a simple String, used for symmetrical signature or an X509 Public Key</li> 
- <li>A private key for Salesforce to sign a new JWT (See below)</li> 
- <li>A configured <a href="https://help.salesforce.com/articleView?id=connected_app_overview.htm&amp;type=5">Connected App</a> in Salesforce where you upload they full certificate and obtain the Consumer Key</li> 
- <li>Some place to run the code, like <a href="https://wwww.heroku.com/">Heroku</a></li> 
-</ol> 
-<p><img src="/blog/images/2018/jwtFlow.png" alt="Authentication Flow for 3rd party JWT"></p><h3>Create your certificate for Salesforce</h3> 
-<p>Salesforce uses a X509 certificate to validate the signatures. The various formats can be a little pain, since <a href="">PKCS</a> has many flavors. To save yourself some pain, here is the script to generate what you need. Please note the script prompts for input:</p> 
+					<div><h3>The scenario</h3>
+<p>You run an app, could be a mobile native, a <a href="https://en.wikipedia.org/wiki/Single-page_application">SPA</a>, a <a href="https://en.wikipedia.org/wiki/Progressive_Web_Apps">PWA</a> or just an application with JavaScript logic, in your domain that needs to incorporate data from your Salesforce instance or one of your Salesforce communities.</p>
+<p>Users have authenticated with your website and the app is using a <a href="https://www.jsonwebtoken.io/">JWT</a> Bearer Token to establish identity. You don't want to bother users with an additional authentication.</p>
+<h3>What you need</h3>
+<p>Salesforce has <a href="https://help.salesforce.com/articleView?id=remoteaccess_oauth_jwt_flow.htm&amp;type=5">very specific</a> requirements how a JWT must be formed to qualify for authentication. For example the token can be valid only for 5 minutes. It is very unlikely that your token matches the requirements.</p>
+<p>Therefore you will need to extract the user identity from existing token, while checking that it isn't spoofed and create a new token that you present to Salesforce to obtain the session token. So you need:</p>
+<ol>
+ <li>The key that can be used to verify the existing token. This could be a simple String, used for symmetrical signature or an X509 Public Key</li>
+ <li>A private key for Salesforce to sign a new JWT (See below)</li>
+ <li>A configured <a href="https://help.salesforce.com/articleView?id=connected_app_overview.htm&amp;type=5">Connected App</a> in Salesforce where you upload they full certificate and obtain the Consumer Key</li>
+ <li>Some place to run the code, like <a href="https://wwww.heroku.com/">Heroku</a></li>
+</ol>
+<p><img src="/blog/images/2018/jwtFlow.png" alt="Authentication Flow for 3rd party JWT"></p><h3>Create your certificate for Salesforce</h3>
+<p>Salesforce uses a X509 certificate to validate the signatures. The various formats can be a little pain, since <a href="">PKCS</a> has many flavors. To save yourself some pain, here is the script to generate what you need. Please note the script prompts for input:</p>
 <pre><code class="language-bash">openssl genrsa -des3 -passout pass:somepass -out server.pass.key 2048
 openssl rsa -passin pass:somepass -in server.pass.key -out temp.key
 rm server.pass.key
@@ -143,22 +143,22 @@ openssl req -new -key temp.key -out server.csr
 openssl x509 -req -sha256 -days 365 -in server.csr -signkey temp.key -out server.crt
 openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in temp.key -out server.key
 rm temp.key
-</code></pre> 
-<h3>Configure Salesforce</h3> 
-<p>In Salesforce you use the <em>App Manager</em> to create a new <em>Connected App</em>:</p> 
-<ul> 
- <li>Fill in Connected App Name, API Name and Contact eMail</li> 
- <li>Check "Enable OAuth Settings"</li> 
- <li>Fill in a value for Callback URL, <a href="http://localhost/callback">http://localhost/callback</a> will do. We won't use that value</li> 
- <li>Check "Use digital signatures". Upload the certificate server.crt you created in the step before</li> 
- <li>for the "Selected OAuth Scopes" you probably need <strong>api id web</strong> and others, depending on your use case. What you <strong>must</strong> have is <strong>refresh_token offline_access</strong>, otherwise authentication will fail</li> 
- <li>Check "Require secret for Web Server Flow" (default setting anyway)</li> 
- <li>Save the entry. Note down the consumer key, you will need it in the code</li> 
-</ul> 
-<h3>The code (Java Edition)</h3> 
-<p>I will show you the essential functions, storing and retrieving variables securely and wrapping a web API around is left to the reader. I wrote the sample using <a href="http://vertx.io">Eclipse vert.x</a> in case you wonder where the <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">JsonObject</a> comes from.</p> 
-<h4>Extracting the user from the 3rd party JWT</h4> 
-<p>Typically the user is stored in the <code>subject</code> property of the JWT Claim. Depending on the signature (symmetric encryption or public key), you need a different function to obtain the key, the extraction works the same:</p> 
+</code></pre>
+<h3>Configure Salesforce</h3>
+<p>In Salesforce you use the <em>App Manager</em> to create a new <em>Connected App</em>:</p>
+<ul>
+ <li>Fill in Connected App Name, API Name and Contact eMail</li>
+ <li>Check "Enable OAuth Settings"</li>
+ <li>Fill in a value for Callback URL, <a href="http://localhost/callback">http://localhost/callback</a> will do. We won't use that value</li>
+ <li>Check "Use digital signatures". Upload the certificate server.crt you created in the step before</li>
+ <li>for the "Selected OAuth Scopes" you probably need <strong>api id web</strong> and others, depending on your use case. What you <strong>must</strong> have is <strong>refresh_token offline_access</strong>, otherwise authentication will fail</li>
+ <li>Check "Require secret for Web Server Flow" (default setting anyway)</li>
+ <li>Save the entry. Note down the consumer key, you will need it in the code</li>
+</ul>
+<h3>The code (Java Edition)</h3>
+<p>I will show you the essential functions, storing and retrieving variables securely and wrapping a web API around is left to the reader. I wrote the sample using <a href="http://vertx.io">Eclipse vert.x</a> in case you wonder where the <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">JsonObject</a> comes from.</p>
+<h4>Extracting the user from the 3rd party JWT</h4>
+<p>Typically the user is stored in the <code>subject</code> property of the JWT Claim. Depending on the signature (symmetric encryption or public key), you need a different function to obtain the key, the extraction works the same:</p>
 <pre><code class="language-java">public String extractSubjectFromJWT(final String incomingJWT) throws SignatureException {
         // Depending on production or demo mode we work with different keys
         if (this.isX509Key()) {
@@ -175,9 +175,9 @@ rm temp.key
             return Jwts.parser().setSigningKey(key).parseClaimsJws(incomingJWT).getBody().getSubject();
         }
     }
-</code></pre> 
-<h4>Generate the Salesforce compliant JWT key</h4> 
-<p>The key requires the user as <code>subject</code>, the login URL as <code>audience</code> and the Consumer Key as <code>issuer</code>. The key must be the X509 private key. The validity needs to be 5 min into the future.</p> 
+</code></pre>
+<h4>Generate the Salesforce compliant JWT key</h4>
+<p>The key requires the user as <code>subject</code>, the login URL as <code>audience</code> and the Consumer Key as <code>issuer</code>. The key must be the X509 private key. The validity needs to be 5 min into the future.</p>
 <pre><code class="language-java">public String createJwt(final String subject) throws Exception {
 
         final String keyString = System.getenv("SFDC_KEY");
@@ -200,9 +200,9 @@ rm temp.key
 
         return compactJws;
     }
-</code></pre> 
-<h4>Exchange the JWT for a OAuth session token</h4> 
-<p>Salesforce requires to POST a http form (yep, form not JSON) to the authentication endpoint <code>/services/oauth2/token</code> and returns JSON if when it is successful or fails:</p> 
+</code></pre>
+<h4>Exchange the JWT for a OAuth session token</h4>
+<p>Salesforce requires to POST a http form (yep, form not JSON) to the authentication endpoint <code>/services/oauth2/token</code> and returns JSON if when it is successful or fails:</p>
 <pre><code class="language-java">private void handleAuth(final Message&lt;JsonObject&gt; incoming) {
 
         // Create a web client to post to Salesforce
@@ -235,7 +235,7 @@ rm temp.key
         incoming.reply(result);
 
     }
-</code></pre> 
+</code></pre>
 <p>As usual: YMMV</p></div>
 					<hr />
 					<p>

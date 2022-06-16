@@ -134,47 +134,47 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>A calDAV reference server</small></h1>
 					<hr />
-					<div><p>After having a look at the <a href="/blog/2019/10/the-caldav-standard.html">many standards</a> involved, it is time to check out a standard or reference implementation. Cutting a long story short: it looks to me the OpenSource <a href="https://github.com/apple/ccs-calendarserver">Apple Calendar and Contacts Server (ccs)</a> is my best bet. While the <a href="https://www.calendarserver.org/">documentation</a> is rather light, it has been battle tested with my range of targeted clients</p> 
-<h3>To Docker or to VM?</h3> 
-<p>Trying to avoid the <a href="https://blog.codinghorror.com/the-works-on-my-machine-certification-program/">Works on my machine</a> certification, a native install was out of the question. So Docker or VM? A search yielded <a href="https://hub.docker.com/r/pluies/ccs-calendarserver/">one hit</a> (<a href="https://www.uponmyshoulder.com/blog/2017/apple-contact-calendar-server-dockerised/">with explanation</a>) and none for for a ready baked VM. On closer inspection, the docker image, being 2 years old, didn't use the current version, so we had to re-create the image. While on it, I decided to give a VM a shot:</p> 
-<h3>Apple calendar server on Ubuntu 18.04</h3> 
-<p>To keep things light, I started with the <a href="https://ubuntu.com/download/desktop/thank-you?version=18.04.3&amp;architecture=amd64">current LTS version 18.04</a> desktop and a minimal install with 4G RAM. First order after the install is to get updates and install modules for the VirtualBox extensions:</p> 
+					<div><p>After having a look at the <a href="/blog/2019/10/the-caldav-standard.html">many standards</a> involved, it is time to check out a standard or reference implementation. Cutting a long story short: it looks to me the OpenSource <a href="https://github.com/apple/ccs-calendarserver">Apple Calendar and Contacts Server (ccs)</a> is my best bet. While the <a href="https://www.calendarserver.org/">documentation</a> is rather light, it has been battle tested with my range of targeted clients</p>
+<h3>To Docker or to VM?</h3>
+<p>Trying to avoid the <a href="https://blog.codinghorror.com/the-works-on-my-machine-certification-program/">Works on my machine</a> certification, a native install was out of the question. So Docker or VM? A search yielded <a href="https://hub.docker.com/r/pluies/ccs-calendarserver/">one hit</a> (<a href="https://www.uponmyshoulder.com/blog/2017/apple-contact-calendar-server-dockerised/">with explanation</a>) and none for for a ready baked VM. On closer inspection, the docker image, being 2 years old, didn't use the current version, so we had to re-create the image. While on it, I decided to give a VM a shot:</p>
+<h3>Apple calendar server on Ubuntu 18.04</h3>
+<p>To keep things light, I started with the <a href="https://ubuntu.com/download/desktop/thank-you?version=18.04.3&amp;architecture=amd64">current LTS version 18.04</a> desktop and a minimal install with 4G RAM. First order after the install is to get updates and install modules for the VirtualBox extensions:</p>
 <pre><code class="language-bash">sudo apt update
 sudo apt install gcc make perl
 sudo apt dist-upgrade
-</code></pre><p>Thereafter "insert" the add-on CD, install the add-ons and create a snapshot. Next step is to install some of the needed packages. Took a little experimentation to get there:</p> 
+</code></pre><p>Thereafter "insert" the add-on CD, install the add-ons and create a snapshot. Next step is to install some of the needed packages. Took a little experimentation to get there:</p>
 <pre><code class="language-bash">sudo apt install libsasl2-dev python-dev libldap2-dev libssl-dev curl \
     make gcc bzip2 libreadline-dev zlib1g-dev libkrb5-dev \
     python-pip libffi-dev libffi6 memcached git python-xattr \
     postgresql postgresql-contrib libssl1.0
-</code></pre> 
-<p>The <code>libssl1.0</code> is essential (and not mentioned anywhere), to ensure the outdated Python2.7 can work with existing security libraries</p> 
-<h4>PostgreSQL</h4> 
-<p>In the previous step we installed postgres system wide. This affords a new username <code>postgres</code> who owns the database. My current user <code>calendar</code> didn't have access, so I needed to add this to postgres. Failing so would trigger the download of Postgres 9.5.3 sources (instead of current 10.10) and a compilaton error:</p> 
+</code></pre>
+<p>The <code>libssl1.0</code> is essential (and not mentioned anywhere), to ensure the outdated Python2.7 can work with existing security libraries</p>
+<h4>PostgreSQL</h4>
+<p>In the previous step we installed postgres system wide. This affords a new username <code>postgres</code> who owns the database. My current user <code>calendar</code> didn't have access, so I needed to add this to postgres. Failing so would trigger the download of Postgres 9.5.3 sources (instead of current 10.10) and a compilaton error:</p>
 <pre><code class="language-bash">sudo su - postgres -c "createuser calendar"
 sudo -u postgres psql
-</code></pre> 
-<p>and there<code>ALTER USER calendar Superuser Createrole CreateDB Replication BypassRLS;</code>. Use <code>\q</code> to exit psql.<br> Then, check for the file <code>bin\_build.sh</code> and replace the following lines:</p> 
+</code></pre>
+<p>and there<code>ALTER USER calendar Superuser Createrole CreateDB Replication BypassRLS;</code>. Use <code>\q</code> to exit psql.<br> Then, check for the file <code>bin\_build.sh</code> and replace the following lines:</p>
 <pre><code class="language-bash"> if command -v postgres &gt; /dev/null; then
     using_system "Postgres";
   else
     local v="9.5.3";
-</code></pre> 
-<p>with</p> 
+</code></pre>
+<p>with</p>
 <pre><code class="language-bash"> if command -v psql &gt; /dev/null; then
     using_system "Postgres";
   else
     local v="10.10";
-</code></pre> 
-<p>Finally edit <code>~/.profile</code> and add <code>PATH=$PATH:/usr/lib/postgresql/10/bin</code> so the Postgres binaries can be found.</p> 
-<p>Next on the list: clone the ccs and run the develop command. I had to do that more than once to get all dependencies right. If you installed the packages as listed above, you are all good.</p> 
+</code></pre>
+<p>Finally edit <code>~/.profile</code> and add <code>PATH=$PATH:/usr/lib/postgresql/10/bin</code> so the Postgres binaries can be found.</p>
+<p>Next on the list: clone the ccs and run the develop command. I had to do that more than once to get all dependencies right. If you installed the packages as listed above, you are all good.</p>
 <pre><code class="language-bash">mkdir ~/CalendarServer
 cd ~/CalendarServer
 git clone https://github.com/apple/ccs-calendarserver.git
 cd ccs-calendarserver
 git checkout release/CalendarServer-9.3-dev
 bin/develop
-</code></pre> 
+</code></pre>
 <p>If this goes off to error land, make sure you had installed <code>libssl1.0</code>. Without it the configuration will fail.<br> You are now able to start the calendar server as your reference using <code>bin/run -n</code>.</p></div>
 					<hr />
 					<p>

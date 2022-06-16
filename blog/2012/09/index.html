@@ -120,82 +120,82 @@ ga('send', 'pageview');
 					<hr />
 					<div>When running Domino on a proper platform (AIX, Solaris, Linux) starting and stopping the Domino server was left to customizing <a href="http://www-01.ibm.com/support/docview.wss?uid=swg21173499">a script from a technote</a> or a Redbook's <a href="ftp://www.redbooks.ibm.com/redbooks/SG246835/">FTP site</a>, as far as official IBM resouces go. Of course the professional source is Daniel Nashed's <a href="http://www.nashcom.de/nshweb/pages/startscript.htm">ultimate Domino startup script</a>. One script to rule them all. 
 <br> On Linux however the way services are started has changed a while ago. The prefered method (definitely in Ubuntu, but also Fedora, RedHat and OpenSuse as option) is <a href="http://en.wikipedia.org/wiki/Upstart">Upstart</a> (there seems to be a push towards <a href="http://en.wikipedia.org/wiki/Systemd">systemd</a>, but that's a story for another time). 
-<br> <a href="http://upstart.ubuntu.com/">Upstart</a> allows for a more flexible control and faster boot times of your environment. To configure your Domino on Linux we will use 2 scripts and one configuration file for each instance (inspired by the <a href="http://clock.co.uk/tech-blogs/upstart-and-nodejs">same approach</a> for node.js). 
+<br><a href="http://upstart.ubuntu.com/">Upstart</a> allows for a more flexible control and faster boot times of your environment. To configure your Domino on Linux we will use 2 scripts and one configuration file for each instance (inspired by the <a href="http://clock.co.uk/tech-blogs/upstart-and-nodejs">same approach</a> for node.js). 
 <br> The first file is <code>/etc/init/domino.conf</code> with the following content: 
-<div class="bash"> <span class="co0"># Sample job script for domino, experimental - use at your own risk, don't use in production</span> 
- <br> description <span class="st_h">'lotus domino upstart script'</span> 
- <br> author <span class="st_h">'@notessensei'</span> 
- <br> 
- <br> <span class="co0">#Stop on shutdown - but no start directive - since it gets started by another script</span> 
+<div class="bash"><span class="co0"># Sample job script for domino, experimental - use at your own risk, don't use in production</span>
+ <br> description <span class="st_h">'lotus domino upstart script'</span>
+ <br> author <span class="st_h">'@notessensei'</span>
+ <br>
+ <br><span class="co0">#Stop on shutdown - but no start directive - since it gets started by another script</span>
  <br> stop on shutdown 
- <br> 
- <br> <span class="co0">#Instance allows for multiple scripts running</span> 
- <br> instance <span class="st0">"Domino - <span class="es2">$NAME</span>"</span> 
- <br> 
- <br> <span class="co0"># Restart if it was crashing, with a limit</span> 
+ <br>
+ <br><span class="co0">#Instance allows for multiple scripts running</span>
+ <br> instance <span class="st0">"Domino - <span class="es2">$NAME</span>"</span>
+ <br>
+ <br><span class="co0"># Restart if it was crashing, with a limit</span>
  <br> respawn 
- <br> respawn limit <span class="nu0">5</span> <span class="nu0">60</span> 
- <br> 
- <br> <span class="co0"># Will go into the background</span> 
+ <br> respawn limit <span class="nu0">5</span><span class="nu0">60</span>
+ <br>
+ <br><span class="co0"># Will go into the background</span>
  <br> expect fork 
- <br> 
- <br> <span class="co0"># Kill timeout 20 sec - to give Domino a shutdown chance</span> 
- <br> <span class="kw2">kill</span> timeout <span class="nu0">20</span> 
- <br> 
- <br> <span class="co0"># Check for the password file</span> 
+ <br>
+ <br><span class="co0"># Kill timeout 20 sec - to give Domino a shutdown chance</span>
+ <br><span class="kw2">kill</span> timeout <span class="nu0">20</span>
+ <br>
+ <br><span class="co0"># Check for the password file</span>
  <br> pre-start script 
- <br> &nbsp; &nbsp; . <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/</span> <span class="re1">$NAME</span>.conf 
- <br> &nbsp; &nbsp; <span class="co0"># Ensure the pwd file is there and has the right owner/access</span> 
- <br> &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">[</span> <span class="sy0">!</span> <span class="re5">-f</span> <span class="re1">$PWD_LOCATION</span> <span class="br0">]</span>; <span class="kw1">then</span> 
+ <br> &nbsp; &nbsp; . <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/</span><span class="re1">$NAME</span>.conf 
+ <br> &nbsp; &nbsp; <span class="co0"># Ensure the pwd file is there and has the right owner/access</span>
+ <br> &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">[</span><span class="sy0">!</span><span class="re5">-f</span><span class="re1">$PWD_LOCATION</span><span class="br0">]</span>; <span class="kw1">then</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">touch</span> PWD_LOCATION 
- <br> &nbsp; &nbsp; <span class="kw1">fi</span> 
- <br> &nbsp; &nbsp; <span class="kw2">chmod</span> 0400 <span class="re1">$PWD_LOCATION</span> 
- <br> &nbsp; &nbsp; <span class="kw2">chown</span> <span class="re1">$SERVER_USER</span>: <span class="re1">$SERVER_GROUP</span> <span class="re1">$PWD_LOCATION</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">fi</span>
+ <br> &nbsp; &nbsp; <span class="kw2">chmod</span> 0400 <span class="re1">$PWD_LOCATION</span>
+ <br> &nbsp; &nbsp; <span class="kw2">chown</span><span class="re1">$SERVER_USER</span>: <span class="re1">$SERVER_GROUP</span><span class="re1">$PWD_LOCATION</span>
  <br> end script 
- <br> 
- <br> <span class="co0"># The script to start the server</span> 
+ <br>
+ <br><span class="co0"># The script to start the server</span>
  <br> script 
- <br> &nbsp; &nbsp; . <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/</span> <span class="re1">$NAME</span>.conf 
- <br> &nbsp; &nbsp; <span class="kw3">exec</span> <span class="kw2">sudo</span> <span class="re5">-u</span> <span class="re1">$SERVER_USER</span> <span class="re5">-c</span> <span class="st0">"cd <span class="es3">${DATA_LOCATION}</span>; cat <span class="es3">${PWD_LOCATION}</span>|PWD_LOCATION/server"</span> <span class="sy0">&gt;&gt;</span> <span class="re1">$LOG_TO</span> <span class="nu0">2</span> <span class="sy0">&gt;&amp;</span> <span class="nu0">1 &amp;</span> 
+ <br> &nbsp; &nbsp; . <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/</span><span class="re1">$NAME</span>.conf 
+ <br> &nbsp; &nbsp; <span class="kw3">exec</span><span class="kw2">sudo</span><span class="re5">-u</span><span class="re1">$SERVER_USER</span><span class="re5">-c</span><span class="st0">"cd <span class="es3">${DATA_LOCATION}</span>; cat <span class="es3">${PWD_LOCATION}</span>|PWD_LOCATION/server"</span><span class="sy0">&gt;&gt;</span><span class="re1">$LOG_TO</span><span class="nu0">2</span><span class="sy0">&gt;&amp;</span><span class="nu0">1 &amp;</span>
  <br> end script 
- <br> 
- <br> <span class="co0"># Run before shutdown - tell Domino to go down peacefully</span> 
+ <br>
+ <br><span class="co0"># Run before shutdown - tell Domino to go down peacefully</span>
  <br> pre-stop script 
- <br> &nbsp; &nbsp; &nbsp;. <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/</span> <span class="re1">$NAME</span>.conf 
- <br> &nbsp; &nbsp; <span class="kw3">exec</span> <span class="kw2">sudo</span> <span class="re5">-u</span> <span class="re1">$SERVER_USER</span> <span class="re5">-c</span> <span class="st0">"cd <span class="es3">${DATA_LOCATION}</span>; /opt/ibm/lotus/bin/server -q"</span> 
+ <br> &nbsp; &nbsp; &nbsp;. <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/</span><span class="re1">$NAME</span>.conf 
+ <br> &nbsp; &nbsp; <span class="kw3">exec</span><span class="kw2">sudo</span><span class="re5">-u</span><span class="re1">$SERVER_USER</span><span class="re5">-c</span><span class="st0">"cd <span class="es3">${DATA_LOCATION}</span>; /opt/ibm/lotus/bin/server -q"</span>
  <br> end script 
- <br> 
- <br> <span class="co0"># Make sure it is really dead</span> 
+ <br>
+ <br><span class="co0"># Make sure it is really dead</span>
  <br> post-stop script 
- <br> &nbsp; &nbsp; . <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/</span> <span class="re1">$NAME</span>.conf 
- <br> &nbsp; &nbsp; <span class="kw3">exec</span> <span class="kw2">sudo</span> <span class="re5">-u</span> <span class="re1">$SERVER_USER</span> <span class="re5">-c</span> <span class="st0">"cd <span class="es3">${DATA_LOCATION}</span>; /opt/ibm/lotus/bin/nsd -kill"</span> 
+ <br> &nbsp; &nbsp; . <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/</span><span class="re1">$NAME</span>.conf 
+ <br> &nbsp; &nbsp; <span class="kw3">exec</span><span class="kw2">sudo</span><span class="re5">-u</span><span class="re1">$SERVER_USER</span><span class="re5">-c</span><span class="st0">"cd <span class="es3">${DATA_LOCATION}</span>; /opt/ibm/lotus/bin/nsd -kill"</span>
  <br> end script 
 </div> Secondly you create the configuration file in <code>/etc/domino/server1.conf</code> (you need to create the directory if needed, it isn't there by default): 
-<div class="bash"> <span class="co0">#Configuration variables for Domino instance startup</span> 
- <br> <span class="co0">#User and group for Domino</span> 
- <br> <span class="re2">SERVER_USER</span>= <span class="st0">"domino"</span> 
- <br> <span class="re2">SERVER_GROUP</span>= <span class="st0">"domino"</span> 
- <br> <span class="co0">#Where does the data go</span> 
- <br> <span class="re2">DATA_LOCATION</span>= <span class="st0">"/home/domino/server1/data"</span> 
- <br> <span class="co0">#Must exist and have 0400 doe SERVER_USER:SERVER_GROUP</span> 
- <br> <span class="re2">PWD_LOCATION</span>= <span class="st0">"<span class="es3">${DATA LOCATION}</span>/.domino.pwd"</span> 
- <br> <span class="co0">#Log file</span> 
- <br> <span class="re2">LOG_TO</span>= <span class="st0">"<span class="es3">${DATA LOCATION}</span>/domino.log"</span> 
+<div class="bash"><span class="co0">#Configuration variables for Domino instance startup</span>
+ <br><span class="co0">#User and group for Domino</span>
+ <br><span class="re2">SERVER_USER</span>= <span class="st0">"domino"</span>
+ <br><span class="re2">SERVER_GROUP</span>= <span class="st0">"domino"</span>
+ <br><span class="co0">#Where does the data go</span>
+ <br><span class="re2">DATA_LOCATION</span>= <span class="st0">"/home/domino/server1/data"</span>
+ <br><span class="co0">#Must exist and have 0400 doe SERVER_USER:SERVER_GROUP</span>
+ <br><span class="re2">PWD_LOCATION</span>= <span class="st0">"<span class="es3">${DATA LOCATION}</span>/.domino.pwd"</span>
+ <br><span class="co0">#Log file</span>
+ <br><span class="re2">LOG_TO</span>= <span class="st0">"<span class="es3">${DATA LOCATION}</span>/domino.log"</span>
 </div> The script will be able to start the domino instance using <code>start domino NAME=server1</code>. For additional instances ( <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/index.jsp?topic=%2Fcom.ibm.help.domino.admin85.doc%2FH_PARTITIONED_SERVERS_OVER.html">partitioned servers</a>) you only need to create an additional conf file in /etc/domino. 
 <br> The final missing piece is the script that starts all the configured instances. Here we can more or less copy <a href="http://clock.co.uk/tech-blogs/upstart-and-nodejs">Ian's node script</a> as <code>/etc/init/alldomino.conf</code>: 
 <div class="bash">
-  description <span class="st_h">'Start all domino instances at boot'</span> 
- <br> author <span class="st_h">'@notessensei'</span> 
- <br> 
- <br> start on <span class="br0">(</span>local-filesystems and net-device-up <span class="br0">)</span> 
- <br> 
+  description <span class="st_h">'Start all domino instances at boot'</span>
+ <br> author <span class="st_h">'@notessensei'</span>
+ <br>
+ <br> start on <span class="br0">(</span>local-filesystems and net-device-up <span class="br0">)</span>
+ <br>
  <br> task 
- <br> 
+ <br>
  <br> script 
- <br> &nbsp; <span class="kw1">for</span> <span class="kw2">file</span> <span class="kw1">in</span> <span class="sy0">`</span> <span class="kw2">ls</span> <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/*</span>.conf <span class="sy0">`</span> ; <span class="kw1">do</span> 
- <br> &nbsp; &nbsp; <span class="re2">filename</span>= <span class="sy0">`</span> <span class="kw2">basename</span> <span class="co1">${file%.*}</span> <span class="sy0">`</span> 
- <br> &nbsp; &nbsp; start domino <span class="re2">NAME</span>= <span class="re1">$filename</span> 
- <br> &nbsp; <span class="kw1">done</span> 
+ <br> &nbsp; <span class="kw1">for</span><span class="kw2">file</span><span class="kw1">in</span><span class="sy0">`</span><span class="kw2">ls</span><span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/*</span>.conf <span class="sy0">`</span> ; <span class="kw1">do</span>
+ <br> &nbsp; &nbsp; <span class="re2">filename</span>= <span class="sy0">`</span><span class="kw2">basename</span><span class="co1">${file%.*}</span><span class="sy0">`</span>
+ <br> &nbsp; &nbsp; start domino <span class="re2">NAME</span>= <span class="re1">$filename</span>
+ <br> &nbsp; <span class="kw1">done</span>
  <br> end script 
 </div> That's all you need. As usual YMMV.</div>
 					<hr />
@@ -221,19 +221,19 @@ categories:  <a href="/blog/categories/linux.html">Linux</a>  <a href="/blog/cat
 <br> Still the <a href="http://www.slideshare.net/ryanjbaxter/lotusphere-2011-jmp103">Plug-in Jedi</a> are with us and there are a number of <a href="http://wildfire.openntf.org/">wildly successful</a>, <a href="www.openntf.org/p/File Navigator">useful</a> and <a href="http://www.fewclix.com/">feature rich</a> plug-ins that were contributed from outside IBM. Of course special mention goes to <a href="http://www.ontimesuite.com/">The Master's work</a>. 
 <br> One <b>big</b> stumbling block for development is the <a href="http://www14.software.ibm.com/webapp/download/nochargesearch.jsp?q=Lotus+Expeditor+Toolkit+6.2">Expeditor Toolkit</a> which <a href="http://www-10.lotus.com/ldd/lewiki.nsf/dx/Getting_started_with_the_Lotus_Expeditor_Toolkit_6.2.1">is stuck</a> on Eclipse 3.4.2 (while the current version of Eclipse is 4.2). Using the toolkit it is just a few clicks to create a runtime/debug configuration to test your plug-ins, without you are in for parameter guessing. 
 <br> When searching for information you will find <a href="http://lekkimworld.com/pages/eclipse35_notes852.html">Mikkel's instructions</a> for 3.5/8.5.2 and <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_CA_RUN_NOTES_FROM_ECLIPSE.html">the entry in the Designer Help file</a> (for the later one you need to know exactly what you are looking for). But both instructions won't work for Notes 8.5.3 ot 8.5.4. With the help of <a href="http://www-03.ibm.com/employment/greaterchina/cdl_intro.html">special friends</a> I figured it out: 
-<ul> 
- <li>Install <a href="http://www.eclipse.org/downloads/">Eclipse 4.2</a> (Classic will do)</li> 
- <li>In <i>Window - Preferences - Java - Installed JRE</i> add the Notes JRE (I called mine Notes854)</li> 
- <li>In <i>Window - Preferences - Plug-in Development - Target Platform</i> add an new entry (based on an empty template) and add the directory location <code>/opt/ibm/lotus/notes/framework/rcp/eclipse</code> and <code>/opt/ibm/lotus/notes/framework/shared/eclipse</code> (adjust the directories to your path)</li> 
- <li>In <i>Run - Run Configurations</i> create a new Eclipse Application. Give it a name, in my example it is "SmartFile"</li> 
- <li>Leave the Workspace Data Location at its default <code>${workspace_loc}/../runtime-SmartFile</code></li> 
- <li>Run a product <code>com.ibm.notes.branding.notes</code> and point to the Runtime JRE you just configured (Notes854)</li> 
- <li>In Arguments (second tab) enter for the Program arguments (in one line):<br> <code>-personality com.ibm.rcp.platform.personality -console -pluginCustomization "${rcp_target}/../plugin_customization.ini"</code></li> 
- <li>in the VM argument enter the following. There seems to be no more need to specify variables or an installid<br> <code> -Declipse.registry.nulltoken=true<br> -Dosgi.splashPath=platform:/base/../shared/eclipse/plugins/com.ibm.notes.branding<br> -Djava.util.logging.config.class=com.ibm.rcp.core.internal.logger.boot.LoggerConfig<br> -Dosgi.framework.extensions=com.ibm.rcp.core.logger.frameworkhook<br> -Dcom.ibm.pvc.webcontainer.port=0<br> -Djava.protocol.handler.pkgs=com.ibm.net.ssl.www.protocol<br> -Dosgi.hook.configurators.exclude=org.eclipse.core.runtime.internal.adaptor.EclipseLogHook<br> "-Xbootclasspath/a:${rcp_base}/rcpbootcp.jar"<br> "-Djava.security.properties=file:${rcp_base}/rcp.security.properties" -Xss512K "-Drcp.data=${rcp_data}" "-Drcp.home=${rcp_target}/../.." </code><br> (I don't know why some of the arguments are in quotes). Keep the working directory as default</li> 
- <li>In Plug-ins (3rd Tab): check <b>all</b> Target Platform plug-ins as well as your shiny new ones</li> 
- <li>In Configuration (4th tab) leave the "Use default location" On my machine:<br> <code>${workspace_loc}/.metadata/.plugins/org.eclipse.pde.core/SmartFile</code><br> and "Use an existing config.ini": <code>${rcp_base}/config.ini</code></li> 
- <li>I didn't touch Tabs 5-7</li> 
- <li>On my machine the Notes executable is on the path, but I don't know if that is mandatory</li> 
+<ul>
+ <li>Install <a href="http://www.eclipse.org/downloads/">Eclipse 4.2</a> (Classic will do)</li>
+ <li>In <i>Window - Preferences - Java - Installed JRE</i> add the Notes JRE (I called mine Notes854)</li>
+ <li>In <i>Window - Preferences - Plug-in Development - Target Platform</i> add an new entry (based on an empty template) and add the directory location <code>/opt/ibm/lotus/notes/framework/rcp/eclipse</code> and <code>/opt/ibm/lotus/notes/framework/shared/eclipse</code> (adjust the directories to your path)</li>
+ <li>In <i>Run - Run Configurations</i> create a new Eclipse Application. Give it a name, in my example it is "SmartFile"</li>
+ <li>Leave the Workspace Data Location at its default <code>${workspace_loc}/../runtime-SmartFile</code></li>
+ <li>Run a product <code>com.ibm.notes.branding.notes</code> and point to the Runtime JRE you just configured (Notes854)</li>
+ <li>In Arguments (second tab) enter for the Program arguments (in one line):<br> <code>-personality com.ibm.rcp.platform.personality -console -pluginCustomization "${rcp_target}/../plugin_customization.ini"</code></li>
+ <li>in the VM argument enter the following. There seems to be no more need to specify variables or an installid<br> <code> -Declipse.registry.nulltoken=true<br> -Dosgi.splashPath=platform:/base/../shared/eclipse/plugins/com.ibm.notes.branding<br> -Djava.util.logging.config.class=com.ibm.rcp.core.internal.logger.boot.LoggerConfig<br> -Dosgi.framework.extensions=com.ibm.rcp.core.logger.frameworkhook<br> -Dcom.ibm.pvc.webcontainer.port=0<br> -Djava.protocol.handler.pkgs=com.ibm.net.ssl.www.protocol<br> -Dosgi.hook.configurators.exclude=org.eclipse.core.runtime.internal.adaptor.EclipseLogHook<br> "-Xbootclasspath/a:${rcp_base}/rcpbootcp.jar"<br> "-Djava.security.properties=file:${rcp_base}/rcp.security.properties" -Xss512K "-Drcp.data=${rcp_data}" "-Drcp.home=${rcp_target}/../.." </code><br> (I don't know why some of the arguments are in quotes). Keep the working directory as default</li>
+ <li>In Plug-ins (3rd Tab): check <b>all</b> Target Platform plug-ins as well as your shiny new ones</li>
+ <li>In Configuration (4th tab) leave the "Use default location" On my machine:<br> <code>${workspace_loc}/.metadata/.plugins/org.eclipse.pde.core/SmartFile</code><br> and "Use an existing config.ini": <code>${rcp_base}/config.ini</code></li>
+ <li>I didn't touch Tabs 5-7</li>
+ <li>On my machine the Notes executable is on the path, but I don't know if that is mandatory</li>
 </ul> That's it. While you are on it, take a <a href="http://www.vogella.com/articles/EclipsePlugIn/article.html">little refresher</a> (keep in mind your target platform is still Eclipse 3.4.2) 
 <br> As usual YMMV</div>
 					<hr />
@@ -257,25 +257,25 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 					<hr />
 					<div>Before calendars became electronic, having the <a href="http://www.timesystem.com/shared/design/business-weekly-plan.png">right system</a> in place was a signal of professionalism (admittingly abused as <a href="http://en.wikipedia.org/wiki/Status_symbol">status symbols</a> quite often) and calendars were very personal. 
 <br> At the right level one had access to a personal assistant (the one without the D between the P and the A) who organized and maintained all aspects captured in the calendar. Inquiry of 3rd parties into your calendar was facilitated by a high powered neural network (a.k.a. the human brain) that translated the individual calendar entries into the information density deemed fit for the inquirer. " <i>Information density</i>" also called " <i>information precision</i>" is an interesting concept, that seems hard to translate into time planning software. 
-<br> 
-<img src="/blog/images/2012/CalendarDensity.jpg" border="0" alt="The information density decreases with distance to you"> 
+<br>
+<img src="/blog/images/2012/CalendarDensity.jpg" border="0" alt="The information density decreases with distance to you">
 <br> Your PA would know how to answer an inquiry about availability depending on your whereabouts, previous commitments and most importantly the relation/distance of the enquirer. It could range from a simple "No, try again another time" to "He's in Beijing, back next week" to "I'll slot a phone conference in for you at 17:00 GMT+8". With the rise of the digital assistants and calendars this flexible response got lost. 
 <br> The first generation was entirely personal, while contemporary system will give you "available slots" or (if granted) a full detailed view. They still don't tell you where the other person is (you could use Google Latitude, Foursquare etc. for that) or will be (TripIt might be able to tell you). 
 <br> Since calendars are no longer accessed only by a single person a conflict arises: one one hand we like it simple, on the other hand a lot of contextual information is needed to provide automated access at the right density level. Data protection and privacy concerns complicate matters further. 
 <br> There are tons of <a href="https://www.google.com/search?q=easy+to+use+calendar">solution attempts</a> around which all fall short of taking information density into account. Some try to offer more than one calendar that you then can share with different people, some use tags, but I have yet to see one that can take an itinerary approach: I'm going on a trip to Orlando (usually in January). This sets timezone and location, but doesn't block time (unless a presence request indicates a different location outside a "reasonable radius"). Then as part of the trip I schedule sessions and meetings (that would block time then). 
 <br> Short of having my own PA, that's what my calendar should be able to: 
-<ul> 
- <li>All the basic functions calendars have today: entries with and without people, repeating entries, reminders etc.</li> 
- <li>Hierarchical entries (the itinerary approach mentioned above)</li> 
- <li>Ability to switch into different timezones without altering the system timezone. Offer a shortcut based on where I am or will be in the day/week I'm looking at</li> 
- <li>Some clever mechanism to qualify entries, so enquiries (free time lookup etc) can return more or less information based on the enquirer (that one is really hard). Why can't a freetime lookup not include: "I need a specific location", "Online", "Phone" as qualifier. This includes what goes into my "public" calendar</li> 
- <li>A mechanism to figure out "What is the best option of the following given slots for the group of attendees" (probably online interactive)</li> 
- <li>The ability to track lead times (if I'm in the office and have a customer meeting at their place, I want the travel time blocked and eventually adjusted to traffic conditions)</li> 
- <li>The ability to plan preparation times when planning a meeting (that's a tricky one too) - so I can more efficiently plan time</li> 
- <li>Configurable meta data, so I can tie related calendar entries to customers, projects, goals etc.</li> 
- <li>Feature to drag task execution on and off the calendar - good for planning longer work (a task can have more than one calendar entry)</li> 
- <li>Ability to see public calendars on/off in my calendar in groups. Currently I need to switch them on/off one by one</li> 
- <li>more stuff I will think of, when working with the calendar again</li> 
+<ul>
+ <li>All the basic functions calendars have today: entries with and without people, repeating entries, reminders etc.</li>
+ <li>Hierarchical entries (the itinerary approach mentioned above)</li>
+ <li>Ability to switch into different timezones without altering the system timezone. Offer a shortcut based on where I am or will be in the day/week I'm looking at</li>
+ <li>Some clever mechanism to qualify entries, so enquiries (free time lookup etc) can return more or less information based on the enquirer (that one is really hard). Why can't a freetime lookup not include: "I need a specific location", "Online", "Phone" as qualifier. This includes what goes into my "public" calendar</li>
+ <li>A mechanism to figure out "What is the best option of the following given slots for the group of attendees" (probably online interactive)</li>
+ <li>The ability to track lead times (if I'm in the office and have a customer meeting at their place, I want the travel time blocked and eventually adjusted to traffic conditions)</li>
+ <li>The ability to plan preparation times when planning a meeting (that's a tricky one too) - so I can more efficiently plan time</li>
+ <li>Configurable meta data, so I can tie related calendar entries to customers, projects, goals etc.</li>
+ <li>Feature to drag task execution on and off the calendar - good for planning longer work (a task can have more than one calendar entry)</li>
+ <li>Ability to see public calendars on/off in my calendar in groups. Currently I need to switch them on/off one by one</li>
+ <li>more stuff I will think of, when working with the calendar again</li>
 </ul> Of course, your style would be completely different, so my wishlist wouldn't fit yours. Would it?</div>
 					<hr />
 					<p>
@@ -297,9 +297,9 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>  <a href
 					</h1>
 					<hr />
 					<div>An old <a href="http://www.camilearaujo.com/2012/04/when-student-is-ready-master-appears.html">Zen proverb</a> states: " <i>When the student is ready the master appears</i>". It implies that it is a student's task to get ready. But it also implies that the master needs to be ready to teach. 
-<br> <a href="http://gapingvoid.com/2011/12/15/mastery/" title="Masters need to teach"><img src="http://gapingvoid.com/wp-content/uploads/2011/12/sifu1112-550x432.gif" border="0" width="640"></a> 
+<br><a href="http://gapingvoid.com/2011/12/15/mastery/" title="Masters need to teach"><img src="http://gapingvoid.com/wp-content/uploads/2011/12/sifu1112-550x432.gif" border="0" width="640"></a>
 <br> In traditional craftsmanship the transition from journeyman to master is accompanied with the right and pledge to take on apprentices. So mastery must include teaching to lay the foundation for the <a href="http://www.davincilife.com/biography1.html">next level</a>: " <i>poor is a pupil that does not surpass his master</i>". After all it is " <a href="http://www.ztcollege.com/blog/autonomy-mastery-purpose/">Purpose, Autonomy and Mastery</a>" what <a href="http://www.danpink.com/drive">motivates us</a>. 
-<br> <a href="http://www.gapingvoidart.com/mastery-p-2770.html"><img src="http://www.gapingvoidart.com/images/mastery_1.gif" border="0" alt="Purpose Autonomy Mastery" width="640"></a> 
+<br><a href="http://www.gapingvoidart.com/mastery-p-2770.html"><img src="http://www.gapingvoidart.com/images/mastery_1.gif" border="0" alt="Purpose Autonomy Mastery" width="640"></a>
 <br> Have an nice weekend!</div>
 					<hr />
 					<p>
@@ -347,20 +347,20 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 					</h1>
 					<hr />
 					<div>An <a href="http://www-01.ibm.com/support/docview.wss?uid=swg21608160">IBM Technote</a> updated on 15 Aug 2012 points to a set of XSS vulnerabilities in the Lotus Domino server. You also can read the <a href="http://seclists.org/fulldisclosure/2012/Sep/6">disclosure on seclist.org</a> about that. But first go to your server configuration document and add: 
-<br> <code>DominoValidateFramesetSRC=1</code> 
+<br><code>DominoValidateFramesetSRC=1</code>
 <br> Welcome back (You don't edit the notes.ini directly don't you!). When looking at XSS vulnerabilities, they follow the same pattern as <a href="http://xkcd.com/327/">SQL injections</a>: Input that has been provided by the user is not fully sanitised and used for output generation. In web applications the " <i>usual suspects</i>" for such attacks are: 
-<ul> 
- <li>Framesets</li> 
- <li>URL parameters</li> 
- <li>Error and redirection pages</li> 
- <li>Form submissions</li> 
+<ul>
+ <li>Framesets</li>
+ <li>URL parameters</li>
+ <li>Error and redirection pages</li>
+ <li>Form submissions</li>
 </ul> Finding all those is quite a task for both the developers and the attackers since URLs can be encoded in many different ways (@URLDecode is your friend). Luckily (for the first) and unfortunately (for the later) there is <a href="~&nbsp;
 
 
 
 ÷&nbsp;A
 
-���
+◙
 
 '
 
@@ -373,19 +373,19 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 
 <http://sectools.org/tag/vuln-scanners/>
 ">help available</a>. Poking around in Domino made me add a new server rules ( <b>Update</b> thx to Sven to point that out) (not needed on Domino 8.5.4++): 
-<ul> 
- <li>Type of rule: <b>HTTP response headers</b></li> 
- <li>Incoming URL pattern: <b>*/xsp/.ibmxspres/*</b></li> 
- <li>HTTP response codes: <b>404</b></li> 
- <li>Expires header: <b>Don't add header</b></li> 
- <li>Custom header: <b>Content-Type : text/plain (overwrite)</b></li> 
-</ul> 
-<ul> 
- <li>Type of rule: <b>HTTP response headers</b></li> 
- <li>Incoming URL pattern: <b>*/xsp/.ibmmodres/*</b></li> 
- <li>HTTP response codes: <b>404</b></li> 
- <li>Expires header: <b>Don't add header</b></li> 
- <li>Custom header: <b>Content-Type : text/plain (overwrite)</b></li> 
+<ul>
+ <li>Type of rule: <b>HTTP response headers</b></li>
+ <li>Incoming URL pattern: <b>*/xsp/.ibmxspres/*</b></li>
+ <li>HTTP response codes: <b>404</b></li>
+ <li>Expires header: <b>Don't add header</b></li>
+ <li>Custom header: <b>Content-Type : text/plain (overwrite)</b></li>
+</ul>
+<ul>
+ <li>Type of rule: <b>HTTP response headers</b></li>
+ <li>Incoming URL pattern: <b>*/xsp/.ibmmodres/*</b></li>
+ <li>HTTP response codes: <b>404</b></li>
+ <li>Expires header: <b>Don't add header</b></li>
+ <li>Custom header: <b>Content-Type : text/plain (overwrite)</b></li>
 </ul> Of course a server rule requires that you use the "Internet sites" configuration - since that configuration option was introduced in R6.0 it is high time you use them. 
 <br> As usual YMMV</div>
 					<hr />
@@ -409,29 +409,29 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 					<hr />
 					<div>Inside IBM (not counting the <a href="http://greenhouse.lotus.com/">Greenhouse</a> and <a href="http://www.lotuslive.com/">SmartCloud</a>) I'm a member of close to 200 communities. In some of them I'm quite active, in some I just follow the news stream. While the connections homepage keeps me updated with an <a href="http://activitystrea.ms/">activity stream</a>, navigating to my favorite communities is uncomfortable. 
 <br> I could add them to a browser bookmark, but that has no geek factor. Since the <a href="http://www-03.ibm.com/developerworks/blogs/resources/marybeth/workspaceNew1.gif">introduction</a> ( read the <a href="http://www.ibm.com/developerworks/lotus/library/ls-NDHistory/">full story</a>) and <a href="http://bindapple.com/wp-content/uploads/2010/11/First-Generation-of-Apple-iPhone.jpg">reinvention</a> of tiled start screens I grew fond of them and like to keep it that way. This is one of my Chrome start tabs (you can have many) 
-<br> 
-<img src="/blog/images/2012/HomeScreen.png" border="0" alt="Chrome has tiles too"> 
+<br>
+<img src="/blog/images/2012/HomeScreen.png" border="0" alt="Chrome has tiles too">
 <br> Luckily <a href="https://www.google.com/intl/en/chrome/browser/">Google Chrome</a> offers tiles too and with a few easy steps I can add my favorite destinations onto the start screen: 
-<ol> 
- <li>Create a directory somewhere on your disk. Since you most likely will create more than one icon, put it under a common home. e.g. <code>~/MyGoogleIcons/wisselblog</code>. Your "<i>result</i> will end in <code>~/MyGoogleIcons</code> later on</li> 
- <li>Now comes the hardest part: Create 2 GIF images for your application. One in the size 128x128px and one in 24x24px. If your community has an image, use that one, just make sure it still looks recognizable in the needed sizes. Save them to your directory</li> 
+<ol>
+ <li>Create a directory somewhere on your disk. Since you most likely will create more than one icon, put it under a common home. e.g. <code>~/MyGoogleIcons/wisselblog</code>. Your "<i>result</i> will end in <code>~/MyGoogleIcons</code> later on</li>
+ <li>Now comes the hardest part: Create 2 GIF images for your application. One in the size 128x128px and one in 24x24px. If your community has an image, use that one, just make sure it still looks recognizable in the needed sizes. Save them to your directory</li>
  <li>Create a text file <code>manifest.json</code> in your directory. You can edit it with Notepad. The content should look like this (of course you put your own titles and URLs in there): 
-  <div class="javascript"> <span class="br0">{</span> 
-   <br> &nbsp; <span class="st0">"name"</span> <span class="sy0">:</span> <span class="st0">"NotesSensei Blog"</span> <span class="sy0">,</span> 
-   <br> &nbsp; <span class="st0">"version"</span> <span class="sy0">:</span> <span class="st0">"1"</span> <span class="sy0">,</span> 
-   <br> &nbsp; <span class="st0">"icons"</span> <span class="sy0">:</span> <span class="br0">{</span> <span class="st0">"24"</span> <span class="sy0">:</span> <span class="st0">"wisselnet-24.gif"</span> <span class="sy0">,</span> <span class="st0">"128"</span> <span class="sy0">:</span> <span class="st0">"wisselnet-128.gif"</span> <span class="br0">}</span> <span class="sy0">,</span> 
-   <br> &nbsp; <span class="st0">"app"</span> <span class="sy0">:</span> <span class="br0">{</span> 
-   <br> &nbsp; &nbsp; <span class="st0">"launch"</span> <span class="sy0">:</span> <span class="br0">{</span> 
-   <br> &nbsp; &nbsp; &nbsp; <span class="st0">"web_url"</span> <span class="sy0">:</span> <span class="st0">"http://www.wissel.net/"</span> 
-   <br> &nbsp; &nbsp; <span class="br0">}</span> 
-   <br> &nbsp; <span class="br0">}</span> 
-   <br> <span class="br0">}</span> 
-  </div> We are done with writing code here, if you want to know more check <a href="https://developers.google.com/chrome/apps/docs/developers_guide">the full details</a> what is possible </li> 
- <li>Open Chrome, go to <a href="chrome://chrome/extensions/">the extensions settings</a> (Settings, Extensions) and check in the upper right corner "Developer mode". You will get two new buttons: "Load unpacked extension..." and "Pack extension..." If you just want to test your new icon, load is the right choice. When you are ready to finalize, so you can share, click pack</li> 
- <li>You are prompted for the directory with your manifest.json file. Leave the key empty. When you update your extension, then you need to specify the key:<br> <img src="/blog/images/2012/packdialog.png" border="0" alt="Specify the home directory"><br> <img src="/blog/images/2012/packsuccess.png" border="0" alt="Everything went fine"> </li> 
- <li>You are ready to install and to share. Drag the new crx file onto your settings page and Chrome will prompt you for install permission:<br> <img src="/blog/images/2012/installpermissions.png" border="0" alt="Allow installation"><br> The new icon is on your page and you can drag to arrange it as desired. Friends and coworkers can <a href="/blog/downloads/2012/wisselblog.crx">use the crx file</a> too<br> <img src="/blog/images/2012/newhome.png" border="0" alt="It worked"></li> 
- <li>If you are an admin and want to roll-out the icons to a large user base, <a href="http://support.google.com/a/bin/answer.py?hl=en&amp;answer=188453">Chrome policies</a> do that job for you</li> 
- <li>Repeat for all the key communities</li> 
+  <div class="javascript"><span class="br0">{</span>
+   <br> &nbsp; <span class="st0">"name"</span><span class="sy0">:</span><span class="st0">"NotesSensei Blog"</span><span class="sy0">,</span>
+   <br> &nbsp; <span class="st0">"version"</span><span class="sy0">:</span><span class="st0">"1"</span><span class="sy0">,</span>
+   <br> &nbsp; <span class="st0">"icons"</span><span class="sy0">:</span><span class="br0">{</span><span class="st0">"24"</span><span class="sy0">:</span><span class="st0">"wisselnet-24.gif"</span><span class="sy0">,</span><span class="st0">"128"</span><span class="sy0">:</span><span class="st0">"wisselnet-128.gif"</span><span class="br0">}</span><span class="sy0">,</span>
+   <br> &nbsp; <span class="st0">"app"</span><span class="sy0">:</span><span class="br0">{</span>
+   <br> &nbsp; &nbsp; <span class="st0">"launch"</span><span class="sy0">:</span><span class="br0">{</span>
+   <br> &nbsp; &nbsp; &nbsp; <span class="st0">"web_url"</span><span class="sy0">:</span><span class="st0">"http://www.wissel.net/"</span>
+   <br> &nbsp; &nbsp; <span class="br0">}</span>
+   <br> &nbsp; <span class="br0">}</span>
+   <br><span class="br0">}</span>
+  </div> We are done with writing code here, if you want to know more check <a href="https://developers.google.com/chrome/apps/docs/developers_guide">the full details</a> what is possible </li>
+ <li>Open Chrome, go to <a href="chrome://chrome/extensions/">the extensions settings</a> (Settings, Extensions) and check in the upper right corner "Developer mode". You will get two new buttons: "Load unpacked extension..." and "Pack extension..." If you just want to test your new icon, load is the right choice. When you are ready to finalize, so you can share, click pack</li>
+ <li>You are prompted for the directory with your manifest.json file. Leave the key empty. When you update your extension, then you need to specify the key:<br> <img src="/blog/images/2012/packdialog.png" border="0" alt="Specify the home directory"><br> <img src="/blog/images/2012/packsuccess.png" border="0" alt="Everything went fine"> </li>
+ <li>You are ready to install and to share. Drag the new crx file onto your settings page and Chrome will prompt you for install permission:<br> <img src="/blog/images/2012/installpermissions.png" border="0" alt="Allow installation"><br> The new icon is on your page and you can drag to arrange it as desired. Friends and coworkers can <a href="/blog/downloads/2012/wisselblog.crx">use the crx file</a> too<br> <img src="/blog/images/2012/newhome.png" border="0" alt="It worked"></li>
+ <li>If you are an admin and want to roll-out the icons to a large user base, <a href="http://support.google.com/a/bin/answer.py?hl=en&amp;answer=188453">Chrome policies</a> do that job for you</li>
+ <li>Repeat for all the key communities</li>
 </ol> Nice little bonus: if your application is not available (e.g. you are not VPN connected to your intranet) you get a nice screen "not available" instead of a dumb 404. 
 <br>As usual: YMMV</div>
 					<hr />

@@ -122,30 +122,30 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Generating JWT tokens for tests</small></h1>
 					<hr />
-					<div><p>There are many options for <a href="https://auth0.com/docs/authorization/concepts/authz-and-authn">Authentication and Authorisation</a>. I'm fond of <a href="https://jwt.io/">Json Web Tokens</a> (JWT), implementing <a href="https://tools.ietf.org/html/rfc7519">RFC7519</a>. Mostly because they are like <a href="https://en.wikipedia.org/wiki/IBM_Lightweight_Third-Party_Authentication">LTPA</a> ~~for grownups~~, but standard compliant</p> 
-<h3>Quis custodiet ipsos custodes?</h3> 
-<p>JWT contains information that is digitally signed (and optional encrypted), so a receiving end can verify that the information is correct. The key elements here are:</p> 
-<ul> 
- <li>the JWT contains a claim, at least the <strong>subject</strong> that is tamper resistant by being digitally signed</li> 
- <li>JWT issuer and JWT consumer trust each other, by either having a shared secret (bad idea) or using a public/private key pair. The issuer signs the information with a private key. The consumer (your application server) verifies the signature using the public key</li> 
-</ul> 
-<p>So besides protecting the private key of the issuer, you also want to be clear who's keys you trust. The one who <a href="https://en.wikipedia.org/wiki/Quis_custodiet_ipsos_custodes">holds your identity</a> can impersonate you at any time (so you might rethink if "Login with Facebook" is such a brilliant idea after all).</p> 
-<p>However when <strong>testing</strong> systems, you develop local, you want to be able to have any user at your disposal, so you can generate the claim that is the <a href="https://en.wikipedia.org/wiki/Open_sesame">Open Sesame</a> to your test regime</p> 
-<h3>Building a claim</h3> 
-<p>We start by building the raw claim <strong>template.json</strong> file:</p> 
+					<div><p>There are many options for <a href="https://auth0.com/docs/authorization/concepts/authz-and-authn">Authentication and Authorisation</a>. I'm fond of <a href="https://jwt.io/">Json Web Tokens</a> (JWT), implementing <a href="https://tools.ietf.org/html/rfc7519">RFC7519</a>. Mostly because they are like <a href="https://en.wikipedia.org/wiki/IBM_Lightweight_Third-Party_Authentication">LTPA</a> ~~for grownups~~, but standard compliant</p>
+<h3>Quis custodiet ipsos custodes?</h3>
+<p>JWT contains information that is digitally signed (and optional encrypted), so a receiving end can verify that the information is correct. The key elements here are:</p>
+<ul>
+ <li>the JWT contains a claim, at least the <strong>subject</strong> that is tamper resistant by being digitally signed</li>
+ <li>JWT issuer and JWT consumer trust each other, by either having a shared secret (bad idea) or using a public/private key pair. The issuer signs the information with a private key. The consumer (your application server) verifies the signature using the public key</li>
+</ul>
+<p>So besides protecting the private key of the issuer, you also want to be clear who's keys you trust. The one who <a href="https://en.wikipedia.org/wiki/Quis_custodiet_ipsos_custodes">holds your identity</a> can impersonate you at any time (so you might rethink if "Login with Facebook" is such a brilliant idea after all).</p>
+<p>However when <strong>testing</strong> systems, you develop local, you want to be able to have any user at your disposal, so you can generate the claim that is the <a href="https://en.wikipedia.org/wiki/Open_sesame">Open Sesame</a> to your test regime</p>
+<h3>Building a claim</h3>
+<p>We start by building the raw claim <strong>template.json</strong> file:</p>
 <pre><code class="language-javascript">{
   "iss": "Alibaba Caves",
   "aud": "40Thiefs",
   "expSeconds": 300
 }
-</code></pre> 
-<p>It contains an issuer, an audience and the duration in seconds. The later one is for my convenience. The receiving system might or might not check issuer (iss) and/or audience (aud).</p> 
-<p>Next step is to create a public/private key pair</p><p><a href="https://www.openssl.org/">OpenSSL</a> does the job quite nicely. Just make sure you don't share the private key!</p> 
+</code></pre>
+<p>It contains an issuer, an audience and the duration in seconds. The later one is for my convenience. The receiving system might or might not check issuer (iss) and/or audience (aud).</p>
+<p>Next step is to create a public/private key pair</p><p><a href="https://www.openssl.org/">OpenSSL</a> does the job quite nicely. Just make sure you don't share the private key!</p>
 <pre><code class="language-shell">ssh-keygen -t rsa -b 4096 -m PEM -f private.key
 openssl rsa -in private.key -pubout -outform PEM -out public.pem
-</code></pre> 
-<p>the <code>public.pem</code> file you need to import into your application server (e.g. <a href="https://vertx.io/docs/vertx-auth-jwt/js/">Vert.x</a>), but that's a story <a href="https://en.wikipedia.org/wiki/The_Neverending_Story">for another time</a>.</p> 
-<p>Since I do a lot of testing using <a href="https://curl.haxx.se/">curl</a> and <a href="https://www.getpostman.com/">Postman</a>, I decided, my little imposter should server its payload on <code>localhost:6660</code>. A few lines of JavaScript do the trick:</p> 
+</code></pre>
+<p>the <code>public.pem</code> file you need to import into your application server (e.g. <a href="https://vertx.io/docs/vertx-auth-jwt/js/">Vert.x</a>), but that's a story <a href="https://en.wikipedia.org/wiki/The_Neverending_Story">for another time</a>.</p>
+<p>Since I do a lot of testing using <a href="https://curl.haxx.se/">curl</a> and <a href="https://www.getpostman.com/">Postman</a>, I decided, my little imposter should server its payload on <code>localhost:6660</code>. A few lines of JavaScript do the trick:</p>
 <pre><code class="language-javascript">const express = require("express");
 const app = express();
 const port = 6660;
@@ -175,8 +175,8 @@ app.get("/", renderInstruction);
 app.post("/", renderJwt);
 
 app.listen(port, () =&gt; console.log(`Ready when you are on port ${port}!`));
-</code></pre> 
-<p>Now you can post to the server: <code>curl -d "John Doe" -H "Content-Tpe: text/plain" -X POST http://localhost:6660</code> and get JSON back that contains a <strong>bearer</strong> element.</p> 
+</code></pre>
+<p>Now you can post to the server: <code>curl -d "John Doe" -H "Content-Tpe: text/plain" -X POST http://localhost:6660</code> and get JSON back that contains a <strong>bearer</strong> element.</p>
 <p>As usual: YMMV</p></div>
 					<hr />
 					<p>

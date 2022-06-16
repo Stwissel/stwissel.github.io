@@ -150,15 +150,15 @@ ga('send', 'pageview');
 <br> Not familiar with them? Go and <a href="https://www.youtube.com/results?search_query=angularjs">watch some videos</a>. Back? Let's get going. 
 <br> Since I'm not much of a designer, I choose the ready made <a href="http://www.almsaeedstudio.com/">Admin LTE</a> template based on bootstrap. The main reason for choosing this one, was a <a href="http://almsaeedstudio.com/AdminLTE/pages/UI/timeline.html">timeline layout</a> that I wanted for the inbox. 
 <br> My inbox is already sorted by date, so it should fit nicely (so I thought). However the view optically is categorized by date and under the hood just a flat list of <code>&lt;li&gt;</code> elements. A little tweaking was necessary. The result looks quite OK for an after hour exercise: 
-<br> 
-<img src="/blog/images/2014/mailbox-ng.png" border="0" alt="Alternate layout for the Inbox"> 
+<br>
+<img src="/blog/images/2014/mailbox-ng.png" border="0" alt="Alternate layout for the Inbox">
 <br> The steps to get there: 
-<ol> 
- <li>Tweak the vert.x service to render a categorized by date version of the inbox. You can do that without touching the underlying view. I'll provide details on that modules in a later article (and some sample data below). The main difference for now: the inbox data will be available at the URL <code>/notes/categorized/($Inbox)</code></li> 
- <li>Create templates and <a href="https://docs.angularjs.org/guide/directive">directives</a> for Angular</li> 
- <li>Create the Angular.js app and its <a href="https://docs.angularjs.org/guide/concepts">Controllers</a></li> 
+<ol>
+ <li>Tweak the vert.x service to render a categorized by date version of the inbox. You can do that without touching the underlying view. I'll provide details on that modules in a later article (and some sample data below). The main difference for now: the inbox data will be available at the URL <code>/notes/categorized/($Inbox)</code></li>
+ <li>Create templates and <a href="https://docs.angularjs.org/guide/directive">directives</a> for Angular</li>
+ <li>Create the Angular.js app and its <a href="https://docs.angularjs.org/guide/concepts">Controllers</a></li>
 </ol> Of course, no application is complete with a nice set of challenges. The biggest here was the flat list for the time line. I tried to adjust the CSS to accommodate a hierarchical list, where the outer elements are the date containing all messages arrived at that day, but there was too much CSS. So I decided to tweak the output a little.The JSON emitted from Notes now looks like this: 
-<br> 
+<br>
 <pre><code class="language-js">
 { "messagecount": 23, "messages": [
     {"date": "11 Oct. 2014", "events": [
@@ -169,14 +169,14 @@ ga('send', 'pageview');
        {"time": "14:00","sender": "Mogli Bear","message": "message 3"},
        {"time": "10:00","sender": "F. Zappa","message":"message 4"}
     ]
-}]}</code></pre> 
+}]}</code></pre>
 <br> In my page template I defined the Angular app and controller on the body level: 
-<br> 
-<pre><code class="language-html">&lt;body class="skin-blue" ng-app="inbox" ng-controller="dayController as dc"&gt;&gt;</code></pre> 
+<br>
+<pre><code class="language-html">&lt;body class="skin-blue" ng-app="inbox" ng-controller="dayController as dc"&gt;&gt;</code></pre>
 <br> This was necessary to be able to have the message count displayed in the upper right hand corner: 
-<br> <code>&lt;span class="label label-success"&gt;{{dc.messagecount}}&lt;/span&gt;</code>. 
+<br><code>&lt;span class="label label-success"&gt;{{dc.messagecount}}&lt;/span&gt;</code>. 
 <br> The template pieces are short, this is the main page (excerpt, download link below): 
-<br> 
+<br>
 <pre><code class="language-html">
 &lt;section class="content"&gt;
  &lt;div class="row"&gt;
@@ -189,9 +189,9 @@ ga('send', 'pageview');
   &lt;/div&gt;
  &lt;/div&gt;
 &lt;/section&gt;
-</code></pre> 
+</code></pre>
 <br> The interesting part in the above template are the <code>ng-repeat-start</code> and <code>ng-repeat-end</code> statements. What they do: for every date in the JSON, they will create two <code>&lt;li&gt;</code> entries: one for the date and one for the first message. Angular then needs to be convinced to expand that into all messages. More on that below. The individual message entries use this template: 
-<br> 
+<br>
 <pre><code class="language-html">
 &lt;i class="fa fa-envelope bg-blue"&gt;&lt;/i&gt;
 &lt;div class="timeline-item"&gt;
@@ -206,7 +206,7 @@ ga('send', 'pageview');
        &lt;a class="btn btn-danger btn-xs"&gt;Delete&lt;/a&gt;
     &lt;/div&gt;
 &lt;/div&gt;
-</code></pre> 
+</code></pre>
 <br> So far so good, now the final moving piece is the Angular app code. A little word of warning: the following code is a <b>ugly hack</b>. For production quality you would separate out the data fetching into a <a href="https://docs.angularjs.org/guide/concepts#service">service</a> and you add tests and error handling. Anyway, learning and poking around doesn't need this, so here you go: 
 <pre><code class="language-js">
   angular.module('inbox', ['ngSanitize'])
@@ -258,13 +258,13 @@ ga('send', 'pageview');
     templateUrl : "demotimeline.html"
    };
   }
-</code></pre> 
+</code></pre>
 <br> The interestin part is the <code>link</code> function in the timeEndAccess function. Since we have an outer loop over the date creating one li element per date, instead of one per message for that date, the function replaces that with a loop over the messages for that day. Seems to work quite nicely. The template contains Angular code, so it needs to compile, that's what <code>$compile</code> does for us. You can try for yourself, to run the Demo: 
-<ol> 
- <li>Download the <a href="http://almsaeedstudio.com/">Admin LTE template</a> and expand it</li> 
- <li>Download my <a href="/blog/downloads/2014/demo.zip">sample files</a> and copy them into the directory where you have expanded the template. Put it into the template root</li> 
- <li>Either download <a href="https://angularjs.org/">Angular.js</a> or edit my sample to point to a <a href="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-rc.3/angular.min.js">CDN</a></li> 
- <li>Open <code>demoinbox.html</code> in your browser and enjoy</li> 
+<ol>
+ <li>Download the <a href="http://almsaeedstudio.com/">Admin LTE template</a> and expand it</li>
+ <li>Download my <a href="/blog/downloads/2014/demo.zip">sample files</a> and copy them into the directory where you have expanded the template. Put it into the template root</li>
+ <li>Either download <a href="https://angularjs.org/">Angular.js</a> or edit my sample to point to a <a href="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-rc.3/angular.min.js">CDN</a></li>
+ <li>Open <code>demoinbox.html</code> in your browser and enjoy</li>
 </ol> The data is coming static from <code>days.js</code>, so no vert.x or Domino is required for you to have a look. As usual YMMV</div>
 					<hr />
 					<p>

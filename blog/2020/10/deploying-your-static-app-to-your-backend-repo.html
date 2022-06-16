@@ -125,21 +125,21 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Deploying your static app to your backend repo using GitHub Actions</small></h1>
 					<hr />
-					<div><p>Our solution has two parts: a backend written in JavaScript, providing the API and a front-end created in Angular, Ionic, React or whatever is the flavor of the day. Usually you would deploy a <a href="https://www.nginx.com/">web server</a> to handle the URL, host the static files and have it redirect the <code>/api</code> URL to our backend.</p> 
-<p>However there might be <a href="https://www.heroku.com/">reasons</a> (or <a href="https://cloud.ibm.com/">that</a>) that we can't or <a href="https://kubernetes.io/docs/concepts/services-networking/ingress/">don't want to access</a> the web server and need to serve your front-end app from the <code>/static</code> directory of our backend.</p> 
-<h3>Planning and a little YAML</h3> 
-<p>Merging the two repositories seems initially an easy option, it just would break our workflows, so a different solution needs to be devised. The ask is simple:</p> 
-<p><img src="/blog/images/2020/StaticHosting.png" alt="Merging UI files into the back-end"></p> 
-<p>Whenever a change happens in the <code>main</code> branch of the front-end application (mostly through an approved pull request), the application should be build and the result transfered to the back-end application where a pull request merges it into <code>main</code>. Duplicate approvals shall be avoided. So we need:</p> 
-<ol> 
- <li>Automatic build on push to main</li> 
- <li>Pull / Push the bundle changes from front-end to the back-end</li> 
- <li>Create a pull request and merge it in back-end</li> 
-</ol><h3>GitHub Actions</h3> 
-<p>Our solution's repositories are hosted on <a href="https://www.github.com/">GitHub</a>, so I thought, <a href="https://docs.github.com/en/free-pro-team@latest/actions">GitHub Actions</a> could be a simple solution. Starting is quite easy. We create a <code>.github/workflows</code> directory in our repo and populate it with yaml files.</p> 
-<p>To give us a head start, the <a href="https://github.com/marketplace?type=actions">GitHub Marketplace</a> lists over 5000 actions, that we can utilize. This makes typical tasks quite easy, once we find the right tool.</p> 
-<p>Since we will be working cross repository, we need a <a href="https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token">Personal Access Token</a> (PAT). As a good practise we limit the token's permission to repo access only. Alternatively we could use a <a href="https://docs.github.com/en/free-pro-team@latest/github/getting-started-with-github/github-glossary#deploy-key">Deploy Key</a>.</p> 
-<p>Our first workflow does nothing spectacular, short of the last step:</p> 
+					<div><p>Our solution has two parts: a backend written in JavaScript, providing the API and a front-end created in Angular, Ionic, React or whatever is the flavor of the day. Usually you would deploy a <a href="https://www.nginx.com/">web server</a> to handle the URL, host the static files and have it redirect the <code>/api</code> URL to our backend.</p>
+<p>However there might be <a href="https://www.heroku.com/">reasons</a> (or <a href="https://cloud.ibm.com/">that</a>) that we can't or <a href="https://kubernetes.io/docs/concepts/services-networking/ingress/">don't want to access</a> the web server and need to serve your front-end app from the <code>/static</code> directory of our backend.</p>
+<h3>Planning and a little YAML</h3>
+<p>Merging the two repositories seems initially an easy option, it just would break our workflows, so a different solution needs to be devised. The ask is simple:</p>
+<p><img src="/blog/images/2020/StaticHosting.png" alt="Merging UI files into the back-end"></p>
+<p>Whenever a change happens in the <code>main</code> branch of the front-end application (mostly through an approved pull request), the application should be build and the result transfered to the back-end application where a pull request merges it into <code>main</code>. Duplicate approvals shall be avoided. So we need:</p>
+<ol>
+ <li>Automatic build on push to main</li>
+ <li>Pull / Push the bundle changes from front-end to the back-end</li>
+ <li>Create a pull request and merge it in back-end</li>
+</ol><h3>GitHub Actions</h3>
+<p>Our solution's repositories are hosted on <a href="https://www.github.com/">GitHub</a>, so I thought, <a href="https://docs.github.com/en/free-pro-team@latest/actions">GitHub Actions</a> could be a simple solution. Starting is quite easy. We create a <code>.github/workflows</code> directory in our repo and populate it with yaml files.</p>
+<p>To give us a head start, the <a href="https://github.com/marketplace?type=actions">GitHub Marketplace</a> lists over 5000 actions, that we can utilize. This makes typical tasks quite easy, once we find the right tool.</p>
+<p>Since we will be working cross repository, we need a <a href="https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token">Personal Access Token</a> (PAT). As a good practise we limit the token's permission to repo access only. Alternatively we could use a <a href="https://docs.github.com/en/free-pro-team@latest/github/getting-started-with-github/github-glossary#deploy-key">Deploy Key</a>.</p>
+<p>Our first workflow does nothing spectacular, short of the last step:</p>
 <pre><code class="language-bash">name: Reconcile front and backend
 
 on:
@@ -168,13 +168,13 @@ jobs:
           GITHUB_USER: john-doe
         run: |
           .github/pushRepo.sh
-</code></pre> 
-<p>GitHub will run step by step and terminate if one of the steps fail. Our last step is a shell script. I found it easier to get what I need there, than trying the various market place options. In a nutshell:</p> 
-<ul> 
- <li>register the backend as sub-module. Since the front-end repo never goes back, no harm is done</li> 
- <li>copy the files</li> 
- <li>commit and push</li> 
-</ul> 
+</code></pre>
+<p>GitHub will run step by step and terminate if one of the steps fail. Our last step is a shell script. I found it easier to get what I need there, than trying the various market place options. In a nutshell:</p>
+<ul>
+ <li>register the backend as sub-module. Since the front-end repo never goes back, no harm is done</li>
+ <li>copy the files</li>
+ <li>commit and push</li>
+</ul>
 <pre><code class="language-bash">#!/bin/bash
 # Send UI back to a new branch in backend
 now=$(date +"%Y-%m-%d_%H-%M")
@@ -192,8 +192,8 @@ git add --all
 git commit -m "$message"
 git checkout -b ui/ui-$now
 git push -u origin ui/ui-$now
-</code></pre> 
-<p>The changes now appear in the back-end repository in a new branch carrying a time stamp it its name. Next stop are pull request and auto-merge. For the pull request we use <code>autopull-ui.yml</code> in the back-end repository:</p> 
+</code></pre>
+<p>The changes now appear in the back-end repository in a new branch carrying a time stamp it its name. Next stop are pull request and auto-merge. For the pull request we use <code>autopull-ui.yml</code> in the back-end repository:</p>
 <pre><code class="language-bash">name: Auto pull request on UI branches
 
 on:
@@ -213,8 +213,8 @@ jobs:
           destination_branch: "main" 
           pr_label: "ui,automerge"
           github_token: ${{secrets.UI_PUSH_TOKEN }}
-</code></pre> 
-<p>The key values here are the labels <code>ui</code> and <code>automerge</code> which set the stage for <code>auto-merge-ui.yml</code> that takes the pull request and merges it in. When approvers for the two repositories are different, we would skip that step:</p> 
+</code></pre>
+<p>The key values here are the labels <code>ui</code> and <code>automerge</code> which set the stage for <code>auto-merge-ui.yml</code> that takes the pull request and merges it in. When approvers for the two repositories are different, we would skip that step:</p>
 <pre><code class="language-bash">name: automerge ui
 on:
   pull_request:
@@ -244,8 +244,8 @@ jobs:
           GITHUB_TOKEN: ${{secrets.UI_PUSH_TOKEN }}
           MERGE_DELETE_BRANCH: true
           MERGE_LABELS: automerge,ui
-</code></pre> 
-<p>ANd there you have it: two repositories, one approval for changes. Make sure you check carefull when trying yourself</p> 
+</code></pre>
+<p>ANd there you have it: two repositories, one approval for changes. Make sure you check carefull when trying yourself</p>
 <p>As usual YMMV!</p></div>
 					<hr />
 					<p>

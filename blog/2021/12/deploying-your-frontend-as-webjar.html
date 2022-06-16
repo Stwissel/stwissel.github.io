@@ -125,42 +125,42 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Deploying your frontend as webJar</small></h1>
 					<hr />
-					<div><p>In an API driven world back-end and front-end are clearly separated and might live on different servers alltogether. However for smaller applications serving static files happens from the same place as your backend lives</p> 
-<h3>So many choices</h3> 
-<p>The <a href="https://www.nginx.com/">web server</a> that proxies your application server could have a rule for static files, your firewall could so that, you use a static directory on your application server or pack, that's the story here, your front-end into a jar. I'm not discussing the merits of the different approaches here, that's a story for another time, but describe the workflow and tools for the JAR approach.</p> 
-<h3>vert.x static routes</h3> 
-<p>In <a href="https://vertx.io">Vertx</a> a static route can be declared with a <a href="https://vertx.io/docs/vertx-web/java/#_serving_static_resources">few lines</a> of code:</p> 
+					<div><p>In an API driven world back-end and front-end are clearly separated and might live on different servers alltogether. However for smaller applications serving static files happens from the same place as your backend lives</p>
+<h3>So many choices</h3>
+<p>The <a href="https://www.nginx.com/">web server</a> that proxies your application server could have a rule for static files, your firewall could so that, you use a static directory on your application server or pack, that's the story here, your front-end into a jar. I'm not discussing the merits of the different approaches here, that's a story for another time, but describe the workflow and tools for the JAR approach.</p>
+<h3>vert.x static routes</h3>
+<p>In <a href="https://vertx.io">Vertx</a> a static route can be declared with a <a href="https://vertx.io/docs/vertx-web/java/#_serving_static_resources">few lines</a> of code:</p>
 <pre><code class="language-java">Router router = Router.router(vertx);
 router.route("/ui/*")
       .handler(StaticHandler.create("uitarget"));
-</code></pre> 
-<p>Vertx will then look for the folder <code>uitarget</code> in its current working directory or on the classpath. So you will need to put your jar on the classpath</p> 
-<h3>The swagger-ui example</h3> 
-<p>There are <a href="https://www.webjars.org/">lots of prepackaged UI jars</a> available and <a href="https://www.webjars.org/documentation#vertx">easy to integrate into vert.x</a>. For example the <a href="https://swagger.io/tools/swagger-ui/">Swagger UI</a>. Define a dependency in your <code>pom.xml</code> and a one liner to access the code:</p> 
+</code></pre>
+<p>Vertx will then look for the folder <code>uitarget</code> in its current working directory or on the classpath. So you will need to put your jar on the classpath</p>
+<h3>The swagger-ui example</h3>
+<p>There are <a href="https://www.webjars.org/">lots of prepackaged UI jars</a> available and <a href="https://www.webjars.org/documentation#vertx">easy to integrate into vert.x</a>. For example the <a href="https://swagger.io/tools/swagger-ui/">Swagger UI</a>. Define a dependency in your <code>pom.xml</code> and a one liner to access the code:</p>
 <pre><code class="language-xml">&lt;dependency&gt;
     &lt;groupId&gt;org.webjars&lt;/groupId&gt;
     &lt;artifactId&gt;swagger-ui&lt;/artifactId&gt;
     &lt;version&gt;4.1.3&lt;/version&gt;
 &lt;/dependency&gt;
-</code></pre> 
+</code></pre>
 <pre><code class="language-java">Router router = Router.router(vertx);
 router.route("/assets/lib/*").handler(StaticHandler.create("META-INF/resources/webjars"));
-</code></pre> 
-<h3>Packing your own front-end</h3> 
-<p>Most modern build front-ends owe their executable form to an <code>npm build</code> command. If you are not sure check the documentation for <a href="https://reactjs.org/">React</a>, <a href="https://angular.io/">Angular</a>, <a href="https://angular.io/">Lightning</a>, <a href="https://vuejs.org/">Vue</a>, <a href="https://ionicframework.com/">Ionic</a> or whatever framework you fancy.</p> 
-<p>There are two plugins for <a href="https://maven.apache.org/">maven</a> that can process front-end work:</p> 
-<ul> 
- <li>The <a href="https://github.com/eirslett/frontend-maven-plugin">Frontend Maven Plugin</a>: Specialized module that handles download of NodeJS and running your NodeJS based build tools. Great when you don't have NodeJS installed anyway</li> 
- <li>The <a href="https://www.mojohaus.org/exec-maven-plugin/">Exec Maven Plugin</a>: Generic plugin to run stuff. Doesn't download NodeJS for you. More work to setup (that's what I picked)</li> 
-</ul> 
-<p>The steps you will need to perform, actually not you, but your <code>mvn package</code> run:</p> 
-<ul> 
- <li>run <code>npm install</code></li> 
- <li>run <code>npm build</code></li> 
- <li>move files into the target directory structure</li> 
- <li>build the Jar</li> 
-</ul> 
-<p>All of this can be wrapped into your <code>pom.xml</code>. I usually add the front-end as a module to the whole project, so a build is always complete</p><h3>Sample pom.xml</h3> 
+</code></pre>
+<h3>Packing your own front-end</h3>
+<p>Most modern build front-ends owe their executable form to an <code>npm build</code> command. If you are not sure check the documentation for <a href="https://reactjs.org/">React</a>, <a href="https://angular.io/">Angular</a>, <a href="https://angular.io/">Lightning</a>, <a href="https://vuejs.org/">Vue</a>, <a href="https://ionicframework.com/">Ionic</a> or whatever framework you fancy.</p>
+<p>There are two plugins for <a href="https://maven.apache.org/">maven</a> that can process front-end work:</p>
+<ul>
+ <li>The <a href="https://github.com/eirslett/frontend-maven-plugin">Frontend Maven Plugin</a>: Specialized module that handles download of NodeJS and running your NodeJS based build tools. Great when you don't have NodeJS installed anyway</li>
+ <li>The <a href="https://www.mojohaus.org/exec-maven-plugin/">Exec Maven Plugin</a>: Generic plugin to run stuff. Doesn't download NodeJS for you. More work to setup (that's what I picked)</li>
+</ul>
+<p>The steps you will need to perform, actually not you, but your <code>mvn package</code> run:</p>
+<ul>
+ <li>run <code>npm install</code></li>
+ <li>run <code>npm build</code></li>
+ <li>move files into the target directory structure</li>
+ <li>build the Jar</li>
+</ul>
+<p>All of this can be wrapped into your <code>pom.xml</code>. I usually add the front-end as a module to the whole project, so a build is always complete</p><h3>Sample pom.xml</h3>
 <pre><code class="language-xml">&lt;build&gt;
     &lt;resources&gt;
         &lt;!-- Output of the NPM build --&gt;
@@ -252,21 +252,21 @@ router.route("/assets/lib/*").handler(StaticHandler.create("META-INF/resources/w
         &lt;/plugin&gt;
     &lt;/plugins&gt;
 &lt;/build&gt;
-</code></pre> 
-<h3>A closer look</h3> 
-<p>The resources section makes sure, the npm output ends up inside the jar. Lacking this section the default resource path would be <code>[project root]/src/main/resources</code>. Note the two entries, one for the <code>npm build</code> output and one for any static file you want to add. While <code>&lt;filtering&gt;false&lt;/filtering&gt;</code>is the default, adding it, makes it explicit.</p> 
-<p>You might consider using a third entry with <code>&lt;filtering&gt;true&lt;/filtering&gt;</code>. Then each text file will be scanned and <code>${variableName}</code> replaced with values. This comes in handy</p> 
-<p>The <code>exec-maven-plugin</code> can run any executable. In our case we need to run <code>npm</code>. Any execution needs several pieces of information:</p> 
-<ul> 
- <li>id: the unique identifier for the execution, make one up</li> 
- <li>goal(s): In our case always <code>exec</code></li> 
- <li>phase: The <a href="https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html">Maven Build Lifecyle</a> is made up of phases, that follow each other: validate, compile, test, package, verify, install, deploy. You can't run, short of validate, a phase on its own. They follow each other. So when you type <code>mvn package</code> the phases running are: validate, compile, test, package. To confuse you a little more: there is more than one lifecyle: <code>clean</code>, <code>default</code> and <code>site</code> are build into maven. Make sure you learn more about <a href="https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html#lifecycle-reference">the finer details</a> of the options at hand. What's not described (at least I didn't find it): <code>mvn site</code> executes phases from the default lifecycle when it deems pieces missing or outdated</li> 
- <li>configuration: details of what shall run</li> 
- <li>executable: npm in our case. Luckily npm runs on all platforms</li> 
- <li>arguments: each parameter needs to be wrapped into <code>argument</code> tags</li> 
-</ul> 
-<p>To make all of this work, we run <code>npm install</code> in the <code>compile</code> phase and <code>npm run build</code> in the <code>process-classes</code> phase than runs right after <code>compile</code>. This way the output is ready when the <code>package</code> phase kicks in and the <code>maven-jar-plugin</code> moves the output into the Jar.</p> 
-<p>There are more options you can experiment with, when the various npm command should run. I leave this to your experimentation.</p> 
+</code></pre>
+<h3>A closer look</h3>
+<p>The resources section makes sure, the npm output ends up inside the jar. Lacking this section the default resource path would be <code>[project root]/src/main/resources</code>. Note the two entries, one for the <code>npm build</code> output and one for any static file you want to add. While <code>&lt;filtering&gt;false&lt;/filtering&gt;</code>is the default, adding it, makes it explicit.</p>
+<p>You might consider using a third entry with <code>&lt;filtering&gt;true&lt;/filtering&gt;</code>. Then each text file will be scanned and <code>${variableName}</code> replaced with values. This comes in handy</p>
+<p>The <code>exec-maven-plugin</code> can run any executable. In our case we need to run <code>npm</code>. Any execution needs several pieces of information:</p>
+<ul>
+ <li>id: the unique identifier for the execution, make one up</li>
+ <li>goal(s): In our case always <code>exec</code></li>
+ <li>phase: The <a href="https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html">Maven Build Lifecyle</a> is made up of phases, that follow each other: validate, compile, test, package, verify, install, deploy. You can't run, short of validate, a phase on its own. They follow each other. So when you type <code>mvn package</code> the phases running are: validate, compile, test, package. To confuse you a little more: there is more than one lifecyle: <code>clean</code>, <code>default</code> and <code>site</code> are build into maven. Make sure you learn more about <a href="https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html#lifecycle-reference">the finer details</a> of the options at hand. What's not described (at least I didn't find it): <code>mvn site</code> executes phases from the default lifecycle when it deems pieces missing or outdated</li>
+ <li>configuration: details of what shall run</li>
+ <li>executable: npm in our case. Luckily npm runs on all platforms</li>
+ <li>arguments: each parameter needs to be wrapped into <code>argument</code> tags</li>
+</ul>
+<p>To make all of this work, we run <code>npm install</code> in the <code>compile</code> phase and <code>npm run build</code> in the <code>process-classes</code> phase than runs right after <code>compile</code>. This way the output is ready when the <code>package</code> phase kicks in and the <code>maven-jar-plugin</code> moves the output into the Jar.</p>
+<p>There are more options you can experiment with, when the various npm command should run. I leave this to your experimentation.</p>
 <p>As usual: YMMV</p></div>
 					<hr />
 					<p>

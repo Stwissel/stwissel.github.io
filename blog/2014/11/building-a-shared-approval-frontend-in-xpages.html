@@ -121,30 +121,30 @@ ga('send', 'pageview');
 					<hr />
 					<div>The saying goes: " <i>God would not have been able to create the world in 7 days, if there would have been an installed base to take care of</i>". As much as we wish to have divine powers, we need to make with less and look after an installed base. Point in case: You have a set of approval applications in classic Notes client code, like: Travel, Leave, Expenses, Gifts, Training, BoM changes etc. You are challenged to provide a web and/or mobile interface for them. 
 <br> Considering your options you have to decide between options: 
-<ol> 
- <li>Dump the applications and rebuild them on a new platform. Hope that it will take long enough, so nobody will ask you to migrate any of the existing data</li> 
- <li>Enable them one-by-one</li> 
- <li>Hire <a href="http://redpilldevelopment.com/">Redpill</a> to do an <i>asymmetric modernization</i></li> 
- <li>Build a <i>lateral</i> approval screen across your applications and leave the full web enablement for later</li> 
+<ol>
+ <li>Dump the applications and rebuild them on a new platform. Hope that it will take long enough, so nobody will ask you to migrate any of the existing data</li>
+ <li>Enable them one-by-one</li>
+ <li>Hire <a href="http://redpilldevelopment.com/">Redpill</a> to do an <i>asymmetric modernization</i></li>
+ <li>Build a <i>lateral</i> approval screen across your applications and leave the full web enablement for later</li>
 </ol> While #1 would allow you to silently dump all your technical debt, it will take too long and a potential data migration monster would lurk in the dark. #2 is what non-techies would expect, but again you spend too much time and you will carry forward new technical debt. After all the applications are more similar than different. Hiring Redpill would be a sensible option, but that requires board approval or is against your "we-do-it-inhouse" policy or you simply want to expand your skill horizon. 
 <br> This leaves you with #4. To do this successful, you need to define your scope clearly. In the rest of the article I will work with the following assumptions, if they don't fit your situation, adjust your plan: 
-<ul> 
- <li>The goal is to provide the decision making screen only, not a complete workflow engine (it could evolve to that)</li> 
- <li>Request submission happens in the existing application, providing a new interface for that is outside the current scope</li> 
- <li>The flow logic (how many approvers per level etc.) is determined on submission by the original application</li> 
- <li>Someone from a different department indicated interest to use the approval screen from a complete different system (that is the "scope creep" that happens in any project)</li> 
+<ul>
+ <li>The goal is to provide the decision making screen only, not a complete workflow engine (it could evolve to that)</li>
+ <li>Request submission happens in the existing application, providing a new interface for that is outside the current scope</li>
+ <li>The flow logic (how many approvers per level etc.) is determined on submission by the original application</li>
+ <li>Someone from a different department indicated interest to use the approval screen from a complete different system (that is the "scope creep" that happens in any project)</li>
 </ul> When you look at workflow systems, while planning your application, you will notice, that there are 2 types of data: the flow state/sequence and the specific request data. The flow state is stuff like: what's the current status, what are the potential decisions (usually: Yes, No, More info please), who are the past, current, future approvers. The specific request data is stuff like: duration and type of leave, price of items to purchase, customer involved etc. 
 <br> In your existing applications the two are stored together (and will stay like that), but you need to extract the flow data to your new <i>approvalCentral</i> application. On the back of a napkin you draw this sequence: 
-<br> <a href="/blog/images/2014/ApprovalFlow.svg" title="Click here for a SVG version"> <img src="/blog/images/2014/ApprovalFlow.png" border="0" alt="Your approval workflow"></a> 
+<br><a href="/blog/images/2014/ApprovalFlow.svg" title="Click here for a SVG version"> <img src="/blog/images/2014/ApprovalFlow.png" border="0" alt="Your approval workflow"></a>
 <br> (Image created with <a href="http://bramp.github.io/js-sequence-diagrams/">JS Sequence Diagrams</a> and postprocessed with <a href="https://inkscape.org/en/">InkScape</a>) 
-<br> 
+<br>
 <br> The green part of the application exists, the first question is: how to design the submission. There are a number of options you could choose from: 
-<ul> 
- <li>Have the Approval Central application poll participating applications on schedule. That option is least efficient, but might be your only choice if you can't touch the existing apps at all (happens more often than you think, when <strike> admins are paranoid </strike> policies are set very cautious</li> 
- <li>Have each application create a flow document directly in the workflow central application. You could use a inherited LotusScript library for that. While that might have been the prefered choice a decade ago, it has two problems: first you limit your participating applications to Notes only (and there are other applications with decision requirements) and you would expose the inner workings of your application prematurely</li> 
- <li>Use a web service interface to implement <a href="http://en.wikipedia.org/wiki/Design_by_contract">Contract first</a> development. While REST is the current IT fashion, you pick SOAP. The simple reason: LotusScript can talk SOAP quite well via the Webservice consumer design element, while REST would require your notification code being written in Java. So a SOAP service it is</li> 
+<ul>
+ <li>Have the Approval Central application poll participating applications on schedule. That option is least efficient, but might be your only choice if you can't touch the existing apps at all (happens more often than you think, when <strike> admins are paranoid </strike> policies are set very cautious</li>
+ <li>Have each application create a flow document directly in the workflow central application. You could use a inherited LotusScript library for that. While that might have been the prefered choice a decade ago, it has two problems: first you limit your participating applications to Notes only (and there are other applications with decision requirements) and you would expose the inner workings of your application prematurely</li>
+ <li>Use a web service interface to implement <a href="http://en.wikipedia.org/wiki/Design_by_contract">Contract first</a> development. While REST is the current IT fashion, you pick SOAP. The simple reason: LotusScript can talk SOAP quite well via the Webservice consumer design element, while REST would require your notification code being written in Java. So a SOAP service it is</li>
 </ul>To get started two classes in LotusScript provide the interface the WebService provider needs to generate the WSDL file for submission. In a production environment you need to add validation and sanity checks to the code (and probably more fields): 
-<br> 
+<br>
 <pre><code class="language-vb">
 Option Public
 Option Declare
@@ -173,9 +173,9 @@ Call doc.Replaceitemvalue("Created", now)
 Call doc.Save(true, true)
 End Function
 End Class
-</code></pre> 
+</code></pre>
 <br> Using this class you can generate the WSDL by pointing to <code>ApprovalSubmission</code> as <i>PortType</i> class. The resulting WSDL looks like this: 
-<br> 
+<br>
 <pre><code class="language-xml">
 &lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;definitions targetNamespace="urn:DefaultNamespace"
@@ -230,7 +230,7 @@ End Class
   &lt;/port&gt;
  &lt;/service&gt;
 &lt;/definitions&gt;
-</code></pre> 
+</code></pre>
 <br> Using a <a href="https://addons.mozilla.org/en-US/firefox/addon/soa-client">SOAP client</a>, you can start testing that interface. When you look at the skeleton API you will see a notable absence of specific data for that request. I was thinking quite hard if the specific data should be included and if yes in what format. In conclusion I opted against it to keep the interface lean. Also the set of potential decisions (Yes,No,Try again etc.) is something I'd rather delegate to a configuration document. This will allow to gradually move the whole flow into the approval application. 
 <br> The callback location would, for a Notes application, contain the notes://... URL, so <code>session.resolve(CallbackLocation)</code> will give us a handle on the document. Using our <a href="/blog/2014/11/mustache-helper-for-domino.html">newly acquired</a> {{Mustache}} skills, we can call back and pull information out as HTML blob as needed. You might want to pull different information based on the (size) capabilities of your target device. 
 <br> The callback can later be used to write back values into the application document. Some planning to get that right (and some facade and factories) is required. Another consideration, once your code is working, is caching. Should you pull the data from the applications live on request or pull them when you get the request. Until your application is running well I'd opt for live pulling - unless the access to the servers is slow. 

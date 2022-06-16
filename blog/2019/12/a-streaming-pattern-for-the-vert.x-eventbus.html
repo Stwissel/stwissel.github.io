@@ -132,10 +132,10 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>A Streaming Pattern for the vert.x EventBus (Part 1)</small></h1>
 					<hr />
-					<div><p>When dealing with large amounts of data, using <a href="https://www.baeldung.com/java-8-streams">Streams</a> allows processing happen the moment data arrives, not just when data is complete. Streaming is core to <a href="http://reactivex.io/">reactive programming</a>. This blog entry describes an approach where the <a href="https://vertx.io">vert.x</a> EventBus sits between requester and resource</p> 
-<h3>The scenario</h3> 
-<p><img src="/blog/images/2019/EventBus1.png" alt="Classic Eventbus Request Response"></p> 
-<p>Image created using <a href="http://www.websequencediagrams.com/">WebSequenceDiagramms</a></p> 
+					<div><p>When dealing with large amounts of data, using <a href="https://www.baeldung.com/java-8-streams">Streams</a> allows processing happen the moment data arrives, not just when data is complete. Streaming is core to <a href="http://reactivex.io/">reactive programming</a>. This blog entry describes an approach where the <a href="https://vertx.io">vert.x</a> EventBus sits between requester and resource</p>
+<h3>The scenario</h3>
+<p><img src="/blog/images/2019/EventBus1.png" alt="Classic Eventbus Request Response"></p>
+<p>Image created using <a href="http://www.websequencediagrams.com/">WebSequenceDiagramms</a></p>
 <pre><code class="language-bash">title Vert.x EventBus
 
 participant Requester
@@ -146,21 +146,21 @@ Requester-&gt;EventBus: request DataSet
 EventBus-&gt;DataSource: forward request
 DataSource-&gt;EventBus: reply with data
 EventBus-&gt;Requester: forward reply
-</code></pre> 
-<p>A requester (e.g. the handler of a HTTP Listener) sends a request via the <a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/EventBus.html">EventBus</a> using a <strong>request-response</strong> pattern with <a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/EventBus.html#request-java.lang.String-java.lang.Object-io.vertx.core.eventbus.DeliveryOptions-io.vertx.core.Handler-"><code>EventBus.request(...)</code></a>. Simple and easy. The problem with this: one request has one response. That doesn't work for streaming data.</p> 
-<h3>Taking a page from the military</h3> 
-<p>The standard pattern for military commands is:</p> 
-<ol> 
- <li>Utter the command</li> 
- <li>Accnowledge the command</li> 
- <li>Execute the command (<a href="https://en.wikipedia.org/wiki/Risk_(game)">Conquer 14 countries</a>, might take time. For Germans: <a href="https://de.wikipedia.org/wiki/Risiko_(Spiel)">Liberate 14 countries</a>)</li> 
- <li>Report completion of command</li> 
-</ol> 
-<h3>Applying to the EventBus</h3> 
-<p>Following the pattern above the first request/response only will establish the Intent (btw. <a href="https://www.davidmarquet.com/turn-the-ship-around-a-true-story-of-turning-followers-into-leaders-by-david-marquet/">Intent Based Leadership</a> is a smoking hot topic). Item 2 and 3 will be handled by a publish and subscribe pattern.</p> 
-<p>So our scenario now looks like this:</p> 
-<p><img src="/blog/images/2019/EventBus2.png" alt="Classic Eventbus Request Response"></p> 
-<p>Image created using <a href="http://www.websequencediagrams.com/">WebSequenceDiagramms</a></p> 
+</code></pre>
+<p>A requester (e.g. the handler of a HTTP Listener) sends a request via the <a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/EventBus.html">EventBus</a> using a <strong>request-response</strong> pattern with <a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/EventBus.html#request-java.lang.String-java.lang.Object-io.vertx.core.eventbus.DeliveryOptions-io.vertx.core.Handler-"><code>EventBus.request(...)</code></a>. Simple and easy. The problem with this: one request has one response. That doesn't work for streaming data.</p>
+<h3>Taking a page from the military</h3>
+<p>The standard pattern for military commands is:</p>
+<ol>
+ <li>Utter the command</li>
+ <li>Accnowledge the command</li>
+ <li>Execute the command (<a href="https://en.wikipedia.org/wiki/Risk_(game)">Conquer 14 countries</a>, might take time. For Germans: <a href="https://de.wikipedia.org/wiki/Risiko_(Spiel)">Liberate 14 countries</a>)</li>
+ <li>Report completion of command</li>
+</ol>
+<h3>Applying to the EventBus</h3>
+<p>Following the pattern above the first request/response only will establish the Intent (btw. <a href="https://www.davidmarquet.com/turn-the-ship-around-a-true-story-of-turning-followers-into-leaders-by-david-marquet/">Intent Based Leadership</a> is a smoking hot topic). Item 2 and 3 will be handled by a publish and subscribe pattern.</p>
+<p>So our scenario now looks like this:</p>
+<p><img src="/blog/images/2019/EventBus2.png" alt="Classic Eventbus Request Response"></p>
+<p>Image created using <a href="http://www.websequencediagrams.com/">WebSequenceDiagramms</a></p>
 <pre><code class="language-bash">title Vert.x EventBus Streaming
 
 participant Requester
@@ -183,8 +183,8 @@ DataSource-&gt;EventBus: publish last data
 EventBus-&gt;Requester: forward response
 Requester-&gt;EventBus: end listening\non temp address
 note over Requester, DataSource: End of publish/subscribe
-</code></pre> 
-<p>To implement this, I'm taking advantage of EventBus' <a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/DeliveryOptions.html">DeliveryOptions</a> that allow me to set header values. I define a header <code>StreamListenerAddress</code> that my data source will use for publishing data:</p> 
+</code></pre>
+<p>To implement this, I'm taking advantage of EventBus' <a href="https://vertx.io/docs/apidocs/io/vertx/core/eventbus/DeliveryOptions.html">DeliveryOptions</a> that allow me to set header values. I define a header <code>StreamListenerAddress</code> that my data source will use for publishing data:</p>
 <pre><code class="language-java">// Error handling omitted
 public void initiateStreamResponse(final String dataAddress, final JsonObject requestMessage, Promise&lt;Void&gt; didItWork) {
  final String streamListenerAddress = "tempListenerAddresses." + UUID.randomUUID().toString();
@@ -217,12 +217,12 @@ public void initiateStreamResponse(final String dataAddress, final JsonObject re
    }
   });
 }
-</code></pre> 
-<h2>What next?</h2> 
-<ul> 
- <li>In Part 2 I will describe the data source part of this approach</li> 
- <li>In Part 2 I will wrap that in observable and observer</li> 
-</ul> 
+</code></pre>
+<h2>What next?</h2>
+<ul>
+ <li>In Part 2 I will describe the data source part of this approach</li>
+ <li>In Part 2 I will wrap that in observable and observer</li>
+</ul>
 <p>I'm using this pattern in the <a href="https://www.projectkeep/io">Keep API</a>, YMMV</p></div>
 					<hr />
 					<p>

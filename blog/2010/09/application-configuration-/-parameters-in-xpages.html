@@ -120,62 +120,62 @@ ga('send', 'pageview');
 					<h1><small>Application Configuration / Parameters in XPages</small></h1>
 					<hr />
 					<div>Any application of reasonable size has parameters that configure it. Be it the salutations, the names of departments or the task priorities. In classic Notes and Domino application you typically find @DBColumn, @DBLookup or @GetProfileField to retrieve these values. Short of @GetProfileField you could do the same in an XPages application. However I would advocate a different approach. These are the steps: 
-<ol> 
- <li>Create a SSJS script library. Call it "ApplicationConfiguration[ForNameOfYourApp[Group ] ] "</li> 
- <li>Create <b>one</b> JavaScript object (see source below), call it "[ NameOfApp ]Config" (e.g companyConfig)</li> 
- <li>Create inside this object functions that start with get and the Parameter you want to retrieve (e.g. getDepartments)</li> 
- <li>In your application you then include that library and simply use the object with its function (e.g. <code>companyConfig.getDepartments()</code> )</li> 
+<ol>
+ <li>Create a SSJS script library. Call it "ApplicationConfiguration[ForNameOfYourApp[Group ] ] "</li>
+ <li>Create <b>one</b> JavaScript object (see source below), call it "[ NameOfApp ]Config" (e.g companyConfig)</li>
+ <li>Create inside this object functions that start with get and the Parameter you want to retrieve (e.g. getDepartments)</li>
+ <li>In your application you then include that library and simply use the object with its function (e.g. <code>companyConfig.getDepartments()</code> )</li>
 </ol> What you do inside that object isn't that important for this approach. It is of course important for maintainability, performance etc., but that's a story for another time. So you can stick to your @DBColumn or @DBLookup for starters (until you learn better). So why would you want to follow that approach? There are 2 reasons: abstraction and flexibility. Inside your XPage you have an uniform way to access parameters without risking that 2 script libraries have an identically named function (e.g. <code>getLocations()</code> where one retrieves sales locations and the other manufacturing locations) that clash. The object name will help to distinguish them. Furthermore the call to the function is independent from the actual implementation. Doing a @DBLookup/@DBColumn for rather static values might not make a lot of sense, so some caching might make sense. Instead of building that into every page you can leave that to the function -- adding caching or reading config values differently will not change its signature (signature is the fancy way of saying: how it is called and what it returns). There is an additional reason why you want to stick to the " <code>getParameterName()</code>" syntax. It will allow you, if you want to, to replace your SSJS object with a managed bean that allows you more flexible options how to retrieve and cache your parameters. With a managed bean you also could use parameters directly in XPages' expression language (EL). You gain the option instead of writing <code>#{JavaScript:companyConfig.getDepartments()}</code> the more compact and understandable EL syntax <code>#companyConfig.departments}</code>. As said: only if you want to. Sticking to that syntax i SSJS doesn't have, as far as I can see, any substantial drawback. Planning for that keeps your options open. 
 <br> As usual YMMV. 
-<br> 
+<br>
 <br>Sample parameter library 
-<br> <bupdate>
+<br><bupdate>
  &lt;&gt; : Updated the sample a little since writing back of the cache was missing and a java.util.Hashmap seems to be more useful than {} 
- <div class="javascript"> <span class="kw2">var</span> companyConfig <span class="sy0">=</span> <span class="br0">{</span> 
+ <div class="javascript"><span class="kw2">var</span> companyConfig <span class="sy0">=</span><span class="br0">{</span>
   <br> &nbsp; &nbsp; 
-  <br> &nbsp; &nbsp; getDepartments <span class="sy0">:</span> <span class="kw2">function</span> <span class="br0">(</span> <span class="br0">)</span> <span class="br0">{</span> 
+  <br> &nbsp; &nbsp; getDepartments <span class="sy0">:</span><span class="kw2">function</span><span class="br0">(</span><span class="br0">)</span><span class="br0">{</span>
   <br> &nbsp; &nbsp; &nbsp; &nbsp; 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> cache <span class="sy0">=</span> <span class="kw1">this</span>. <span class="me1">getCacheObject</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> result <span class="sy0">=</span> cache. <span class="me1">get</span> <span class="br0">(</span> <span class="st0">"departments"</span> <span class="br0">)</span> <span class="sy0">;</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span>result <span class="sy0">==</span> <span class="kw2">null</span> <span class="br0">)</span> <span class="br0">{</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// Here is where you would do @DBSomething or worse</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result <span class="sy0">=</span> <span class="sy0">@</span>DbLookup <span class="br0">(</span> <span class="st0">"configDB.nsf"</span> <span class="sy0">,</span> <span class="st0">"configView"</span> <span class="sy0">,</span> <span class="st0">"departments"</span> <span class="sy0">,</span> <span class="nu0">2</span> <span class="br0">)</span> <span class="sy0">;</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; cache. <span class="me1">put</span> <span class="br0">(</span> <span class="st0">"departments"</span> <span class="sy0">,</span>result <span class="br0">)</span> <span class="sy0">;</span> <span class="co1">//Cache it back</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; sessionScope. <span class="me1">put</span> <span class="br0">(</span> <span class="st0">"companyConfig"</span> <span class="sy0">,</span>cache <span class="br0">)</span> <span class="sy0">;</span> <span class="co1">//Put the variable back in the scope</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> 
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> cache <span class="sy0">=</span><span class="kw1">this</span>. <span class="me1">getCacheObject</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> result <span class="sy0">=</span> cache. <span class="me1">get</span><span class="br0">(</span><span class="st0">"departments"</span><span class="br0">)</span><span class="sy0">;</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span>result <span class="sy0">==</span><span class="kw2">null</span><span class="br0">)</span><span class="br0">{</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// Here is where you would do @DBSomething or worse</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result <span class="sy0">=</span><span class="sy0">@</span>DbLookup <span class="br0">(</span><span class="st0">"configDB.nsf"</span><span class="sy0">,</span><span class="st0">"configView"</span><span class="sy0">,</span><span class="st0">"departments"</span><span class="sy0">,</span><span class="nu0">2</span><span class="br0">)</span><span class="sy0">;</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; cache. <span class="me1">put</span><span class="br0">(</span><span class="st0">"departments"</span><span class="sy0">,</span>result <span class="br0">)</span><span class="sy0">;</span><span class="co1">//Cache it back</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; sessionScope. <span class="me1">put</span><span class="br0">(</span><span class="st0">"companyConfig"</span><span class="sy0">,</span>cache <span class="br0">)</span><span class="sy0">;</span><span class="co1">//Put the variable back in the scope</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
   <br> &nbsp; &nbsp; &nbsp; &nbsp; 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">return</span> result <span class="sy0">;</span> 
-  <br> &nbsp; &nbsp; <span class="br0">}</span> <span class="sy0">,</span> 
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">return</span> result <span class="sy0">;</span>
+  <br> &nbsp; &nbsp; <span class="br0">}</span><span class="sy0">,</span>
   <br> &nbsp; &nbsp; 
-  <br> &nbsp; &nbsp; <span class="co2">/*Traffic light colors don't need to be cached*/</span> 
-  <br> &nbsp; &nbsp; getColors <span class="sy0">:</span> <span class="kw2">function</span> <span class="br0">(</span> <span class="br0">)</span> <span class="br0">{</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">return</span> <span class="br0">[</span> <span class="st0">"red"</span> <span class="sy0">,</span> <span class="st0">"yellow"</span> <span class="sy0">,</span> <span class="st0">"green"</span> <span class="br0">]</span> <span class="sy0">;</span> 
-  <br> &nbsp; &nbsp; <span class="br0">}</span> <span class="sy0">,</span> 
-  <br> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co2">/*Here would be much more of these functions*/</span> 
-  <br> 
-  <br> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co2">/*Utility functions for cache management*/</span> 
+  <br> &nbsp; &nbsp; <span class="co2">/*Traffic light colors don't need to be cached*/</span>
+  <br> &nbsp; &nbsp; getColors <span class="sy0">:</span><span class="kw2">function</span><span class="br0">(</span><span class="br0">)</span><span class="br0">{</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">return</span><span class="br0">[</span><span class="st0">"red"</span><span class="sy0">,</span><span class="st0">"yellow"</span><span class="sy0">,</span><span class="st0">"green"</span><span class="br0">]</span><span class="sy0">;</span>
+  <br> &nbsp; &nbsp; <span class="br0">}</span><span class="sy0">,</span>
+  <br>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co2">/*Here would be much more of these functions*/</span>
+  <br>
+  <br>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co2">/*Utility functions for cache management*/</span>
   <br> &nbsp; &nbsp; 
-  <br> &nbsp; &nbsp; <span class="coMULTI">/*Retrieves the configuration object from a cache store. <br> &nbsp; &nbsp; &nbsp; &nbsp;There are many ways to do that*/</span> 
-  <br> &nbsp; &nbsp; getCacheObject <span class="sy0">:</span> <span class="kw2">function</span> <span class="br0">(</span> <span class="br0">)</span> <span class="br0">{</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// Consider carefully where to cache. Typical places</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// are sessions or applications</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> curCache <span class="sy0">=</span> sessionScope. <span class="me1">get</span> <span class="br0">(</span> <span class="st0">"companyConfig"</span> <span class="br0">)</span> <span class="sy0">;</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span>curCache <span class="sy0">==</span> <span class="kw2">null</span> <span class="br0">)</span> <span class="br0">{</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; curCache <span class="sy0">=</span> <span class="kw2">new</span> java. <span class="me1">util</span>. <span class="me1">HashMap</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; sessionScope. <span class="me1">put</span> <span class="br0">(</span> <span class="st0">"companyConfig"</span> <span class="sy0">,</span>curCache <span class="br0">)</span> <span class="sy0">;</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> 
+  <br> &nbsp; &nbsp; <span class="coMULTI">/*Retrieves the configuration object from a cache store. <br> &nbsp; &nbsp; &nbsp; &nbsp;There are many ways to do that*/</span>
+  <br> &nbsp; &nbsp; getCacheObject <span class="sy0">:</span><span class="kw2">function</span><span class="br0">(</span><span class="br0">)</span><span class="br0">{</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// Consider carefully where to cache. Typical places</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// are sessions or applications</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> curCache <span class="sy0">=</span> sessionScope. <span class="me1">get</span><span class="br0">(</span><span class="st0">"companyConfig"</span><span class="br0">)</span><span class="sy0">;</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span>curCache <span class="sy0">==</span><span class="kw2">null</span><span class="br0">)</span><span class="br0">{</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; curCache <span class="sy0">=</span><span class="kw2">new</span> java. <span class="me1">util</span>. <span class="me1">HashMap</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; sessionScope. <span class="me1">put</span><span class="br0">(</span><span class="st0">"companyConfig"</span><span class="sy0">,</span>curCache <span class="br0">)</span><span class="sy0">;</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
   <br> &nbsp; &nbsp; &nbsp; &nbsp; 
   <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">return</span> curCache <span class="sy0">;</span> &nbsp; &nbsp; 
-  <br> &nbsp; &nbsp; <span class="br0">}</span> <span class="sy0">,</span> 
+  <br> &nbsp; &nbsp; <span class="br0">}</span><span class="sy0">,</span>
   <br> &nbsp; &nbsp; 
-  <br> &nbsp; &nbsp; <span class="co2">/*Resets the cache*/</span> 
-  <br> &nbsp; &nbsp; reset <span class="sy0">:</span> <span class="kw2">function</span> <span class="br0">(</span> <span class="br0">)</span> <span class="br0">{</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> curCache <span class="sy0">=</span> <span class="kw2">new</span> java. <span class="me1">util</span>. <span class="me1">HashMap</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
-  <br> &nbsp; &nbsp; &nbsp; &nbsp; sessionScope. <span class="me1">put</span> <span class="br0">(</span> <span class="st0">"companyConfig"</span> <span class="sy0">,</span>curCache <span class="br0">)</span> <span class="sy0">;</span> 
-  <br> &nbsp; &nbsp; <span class="br0">}</span> 
-  <br> <span class="br0">}</span> 
+  <br> &nbsp; &nbsp; <span class="co2">/*Resets the cache*/</span>
+  <br> &nbsp; &nbsp; reset <span class="sy0">:</span><span class="kw2">function</span><span class="br0">(</span><span class="br0">)</span><span class="br0">{</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> curCache <span class="sy0">=</span><span class="kw2">new</span> java. <span class="me1">util</span>. <span class="me1">HashMap</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+  <br> &nbsp; &nbsp; &nbsp; &nbsp; sessionScope. <span class="me1">put</span><span class="br0">(</span><span class="st0">"companyConfig"</span><span class="sy0">,</span>curCache <span class="br0">)</span><span class="sy0">;</span>
+  <br> &nbsp; &nbsp; <span class="br0">}</span>
+  <br><span class="br0">}</span>
  </div> 
 </bupdate>&lt;&gt;</div>
 					<hr />

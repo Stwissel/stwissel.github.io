@@ -122,34 +122,34 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Mime is where Legacy Systems go to die</small></h1>
 					<hr />
-					<div><p>Your new system went live. Migration of current, active data went well. A decision was made not to move historic data and keep the old system around in "read-only" mode, just in case some information needs to be looked up. Over time your zoo of legacy systems grows. I'll outline a way to put them to rest.</p> 
-<h3>The challenges</h3> 
-<p>All recent systems (that's younger than 30 years) data is stored more or less normalized. A business document, like a contract, is split over multiple tables like customer, address, header, line items, item details, product etc.</p> 
-<p>Dumping this data as is (<a href="https://en.wikipedia.org/wiki/Comma-separated_values">csv</a> rules supreme here) only creates a <a href="https://www.geotab.com/blog/big-data-graveyard/">data graveyard</a> instead of the much coveted <a href="https://en.wikipedia.org/wiki/Data_lake">data lake</a> or <a href="https://en.wikipedia.org/wiki/Data_warehouse">data warehouse</a>.</p> 
-<p>The issue gets aggravated by the prevalence of <a href="https://en.wikipedia.org/wiki/Magic_number_(programming)">magic numbers</a> and abbreviations that are only resolved inside the legacy system. So looking at one piece of data tells you squid. Only an <a href="https://en.wikipedia.org/wiki/Old_Hands">old hand</a> would be able to make sense of <code>Status 82</code> or <code>Flags x7D3z</code></p> 
-<p>Access to meaningful information is confined to the user interface of the legacy application. It provides search and assembly of business relevant context</p> 
-<h3>The solution approach</h3> 
-<p>Solving this puzzle requires a three step approach:</p> 
-<ul> 
- <li>denormalize</li> 
- <li>transform</li> 
- <li>make accessible</li> 
-</ul><h4>Denormalize</h4> 
-<p>The persistence format needs to be something that is closer to a document structure. The formats suitable would be XML, JSON or YAML. Probably owing to my age I would make a case for XML. I would argue that <code>&lt;Status id="42"&gt;Universe questions answered&lt;/Status&gt;</code> is way more readable than JSON when you try to link the magic number <code>42</code> to its business meaning <code>Universe questions answered</code>.</p> 
-<p>To be very clear: You will massively duplicate data and if any of the relations would change, you would face a data nightmare. But our use case: archive, read only doesn't face any penalties, other than storage, for this duplication.</p> 
-<h4>Transform</h4> 
-<p>While your <a href="https://en.wikipedia.org/wiki/Friendly_Neighborhood_Spider-Man">friendly neighborhood geek</a> would be perfectly fine staring at XML, <a href="https://lerms.deviantart.com/art/Do-You-Believe-in-the-Users-189078499">normal mortal users</a> will prefer something that's not only human readable, but easy to comprehend.</p> 
-<p>The reflective approach for an IT department tasked with this would be the creation of another future legacy system to visualize the data.</p> 
-<p>A better solution I'd like to propose is an <a href="https://en.wikipedia.org/wiki/XSLT">XSLT</a> (for XML) or <a href="http://mustache.github.io/">Mustache</a> (for JSON) transformation into HTML. Adventures souls could aim towards <a href="https://en.wikipedia.org/wiki/XSL_Formatting_Objects">XSL:FO</a> and a <a href="https://en.wikipedia.org/wiki/PDF/A">PDF-A</a> result.</p> 
-<p>Now you have at least 2 files: the denormalized XML and the HTML (or PDF). Eventually you have binary data like image files or office attachments that belong to that business record.</p> 
-<p>Enter <a href="https://en.wikipedia.org/wiki/MIME">MIME</a>. MIME is a container format, typically found in eMail systems. Nothing stops us reusing its capabilities. The MIME file consists of a MIME Header and one or more MIME parts, that qualify their content by a type.</p> 
-<p>A MIME part can contain a mime header and one or more mime parts - at nauseam or stack overflow.</p> 
-<p>Using MIME we can compose a single file. In the header would be meta information: what legacy system it came from, when it was exported, where the documentation could be found etc. Thereafter would be MIME parts with HTML, XML, PDF and binary files.</p> 
-<h4>Make accessible</h4> 
-<p>Just double clicking on that file would open it in the standard mail viewer. With clever set header fields (e.g. From as name of the legacy system) it will render the HTML part into something directly read- and understandable. Thus the file is useful in itself. If automated further processing is required, the XML or binary parts can be harvested.</p> 
-<p>Now take that file and store in an an append only object store (S3 anyone). The final piece is: how to make the information findable?</p> 
-<p>Users might search for a part, a customer, a time frame, a combination of all sorts of criteria. This type of requirements can be covered by <a href="https://lucene.apache.org/">a fulltext index</a> and a <a href="https://lucene.apache.org/solr/">search engine</a>. Lucene is content format aware, so queries can be very specific or very simple. The beauty of the approach: Other than a database, the MIME documents don't need to have a shared structure to be able to be searched by Lucene. Still the indexing process can do some level of standardization like merging <code>Id, ID, id, recordid, account_id</code> to be searchable as <code>ID=</code></p> 
-<p>Of course implementation needs to be planned carefully. Nevertheless this can be used as a blueprint for the one archive system <a href="https://en.wikipedia.org/wiki/One_Ring">to rule them all</a>.</p> 
+					<div><p>Your new system went live. Migration of current, active data went well. A decision was made not to move historic data and keep the old system around in "read-only" mode, just in case some information needs to be looked up. Over time your zoo of legacy systems grows. I'll outline a way to put them to rest.</p>
+<h3>The challenges</h3>
+<p>All recent systems (that's younger than 30 years) data is stored more or less normalized. A business document, like a contract, is split over multiple tables like customer, address, header, line items, item details, product etc.</p>
+<p>Dumping this data as is (<a href="https://en.wikipedia.org/wiki/Comma-separated_values">csv</a> rules supreme here) only creates a <a href="https://www.geotab.com/blog/big-data-graveyard/">data graveyard</a> instead of the much coveted <a href="https://en.wikipedia.org/wiki/Data_lake">data lake</a> or <a href="https://en.wikipedia.org/wiki/Data_warehouse">data warehouse</a>.</p>
+<p>The issue gets aggravated by the prevalence of <a href="https://en.wikipedia.org/wiki/Magic_number_(programming)">magic numbers</a> and abbreviations that are only resolved inside the legacy system. So looking at one piece of data tells you squid. Only an <a href="https://en.wikipedia.org/wiki/Old_Hands">old hand</a> would be able to make sense of <code>Status 82</code> or <code>Flags x7D3z</code></p>
+<p>Access to meaningful information is confined to the user interface of the legacy application. It provides search and assembly of business relevant context</p>
+<h3>The solution approach</h3>
+<p>Solving this puzzle requires a three step approach:</p>
+<ul>
+ <li>denormalize</li>
+ <li>transform</li>
+ <li>make accessible</li>
+</ul><h4>Denormalize</h4>
+<p>The persistence format needs to be something that is closer to a document structure. The formats suitable would be XML, JSON or YAML. Probably owing to my age I would make a case for XML. I would argue that <code>&lt;Status id="42"&gt;Universe questions answered&lt;/Status&gt;</code> is way more readable than JSON when you try to link the magic number <code>42</code> to its business meaning <code>Universe questions answered</code>.</p>
+<p>To be very clear: You will massively duplicate data and if any of the relations would change, you would face a data nightmare. But our use case: archive, read only doesn't face any penalties, other than storage, for this duplication.</p>
+<h4>Transform</h4>
+<p>While your <a href="https://en.wikipedia.org/wiki/Friendly_Neighborhood_Spider-Man">friendly neighborhood geek</a> would be perfectly fine staring at XML, <a href="https://lerms.deviantart.com/art/Do-You-Believe-in-the-Users-189078499">normal mortal users</a> will prefer something that's not only human readable, but easy to comprehend.</p>
+<p>The reflective approach for an IT department tasked with this would be the creation of another future legacy system to visualize the data.</p>
+<p>A better solution I'd like to propose is an <a href="https://en.wikipedia.org/wiki/XSLT">XSLT</a> (for XML) or <a href="http://mustache.github.io/">Mustache</a> (for JSON) transformation into HTML. Adventures souls could aim towards <a href="https://en.wikipedia.org/wiki/XSL_Formatting_Objects">XSL:FO</a> and a <a href="https://en.wikipedia.org/wiki/PDF/A">PDF-A</a> result.</p>
+<p>Now you have at least 2 files: the denormalized XML and the HTML (or PDF). Eventually you have binary data like image files or office attachments that belong to that business record.</p>
+<p>Enter <a href="https://en.wikipedia.org/wiki/MIME">MIME</a>. MIME is a container format, typically found in eMail systems. Nothing stops us reusing its capabilities. The MIME file consists of a MIME Header and one or more MIME parts, that qualify their content by a type.</p>
+<p>A MIME part can contain a mime header and one or more mime parts - at nauseam or stack overflow.</p>
+<p>Using MIME we can compose a single file. In the header would be meta information: what legacy system it came from, when it was exported, where the documentation could be found etc. Thereafter would be MIME parts with HTML, XML, PDF and binary files.</p>
+<h4>Make accessible</h4>
+<p>Just double clicking on that file would open it in the standard mail viewer. With clever set header fields (e.g. From as name of the legacy system) it will render the HTML part into something directly read- and understandable. Thus the file is useful in itself. If automated further processing is required, the XML or binary parts can be harvested.</p>
+<p>Now take that file and store in an an append only object store (S3 anyone). The final piece is: how to make the information findable?</p>
+<p>Users might search for a part, a customer, a time frame, a combination of all sorts of criteria. This type of requirements can be covered by <a href="https://lucene.apache.org/">a fulltext index</a> and a <a href="https://lucene.apache.org/solr/">search engine</a>. Lucene is content format aware, so queries can be very specific or very simple. The beauty of the approach: Other than a database, the MIME documents don't need to have a shared structure to be able to be searched by Lucene. Still the indexing process can do some level of standardization like merging <code>Id, ID, id, recordid, account_id</code> to be searchable as <code>ID=</code></p>
+<p>Of course implementation needs to be planned carefully. Nevertheless this can be used as a blueprint for the one archive system <a href="https://en.wikipedia.org/wiki/One_Ring">to rule them all</a>.</p>
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>

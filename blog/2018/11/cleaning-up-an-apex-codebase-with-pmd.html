@@ -125,36 +125,36 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Cleaning up an APEX codebase with PMD</small></h1>
 					<hr />
-					<div><p>You inherit a large code base, it is perfect, a work of beauty. Then you wake up to the ping of your <a href="https://pmd.github.io">PMD</a> run completion and find multiple thousands of rule violation (and you haven't even started to assert test assertions). Here is how to fix that.</p> 
-<h3>Divide and conquer</h3> 
-<p><a href="https://www.investopedia.com/terms/b/boil-the-ocean.asp">Boiling the ocean</a> and fix all issues in one go is hardly an option. So you need to strategize. PMD gives you a hint: every rule has a <a href="https://pmd.github.io/pmd-6.9.0/pmd_userdocs_configuring_rules.html#message-and-priority-overriding">priority</a> property, where you can specify how important this rule is. The higher the number, the less important the rule. You can run PMD using the <code>min -[somenumber]</code> parameter which will ignore rules with a higher value.</p> 
-<p>Next step is to decide what rules constitute your priority 1 and 2 buckets. I strongly recommend to make them mandatory fixes before the next deployment, so pick the rules carefully. The candidates I suggest are around performance and security:</p> 
-<h4>Priority 1</h4> 
-<ul> 
- <li>ApexXSSFromURLParam</li> 
- <li>ApexSOQLInjection</li> 
- <li>ApexOpenRedirect</li> 
- <li>ApexInsecureEndpoint</li> 
- <li>AvoidDmlStatementsInLoops</li> 
- <li>AvoidSoqlInLoops</li> 
-</ul> 
-<h4>Priority 2</h4> 
-<ul> 
- <li>ApexCRUDViolation</li> 
- <li>ApexSharingViolations</li> 
-</ul> 
-<p>Thereafter you decide on priority 3 onwards. Strong candidates for level 3 are all the rules that ensure code is maintainable and avoid errors, like deep nesting or cyclomatic complexity (a fancy word for "messy code")</p><h3>Putting it into practice</h3> 
-<p>Designing the rules and enforcing them are two distinct steps. Your best course of action is to add PMD to your build pipeline. Of course you don't want your developers to rely on the pipeline to inform them, so you make sure they have the <a href="https://marketplace.visualstudio.com/items?itemName=chuckjonas.apex-pmd">PMD Plugin</a> installed in their <a href="https://code.visualstudio.com/">VSCode</a> environment.</p> 
-<p>The build pipeline runs PMD and will fail if violations have been found. So you would run you ruleset with e.g. <code>-min 2</code> to only fail on high priority rule violations. You still can extract information on the suppressed rules using <code>-showsuppressed</code>. Another option is to run PMD twice. First run uses <code>-min 2</code> and fails, second run (using HTML or XSLT output) uses all rules and <code>-failOnViolation false</code> to get the full report. The pipeline needs to send the report somewhere thereafter to retain it.</p> 
-<h3>Getting tough on new files</h3> 
-<p>Pick this working strategy to improve your code base: "<em>Whenever you have to alter a piece of code for a business requirement, you fix it to be compliant to all code rules</em>". Keep in mind, a rule is only as good as its enforcement, so your pipeline needs to accommodate that. To implement that a little shell magic is needed. The following snippet presumes your CI has checked out the branch, the ruleset is in the repository (I would pull it from a central location, but we keep it simple here) and starts in your working directory:</p> 
+					<div><p>You inherit a large code base, it is perfect, a work of beauty. Then you wake up to the ping of your <a href="https://pmd.github.io">PMD</a> run completion and find multiple thousands of rule violation (and you haven't even started to assert test assertions). Here is how to fix that.</p>
+<h3>Divide and conquer</h3>
+<p><a href="https://www.investopedia.com/terms/b/boil-the-ocean.asp">Boiling the ocean</a> and fix all issues in one go is hardly an option. So you need to strategize. PMD gives you a hint: every rule has a <a href="https://pmd.github.io/pmd-6.9.0/pmd_userdocs_configuring_rules.html#message-and-priority-overriding">priority</a> property, where you can specify how important this rule is. The higher the number, the less important the rule. You can run PMD using the <code>min -[somenumber]</code> parameter which will ignore rules with a higher value.</p>
+<p>Next step is to decide what rules constitute your priority 1 and 2 buckets. I strongly recommend to make them mandatory fixes before the next deployment, so pick the rules carefully. The candidates I suggest are around performance and security:</p>
+<h4>Priority 1</h4>
+<ul>
+ <li>ApexXSSFromURLParam</li>
+ <li>ApexSOQLInjection</li>
+ <li>ApexOpenRedirect</li>
+ <li>ApexInsecureEndpoint</li>
+ <li>AvoidDmlStatementsInLoops</li>
+ <li>AvoidSoqlInLoops</li>
+</ul>
+<h4>Priority 2</h4>
+<ul>
+ <li>ApexCRUDViolation</li>
+ <li>ApexSharingViolations</li>
+</ul>
+<p>Thereafter you decide on priority 3 onwards. Strong candidates for level 3 are all the rules that ensure code is maintainable and avoid errors, like deep nesting or cyclomatic complexity (a fancy word for "messy code")</p><h3>Putting it into practice</h3>
+<p>Designing the rules and enforcing them are two distinct steps. Your best course of action is to add PMD to your build pipeline. Of course you don't want your developers to rely on the pipeline to inform them, so you make sure they have the <a href="https://marketplace.visualstudio.com/items?itemName=chuckjonas.apex-pmd">PMD Plugin</a> installed in their <a href="https://code.visualstudio.com/">VSCode</a> environment.</p>
+<p>The build pipeline runs PMD and will fail if violations have been found. So you would run you ruleset with e.g. <code>-min 2</code> to only fail on high priority rule violations. You still can extract information on the suppressed rules using <code>-showsuppressed</code>. Another option is to run PMD twice. First run uses <code>-min 2</code> and fails, second run (using HTML or XSLT output) uses all rules and <code>-failOnViolation false</code> to get the full report. The pipeline needs to send the report somewhere thereafter to retain it.</p>
+<h3>Getting tough on new files</h3>
+<p>Pick this working strategy to improve your code base: "<em>Whenever you have to alter a piece of code for a business requirement, you fix it to be compliant to all code rules</em>". Keep in mind, a rule is only as good as its enforcement, so your pipeline needs to accommodate that. To implement that a little shell magic is needed. The following snippet presumes your CI has checked out the branch, the ruleset is in the repository (I would pull it from a central location, but we keep it simple here) and starts in your working directory:</p>
 <pre><code class="language-bash">#!/bin/bash
 # Extract list of changed classes from GIT
 git log -1 --name-only | grep classes &gt; changedClasses.txt
 # Run PMD on changed class files from the last commit
 pmd -R StrictRuleset.xml -filelist changedClasses.txt -failOnViolation true 
-</code></pre> 
-<p>This makes sure new and updated code is up to your standards.</p> 
+</code></pre>
+<p>This makes sure new and updated code is up to your standards.</p>
 <p>As usual: YMMV</p></div>
 					<hr />
 					<p>

@@ -125,46 +125,46 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>http(s) debugging cheat sheet</small></h1>
 					<hr />
-					<div><p><a href="https://en.wikipedia.org/wiki/Martin_Luther">Martin Luther</a> is <a href="hhttps://www.redensarten-index.de/suche.php?suchbegriff=~~dem%20Volk%20aufs%20Maul%20schauen">attributed</a> with the utterance "You have to watch how people talk". What works for the famous <a href="https://en.wikipedia.org/wiki/Luther_Bible">bible translation</a> applies to APIs as well. Despite <a href="https://www.openapis.org/">Open Standards</a> and <a href="https://www.ietf.org/">a standard body</a>, APIs do their own thing, not necessarily documented as they are.</p> 
-<p>While it is reasonable easy to watch them inside a browser using <a href="https://developer.mozilla.org/en-US/docs/Tools">Developer Tools</a> (also <a href="https://developers.google.com/web/tools/chrome-devtools">here</a>) it gets tricky when you want to watch an application like <a href="https://support.apple.com/en-sg/guide/calendar/welcome/mac">macOS Calendar</a>, <a href="https://www.thunderbird.net/en-US/">Thunderbird</a>, <a href="https://slackhq.com/">Slack</a>, <a href="https://getbodo.com/">Bodo</a> (for Jira).</p> 
-<p>This is your cheat-sheet.</p> 
-<h3>Setup your HTTP(s) Forensics</h3> 
-<ul> 
- <li>Install the application you want to investigate (Yeah, a no brainer)</li> 
- <li>Install a HTTP debugger, one of them (I use <a href="https://wwww.charlesproxy.com">Charles Proxy</a>)</li> 
- <li><a href="https://proxyman.io">Proxyman</a> (Mac)</li> 
- <li><a href="https://wwww.charlesproxy.com">Charles Proxy</a> (Mac, Win, Linux)</li> 
- <li><a href="https://www.telerik.com/fiddler">Fiddler</a> (Win)</li> 
- <li>Configure your HTTP debugger to be able to analyse <strong>https</strong> traffic to your choosen calendar server</li> 
- <li>Install <a href="https://www.getpostman.com/">PostMan</a> and <a href="https://curl.haxx.se/">curl</a></li> 
- <li>Have a place where you save your investigation results in <a href="https://daringfireball.net/projects/markdown/">Markdown</a>, <code>/docs</code> in a GitHub repo is a good place</li> 
- <li>Configure your HTTP debugger to intercept the http traffic on your target domain. This works different for each OS and debugger, so read the manual!</li> 
- <li><a href="https://www.charlesproxy.com/documentation/proxying/ssl-proxying/">SSL Proxying</a> for Charles Proxy</li> 
- <li><a href="https://docs.telerik.com/fiddler/Configure-Fiddler/Tasks/DecryptHTTPS">Decrypt HTTPS</a> for Fiddler</li> 
- <li><a href="https://docs.proxyman.io/basic-features/ssl-proxying">SSL Proxying</a> with Proxyman</li> 
- <li>Fetch a cup of your favorite beverage, we are good to go</li> 
-</ul> 
-<h3>Investigate</h3> 
-<ul> 
- <li>Switch on your HTTP debugger (this line is sponsored by <a href="https://en.wiktionary.org/wiki/Captain_Obvious">Captain Obvious</a>)</li> 
- <li>Execute <strong>one</strong> command in your custom app. Typically something like "<em>login</em>" or "<em>add account</em>" or "<em>File Open</em>" (that's my favorite in Office apps, fires 4 or more HTTP request when done against a http endpoint that understands <em>webDAV</em>)</li> 
- <li>Look at the <strong>raw</strong> results. Each debugger has a nice <a href="https://en.wikipedia.org/wiki/Graphical_user_interface">gui</a> that separates headers, cookies and body payload, but you want to look at raw data:</li> 
- <li>Your request starts with <em>METHOD /route HTTP_Version</em>, e.g. <code>POST /login HTTP/1.1</code> Everything until the first empty line is header, followed eventually with a body. Knowing <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods">methods</a> helps to set expectations. See also <a href="https://tools.ietf.org/html/rfc7231#section-4">RFC 7231</a>, <a href="https://tools.ietf.org/html/rfc5789#section-2">RFC 5789</a>, <a href="https://tools.ietf.org/html/rfc2518">RFC 2518</a>, <a href="https://tools.ietf.org/html/rfc4918">RFC 4918</a>, <a href="https://tools.ietf.org/html/rfc3744">RFC 3744</a> and <a href="https://tools.ietf.org/html/rfc4791">RFC 4791</a></li> 
- <li>Your response starts with a status line <em>HTTP/1.1 StatusCode StatusMessage</em> e.g. <code>HTTP/1.1 200 OK</code> Again: everything until the first empty line is header, followed by the optional response body</li> 
- <li>It can get trickier when you app is already using <em>HTTP/2.0</em> or later since it allows streaming or non-text payloads like <a href="https://grpc.io/">gRPC</a></li> 
- <li>Document that in markdown, bracket the http with three backticks, so it renders as source</li> 
- <li>Repeat for other commands in your app</li> 
-</ul> 
-<h3>Re-enactment</h3> 
-<p>What fun is <a href="https://en.wikipedia.org/wiki/Detective">detective work</a> without verifying results. This is where you turn to <a href="https://www.getpostman.com/">Postman</a> or if <a href="https://www.urbandictionary.com/define.php?term=Tough%20As%20Nails">you have it</a> - curl.</p> 
-<p>You want to use parameters for your hostname and the user specific parts (username, passwords) and you need to have a clear idea what are variable return values. Good candidtes to watch out for are cookies or header values. You need to <a href="https://blog.getpostman.com/2014/01/27/extracting-data-from-responses-and-chaining-requests/">extract these values for chaining to the next request</a>. With a little practise you should be able to make Postman behave like the original app</p> 
-<h3>Parting words</h3> 
-<ul> 
- <li>Check the terms of service of the application you are investigating. While public end-point are, well, public, you might have agreed in your <a href="https://www.termsandconditionsgenerator.com/">T&amp;C</a> not to touch them</li> 
- <li>This isn't an instuction for hacking, you still need to be you - with your credentials. Nevertheless you might stumble over "security by obscurity" or other annoyances</li> 
- <li>Any app that uses http instead of https needs to die a horrible death</li> 
- <li>Reading the API spec is potentially faster</li> 
-</ul> 
+					<div><p><a href="https://en.wikipedia.org/wiki/Martin_Luther">Martin Luther</a> is <a href="hhttps://www.redensarten-index.de/suche.php?suchbegriff=~~dem%20Volk%20aufs%20Maul%20schauen">attributed</a> with the utterance "You have to watch how people talk". What works for the famous <a href="https://en.wikipedia.org/wiki/Luther_Bible">bible translation</a> applies to APIs as well. Despite <a href="https://www.openapis.org/">Open Standards</a> and <a href="https://www.ietf.org/">a standard body</a>, APIs do their own thing, not necessarily documented as they are.</p>
+<p>While it is reasonable easy to watch them inside a browser using <a href="https://developer.mozilla.org/en-US/docs/Tools">Developer Tools</a> (also <a href="https://developers.google.com/web/tools/chrome-devtools">here</a>) it gets tricky when you want to watch an application like <a href="https://support.apple.com/en-sg/guide/calendar/welcome/mac">macOS Calendar</a>, <a href="https://www.thunderbird.net/en-US/">Thunderbird</a>, <a href="https://slackhq.com/">Slack</a>, <a href="https://getbodo.com/">Bodo</a> (for Jira).</p>
+<p>This is your cheat-sheet.</p>
+<h3>Setup your HTTP(s) Forensics</h3>
+<ul>
+ <li>Install the application you want to investigate (Yeah, a no brainer)</li>
+ <li>Install a HTTP debugger, one of them (I use <a href="https://wwww.charlesproxy.com">Charles Proxy</a>)</li>
+ <li><a href="https://proxyman.io">Proxyman</a> (Mac)</li>
+ <li><a href="https://wwww.charlesproxy.com">Charles Proxy</a> (Mac, Win, Linux)</li>
+ <li><a href="https://www.telerik.com/fiddler">Fiddler</a> (Win)</li>
+ <li>Configure your HTTP debugger to be able to analyse <strong>https</strong> traffic to your choosen calendar server</li>
+ <li>Install <a href="https://www.getpostman.com/">PostMan</a> and <a href="https://curl.haxx.se/">curl</a></li>
+ <li>Have a place where you save your investigation results in <a href="https://daringfireball.net/projects/markdown/">Markdown</a>, <code>/docs</code> in a GitHub repo is a good place</li>
+ <li>Configure your HTTP debugger to intercept the http traffic on your target domain. This works different for each OS and debugger, so read the manual!</li>
+ <li><a href="https://www.charlesproxy.com/documentation/proxying/ssl-proxying/">SSL Proxying</a> for Charles Proxy</li>
+ <li><a href="https://docs.telerik.com/fiddler/Configure-Fiddler/Tasks/DecryptHTTPS">Decrypt HTTPS</a> for Fiddler</li>
+ <li><a href="https://docs.proxyman.io/basic-features/ssl-proxying">SSL Proxying</a> with Proxyman</li>
+ <li>Fetch a cup of your favorite beverage, we are good to go</li>
+</ul>
+<h3>Investigate</h3>
+<ul>
+ <li>Switch on your HTTP debugger (this line is sponsored by <a href="https://en.wiktionary.org/wiki/Captain_Obvious">Captain Obvious</a>)</li>
+ <li>Execute <strong>one</strong> command in your custom app. Typically something like "<em>login</em>" or "<em>add account</em>" or "<em>File Open</em>" (that's my favorite in Office apps, fires 4 or more HTTP request when done against a http endpoint that understands <em>webDAV</em>)</li>
+ <li>Look at the <strong>raw</strong> results. Each debugger has a nice <a href="https://en.wikipedia.org/wiki/Graphical_user_interface">gui</a> that separates headers, cookies and body payload, but you want to look at raw data:</li>
+ <li>Your request starts with <em>METHOD /route HTTP_Version</em>, e.g. <code>POST /login HTTP/1.1</code> Everything until the first empty line is header, followed eventually with a body. Knowing <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods">methods</a> helps to set expectations. See also <a href="https://tools.ietf.org/html/rfc7231#section-4">RFC 7231</a>, <a href="https://tools.ietf.org/html/rfc5789#section-2">RFC 5789</a>, <a href="https://tools.ietf.org/html/rfc2518">RFC 2518</a>, <a href="https://tools.ietf.org/html/rfc4918">RFC 4918</a>, <a href="https://tools.ietf.org/html/rfc3744">RFC 3744</a> and <a href="https://tools.ietf.org/html/rfc4791">RFC 4791</a></li>
+ <li>Your response starts with a status line <em>HTTP/1.1 StatusCode StatusMessage</em> e.g. <code>HTTP/1.1 200 OK</code> Again: everything until the first empty line is header, followed by the optional response body</li>
+ <li>It can get trickier when you app is already using <em>HTTP/2.0</em> or later since it allows streaming or non-text payloads like <a href="https://grpc.io/">gRPC</a></li>
+ <li>Document that in markdown, bracket the http with three backticks, so it renders as source</li>
+ <li>Repeat for other commands in your app</li>
+</ul>
+<h3>Re-enactment</h3>
+<p>What fun is <a href="https://en.wikipedia.org/wiki/Detective">detective work</a> without verifying results. This is where you turn to <a href="https://www.getpostman.com/">Postman</a> or if <a href="https://www.urbandictionary.com/define.php?term=Tough%20As%20Nails">you have it</a> - curl.</p>
+<p>You want to use parameters for your hostname and the user specific parts (username, passwords) and you need to have a clear idea what are variable return values. Good candidtes to watch out for are cookies or header values. You need to <a href="https://blog.getpostman.com/2014/01/27/extracting-data-from-responses-and-chaining-requests/">extract these values for chaining to the next request</a>. With a little practise you should be able to make Postman behave like the original app</p>
+<h3>Parting words</h3>
+<ul>
+ <li>Check the terms of service of the application you are investigating. While public end-point are, well, public, you might have agreed in your <a href="https://www.termsandconditionsgenerator.com/">T&amp;C</a> not to touch them</li>
+ <li>This isn't an instuction for hacking, you still need to be you - with your credentials. Nevertheless you might stumble over "security by obscurity" or other annoyances</li>
+ <li>Any app that uses http instead of https needs to die a horrible death</li>
+ <li>Reading the API spec is potentially faster</li>
+</ul>
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>

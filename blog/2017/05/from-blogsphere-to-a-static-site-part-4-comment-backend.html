@@ -131,16 +131,16 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>From Blogsphere to a Static Site (Part 4) - Comment backend</small></h1>
 					<hr />
-					<div><p>The blog needed a comment function. While there are social options around (Facebook, <a href="https://disqus.com/">Disqus</a> etc), I decided I want to roll my own. Partly because I want tighter control and partly, well, because I could. My comment backend would:</p> 
-<ul> 
- <li>Provide a REST API to create comments in a JSON structure. The comment body will be <a href="https://daringfireball.net/projects/markdown/syntax">Markdown</a>. Reading would provide comments in ready to use HTML (I hear howling from the API crowd). No delete or update functionality</li> 
- <li>Cleanup content considered harmful (code injection) and optional sport Captcha</li> 
- <li>Store all content in a NoSQL database, in my case CouchDB (or Cloudant with its 20G free plan)</li> 
- <li>Cache all queries for comment in an online cache to limit calls to the database</li> 
- <li>Initially run on Domino, later on liberty or the raw JVM</li> 
- <li>Initially also update Domino using a web service - so during transition no comments would get lost</li> 
-</ul> 
-<p>In its initial incarnation the Comment servlet is a OSGi plugin that listens to the <code>/comments</code> URL implemented as Wink servlet. So the class of interest is the one defining the service. We have one method for post, one for get and a helper function</p> 
+					<div><p>The blog needed a comment function. While there are social options around (Facebook, <a href="https://disqus.com/">Disqus</a> etc), I decided I want to roll my own. Partly because I want tighter control and partly, well, because I could. My comment backend would:</p>
+<ul>
+ <li>Provide a REST API to create comments in a JSON structure. The comment body will be <a href="https://daringfireball.net/projects/markdown/syntax">Markdown</a>. Reading would provide comments in ready to use HTML (I hear howling from the API crowd). No delete or update functionality</li>
+ <li>Cleanup content considered harmful (code injection) and optional sport Captcha</li>
+ <li>Store all content in a NoSQL database, in my case CouchDB (or Cloudant with its 20G free plan)</li>
+ <li>Cache all queries for comment in an online cache to limit calls to the database</li>
+ <li>Initially run on Domino, later on liberty or the raw JVM</li>
+ <li>Initially also update Domino using a web service - so during transition no comments would get lost</li>
+</ul>
+<p>In its initial incarnation the Comment servlet is a OSGi plugin that listens to the <code>/comments</code> URL implemented as Wink servlet. So the class of interest is the one defining the service. We have one method for post, one for get and a helper function</p>
 <pre><code class="language-java">
 /**
  * Wink implementation of Comment service
@@ -252,8 +252,8 @@ public class CommentService extends CommentResponse {
     }
 
 }
-</code></pre><p>The two interesting lines in the class above are <code>CommentManager.INSTANCE.saveComment(comment, true);</code> and <code> CommentManager.INSTANCE.loadComments(parentid);</code>, with the former saving a new comment and the later loading the list of comments. Both use the CommentsManager Singleton to access comments. The key component is a <a href="https://github.com/google/guava">Google Guava</a> cache and the <a href="http://www.ikea.com/sg/en/catalog/categories/series/07488/" title="Hope you don't mind this practical joke">Ektorp</a> CouchDB library</p> 
-<h3>Setting up the cache</h3> 
+</code></pre><p>The two interesting lines in the class above are <code>CommentManager.INSTANCE.saveComment(comment, true);</code> and <code> CommentManager.INSTANCE.loadComments(parentid);</code>, with the former saving a new comment and the later loading the list of comments. Both use the CommentsManager Singleton to access comments. The key component is a <a href="https://github.com/google/guava">Google Guava</a> cache and the <a href="http://www.ikea.com/sg/en/catalog/categories/series/07488/" title="Hope you don't mind this practical joke">Ektorp</a> CouchDB library</p>
+<h3>Setting up the cache</h3>
 <pre><code class="language-java">
  class CommentLoader extends CacheLoader&lt;String, Collection&lt;BlogComment&gt;&gt; {
 
@@ -289,8 +289,8 @@ public class CommentService extends CommentResponse {
         this.commentCache = CacheBuilder.newBuilder().maximumSize(1000).recordStats().expireAfterAccess(8, TimeUnit.HOURS)
                 .build(loader);
 
-</code></pre> 
-<h3>Save a comment</h3> 
+</code></pre>
+<h3>Save a comment</h3>
 <pre><code class="language-java">
 public String saveComment(BlogComment bc, boolean validate) {
         String key = this.config.CHECKCAPTCHA ? this.config.RECAPTCHAKEY : null;
@@ -320,8 +320,8 @@ public String saveComment(BlogComment bc, boolean validate) {
         return result;
     }
 
-</code></pre> 
-<h3>Load comments</h3> 
+</code></pre>
+<h3>Load comments</h3>
 <pre><code class="language-java">
 public Collection&lt;BlogComment&gt; loadComments(final String parentId) {
         Collection&lt;BlogComment&gt; result = null;
@@ -334,8 +334,8 @@ public Collection&lt;BlogComment&gt; loadComments(final String parentId) {
         }
         return result;
     }
-</code></pre> 
-<h3>Getting a gravatar image</h3> 
+</code></pre>
+<h3>Getting a gravatar image</h3>
 <pre><code class="language-java">
 public String getGravatarURL() {
 
@@ -349,15 +349,15 @@ public String getGravatarURL() {
         return this.gravatarURL;
     }
 
-</code></pre> 
-<h3>Create HTML from Markdown</h3> 
+</code></pre>
+<h3>Create HTML from Markdown</h3>
 <pre><code class="language-java">
 private void createHtmlBody(String markdownBody) {
         PegDownProcessor p = new PegDownProcessor();
         this.htmlBody = p.markdownToHtml(HTMLFilter.filter(markdownBody));
     }
-</code></pre> 
-<h3>Check for valid Captcha</h3> 
+</code></pre>
+<h3>Check for valid Captcha</h3>
 <pre><code class="language-java">
 public static boolean isValidCaptcha(String captchaKey, String remoteAddress, String challenge, String response) {
   boolean result = true;
@@ -371,7 +371,7 @@ public static boolean isValidCaptcha(String captchaKey, String remoteAddress, St
 
 return result;
 }
-</code></pre> 
+</code></pre>
 <p>For the full details of the implementation, including the background task talking to Domino, you need to wait for the source release on Github. Next stop: the comment front end</p></div>
 					<hr />
 					<p>

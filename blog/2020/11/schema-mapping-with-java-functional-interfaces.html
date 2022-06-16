@@ -119,9 +119,9 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Schema mapping with Java functional interfaces</small></h1>
 					<hr />
-					<div><p>Mapping one data structure into another is a never ending chore since COBOL's <code>MOVE CORRESPONDING</code>. One to one mappings are trivial, onnce computation is needed, clean code can become messy, really fast</p> 
-<h3>Map with Functions</h3> 
-<p>We will use the following, simplified, scenario with source and target formats:</p> 
+					<div><p>Mapping one data structure into another is a never ending chore since COBOL's <code>MOVE CORRESPONDING</code>. One to one mappings are trivial, onnce computation is needed, clean code can become messy, really fast</p>
+<h3>Map with Functions</h3>
+<p>We will use the following, simplified, scenario with source and target formats:</p>
 <pre><code class="language-java">{
  "FirstName" : "Peter",
  "LastName" : "Pan",
@@ -129,15 +129,15 @@ ga('send', 'pageview');
  "ToC" : "accepted",
  "Marketing" : "no"
 }
-</code></pre> 
-<p>Desired Result:</p> 
+</code></pre>
+<p>Desired Result:</p>
 <pre><code class="language-java">{
  "fullname" : "Peter Pan",
  "birthday" : "1873-11-23",
  "gdpr" : true
 }
-</code></pre> 
-<p>In our case only <code>DoB</code> has a simple mapping to <code>birthday</code> all others need computation or are dropped. So to keep code clean we will use a map with mapping functions, so each computation can be in its own method. The defaults 1:1 and drop functions get defined first.</p> 
+</code></pre>
+<p>In our case only <code>DoB</code> has a simple mapping to <code>birthday</code> all others need computation or are dropped. So to keep code clean we will use a map with mapping functions, so each computation can be in its own method. The defaults 1:1 and drop functions get defined first.</p>
 <pre><code class="language-java">final Map&lt;String, Function&lt;JsonObject, JsonObject&gt;&gt; functionList = new HashMap&lt;&gt;();
 
 Function&lt;JsonObject, JsonObject&gt; simple(final String fieldNameIn, final String fieldNameOut) {
@@ -148,8 +148,8 @@ Function&lt;JsonObject, JsonObject&gt; drop() {
  return in -&gt; new JsonObject();
 }
 
-</code></pre> 
-<p>Each of the functions returns an Json object that <strong>only</strong> returns a value for the one field it gets called for. We will use a collector to aggregate the values. Since we are planning to use streams and functional interfaces, we need a helper class.</p> 
+</code></pre>
+<p>Each of the functions returns an Json object that <strong>only</strong> returns a value for the one field it gets called for. We will use a collector to aggregate the values. Since we are planning to use streams and functional interfaces, we need a helper class.</p>
 <pre><code class="language-java">class MapHelper() {
  JsonObject source;
  Function&lt;JsonObject, JsonObject&gt; mapper;
@@ -164,8 +164,8 @@ MapHelper getMapHelper(final JsonObject source, final Map.Entry&lt;String, Objec
     result.mapper = this.functionList.getOrDefault(incoming.getKey(), drop());
     return result;
   }
-</code></pre> 
-<p>Since each function will return some JSON, that needs to be merged together, we use a Java <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html">Collector</a> to accumulate the values</p><p>The Collector interface provides the static function <code>Collector.of</code> that is suitable for our purpose:</p> 
+</code></pre>
+<p>Since each function will return some JSON, that needs to be merged together, we use a Java <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html">Collector</a> to accumulate the values</p><p>The Collector interface provides the static function <code>Collector.of</code> that is suitable for our purpose:</p>
 <pre><code class="language-java">Collector&lt;MapHelper, JsonObject, JsonObject&gt; myCollector() {
  return Collector.of(
   JsonObject::new,
@@ -173,8 +173,8 @@ MapHelper getMapHelper(final JsonObject source, final Map.Entry&lt;String, Objec
   (part1, part2) -&gt; part1.mergeIn(part2)
  );
 }
-</code></pre> 
-<p>Next stop are the additional functions for the <code>gdpr</code> and the <code>fullname</code> fields and the population of our <code>functionList</code> A few small functions will do.</p> 
+</code></pre>
+<p>Next stop are the additional functions for the <code>gdpr</code> and the <code>fullname</code> fields and the population of our <code>functionList</code> A few small functions will do.</p>
 <pre><code class="language-java">
 Function&lt;JsonObject, JsonObject&gt; gdpr() {
  return in -&gt; in.getString("ToC").equals("accepted") &amp;&amp; !in.getString("Marketing").equals("unknown");
@@ -194,16 +194,16 @@ void populateMapper() {
  functionList.put("gdpr", grpr());
  functionList.put("LastName", fullname());
 }
-</code></pre> 
-<p>With all this in place we now can setup the final function that excutes our actual mapping operation;</p> 
+</code></pre>
+<p>With all this in place we now can setup the final function that excutes our actual mapping operation;</p>
 <pre><code class="language-java">JsonObject transform(final JsonObject incoming) {
  populateMapper();
  return incoming.stream()
  .map(e -&gt; getMapHelper(incoming, e))
  .collect(myCollector());
 }
-</code></pre> 
-<p>What have you seen: usage of Java Streams, custom collector and functional interfaces to create clean mapping code. Be aware that you need better checks in your functions, omitted here for readability</p> 
+</code></pre>
+<p>What have you seen: usage of Java Streams, custom collector and functional interfaces to create clean mapping code. Be aware that you need better checks in your functions, omitted here for readability</p>
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>

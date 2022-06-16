@@ -122,22 +122,22 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Maven JNA macOS and LD_LIBRARY_PATH</small></h1>
 					<hr />
-					<div><p>When running Java applications on a <code>*nix</code> style of operating system that need to load native libraries, you will need to set the <a href="https://linuxhint.com/what-is-ld-library-path/">LD_LIBRARY_PATH</a> environment variable (<a href="https://medium.com/macos-is-not-linux-and-other-nix-reflections/d-o-y-ou-ld-library-path-you-6ab0a6135a33">or something similar</a>). That's not an issue on Linux.</p> 
-<h3>macOS: I won't let you, it's for your own good</h3> 
-<p>On <a href="https://en.wikipedia.org/wiki/MacOS">macOS</a> the <a href="https://support.apple.com/en-sg/guide/security/secb7ea06b49/web">System Integrity Protection (SIP)</a> prevents these variables to be set in <a href="https://stackoverflow.com/questions/60126159/how-to-set-ld-library-path-dyld-library-path-on-macos">your shell (bash, zsh)</a>. It works inside Eclipse, when you define environment parameters, but not in any shell script. Unfortunately <a href="https://maven.apache.org">Maven</a>'s command line <code>mvn</code> is a shell script.</p> 
-<h3>The Notes challenge</h3> 
-<p>Since the Notes client is a cross-platform product, the library locations aren't where a macOS program would look for:</p> 
-<ul> 
- <li>The application directory. That's where the <strong>Java</strong> runtime is at home, not the notes executable</li> 
- <li>In a library location, here looking for <code>notes</code> instead of <code>libnotes.dylib</code></li> 
- <li><code>/Users/[YOURNAME]/Library/Frameworks/notes.framework/</code></li> 
- <li><code>/Library/Frameworks/notes.framework/</code></li> 
- <li><code>/System/Library/Frameworks/notes.framework/</code></li> 
-</ul> 
-<p>You could try to symlink the first library: <code>ln -s /Applications/HCL\ Notes.app/Contents/MacOS/libnotes.dylib ~/Library/Frameworks/notes.framework/notes</code> (after creating the rewuired directories) to run into the next challenge.</p><p>The Notes libraries are linked at build time with the <code>@executable_path</code> annotation. Even when linking all libraries into <code>notes.framework</code>, loading will fail. Maybe in a future version linking with <code>@loader_path</code> or <code>@rpath</code> might solve this.</p> 
-<h3>symlink to the rescue</h3> 
-<p>The old joke goes <em>When man doesn't come to the mountain, the mountain will come to man</em>, also known as <a href="https://en.wikipedia.org/wiki/Avalanche">avalanche</a> (Not to be confuse with the <a href="https://www.phrases.org.uk/meanings/if-the-mountain-will-not-come-to-muhammad.html">real saying</a>).</p> 
-<p>Our executable directory is the JDK's (to be able to compile) home, which luckily doesn't contain any <code>dylib</code> files. With a little loop I give you <code>mvnx</code> (to be stored in <code>~/bin</code>):</p> 
+					<div><p>When running Java applications on a <code>*nix</code> style of operating system that need to load native libraries, you will need to set the <a href="https://linuxhint.com/what-is-ld-library-path/">LD_LIBRARY_PATH</a> environment variable (<a href="https://medium.com/macos-is-not-linux-and-other-nix-reflections/d-o-y-ou-ld-library-path-you-6ab0a6135a33">or something similar</a>). That's not an issue on Linux.</p>
+<h3>macOS: I won't let you, it's for your own good</h3>
+<p>On <a href="https://en.wikipedia.org/wiki/MacOS">macOS</a> the <a href="https://support.apple.com/en-sg/guide/security/secb7ea06b49/web">System Integrity Protection (SIP)</a> prevents these variables to be set in <a href="https://stackoverflow.com/questions/60126159/how-to-set-ld-library-path-dyld-library-path-on-macos">your shell (bash, zsh)</a>. It works inside Eclipse, when you define environment parameters, but not in any shell script. Unfortunately <a href="https://maven.apache.org">Maven</a>'s command line <code>mvn</code> is a shell script.</p>
+<h3>The Notes challenge</h3>
+<p>Since the Notes client is a cross-platform product, the library locations aren't where a macOS program would look for:</p>
+<ul>
+ <li>The application directory. That's where the <strong>Java</strong> runtime is at home, not the notes executable</li>
+ <li>In a library location, here looking for <code>notes</code> instead of <code>libnotes.dylib</code></li>
+ <li><code>/Users/[YOURNAME]/Library/Frameworks/notes.framework/</code></li>
+ <li><code>/Library/Frameworks/notes.framework/</code></li>
+ <li><code>/System/Library/Frameworks/notes.framework/</code></li>
+</ul>
+<p>You could try to symlink the first library: <code>ln -s /Applications/HCL\ Notes.app/Contents/MacOS/libnotes.dylib ~/Library/Frameworks/notes.framework/notes</code> (after creating the rewuired directories) to run into the next challenge.</p><p>The Notes libraries are linked at build time with the <code>@executable_path</code> annotation. Even when linking all libraries into <code>notes.framework</code>, loading will fail. Maybe in a future version linking with <code>@loader_path</code> or <code>@rpath</code> might solve this.</p>
+<h3>symlink to the rescue</h3>
+<p>The old joke goes <em>When man doesn't come to the mountain, the mountain will come to man</em>, also known as <a href="https://en.wikipedia.org/wiki/Avalanche">avalanche</a> (Not to be confuse with the <a href="https://www.phrases.org.uk/meanings/if-the-mountain-will-not-come-to-muhammad.html">real saying</a>).</p>
+<p>Our executable directory is the JDK's (to be able to compile) home, which luckily doesn't contain any <code>dylib</code> files. With a little loop I give you <code>mvnx</code> (to be stored in <code>~/bin</code>):</p>
 <pre><code class="language-bash">#!/bin/bash
 # Dynamic linking of Notes libraries into the JDK
 JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-8-openj9.jdk/Contents/Home
@@ -156,7 +156,7 @@ do
   echo "Unlinking /Applications/HCL\ Notes.app/Contents/MacOS/${onelib}"
   sudo rm ${JAVA_HOME}/jre/bin/${onelib}
 done
-</code></pre> 
+</code></pre>
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>

@@ -119,7 +119,7 @@ ga('send', 'pageview');
 					</h1>
 					<hr />
 					<div>Now that I'm <a href="http://www.ibm.com/" target="_blank">inside</a>, I have access to a new wealth of information. Today I got access to a draft for a press release: In a surprise move IBM and Microsoft announce today: 
-<h3>Microsoft Exchange for IBM DB/2</h3> The IBM spokesman declared: " <i>With our scalable and robust storage technology we finally can ensure that you never have to spend time in <a href="http://www.outlookpower.com/issues/issue200410/00001297001.html" target="_blank">Exchange hell</a> <font size="2" face="sans-serif"> anymore. Also true Microsoft shops can finally benefit from IBM technology. The code name for the project is TBE = True Blue Exchange</font></i> <font size="2" face="sans-serif">".<br> When questioned about the move a long serving Microsoft engineer stated: "<i>With all the pressure and monstrous code in Vista, Office 12 and Exchange 12 we remembered the good times when we were working with IBM on OS/2. Basically then we were playing Mimesweeper and Flight Simulator while the IBM coders did all the work. The only thing we did was to put the presentation manager GUI coordinates upside down to ensure the Lotus people would use up all their resources to recode 1-2-3 on OS/2 while another team was working on Windows 3.11. We wanted the good times back, so we handed over the complete API spec to the </i></font> <i><a href="http://www.almaden.ibm.com/" target="_blank">IBM Almaden lab</a>, of course not before they ensured us not to deliver it to the Europeans, since it is our policy to ignore court orders</i>". 
+<h3>Microsoft Exchange for IBM DB/2</h3> The IBM spokesman declared: " <i>With our scalable and robust storage technology we finally can ensure that you never have to spend time in <a href="http://www.outlookpower.com/issues/issue200410/00001297001.html" target="_blank">Exchange hell</a> <font size="2" face="sans-serif"> anymore. Also true Microsoft shops can finally benefit from IBM technology. The code name for the project is TBE = True Blue Exchange</font></i><font size="2" face="sans-serif">".<br> When questioned about the move a long serving Microsoft engineer stated: "<i>With all the pressure and monstrous code in Vista, Office 12 and Exchange 12 we remembered the good times when we were working with IBM on OS/2. Basically then we were playing Mimesweeper and Flight Simulator while the IBM coders did all the work. The only thing we did was to put the presentation manager GUI coordinates upside down to ensure the Lotus people would use up all their resources to recode 1-2-3 on OS/2 while another team was working on Windows 3.11. We wanted the good times back, so we handed over the complete API spec to the </i></font><i><a href="http://www.almaden.ibm.com/" target="_blank">IBM Almaden lab</a>, of course not before they ensured us not to deliver it to the Europeans, since it is our policy to ignore court orders</i>". 
 <br> I was puzzled, so I contacted the Alpha team @ IBM Almaden. The lead architect confirmed <b>: Microsoft Exchange for IBM DB/2</b> does exist. 
 <br> With a big smile he added: " <i>If you have a close look at the code, you will see, that it is actually a Domino 7.1 server in disguise. We had the messaging part, the DB/2 storage, the fault tolerance and the scalability. We just merged our Domino Access for Outlook into the Domino core and off we went.</i>" 
 <br>I got my hand on some Alpha code. It is amazing. All MAPI calls work, Outlooks sees a native Exchange box, even active directory recognized an Exchange12_01042006 version. Once I've played more with the code I'll post my test results, so stay tuned.</div>
@@ -163,19 +163,19 @@ categories:  <a href="/blog/categories/software.html">Software</a>
 					</h1>
 					<hr />
 					<div>Notes provides us with a build in hierarchy for documents. You have documents, responses and responses to responses. This looks like sufficient to cover most hierarchical requirements. Nevertheless it often is not the right fit. For example: would you consider the head of a department a main document and her staff response documents? Rather not. Especially moving a response document around (when you switch departments) is a pain in the neck. Enter the Hierarchical document pattern. I will describe the principle, you can adopt it to your specific needs. 
-<br> 
+<br>
 <br>Step1: Compute your document ID. Use a field <b>DocID</b> and the formula @Text(@DocumentUniqueId). The field can be computed when composed or computed. If you opt for computed when composed you need to take care of the Copy &amp; Paste operations (Take care does not mean: suppress it, life is hard enough for your users). 
-<br> 
+<br>
 <br>Step 2: Create a field <b>Parent[xxx]ID</b>. Replace the [xxx] with the logical relationship e.g. ParentManagerID, ParentRequestID, ParentDocID. You can have as many as you want (thus a difference to the mono-inheritance of the build-in hierarchy. You need to populate this fields according to your business logic. If you only have ParentDocID you could put it above the DocID, switch on "Inherit values" in the form and use DocID as formula for a computed when composed field. If you have multiple fields your mileage might vary. 
-<br> 
+<br>
 <br>Step 3: Since it is often necessary to get values up the hierarchy we create additional fields. E.g. you have an appraisal form (HR stuff), where you want that your manager, your dotted-line manager and their bosses and their bosses bosses can read how <strike> miserable you felt </strike> much you appreciated the ever changing challenges. There you have two options: pull the values on the fly when saving the document using some lengthy script code - or store the values directly in the document. You need to consider: does my hierarchy change often (every minute) or rather rarely (twice a month). Our approach fits well for the later. 
 <br>For every Parent[xxx]ID field you create one field <b>Parent[xxx]IDtree</b>. This field will have the following formula (adjust as needed) @if(ParentDocID="";DocID;@GetDocField(ParentDocID;"ParentDocIDtree"):DocID). Some error handling needs to be added and the field needs to be multi-value of course. Now you have all DocIDs of the tree above the document in one field. This comes VERY handy in a view, when you want to get all documents that "hang below" a specific one regardless of depth of the hierarchy. It also allows (but we might avoid it) that you loop through the various document using @GetDocField to pull values. 
-<br> 
+<br>
 <br>Step 4: Extend the pattern. Besides storing the IDs you could store also normal fields like Manager or Subject in a redundant hierarchical fashion (data normalizers will shoot me for that "high-performance" approach. Typical examples: Show me all my managers, show me the project structure etc. Instead of pulling the values at view time using a @For loop and @Getdocfield for a computed for display field, we use computed fields: 
 <br>e.g. SubjectDocTree, FullNameManagerTree, CompletionDateProjectTree etc. The formula for the computed field would be similar to above: @if(ParentDocID="";Subject;@GetDocField(ParentDocID;"SubjectDocTree"):Subject), repeat this for all fields you need. 
-<br> 
+<br>
 <br>Why are we doing that this way? Very simple: @Fomulas perform typically faster than LotusScript code. Also the pattern is easily extendible. Need another hierarchy: just add the fields. The only caveat: when you change a value "up in the tree" you need to cascade down the branches to the leaves. However after having identified the documents (Step 2 and the matching view) a simple doc.computewithform will do, so you Script Code will be generic. 
-<br> 
+<br>
 <br>I know your next question: Where is the code? I'll post the LotusScript for the updates and a sample database on an upcoming Show-and-tell Thursday soon. 
 <br></div>
 					<hr />
@@ -198,9 +198,9 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 					</h1>
 					<hr />
 					<div>After <a href="/blog/2006/03/big-news-ahead.html" target="_blank">some teasing</a> and <a href="/blog/2006/03/sunday-thoughts.html" target="_blank">cryptic thoughts</a>, here the conclusion. Linus Torvald said it in his keynote address during 1999' Lotus DevCon: "If you love somebody, set them free". I put in a lot of work in TAO Consulting over the last 6 years and it is time to set it free. Ms. Ida Cheong will take over as Managing Director, Pitt will run the Notes consulting arm, Dr. Magaret Tan continues the Business consulting, Christoph Schaaf will cover UMsys. The position for a sales director has three hot candidates (more once its closed). We recently signed partner agreements with <a href="http://www.eworkplace.com.sg/" target="_blank">eWorkplace</a> and <a href="http://www.cpucom.com/" target="_blank">CPUSoft</a> to resell our products, so expect more activities there. If you want to have your product represented in SE-Asia talk to the <a href="mailto:contact@taoconsulting.sg">good folks</a> at TAO. 
-<br> 
-<br>And I? Well think <a href="http://www.lotusgeek.com/SapphireOak/LotusGeekBlog.nsf" target="_blank">Rock</a>, think <a href="http://www.looseleaf.net/" target="_blank">Bob</a> 
-<br> 
+<br>
+<br>And I? Well think <a href="http://www.lotusgeek.com/SapphireOak/LotusGeekBlog.nsf" target="_blank">Rock</a>, think <a href="http://www.looseleaf.net/" target="_blank">Bob</a>
+<br>
 <br>I will be the LTPA ....</div>
 					<hr />
  <a href="/blog/2006/03/if-you-love-somebody-set-them-free.html">Read more</a>
@@ -222,8 +222,8 @@ categories:  <a href="/blog/categories/singapore.html">Singapore</a>
 						<small><a href="/blog/2006/03/what-does-ltpa-stand-for.html">What does LTPA stand for?</a></small>
 					</h1>
 					<hr />
-					<div><p>Is there is another meaning besides "Lightweight Third Party Authentication"?</p> 
-<p>What is your take?</p> 
+					<div><p>Is there is another meaning besides "Lightweight Third Party Authentication"?</p>
+<p>What is your take?</p>
 <p><img src="/blog/images/emoticons/smile.gif"> stw&nbsp;</p></div>
 					<hr />
 					<p>
@@ -245,9 +245,9 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 					</h1>
 					<hr />
 					<div>There is a document called <a href="http://www.rfc-ignorant.org/rfcs/rfc2142.php" target="_blank" title="RFC2142 with relevant text highlight">RFC2142</a>. This RFC defines some standard email addresses every provider is supposed to implement <b>monitor and attend to</b>. Names like hostmaster, abuse etc. You would expect, that a very big provider would implement them to be a good net-citizen. Not so here: 
-<br> 
-<br> 
-<br> <i>Dear Stephan H. Wissel, <br><br> Emails sent directly to our mailbox are no longer attended to with <br> immediate effect. Please use the online form at <br> 
+<br>
+<br>
+<br><i>Dear Stephan H. Wissel, <br><br> Emails sent directly to our mailbox are no longer attended to with <br> immediate effect. Please use the online form at <br> 
  <http: www.singnet.com.sg tou misc ia_incidentreport.asp>
    to submit your 
   <br> Internet Abuse Incident Report. 
@@ -271,7 +271,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
     </http:>
    </http:>
   </http:>
- </http:></i> 
+ </http:></i>
 <br> &lt;rant&gt; !@#$%^&amp; 
 <br> So when you just forward a virus message nicely with all headers, so they can notify the poor soul and rescue it, you get told: no we won't help unless you accommodate our process, that is in violation of internet standards. Hhm. Time for the ICT regulators to step forward and have a nice roster of fines for <b>negligence</b>. An ISP should be held responsible for maleware traffic leaving their network. &lt;/rant&gt;</div>
 					<hr />
@@ -293,7 +293,7 @@ categories:  <a href="/blog/categories/singapore.html">Singapore</a>
 						<small><a href="/blog/2006/03/if-you-are-short-of-web-20-vocabulary.html">If you are short of Web 2.0 vocabulary...</a></small>
 					</h1>
 					<hr />
-					<div>... there is hope: head over to the <a href="http://emptybottle.org/bullshit/" title="Valuable phrases for Web 2.0 entrepreneurs" target="_blank">Web 2.0 Bullshit Generator</a> 
+					<div>... there is hope: head over to the <a href="http://emptybottle.org/bullshit/" title="Valuable phrases for Web 2.0 entrepreneurs" target="_blank">Web 2.0 Bullshit Generator</a>
 <br> via <a href="http://www.vowe.net/" title="Volker Weber's site" target="_blank">vowe</a></div>
 					<hr />
 					<p>
@@ -401,7 +401,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 					<hr />
 					<div>We have a new member in our IT Zoo. A nice Sony VGN-A17GP laptop. After reinstalling the OS from the rescue disk and one gazillion patches there was the question of Antivirus/Firewall. Since the desktop runs happily with <a href="http://www.zonelabs.com/" target="_blank">Zonealam</a> pro with Antivirus I wanted to order a licence for the Laptop too. To confuse me product is now called ZoneAlarm Suite and ZoneAlarm Pro doesn't come with Anti-Virus. Before breakfast I only skimp pages and I promptly spend 50 bucks on the wrong product. 
 <br> So I headed to the customer feedback page, actually not expecting much, but to my surprise after they had their breakfast I got a mail stating, that they refunded my purchase and I'm free to order what I originally intended to do. 
-<br> <b>Well done Zonelabs!</b></div>
+<br><b>Well done Zonelabs!</b></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -422,33 +422,33 @@ categories:  <a href="/blog/categories/software.html">Software</a>
 					</h1>
 					<hr />
 					<div>I'm not and admin buff, so I try to keep time spending in administration short. Management of groups for security purposes can be a drag on your administrative time. Since Notes basically let you do whatever you want, I find a lot of organic grown group structures. These are hard to maintain and often confusing. So over the years we refined a group structure, that is easy to understand as well as processable through code. The groups consist of three semantic elements connected by a dot: 
-<br> 
+<br>
 <br>&amp;domainname dot metagroup dot purpose 
-<br> 
+<br>
 <br>Some examples: 
-<br> 
+<br>
 <br>&amp;mycorp.sys.accessserver 
 <br>&amp;mycorp.sys.server01.signagents 
 <br>&amp;mycorp.sys.denyaccess 
-<br> 
+<br>
 <br>&amp;yourcorp.apps.leave.administrator 
 <br>&amp;mycorp.apps.leave.support 
 <br>&amp;theircorp.apps.news.users 
-<br> 
-<br> <b>&amp;domainname</b> stands for your domain name or a sensible abbreviation of it. 
-<br> <b>metagroup</b> can be either <i>sys</i> for system group (e.g. server access) or <i>apps</i> for applications 
-<br> <b>purpose </b>can be composed out of one or more sub-elements. In the system metagroup it would be either an access role <i>.createdatabase </i>or a servername with an access role <i>x34za.denyaccess</i>. In the application metagroup it always will be the name of the application and the application function. . <i>leave.hr</i> <i>.po.manager</i> etc. Depending on your organization's size you might want to tweak the structure rules for the best fit (&lt;advertisement&gt;if in doubt ask <a href="http://www.taoconsulting.sg/" target="_blank">TAO</a> for consulting services&lt;/advertisement&gt;). Keep in mind to stick to the maximum length of 64 characters 
-<br> 
+<br>
+<br><b>&amp;domainname</b> stands for your domain name or a sensible abbreviation of it. 
+<br><b>metagroup</b> can be either <i>sys</i> for system group (e.g. server access) or <i>apps</i> for applications 
+<br><b>purpose </b>can be composed out of one or more sub-elements. In the system metagroup it would be either an access role <i>.createdatabase </i>or a servername with an access role <i>x34za.denyaccess</i>. In the application metagroup it always will be the name of the application and the application function. . <i>leave.hr</i><i>.po.manager</i> etc. Depending on your organization's size you might want to tweak the structure rules for the best fit (&lt;advertisement&gt;if in doubt ask <a href="http://www.taoconsulting.sg/" target="_blank">TAO</a> for consulting services&lt;/advertisement&gt;). Keep in mind to stick to the maximum length of 64 characters 
+<br>
 <br>The structure has a number of advantages: 
-<br> 
-<ol> 
- <li value="1">Using the # in front makes sure the groups are not mixed with user names or mail-group names in the address dialogue </li> 
- <li value="2">Having the domain (or a sensible abbreviation of it) in front eases the maintenance of ACL of databases and templates that get replicated across domains (e.g. from system integrator to customer) </li> 
- <li value="3">The structure allows for easy parsing. E.g. a server document must only contain groups that have .sys. in the second position. A ACL can only contain groups that carry the application name in third position. We typically use a registration database where all databases are configured with their "application name" to a acl scanner can find inconsistencies </li> 
- <li value="4">We typically add a #mycorp.apps.NameOfTheApp.support group with designer rights to every database. The group is empty. When there is a need for troubleshooting a workflow process will add the developer to this group for a specified time frame. This way we avoid the two pitfalls in security: giving developers full admin rights or giving them permanent developer access to production databases </li> 
- <li value="5">Since group names for applications are well defined you can use the application registration database for some kind of self service, where the business owner of a database grants access to a user by filling in a form and a background agent is updating the Domino directory. You can have as much audit trail and workflow as your auditors need to see. </li> 
- <li value="6">ACL structures can be fine granular and well defined at the same time. E.g. you can enforce (and scan) rules like: If it is not a mail file, there must not be a person entry. Every database needs a support group with designer access (the structure would determine the exact name). etc.</li> 
-</ol> <b>Update</b>: <a href="https://www-304.ibm.com/support/docview.wss?uid=swg21088877">IBM recommends</a> not to use #, so I replaced it above with &amp;</div>
+<br>
+<ol>
+ <li value="1">Using the # in front makes sure the groups are not mixed with user names or mail-group names in the address dialogue </li>
+ <li value="2">Having the domain (or a sensible abbreviation of it) in front eases the maintenance of ACL of databases and templates that get replicated across domains (e.g. from system integrator to customer) </li>
+ <li value="3">The structure allows for easy parsing. E.g. a server document must only contain groups that have .sys. in the second position. A ACL can only contain groups that carry the application name in third position. We typically use a registration database where all databases are configured with their "application name" to a acl scanner can find inconsistencies </li>
+ <li value="4">We typically add a #mycorp.apps.NameOfTheApp.support group with designer rights to every database. The group is empty. When there is a need for troubleshooting a workflow process will add the developer to this group for a specified time frame. This way we avoid the two pitfalls in security: giving developers full admin rights or giving them permanent developer access to production databases </li>
+ <li value="5">Since group names for applications are well defined you can use the application registration database for some kind of self service, where the business owner of a database grants access to a user by filling in a form and a background agent is updating the Domino directory. You can have as much audit trail and workflow as your auditors need to see. </li>
+ <li value="6">ACL structures can be fine granular and well defined at the same time. E.g. you can enforce (and scan) rules like: If it is not a mail file, there must not be a person entry. Every database needs a support group with designer access (the structure would determine the exact name). etc.</li>
+</ol><b>Update</b>: <a href="https://www-304.ibm.com/support/docview.wss?uid=swg21088877">IBM recommends</a> not to use #, so I replaced it above with &amp;</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -512,21 +512,21 @@ categories:  <a href="/blog/categories/singapore.html">Singapore</a>
 					</h1>
 					<hr />
 					<div>After last weeks flight level 500 contribution I'd like to dive right into some code today. The task at hand: visualize a date range in a calendar like display with weekends and special days (e.g. Holidays) marked differently. A leave application or a travel approval system would be typical examples where that comes in handy. Do not use any Lotus Script or Java or JavaScript. OK and no C/C++ either. So the tools at hand are @Formula, HTML and CSS: 
-<br> 
+<br>
 <br> Let us assume, that the two fields holding the start and the end date are: <code>LeaveStart</code> and <code>LeaveEnd</code>. 
 <br> Create one field, Type date, name Datelist, multivalue enabled, computed, Formula: <code>@Explode(@TextToTime(@Text(@Date(LeaveStart))+"-"+@Text(@Date(LeaveEnd)</code>))) 
 <br> Another field <code>dHolidays</code> contains all the special days as Text list. 
-<br> 
+<br>
 <br> The surrounding code for the display looks like this: 
-<br> 
+<br>
 <pre><code class="language-xml">
  &lt;table width=100% border=0 cellpadding=2 cellspacing=2 bgcolor=#DDDDFF class=leavecal&gt;
     &lt;tr&gt;&lt;th colspan=7&gt;Overview days for this request&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;
     &lt;tr&gt;<b>[dLeaveCal]</b>&lt;/tr&gt;
 &lt;/table&gt;
-</code></pre> 
+</code></pre>
 <br> The code in the computed for display text field [dLeaveCal] looks like this: 
-<br> 
+<br>
 <pre><code class="language-pascal">
 REM {Hodidays in Red; Weekends in Green; Leave in Blue};
 tmpColWeekend := "weekend";
@@ -544,9 +544,9 @@ tmpbgcolstep3 :=@Replace(tmpbgcolstep2;"1":"2":"3":"4":"5":"6":"7";tmpColWeekend
 tmplinkebreak :=@Replace(tmpWeekdays;"1":"2":"3":"4":"5":"6":"7";"&lt;/tr&gt;&lt;tr&gt;":"");
 leadString+@Implode("&lt;td class="+tmpbgcolstep3+"&gt;"+tmpWdNames+"&lt;br /&gt;"+@Text(datelist)+"&lt;/td&gt;"+tmplinkebreak;" ")+
 "&lt;/tr&gt;&lt;tr&gt;&lt;td &nbsp;colspan=3 class="+tmpColLeave+"&gt;Leave days&lt;/td&gt;&lt;td &nbsp;colspan=2 class="+@Subset(tmpColHoliday;1)+"&gt;Public Holiday (if any)&lt;/td&gt;&lt;td colspan=2 class="+tmpColWeekend+"&gt;Weekend&lt;/td&gt;"
- </code></pre> 
+ </code></pre>
 <br> You need to figure out some CSS for the classes: 
-<br> 
+<br>
 <pre><code class="language-css">
 .holiday { font-size : xx-small;
                background-color: #FFCCCC;
@@ -560,9 +560,9 @@ leadString+@Implode("&lt;td class="+tmpbgcolstep3+"&gt;"+tmpWdNames+"&lt;br /&gt
                    background-color: #CCFFCC;
                    border : 1px solid #00FF00;
 }
- </code></pre> 
+ </code></pre>
 <br> The result will look like this (look Ma, no JS): 
-<br> 
+<br>
 <img src="/blog/images/2014/weekcalendar.gif" border="0" width="607" height="114" alt="Display of a date range in HTML"></div>
 					<hr />
 					<p>
@@ -585,13 +585,13 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 					<hr />
 					<div>DominoWebDAV 0.1 will be up soon. Part of the application is a little helper application, that knows how to deal with the webdav:// protocol. As "good citizens" we want to make the information available, that the helper is installed by amending the user_agent string in the browser. We add something, not alter, so the typical browser sniffing scripts won't break (Note to all who still use them: start sniffing the DOM). 
 <br> In Internet Explorer the user_agent extension are defined by a registry entry (This is e.g. how IE/IIS "knows" that a .net runtime is installed): 
-<br> <code> HKLM "Software\Microsoft\Windows\CurrentVersion\Internet Settings\5.0\User Agent\Post Platform" "Some funny string" </code> All entries here end up in the user_agent. In Firefox it is a little trickier: the following steps are needed: 
-<ol> 
- <li>Is Firefox installed?</li> 
- <li>Locate the profile directory (per user)</li> 
- <li>Read the profiles.ini and locate the current user profile</li> 
- <li>Look for the file user.js, create it if missing</li> 
- <li>Add the line <code> user_pref("general.useragent.extra.funnySoftware", "Some funny string"); </code> if missing</li> 
+<br><code> HKLM "Software\Microsoft\Windows\CurrentVersion\Internet Settings\5.0\User Agent\Post Platform" "Some funny string" </code> All entries here end up in the user_agent. In Firefox it is a little trickier: the following steps are needed: 
+<ol>
+ <li>Is Firefox installed?</li>
+ <li>Locate the profile directory (per user)</li>
+ <li>Read the profiles.ini and locate the current user profile</li>
+ <li>Look for the file user.js, create it if missing</li>
+ <li>Add the line <code> user_pref("general.useragent.extra.funnySoftware", "Some funny string"); </code> if missing</li>
 </ol> I managed to get the part with the Registry going, but I could need some help on the Firefox part. Any takers?</div>
 					<hr />
 					<p>
@@ -634,7 +634,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 					<hr />
 					<div>I'm generally open to have guest entries here. However it would be a clever idea to ask me instead of trying to log in. The IPs are logged, so I can find out who you are. 
 <br>Special note to the Singaporean subset of you. Can you spell <a href="http://agcvldb4.agc.gov.sg/" target="_blank" title="Singapore legislation">Computer Misuse Act</a>? 
-<br> 
+<br>
 <br> I'm not amused.</div>
 					<hr />
 					<p>
@@ -656,20 +656,20 @@ categories:  <a href="/blog/categories/singapore.html">Singapore</a>
 					</h1>
 					<hr />
 					<div>I was asked recently to sum up the strongest points about Lotus Domino. This is what I came up with: 
-<br> 
+<br>
 <br>Lotus Domino is an integrated communication platform, that features email, instant messaging, collaboration and an application development platform. Its strongest points are self-containment, robustness, scalability, freedom of platform choice, security, extensibility, low cost of ownership and IBM's commitment. 
-<br> 
-<br> <b>Self-containment</b>: Domino is not dependent on external applications other than the operating system and the network. While MS Exchange depends on Active Directory and Novell Groupwise on Novell's eDirectory, Domino provides it's own directory that also can serve as an LDAP directory for other applications. Due to the lack of external dependencies Domino servers can be moved from one platform to another with ease and low effort. More important: Running Domino does not require a bundle of different products and product skills. When comparing Domino's capabilities with Microsoft's offerings, you would need multiple Microsoft products to cover all Domino functionality: MS Active Directory, MS Exchange, MS Sharepoint, MS Life Connection Server and MS SQL. 
-<br> 
-<br> <b>Robustness</b>: Domino uses individual databases for every mail user. The databases can synchronized ("replicated" in Notes lingo) between multiple servers and clients. Therefore Domino is very resilient against failures on one server or in one database. Combined with the active clustering and the choice of platforms a Domino system can be build with practical no perceivable downtime. 
-<br> 
-<br> <b>Scalability and platform choice</b>: Domino is available on multiple platforms from Windows, Linux, Unix to z/OS. It provides cross-platform clustering and load balancing. An investment into a Domino cluster for high availability is paid back with better response times due to the load balancing functionality. IBM has provided benchmarks on notesbench.org where a single iSeries server supports 100,000 concurrent mail users. &nbsp;However the most interesting aspect of the multi-platform availability is the possibility running Domino servers on different operating systems than the clients, thus providing a natural infection barrier for viruses and maleware. The platform choice doesn't stop with the servers. eMail and data stored in Domino can be accessed by a wealth of clients and protocols, giving the customer the freedom to pick the desktop (email) application of their choice: Lotus Notes Clients, IBM Workplace, MS Outlook, POP3/IMAP4 clients like Mozilla Thunderbird or web mail via a browser. 
-<br> 
-<br> <b>Security</b>: Domino's granular access control to email, calendar and Domino applications is unique in the industry. Furthermore Domino provides digital signatures and encryption both in Domino's propriety format as well as the industry standard X509. Domino serves as the corporate PKI infrastructure, eliminating the need to invest into and introduce another technology for that. But there is more: Domino enables by design the lock-down of sensitive information, so even the system administrators could not retrieve it, so the data owners can be assured of data confidentiality. 
-<br> 
-<br> <b>Extensibility</b>: Domino's mail design is completely open and can be customized to specific corporate needs. The OpenNTF open source community provides an free alternative to IBM's own design with enhanced functions putting pressure on IBM to constantly innovate. Besides eMail Domino features a platform for collaborative applications like discussion boards, blogs, wikis, CMS, CRM and a huge selection of open source or commercial applications. The latest version of Domino makes all this available as web services, in fact turning Domino into a pilar of a SOA strategy. Since the application share the platform with messaging they integrate well with email and allow the creation of an corporate unified information backbone. 
-<br> 
-<br> <b>Low cost of ownership and IBM's commitment</b>: a well configured Domino platform takes advantage of the policy based administration, that minimizes administrative efforts through a set of comprehensive rules. In the latest release IBM also added a comprehensive domain monitoring capability. All this frees up valuable time for administrators to manage their environment more proactive. IBM is the single vendor with the most detailed roadmap for it's messaging platform. The current version Domino 7 has been released a few month ago, nevertheless IBM has outlined plans for Domino version 8 and 9. This assures users of the Domino platform, that they are not in for any rip and replace upgrade any time soon.</div>
+<br>
+<br><b>Self-containment</b>: Domino is not dependent on external applications other than the operating system and the network. While MS Exchange depends on Active Directory and Novell Groupwise on Novell's eDirectory, Domino provides it's own directory that also can serve as an LDAP directory for other applications. Due to the lack of external dependencies Domino servers can be moved from one platform to another with ease and low effort. More important: Running Domino does not require a bundle of different products and product skills. When comparing Domino's capabilities with Microsoft's offerings, you would need multiple Microsoft products to cover all Domino functionality: MS Active Directory, MS Exchange, MS Sharepoint, MS Life Connection Server and MS SQL. 
+<br>
+<br><b>Robustness</b>: Domino uses individual databases for every mail user. The databases can synchronized ("replicated" in Notes lingo) between multiple servers and clients. Therefore Domino is very resilient against failures on one server or in one database. Combined with the active clustering and the choice of platforms a Domino system can be build with practical no perceivable downtime. 
+<br>
+<br><b>Scalability and platform choice</b>: Domino is available on multiple platforms from Windows, Linux, Unix to z/OS. It provides cross-platform clustering and load balancing. An investment into a Domino cluster for high availability is paid back with better response times due to the load balancing functionality. IBM has provided benchmarks on notesbench.org where a single iSeries server supports 100,000 concurrent mail users. &nbsp;However the most interesting aspect of the multi-platform availability is the possibility running Domino servers on different operating systems than the clients, thus providing a natural infection barrier for viruses and maleware. The platform choice doesn't stop with the servers. eMail and data stored in Domino can be accessed by a wealth of clients and protocols, giving the customer the freedom to pick the desktop (email) application of their choice: Lotus Notes Clients, IBM Workplace, MS Outlook, POP3/IMAP4 clients like Mozilla Thunderbird or web mail via a browser. 
+<br>
+<br><b>Security</b>: Domino's granular access control to email, calendar and Domino applications is unique in the industry. Furthermore Domino provides digital signatures and encryption both in Domino's propriety format as well as the industry standard X509. Domino serves as the corporate PKI infrastructure, eliminating the need to invest into and introduce another technology for that. But there is more: Domino enables by design the lock-down of sensitive information, so even the system administrators could not retrieve it, so the data owners can be assured of data confidentiality. 
+<br>
+<br><b>Extensibility</b>: Domino's mail design is completely open and can be customized to specific corporate needs. The OpenNTF open source community provides an free alternative to IBM's own design with enhanced functions putting pressure on IBM to constantly innovate. Besides eMail Domino features a platform for collaborative applications like discussion boards, blogs, wikis, CMS, CRM and a huge selection of open source or commercial applications. The latest version of Domino makes all this available as web services, in fact turning Domino into a pilar of a SOA strategy. Since the application share the platform with messaging they integrate well with email and allow the creation of an corporate unified information backbone. 
+<br>
+<br><b>Low cost of ownership and IBM's commitment</b>: a well configured Domino platform takes advantage of the policy based administration, that minimizes administrative efforts through a set of comprehensive rules. In the latest release IBM also added a comprehensive domain monitoring capability. All this frees up valuable time for administrators to manage their environment more proactive. IBM is the single vendor with the most detailed roadmap for it's messaging platform. The current version Domino 7 has been released a few month ago, nevertheless IBM has outlined plans for Domino version 8 and 9. This assures users of the Domino platform, that they are not in for any rip and replace upgrade any time soon.</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">

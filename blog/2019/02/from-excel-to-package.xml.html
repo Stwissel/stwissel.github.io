@@ -122,32 +122,32 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>From Excel to package.xml</small></h1>
 					<hr />
-					<div><p>Cleaning up an org that has gone through several generations of ownership and objectives is fun. Some tooling helps</p> 
-<h3>Data frugality</h3> 
-<p>A computing principle, very much the anathema to Google and Facebook, is <a href="https://martinfowler.com/bliki/Datensparsamkeit.html">Data Frugality</a>, storing only what you actually need. It is the data equivalent to coders' <a href="https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it">YAGNI</a> principle. Latest since <a href="http://ec.europa.eu/justice/newsroom/data-protection/infographic/2017/index_en.htm">GDPR</a> it got center stage attention.</p> 
-<h3>Your cleanup plan</h3> 
-<p>So your cleanup exercise has a few steps:</p> 
-<ul> 
- <li>Find fields that don't have any data. You can use tools like <a href="https://appexchange.salesforce.com/appxListingDetail?listingId=a0N30000003HSXEEA4">Field Trip</a> to achieve that</li> 
- <li>Verify that these fields are not "about to be used", but "really obsolete"</li> 
- <li>Add all the fields that did have some data left over, but unused now</li> 
- <li>Add fields that contain data legal told you to get rid off</li> 
-</ul> 
-<p>The absolute standard approach, of any consultant I have encountered, is to fire up an Excel sheet and track all fields in a list, capture insights in the <code>remarks</code> column and have another column that indicates <code>can be deleted</code> Status. Something like <code>Yes,No,Investigating</code> or "Call Paul to clarify". I would be surprised if there's a different approach in the wild (in theory there are).</p> 
-<h3>Excel as source?</h3> 
-<p>In a current project the consultant neatly created one sheet (that's the page, not the file) per object, labeled with the object name, containing rows for all custom fields. Then the team went off to investigate. In result they identified more than one thousand fields to be deleted.</p> 
-<p>Now to actually get rid of the fields, you could <a href="https://www.mturk.com/">outsource</a> some manual labor to either go into you org or use Copy-Paste to create a <code>destructivechanges.xml</code> package file for use with the <a href="https://developer.salesforce.com/docs/atlas.en-us.daas.meta/daas/daas_destructive_changes.htm">Salesforce ANT tool</a>.</p> 
-<p>In any case: the probability that there will be errors in transferring is approximately 100%. The business owner will point to: I signed off that spreadsheet and not that XML file! Finger pointing commencing.</p> 
-<p>There must be a better way</p><h3>XML and XSLT to the rescue</h3> 
-<p>Since I encounter Excel based list quite frequently, I wrote a small tool that converts <a href="https://github.com/stwissel/Excel2XML">Excel to XML</a>. It is specifically designed to cater to lists, and lists only. The result is XSLT friendly, with cells carrying proper row and column properties and computed cells carrying the last result and not the formula.</p> 
-<p>In case you wonder why, read <a href="/blog/2017/10/excel-in-ci.html">my previous post</a> or the <a href="https://en.wikipedia.org/wiki/Office_Open_XML_file_formats">OOXML specifications</a> (The later might take you a while).</p> 
-<p>A quick command line generated the XML: <code>java -Xmx4g -jar excel2xml.jar -i deadfieldsreport.xslx -o destructivechanges.xml -s</code> that had:</p> 
-<ul> 
- <li>Object name in sheet name</li> 
- <li>Field name in column 0</li> 
- <li>Status that determined deletability in column 5</li> 
-</ul> 
-<p>less than 40 lines XSLT <a href="https://gist.github.com/Stwissel/b5ad5fd6de8d6d9ccdab8ec903bab510">did the job</a>.</p> 
+					<div><p>Cleaning up an org that has gone through several generations of ownership and objectives is fun. Some tooling helps</p>
+<h3>Data frugality</h3>
+<p>A computing principle, very much the anathema to Google and Facebook, is <a href="https://martinfowler.com/bliki/Datensparsamkeit.html">Data Frugality</a>, storing only what you actually need. It is the data equivalent to coders' <a href="https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it">YAGNI</a> principle. Latest since <a href="http://ec.europa.eu/justice/newsroom/data-protection/infographic/2017/index_en.htm">GDPR</a> it got center stage attention.</p>
+<h3>Your cleanup plan</h3>
+<p>So your cleanup exercise has a few steps:</p>
+<ul>
+ <li>Find fields that don't have any data. You can use tools like <a href="https://appexchange.salesforce.com/appxListingDetail?listingId=a0N30000003HSXEEA4">Field Trip</a> to achieve that</li>
+ <li>Verify that these fields are not "about to be used", but "really obsolete"</li>
+ <li>Add all the fields that did have some data left over, but unused now</li>
+ <li>Add fields that contain data legal told you to get rid off</li>
+</ul>
+<p>The absolute standard approach, of any consultant I have encountered, is to fire up an Excel sheet and track all fields in a list, capture insights in the <code>remarks</code> column and have another column that indicates <code>can be deleted</code> Status. Something like <code>Yes,No,Investigating</code> or "Call Paul to clarify". I would be surprised if there's a different approach in the wild (in theory there are).</p>
+<h3>Excel as source?</h3>
+<p>In a current project the consultant neatly created one sheet (that's the page, not the file) per object, labeled with the object name, containing rows for all custom fields. Then the team went off to investigate. In result they identified more than one thousand fields to be deleted.</p>
+<p>Now to actually get rid of the fields, you could <a href="https://www.mturk.com/">outsource</a> some manual labor to either go into you org or use Copy-Paste to create a <code>destructivechanges.xml</code> package file for use with the <a href="https://developer.salesforce.com/docs/atlas.en-us.daas.meta/daas/daas_destructive_changes.htm">Salesforce ANT tool</a>.</p>
+<p>In any case: the probability that there will be errors in transferring is approximately 100%. The business owner will point to: I signed off that spreadsheet and not that XML file! Finger pointing commencing.</p>
+<p>There must be a better way</p><h3>XML and XSLT to the rescue</h3>
+<p>Since I encounter Excel based list quite frequently, I wrote a small tool that converts <a href="https://github.com/stwissel/Excel2XML">Excel to XML</a>. It is specifically designed to cater to lists, and lists only. The result is XSLT friendly, with cells carrying proper row and column properties and computed cells carrying the last result and not the formula.</p>
+<p>In case you wonder why, read <a href="/blog/2017/10/excel-in-ci.html">my previous post</a> or the <a href="https://en.wikipedia.org/wiki/Office_Open_XML_file_formats">OOXML specifications</a> (The later might take you a while).</p>
+<p>A quick command line generated the XML: <code>java -Xmx4g -jar excel2xml.jar -i deadfieldsreport.xslx -o destructivechanges.xml -s</code> that had:</p>
+<ul>
+ <li>Object name in sheet name</li>
+ <li>Field name in column 0</li>
+ <li>Status that determined deletability in column 5</li>
+</ul>
+<p>less than 40 lines XSLT <a href="https://gist.github.com/Stwissel/b5ad5fd6de8d6d9ccdab8ec903bab510">did the job</a>.</p>
 <pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
@@ -187,8 +187,8 @@ ga('send', 'pageview');
 
 &lt;/xsl:stylesheet&gt;
 
-</code></pre> 
-<p>The nice side effect: it is repeatable. Just fetch the latest Excel file and run it through. Since no Excel installation is required, you can make this approach part of your CI pipeline.</p> 
+</code></pre>
+<p>The nice side effect: it is repeatable. Just fetch the latest Excel file and run it through. Since no Excel installation is required, you can make this approach part of your CI pipeline.</p>
 <p>As usual: YMMV</p></div>
 					<hr />
 					<p>

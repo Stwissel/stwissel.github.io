@@ -120,24 +120,24 @@ ga('send', 'pageview');
 					<h1><small>Access protected Notes documents - RDBMS style</small></h1>
 					<hr />
 					<div>An interesting discussion happened today around Notes performance. In a rather large database (&gt; 500k records) all documents are protected with Author and Reader fields. The access is rather narrow, so any user might see just about 1000 of the 500000 documents. Opening a view in the Notes client is rather slow and the old "rah. rah Notes is bad" song is performed. Notes <a href="http://www.ibm.com/developerworks/lotus/performance/">performance</a> is <a href="http://www.ibm.com/developerworks/lotus/library/ls-perf_intro/">discussed</a> in <a href="http://www.nsftools.com/tips/PerfTips.htm">great length</a> at <a href="http://www.ibm.com/developerworks/lotus/documentation/d-ls-notesperformance/">other places</a>, so this isn't what this post is about. I was wondering how one would implement access control on a record level in a relational database. This would be the specifications: 
-<ul> 
- <li>Design a view that restricts access to a subset of table data (we simplify here by excluding multi-value data fields)</li> 
- <li>A record can have zero or many readers, who are allowed to see the record</li> 
- <li>A record can have zero or many authors, who are allowed to see the record and later update them (eventually)</li> 
- <li>If a record has no readers any user with access to the database can see the record</li> 
- <li>If one or more readers are present only the sum of readers and authors can see the document</li> 
- <li>A reader or author can be of type: Person, Group, Role</li> 
- <li>A role can be assigned to one or more Persons or Groups</li> 
- <li>A group can contain Groups and People (we simplify here and omit the * operator)</li> 
- <li>A group can have zero or more roles</li> 
- <li>A person can have zero or more roles</li> 
- <li>A person can be member in zero or more groups</li> 
+<ul>
+ <li>Design a view that restricts access to a subset of table data (we simplify here by excluding multi-value data fields)</li>
+ <li>A record can have zero or many readers, who are allowed to see the record</li>
+ <li>A record can have zero or many authors, who are allowed to see the record and later update them (eventually)</li>
+ <li>If a record has no readers any user with access to the database can see the record</li>
+ <li>If one or more readers are present only the sum of readers and authors can see the document</li>
+ <li>A reader or author can be of type: Person, Group, Role</li>
+ <li>A role can be assigned to one or more Persons or Groups</li>
+ <li>A group can contain Groups and People (we simplify here and omit the * operator)</li>
+ <li>A group can have zero or more roles</li>
+ <li>A person can have zero or more roles</li>
+ <li>A person can be member in zero or more groups</li>
 </ul> Graphically it would look somehow like this: 
-<br> 
-<img src="/blog/images/2008/RelationalAccessControl400.png" alt="RelationalAccessControl400.png"> 
+<br>
+<img src="/blog/images/2008/RelationalAccessControl400.png" alt="RelationalAccessControl400.png">
 <br> Now how would an SQL statement look like? I'm not an SQL expert, so I might get quite some stuff wrong. But here is my go: 
-<br> 
-<br> 
+<br>
+<br>
 <pre>SELECT* FROM maintable
    WHERE maintable.id IN (SELECT readertable.maintableid FROM readertable
    WHERE readertable.entry = @CurrentUser

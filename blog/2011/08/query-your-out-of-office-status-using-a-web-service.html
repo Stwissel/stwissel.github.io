@@ -120,209 +120,209 @@ ga('send', 'pageview');
 					<h1><small>Query your Out-Of-Office status using a web service</small></h1>
 					<hr />
 					<div>In a more distributed working environment presence information becomes more and more important. In the consumer space you "check in" using <a href="http://www.google.com/search?&amp;q=location+aware+services">various services</a>, in the enterprise world <i>where</i> is less important than <i>how</i>, where <i>how</i> stands for: available, busy, unavailable etc. In the <strike> Lotus </strike> IBM Collaboration world we have multiple sources of status: the Sametime status, your IBM Connections status updates, the <a href="http://www.lotuslive.com/">IBM LotusLive</a> status and - for longer periods - your email out-of-office status. All but the last can easily kept in sync thanks <a href="http://www.openntf.org/Projects/pmt.nsf/ProjectLookup/WildFire">WildFire</a>. Integrating the OOO service proves a little more tricky since it isn't exposed in a neutral API. So in a first step I designed a web service that can retrieve one or more OOO Status messages. In its first cut it ignores the OOO subject or the id of the requestor, but once you got the base version running it is easy to extend it. A few caveats: 
-<ul> 
- <li>You can (and probably should) place that web service in its own database. Access control to that database defines who can access that service</li> 
- <li>You will need the <a href="http://www.openntf.org/Projects/pmt.nsf/ProjectLookup/OpenLog">OpenLog</a> library in that database</li> 
- <li>The service should be signed with the server ID, so it can read all mail files</li> 
- <li>If you want to make it run across servers, you need to configure the servers to trust each other (check the Admin help for that)</li> 
- <li>Since web services don't cache anything it is not the most performant option, so there is improvement potential</li> 
- <li>There are 2 methods: one for just one status and one to retrieve a batch of them</li> 
+<ul>
+ <li>You can (and probably should) place that web service in its own database. Access control to that database defines who can access that service</li>
+ <li>You will need the <a href="http://www.openntf.org/Projects/pmt.nsf/ProjectLookup/OpenLog">OpenLog</a> library in that database</li>
+ <li>The service should be signed with the server ID, so it can read all mail files</li>
+ <li>If you want to make it run across servers, you need to configure the servers to trust each other (check the Admin help for that)</li>
+ <li>Since web services don't cache anything it is not the most performant option, so there is improvement potential</li>
+ <li>There are 2 methods: one for just one status and one to retrieve a batch of them</li>
 </ul>And here is the code: 
-<div class="lotusscript"> <span class="kw1">Public</span> <span class="kw1">Class</span> OOOInfo 
- <br> &nbsp; &nbsp; <span class="kw1">Private</span> s <span class="kw1">As</span> <span class="kw2">NotesSession</span> 
- <br> &nbsp; &nbsp; <span class="kw1">Private</span> db <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> 
- <br> &nbsp; &nbsp; <span class="kw1">Private</span> allNab <span class="kw1">As</span> <span class="kw1">Variant</span> 
- <br> &nbsp; &nbsp; <span class="kw1">Private</span> isError <span class="kw1">As</span> <span class="kw1">Boolean</span> 
- <br> &nbsp; &nbsp; <span class="kw1">Private</span> errorMsg <span class="kw1">As</span> <span class="kw1">String</span> 
+<div class="lotusscript"><span class="kw1">Public</span><span class="kw1">Class</span> OOOInfo 
+ <br> &nbsp; &nbsp; <span class="kw1">Private</span> s <span class="kw1">As</span><span class="kw2">NotesSession</span>
+ <br> &nbsp; &nbsp; <span class="kw1">Private</span> db <span class="kw1">As</span><span class="kw2">NotesDatabase</span>
+ <br> &nbsp; &nbsp; <span class="kw1">Private</span> allNab <span class="kw1">As</span><span class="kw1">Variant</span>
+ <br> &nbsp; &nbsp; <span class="kw1">Private</span> isError <span class="kw1">As</span><span class="kw1">Boolean</span>
+ <br> &nbsp; &nbsp; <span class="kw1">Private</span> errorMsg <span class="kw1">As</span><span class="kw1">String</span>
  <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">Private</span> <span class="kw1">Sub</span> initSessionAndDB 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Me</span>. <span class="me1">s</span> <span class="kw1">Is</span> <span class="kw1">Nothing</span> <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> <span class="kw1">Me</span>. <span class="me1">s</span> = <span class="kw1">New</span> <span class="kw2">NotesSession</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> <span class="kw1">Me</span>. <span class="me1">db</span> = s. <span class="me1">Currentdatabase</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; allNab = s. <span class="me1">AddressBooks</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Sub</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Private</span><span class="kw1">Sub</span> initSessionAndDB 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">Me</span>. <span class="me1">s</span><span class="kw1">Is</span><span class="kw1">Nothing</span><span class="kw1">Then</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span><span class="kw1">Me</span>. <span class="me1">s</span> = <span class="kw1">New</span><span class="kw2">NotesSession</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span><span class="kw1">Me</span>. <span class="me1">db</span> = s. <span class="me1">Currentdatabase</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; allNab = s. <span class="me1">AddressBooks</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
+ <br> &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">Sub</span>
  <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Sub</span> <span class="kw1">new</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> <span class="kw1">Me</span>. <span class="me1">initSessionAndDB</span> 
- <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Sub</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span><span class="kw1">Sub</span><span class="kw1">new</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span><span class="kw1">Me</span>. <span class="me1">initSessionAndDB</span>
+ <br> &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">Sub</span>
  <br> &nbsp; &nbsp; 
- <br> <span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; getOOOStatus<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: Gets the status of one user name, there's the real work<br> %END REM</span> 
- <br> &nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Function</span> getOOOStatus <span class="br0">(</span>who <span class="kw1">As</span> <span class="kw1">String</span> <span class="br0">)</span> <span class="kw1">As</span> OOOResult 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> result <span class="kw1">As</span> <span class="kw1">New</span> OOOResult 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> doc <span class="kw1">As</span> <span class="kw2">NotesDocument</span> 
+ <br><span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; getOOOStatus<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: Gets the status of one user name, there's the real work<br> %END REM</span>
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span><span class="kw1">Function</span> getOOOStatus <span class="br0">(</span>who <span class="kw1">As</span><span class="kw1">String</span><span class="br0">)</span><span class="kw1">As</span> OOOResult 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> result <span class="kw1">As</span><span class="kw1">New</span> OOOResult 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> doc <span class="kw1">As</span><span class="kw2">NotesDocument</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">On</span> <span class="kw1">Error</span> <span class="kw1">Goto</span> Err_getOOOStatus 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">On</span><span class="kw1">Error</span><span class="kw1">Goto</span> Err_getOOOStatus 
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> doc = <span class="kw1">Me</span>. <span class="me1">getUserDoc</span> <span class="br0">(</span>who <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> doc = <span class="kw1">Me</span>. <span class="me1">getUserDoc</span><span class="br0">(</span>who <span class="br0">)</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> doc <span class="kw1">Is</span> <span class="kw1">Nothing</span> <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Here is the real work, retrieving the status</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> result = <span class="kw1">Me</span>. <span class="me1">getOOOfromNSF</span> <span class="br0">(</span>doc. <span class="me1">Getitemvalue</span> <span class="br0">(</span> <span class="st0">"MailServer"</span> <span class="br0">)</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span>,doc. <span class="me1">Getitemvalue</span> <span class="br0">(</span> <span class="st0">"MailFile"</span> <span class="br0">)</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">UserName</span> = doc. <span class="me1">GetItemValue</span> <span class="br0">(</span> <span class="st0">"FullName"</span> <span class="br0">)</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">InterNetMail</span> = doc. <span class="me1">GetItemValue</span> <span class="br0">(</span> <span class="st0">"InternetAddress"</span> <span class="br0">)</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Else</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">Status</span> = <span class="st0">"UserUnknown"</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">Not</span> doc <span class="kw1">Is</span><span class="kw1">Nothing</span><span class="kw1">Then</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Here is the real work, retrieving the status</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> result = <span class="kw1">Me</span>. <span class="me1">getOOOfromNSF</span><span class="br0">(</span>doc. <span class="me1">Getitemvalue</span><span class="br0">(</span><span class="st0">"MailServer"</span><span class="br0">)</span><span class="br0">(</span><span class="nu0">0</span><span class="br0">)</span>,doc. <span class="me1">Getitemvalue</span><span class="br0">(</span><span class="st0">"MailFile"</span><span class="br0">)</span><span class="br0">(</span><span class="nu0">0</span><span class="br0">)</span><span class="br0">)</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">UserName</span> = doc. <span class="me1">GetItemValue</span><span class="br0">(</span><span class="st0">"FullName"</span><span class="br0">)</span><span class="br0">(</span><span class="nu0">0</span><span class="br0">)</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">InterNetMail</span> = doc. <span class="me1">GetItemValue</span><span class="br0">(</span><span class="st0">"InternetAddress"</span><span class="br0">)</span><span class="br0">(</span><span class="nu0">0</span><span class="br0">)</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Else</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">Status</span> = <span class="st0">"UserUnknown"</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <br> Exit_getOOOStatus: 
  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> getOOOStatus = result 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">Function</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span><span class="kw1">Function</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <br> Err_getOOOStatus: 
  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> logError 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">status</span> = <span class="st0">"Error"</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">message</span> = <span class="kw1">Error$</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">status</span> = <span class="st0">"Error"</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">message</span> = <span class="kw1">Error$</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Resume</span> Exit_getOOOStatus 
- <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Function</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">Function</span>
  <br> &nbsp; &nbsp; 
- <br> <span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; Function getOOOfromNSF<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: Given an NSF Name retrieves the OOO Status and message<br> %END REM</span> 
- <br> &nbsp; &nbsp; <span class="kw1">Private</span> <span class="kw1">Function</span> getOOOfromNSF <span class="br0">(</span>server <span class="kw1">As</span> <span class="kw1">String</span>, mailFile <span class="kw1">As</span> <span class="kw1">String</span> <span class="br0">)</span> <span class="kw1">As</span> OOOResult &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> result <span class="kw1">As</span> <span class="kw1">New</span> OOOResult 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> mailDB <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> OOOProfile <span class="kw1">As</span> <span class="kw2">NotesDocument</span> 
+ <br><span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; Function getOOOfromNSF<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: Given an NSF Name retrieves the OOO Status and message<br> %END REM</span>
+ <br> &nbsp; &nbsp; <span class="kw1">Private</span><span class="kw1">Function</span> getOOOfromNSF <span class="br0">(</span>server <span class="kw1">As</span><span class="kw1">String</span>, mailFile <span class="kw1">As</span><span class="kw1">String</span><span class="br0">)</span><span class="kw1">As</span> OOOResult &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> result <span class="kw1">As</span><span class="kw1">New</span> OOOResult 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> mailDB <span class="kw1">As</span><span class="kw2">NotesDatabase</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> OOOProfile <span class="kw1">As</span><span class="kw2">NotesDocument</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">On</span> <span class="kw1">Error</span> <span class="kw1">Goto</span> Err_getOOOfromNSF 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">On</span><span class="kw1">Error</span><span class="kw1">Goto</span> Err_getOOOfromNSF 
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> <span class="kw1">Me</span>. <span class="me1">initSessionAndDB</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span><span class="kw1">Me</span>. <span class="me1">initSessionAndDB</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> mailDB = <span class="kw1">New</span> <span class="kw2">NotesDatabase</span> <span class="br0">(</span>server, mailFile <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> mailDB. <span class="me1">Isopen</span> <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> mailDB. <span class="kw1">Open</span> <span class="br0">(</span> <span class="st0">""</span>, <span class="st0">""</span> <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> mailDB = <span class="kw1">New</span><span class="kw2">NotesDatabase</span><span class="br0">(</span>server, mailFile <span class="br0">)</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">Not</span> mailDB. <span class="me1">Isopen</span><span class="kw1">Then</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> mailDB. <span class="kw1">Open</span><span class="br0">(</span><span class="st0">""</span>, <span class="st0">""</span><span class="br0">)</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> mailDB. <span class="me1">Isopen</span> <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> OOOProfile = mailDB. <span class="me1">Getprofiledocument</span> <span class="br0">(</span> <span class="st0">"OutOfOfficeProfile"</span> <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> OOOProfile. <span class="me1">Hasitem</span> <span class="br0">(</span> <span class="st0">"CurrentStatus"</span> <span class="br0">)</span> <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> OOOProfile. <span class="me1">Getitemvalue</span> <span class="br0">(</span> <span class="st0">"CurrentStatus"</span> <span class="br0">)</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> = <span class="st0">"0"</span> <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">Status</span> = <span class="st0">"NoOOO"</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Else</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">Status</span> = <span class="st0">"OK"</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'//TODO: Do we need to specify different messages here?</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">message</span> = OOOProfile. <span class="me1">Getitemvalue</span> <span class="br0">(</span> <span class="st0">"GeneralMessage"</span> <span class="br0">)</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">returnDate</span> = <span class="kw1">Me</span>. <span class="me1">getISODate</span> <span class="br0">(</span>OOOProfile. <span class="me1">Getitemvalue</span> <span class="br0">(</span> <span class="st0">"FirstDayOut"</span> <span class="br0">)</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Else</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">Status</span> = <span class="st0">"NoOOO"</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Else</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">Status</span> = <span class="st0">"Error"</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> mailDB. <span class="me1">Isopen</span><span class="kw1">Then</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> OOOProfile = mailDB. <span class="me1">Getprofiledocument</span><span class="br0">(</span><span class="st0">"OutOfOfficeProfile"</span><span class="br0">)</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> OOOProfile. <span class="me1">Hasitem</span><span class="br0">(</span><span class="st0">"CurrentStatus"</span><span class="br0">)</span><span class="kw1">Then</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> OOOProfile. <span class="me1">Getitemvalue</span><span class="br0">(</span><span class="st0">"CurrentStatus"</span><span class="br0">)</span><span class="br0">(</span><span class="nu0">0</span><span class="br0">)</span> = <span class="st0">"0"</span><span class="kw1">Then</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">Status</span> = <span class="st0">"NoOOO"</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Else</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">Status</span> = <span class="st0">"OK"</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'//TODO: Do we need to specify different messages here?</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">message</span> = OOOProfile. <span class="me1">Getitemvalue</span><span class="br0">(</span><span class="st0">"GeneralMessage"</span><span class="br0">)</span><span class="br0">(</span><span class="nu0">0</span><span class="br0">)</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">returnDate</span> = <span class="kw1">Me</span>. <span class="me1">getISODate</span><span class="br0">(</span>OOOProfile. <span class="me1">Getitemvalue</span><span class="br0">(</span><span class="st0">"FirstDayOut"</span><span class="br0">)</span><span class="br0">(</span><span class="nu0">0</span><span class="br0">)</span><span class="br0">)</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Else</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">Status</span> = <span class="st0">"NoOOO"</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Else</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">Status</span> = <span class="st0">"Error"</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">message</span> = <span class="st0">"Can't open mail file:"</span> &amp; mailFile 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <br> Exit_getOOOfromNSF: 
  <br> &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">server</span> = server 
  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> getOOOfromNSF = result 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">Function</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span><span class="kw1">Function</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <br> Err_getOOOfromNSF: 
  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> logError 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">status</span> = <span class="st0">"Error"</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">message</span> = <span class="kw1">Error$</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">status</span> = <span class="st0">"Error"</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; result. <span class="me1">message</span> = <span class="kw1">Error$</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Resume</span> Exit_getOOOfromNSF 
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Function</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">Function</span>
  <br> &nbsp; &nbsp; 
- <br> <span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; Function getISODate<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: converts a Notes Date-time into ISO date<br> %END REM</span> 
- <br> &nbsp; &nbsp; <span class="kw1">Private</span> <span class="kw1">Function</span> getISODate <span class="br0">(</span>raw <span class="kw1">As</span> <span class="kw1">Variant</span> <span class="br0">)</span> <span class="kw1">As</span> <span class="kw1">String</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> cur <span class="kw1">As</span> <span class="kw2">NotesDateTime</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> cur = <span class="kw1">New</span> <span class="kw2">NotesDateTime</span> <span class="br0">(</span>raw <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'ToDo: fix this and get a proper date</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; getISODate = cur. <span class="me1">Dateonly</span> 
- <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Function</span> 
+ <br><span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; Function getISODate<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: converts a Notes Date-time into ISO date<br> %END REM</span>
+ <br> &nbsp; &nbsp; <span class="kw1">Private</span><span class="kw1">Function</span> getISODate <span class="br0">(</span>raw <span class="kw1">As</span><span class="kw1">Variant</span><span class="br0">)</span><span class="kw1">As</span><span class="kw1">String</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> cur <span class="kw1">As</span><span class="kw2">NotesDateTime</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> cur = <span class="kw1">New</span><span class="kw2">NotesDateTime</span><span class="br0">(</span>raw <span class="br0">)</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'ToDo: fix this and get a proper date</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; getISODate = cur. <span class="me1">Dateonly</span>
+ <br> &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">Function</span>
  <br> &nbsp; &nbsp; 
- <br> <span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; Function getUserDoc<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: Retrieves the Notes Document with the user information<br> %END REM</span> 
- <br> &nbsp; &nbsp; <span class="kw1">Private</span> <span class="kw1">Function</span> getUserDoc <span class="br0">(</span>who <span class="kw1">As</span> <span class="kw1">String</span> <span class="br0">)</span> <span class="kw1">As</span> <span class="kw2">NotesDocument</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> doc <span class="kw1">As</span> <span class="kw2">NotesDocument</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> nab <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> v <span class="kw1">As</span> <span class="kw2">NotesView</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> i <span class="kw1">As</span> <span class="kw1">Integer</span> 
+ <br><span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; Function getUserDoc<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: Retrieves the Notes Document with the user information<br> %END REM</span>
+ <br> &nbsp; &nbsp; <span class="kw1">Private</span><span class="kw1">Function</span> getUserDoc <span class="br0">(</span>who <span class="kw1">As</span><span class="kw1">String</span><span class="br0">)</span><span class="kw1">As</span><span class="kw2">NotesDocument</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> doc <span class="kw1">As</span><span class="kw2">NotesDocument</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> nab <span class="kw1">As</span><span class="kw2">NotesDatabase</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> v <span class="kw1">As</span><span class="kw2">NotesView</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> i <span class="kw1">As</span><span class="kw1">Integer</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">On</span> <span class="kw1">Error</span> <span class="kw1">Goto</span> Err_getUserDoc 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">On</span><span class="kw1">Error</span><span class="kw1">Goto</span> Err_getUserDoc 
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Loop through all NAB to make sure we get him</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">For</span> i = <span class="nu0">0</span> <span class="kw1">To</span> <span class="kw1">Ubound</span> <span class="br0">(</span>allNab <span class="br0">)</span> <span class="kw1">Step</span> <span class="nu0">1</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> nab = allNab <span class="br0">(</span>i <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> &nbsp;nab. <span class="me1">IsOpen</span> <span class="br0">(</span> <span class="br0">)</span> <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> nab. <span class="kw1">Open</span> <span class="br0">(</span> <span class="st0">""</span>, <span class="st0">""</span> <span class="br0">)</span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> nab. <span class="me1">IsOpen</span> <span class="br0">(</span> <span class="br0">)</span> <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> v = nab. <span class="me1">GetView</span> <span class="br0">(</span> <span class="st0">"($Users)"</span> <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> v <span class="kw1">Is</span> <span class="kw1">Nothing</span> <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> doc = v. <span class="me1">GetDocumentByKey</span> <span class="br0">(</span> <span class="kw1">Lcase</span> <span class="br0">(</span>who <span class="br0">)</span>, <span class="kw1">True</span> <span class="br0">)</span> <span class="co1">'$Users has lowercase keys</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> doc <span class="kw1">Is</span> <span class="kw1">Nothing</span> <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">For</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Next</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Loop through all NAB to make sure we get him</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">For</span> i = <span class="nu0">0</span><span class="kw1">To</span><span class="kw1">Ubound</span><span class="br0">(</span>allNab <span class="br0">)</span><span class="kw1">Step</span><span class="nu0">1</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> nab = allNab <span class="br0">(</span>i <span class="br0">)</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">Not</span> &nbsp;nab. <span class="me1">IsOpen</span><span class="br0">(</span><span class="br0">)</span><span class="kw1">Then</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> nab. <span class="kw1">Open</span><span class="br0">(</span><span class="st0">""</span>, <span class="st0">""</span><span class="br0">)</span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> nab. <span class="me1">IsOpen</span><span class="br0">(</span><span class="br0">)</span><span class="kw1">Then</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> v = nab. <span class="me1">GetView</span><span class="br0">(</span><span class="st0">"($Users)"</span><span class="br0">)</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">Not</span> v <span class="kw1">Is</span><span class="kw1">Nothing</span><span class="kw1">Then</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> doc = v. <span class="me1">GetDocumentByKey</span><span class="br0">(</span><span class="kw1">Lcase</span><span class="br0">(</span>who <span class="br0">)</span>, <span class="kw1">True</span><span class="br0">)</span><span class="co1">'$Users has lowercase keys</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">Not</span> doc <span class="kw1">Is</span><span class="kw1">Nothing</span><span class="kw1">Then</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span><span class="kw1">For</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Next</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> getUserDoc = doc 
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <br> Exit_getUserDoc: 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">Function</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span><span class="kw1">Function</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
  <br> Err_getUserDoc : 
  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> logError 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> getUserDoc = <span class="kw1">Nothing</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> getUserDoc = <span class="kw1">Nothing</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Resume</span> Exit_getUserDoc 
- <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Function</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">Function</span>
  <br> &nbsp; &nbsp; 
  <br> &nbsp; &nbsp; 
  <br> &nbsp; &nbsp; 
- <br> <span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; getOOOStatus<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: Gets the status of multiple user names<br> %END REM</span>&nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Function</span> getMultipleOOOStatus <span class="br0">(</span>multiWho <span class="kw1">As</span> OOOMultiInput <span class="br0">)</span> <span class="kw1">As</span> OOOMultiResult 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> i <span class="kw1">As</span> <span class="kw1">Integer</span> 
+ <br><span class="coMULTI">%REM<br> &nbsp; &nbsp; &nbsp; &nbsp; getOOOStatus<br> &nbsp; &nbsp; &nbsp; &nbsp; Description: Gets the status of multiple user names<br> %END REM</span>&nbsp; &nbsp; 
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span><span class="kw1">Function</span> getMultipleOOOStatus <span class="br0">(</span>multiWho <span class="kw1">As</span> OOOMultiInput <span class="br0">)</span><span class="kw1">As</span> OOOMultiResult 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> i <span class="kw1">As</span><span class="kw1">Integer</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> result <span class="kw1">As</span> OOOResult 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> allSource <span class="kw1">As</span> <span class="kw1">Variant</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Dim</span> allSource <span class="kw1">As</span><span class="kw1">Variant</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; allSource = multiWho. <span class="me1">InputValues</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; allSource = multiWho. <span class="me1">InputValues</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> getMultipleOOOStatus = <span class="kw1">New</span> OOOMultiResult 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> getMultipleOOOStatus. <span class="me1">resetSize</span> <span class="br0">(</span> <span class="kw1">Ubound</span> <span class="br0">(</span>allSource <span class="br0">)</span> <span class="br0">)</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> getMultipleOOOStatus. <span class="me1">resetSize</span><span class="br0">(</span><span class="kw1">Ubound</span><span class="br0">(</span>allSource <span class="br0">)</span><span class="br0">)</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">For</span> i = <span class="nu0">0</span> <span class="kw1">To</span> <span class="kw1">Ubound</span> <span class="br0">(</span>allSource <span class="br0">)</span> <span class="kw1">Step</span> <span class="nu0">1</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> result = <span class="kw1">Me</span>. <span class="me1">getOOOStatus</span> <span class="br0">(</span>allSource <span class="br0">(</span>i <span class="br0">)</span> <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> getMultipleOOOStatus. <span class="me1">updateResult</span> <span class="br0">(</span>result,i <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Next</span> 
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">For</span> i = <span class="nu0">0</span><span class="kw1">To</span><span class="kw1">Ubound</span><span class="br0">(</span>allSource <span class="br0">)</span><span class="kw1">Step</span><span class="nu0">1</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> result = <span class="kw1">Me</span>. <span class="me1">getOOOStatus</span><span class="br0">(</span>allSource <span class="br0">(</span>i <span class="br0">)</span><span class="br0">)</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> getMultipleOOOStatus. <span class="me1">updateResult</span><span class="br0">(</span>result,i <span class="br0">)</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Next</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Function</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">Function</span>
  <br> &nbsp; &nbsp; 
- <br> <span class="kw1">End</span> <span class="kw1">Class</span> 
- <br> 
- <br> <span class="coMULTI">%REM<br> &nbsp; &nbsp; Class OOOResult<br> &nbsp; &nbsp; Description: Return values for this user<br> %END REM</span> 
- <br> <span class="kw1">Public</span> <span class="kw1">Class</span> OOOResult 
- <br> &nbsp; &nbsp; <span class="kw1">Public</span> Status <span class="kw1">As</span> <span class="kw1">String</span> <span class="co1">'OK, NoOOO, UserUnknown, Error</span> 
- <br> &nbsp; &nbsp; <span class="kw1">Public</span> Server <span class="kw1">As</span> <span class="kw1">String</span> <span class="co1">'What server does the user come from</span> 
- <br> &nbsp; &nbsp; <span class="kw1">Public</span> UserName <span class="kw1">As</span> <span class="kw1">String</span> <span class="co1">'The fullName we found</span> 
- <br> &nbsp; &nbsp; <span class="kw1">Public</span> InterNetMail <span class="kw1">As</span> <span class="kw1">String</span> <span class="co1">'The Internet address</span> 
- <br> &nbsp; &nbsp; <span class="kw1">Public</span> returnDate <span class="kw1">As</span> <span class="kw1">String</span> <span class="co1">'//ToDo Decide on format</span> 
- <br> &nbsp; &nbsp; <span class="kw1">Public</span> message <span class="kw1">As</span> <span class="kw1">String</span> <span class="co1">'What's the message</span> 
- <br> <span class="kw1">End</span> <span class="kw1">Class</span> 
- <br> 
- <br> 
- <br> <span class="coMULTI">%REM<br> &nbsp; &nbsp; Class OOOMultiInput<br> &nbsp; &nbsp; Description: Array for multiple queries<br> %END REM</span> 
- <br> <span class="kw1">Public</span> <span class="kw1">Class</span> OOOMultiInput 
- <br> &nbsp; &nbsp; <span class="kw1">Public</span> InputValues <span class="br0">(</span> <span class="br0">)</span> <span class="kw1">As</span> <span class="kw1">String</span> 
- <br> <span class="kw1">End</span> <span class="kw1">Class</span> 
- <br> 
- <br> 
- <br> <span class="coMULTI">%REM<br> &nbsp; &nbsp; Class OOOMultiResult<br> &nbsp; &nbsp; Description: Array for multiple output values<br> %END REM</span> 
- <br> <span class="kw1">Public</span> <span class="kw1">Class</span> OOOMultiResult 
- <br> &nbsp; &nbsp; <span class="kw1">Public</span> ResultValues <span class="br0">(</span> <span class="br0">)</span> <span class="kw1">As</span> OOOResult 
+ <br><span class="kw1">End</span><span class="kw1">Class</span>
+ <br>
+ <br><span class="coMULTI">%REM<br> &nbsp; &nbsp; Class OOOResult<br> &nbsp; &nbsp; Description: Return values for this user<br> %END REM</span>
+ <br><span class="kw1">Public</span><span class="kw1">Class</span> OOOResult 
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span> Status <span class="kw1">As</span><span class="kw1">String</span><span class="co1">'OK, NoOOO, UserUnknown, Error</span>
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span> Server <span class="kw1">As</span><span class="kw1">String</span><span class="co1">'What server does the user come from</span>
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span> UserName <span class="kw1">As</span><span class="kw1">String</span><span class="co1">'The fullName we found</span>
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span> InterNetMail <span class="kw1">As</span><span class="kw1">String</span><span class="co1">'The Internet address</span>
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span> returnDate <span class="kw1">As</span><span class="kw1">String</span><span class="co1">'//ToDo Decide on format</span>
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span> message <span class="kw1">As</span><span class="kw1">String</span><span class="co1">'What's the message</span>
+ <br><span class="kw1">End</span><span class="kw1">Class</span>
+ <br>
+ <br>
+ <br><span class="coMULTI">%REM<br> &nbsp; &nbsp; Class OOOMultiInput<br> &nbsp; &nbsp; Description: Array for multiple queries<br> %END REM</span>
+ <br><span class="kw1">Public</span><span class="kw1">Class</span> OOOMultiInput 
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span> InputValues <span class="br0">(</span><span class="br0">)</span><span class="kw1">As</span><span class="kw1">String</span>
+ <br><span class="kw1">End</span><span class="kw1">Class</span>
+ <br>
+ <br>
+ <br><span class="coMULTI">%REM<br> &nbsp; &nbsp; Class OOOMultiResult<br> &nbsp; &nbsp; Description: Array for multiple output values<br> %END REM</span>
+ <br><span class="kw1">Public</span><span class="kw1">Class</span> OOOMultiResult 
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span> ResultValues <span class="br0">(</span><span class="br0">)</span><span class="kw1">As</span> OOOResult 
  <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Sub</span> resetSize <span class="br0">(</span>index <span class="kw1">As</span> <span class="kw1">Integer</span> <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Redim</span> ResultValues <span class="br0">(</span>index <span class="br0">)</span> 
- <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Sub</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span><span class="kw1">Sub</span> resetSize <span class="br0">(</span>index <span class="kw1">As</span><span class="kw1">Integer</span><span class="br0">)</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Redim</span> ResultValues <span class="br0">(</span>index <span class="br0">)</span>
+ <br> &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">Sub</span>
  <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">Public</span> <span class="kw1">Sub</span> updateResult <span class="br0">(</span>newResult <span class="kw1">As</span> OOOResult, index <span class="kw1">As</span> <span class="kw1">Integer</span> <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Ubound</span> <span class="br0">(</span>ResultValues <span class="br0">)</span> &lt; index <span class="kw1">Then</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Redim</span> <span class="kw1">Preserve</span> ResultValues <span class="br0">(</span>index <span class="br0">)</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">Public</span><span class="kw1">Sub</span> updateResult <span class="br0">(</span>newResult <span class="kw1">As</span> OOOResult, index <span class="kw1">As</span><span class="kw1">Integer</span><span class="br0">)</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">Ubound</span><span class="br0">(</span>ResultValues <span class="br0">)</span> &lt; index <span class="kw1">Then</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Redim</span><span class="kw1">Preserve</span> ResultValues <span class="br0">(</span>index <span class="br0">)</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
  <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> resultValues <span class="br0">(</span>index <span class="br0">)</span> = newResult 
- <br> &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">Sub</span> 
- <br> <span class="kw1">End</span> <span class="kw1">Class</span> 
+ <br> &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">Sub</span>
+ <br><span class="kw1">End</span><span class="kw1">Class</span>
 </div> Specify <code>OOOInfo</code> as your Port type class in the info box (Alt+Enter). If your database's name is ooo.nsf and you called the webservice query you can retrieve the wsdl using a url like this: <code>http://www.myserver.org/ooo.nsf/query?wsdl</code>. Next stop: The same as XPages based REST service. 
 <br> As usual: YMMV</div>
 					<hr />

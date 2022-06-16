@@ -125,21 +125,21 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Create your own Certificate Authority (CA)</small></h1>
 					<hr />
-					<div><p><strong>Warning</strong> Do NOT, never, ever do that to a production system!</p> 
-<p>Promised? OK! Here's the use case: you want to test your systems that have made up addresses like <code>awesomeserver.local</code> and don't want to deal with certificate warnings or fancy errors that arise when you just use a self signed cert. This post is a self-reference for my convenience. There are <a href="https://www.google.com/search?q=crrate+your+own+CA">ample other instructions</a> out there.</p> 
-<p><strong>Disclaimer</strong>: I mostly followed <a href="https://jamielinux.com/docs/openssl-certificate-authority/introduction.html">this instructions</a> short of updating some of the commands to use <a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography">elliptic-curve</a> cyphers.</p> 
-<h3>Useful with a side of work</h3> 
-<p>The process requires a series of steps:</p> 
-<ul> 
- <li>Create the private key and root certificate</li> 
- <li>Create an intermediate key and certificate</li> 
- <li>Create certs for your servers</li> 
- <li>Convert them if necessary (e.g. for import in Java Keystors JKS)</li> 
- <li>Make the public key of the root and intermediate certs available</li> 
- <li>Import these certs in all browsers and runtimes that you will use for testing</li> 
-</ul> 
-<p>Normal mortal users, without these imports will get scary error messages. While this doesn't deter the determined, it's good for a laugh.<br> We don't want old school certs, so we aim at a modern <a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography">Elliptic-curve</a> cert (<a href="https://www.erianna.com/ecdsa-certificate-authorities-and-certificates-with-openssl/">Details here</a>). Here we go:</p> 
-<h4>Setting up the directory structure</h4> 
+					<div><p><strong>Warning</strong> Do NOT, never, ever do that to a production system!</p>
+<p>Promised? OK! Here's the use case: you want to test your systems that have made up addresses like <code>awesomeserver.local</code> and don't want to deal with certificate warnings or fancy errors that arise when you just use a self signed cert. This post is a self-reference for my convenience. There are <a href="https://www.google.com/search?q=crrate+your+own+CA">ample other instructions</a> out there.</p>
+<p><strong>Disclaimer</strong>: I mostly followed <a href="https://jamielinux.com/docs/openssl-certificate-authority/introduction.html">this instructions</a> short of updating some of the commands to use <a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography">elliptic-curve</a> cyphers.</p>
+<h3>Useful with a side of work</h3>
+<p>The process requires a series of steps:</p>
+<ul>
+ <li>Create the private key and root certificate</li>
+ <li>Create an intermediate key and certificate</li>
+ <li>Create certs for your servers</li>
+ <li>Convert them if necessary (e.g. for import in Java Keystors JKS)</li>
+ <li>Make the public key of the root and intermediate certs available</li>
+ <li>Import these certs in all browsers and runtimes that you will use for testing</li>
+</ul>
+<p>Normal mortal users, without these imports will get scary error messages. While this doesn't deter the determined, it's good for a laugh.<br> We don't want old school certs, so we aim at a modern <a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography">Elliptic-curve</a> cert (<a href="https://www.erianna.com/ecdsa-certificate-authorities-and-certificates-with-openssl/">Details here</a>). Here we go:</p>
+<h4>Setting up the directory structure</h4>
 <pre><code class="language-bash">mkdir -pv -m 600 /root/ca/intermediate
 cd /root/ca
 curl https://jamielinux.com/docs/openssl-certificate-authority/_downloads/root-config.txt -o openssl.cnf
@@ -155,43 +155,43 @@ touch index.txt
 echo 1000 &gt; serial
 echo 1000 &gt; crlnumber
 cd ..
-</code></pre> 
-<p>You want to check the downloaded files and eventually change the path in case you have chosen to us a different one.</p> 
-<h4>The Root CA</h4> 
+</code></pre>
+<p>You want to check the downloaded files and eventually change the path in case you have chosen to us a different one.</p>
+<h4>The Root CA</h4>
 <pre><code class="language-bash">export OPENSSL_CONF=./openssl.cnf
 openssl ecparam -genkey -name prime256v1 -outform PEM | openssl ec -aes256 -out private/ca.key.pem
 chmod 400 private/ca.key.pem
 openssl req -config openssl.cnf -key private/ca.key.pem -new -x509 -days 7300 -SHA384 -extensions v3_ca -out certs/ca.cert.pem
-</code></pre> 
-<p>Keep them save - remember: its on my harddrive only isn't save!!!<br> You want to check the file using <code>openssl x509 -noout -text -in certs/ca.cert.pem</code> or on macOS just hit the space key in finder.</p><h4>The intermediate CA (one or more)</h4> 
-<p>Good practise is to keep the root keys save and only use them for one or more intermediate certificate(s).<br> This allows to delegate cert creation to multiple players and also allows to invalidate an intermediate cert if needed.</p> 
+</code></pre>
+<p>Keep them save - remember: its on my harddrive only isn't save!!!<br> You want to check the file using <code>openssl x509 -noout -text -in certs/ca.cert.pem</code> or on macOS just hit the space key in finder.</p><h4>The intermediate CA (one or more)</h4>
+<p>Good practise is to keep the root keys save and only use them for one or more intermediate certificate(s).<br> This allows to delegate cert creation to multiple players and also allows to invalidate an intermediate cert if needed.</p>
 <pre><code class="language-bash">openssl ecparam -genkey -name prime256v1 -outform PEM | openssl ec -aes256 -out intermediate/private/intermediate.key.pem
 chmod 400 intermediate/private/intermediate.key.pem
 openssl req -config intermediate/openssl.cnf -new -SHA384 -key intermediate/private/intermediate.key.pem -out intermediate/csr/intermediate.csr.pem
 openssl ca -config openssl.cnf -extensions v3_intermediate_ca -days 3650 -notext -md sha256 -in intermediate/csr/intermediate.csr.pem -out intermediate/certs/intermediate.cert.pem
 chmod 444 intermediate/certs/intermediate.cert.pem
 openssl verify -CAfile certs/ca.cert.pem intermediate/certs/intermediate.cert.pem
-</code></pre> 
-<p>The last command should return <strong>OK</strong>. Now we need to create the certificate chain.<br> That's the file you need to install in browsers or other key stores avoid <code>unknown certificate</code> errors.</p> 
+</code></pre>
+<p>The last command should return <strong>OK</strong>. Now we need to create the certificate chain.<br> That's the file you need to install in browsers or other key stores avoid <code>unknown certificate</code> errors.</p>
 <pre><code class="language-bash">cat intermediate/certs/intermediate.cert.pem certs/ca.cert.pem &gt; intermediate/certs/ca-chain.cert.pem
 chmod 444 intermediate/certs/ca-chain.cert.pem
-</code></pre> 
-<p>That was a lot of command line. For a production system, save yourself the headache and use <a href="https://letsencrypt.org/">LetsEncrypt</a> with <a href="https://www.midpoints.de/de-solutions-LE4D">LE4D</a> for Domino</p> 
-<h4>Actual server certificates</h4> 
-<p>With all the prerequisites in place we now can create server certificates. You could, to save time, create a wildcard certificate (like <code>*.theprojectthatshallnotbenamed.com</code>), but that might bite you once you want to enable mutual TLS authentication. So stick to individual certs.</p> 
+</code></pre>
+<p>That was a lot of command line. For a production system, save yourself the headache and use <a href="https://letsencrypt.org/">LetsEncrypt</a> with <a href="https://www.midpoints.de/de-solutions-LE4D">LE4D</a> for Domino</p>
+<h4>Actual server certificates</h4>
+<p>With all the prerequisites in place we now can create server certificates. You could, to save time, create a wildcard certificate (like <code>*.theprojectthatshallnotbenamed.com</code>), but that might bite you once you want to enable mutual TLS authentication. So stick to individual certs.</p>
 <pre><code class="language-bash">export SSL_DOMAIN_NAME=www.example.com
 openssl ecparam -genkey -name prime256v1 -outform PEM -out intermediate/private/$SSL_DOMAIN_NAME.key.pem
 chmod 400 intermediate/private/$SSL_DOMAIN_NAME.key.pem
 openssl req -config intermediate/openssl.cnf -key intermediate/private/$SSL_DOMAIN_NAME.key.pem -new -sha256 -out intermediate/csr/$SSL_DOMAIN_NAME.csr.pem
 openssl ca -config intermediate/openssl.cnf -extensions server_cert -days 375 -notext -md sha256 -in intermediate/csr/$SSL_DOMAIN_NAME.csr.pem -out intermediate/certs/$SSL_DOMAIN_NAME.cert.pem
 chmod 444 intermediate/certs/$SSL_DOMAIN_NAME.cert.pem
-</code></pre> 
-<p>You need 3 files on your server system:</p> 
-<ul> 
- <li>ca-chain.cert.pem</li> 
- <li>www.example.com.key.pem</li> 
- <li>www.example.com.cert.pem</li> 
-</ul> 
+</code></pre>
+<p>You need 3 files on your server system:</p>
+<ul>
+ <li>ca-chain.cert.pem</li>
+ <li>www.example.com.key.pem</li>
+ <li>www.example.com.cert.pem</li>
+</ul>
 <p>As usual: YMMV - make sure you read the <a href="https://jamielinux.com/docs/openssl-certificate-authority/index-full.html">detailed instructions</a></p></div>
 					<hr />
 					<p>

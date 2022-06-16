@@ -122,13 +122,13 @@ ga('send', 'pageview');
 					<div>In Notes client applications we are used to opening any document from a view and get it redered with the form specified in the <code>Form</code> (or the view's form formula). XPages behaves in a similar fashion when using the view control. However both approached open a new page (a tab in the Notes client, replaceing the current window in a browser). 
 <br> Modern applications however expect a <a href="http://en.wikipedia.org/wiki/Single-page_application">Single page application</a> behavior, where only parts of the screen are replaced with new information. The XPages <a href="http://extlib.openntf.org/">Extension library</a> makes this easy, by providing the <a href="http://www.xpages.jp/demos/xpagesext.nsf/Core_InPlaceForm.xsp" title="Go and learn some Japanese!">InPlace Form</a> custom control. 
 <br> Looking at the source code of the example page, it looks easy enough. However a real life application needs a few more considerations: 
-<ul> 
- <li>I want to open a (different) form depending on the current document</li> 
- <li>That form needs to be stored in its own control, so it can be reused</li> 
- <li>It is OK to enumerate the possible forms in the page (not fully flexible)</li> 
- <li>When saving an edit the form needs to disappear</li> 
+<ul>
+ <li>I want to open a (different) form depending on the current document</li>
+ <li>That form needs to be stored in its own control, so it can be reused</li>
+ <li>It is OK to enumerate the possible forms in the page (not fully flexible)</li>
+ <li>When saving an edit the form needs to disappear</li>
 </ul> With the help of the devine <a href="http://www.ibmpressbooks.com/authors/bio/d3c13991-44d6-4961-8cd2-d1d04014ed57">Maire Kehoe</a>, this is the solution I came up with: 
-<br> 
+<br>
 <pre><code class="language-xml">
 &lt;xp:eventHandler event="onclick"
     submit="true" refreshMode="partial"
@@ -137,9 +137,9 @@ ga('send', 'pageview');
           getComponent(formId).toggle();}]]&gt;
  &lt;/xp:this.action&gt;
 &lt;/xp:eventHandler&gt;
-</code></pre> 
+</code></pre>
 <br> The code above is the event handler that goes into the link or button that triggers the edit action. In my case inside a repeat based on a view. The code to find the form is simple. 
-<br> 
+<br>
 <pre><code class="language-js">
 function getSubform(ve:NotesXspViewEntry) {
  // Put real logic here, like looking at the form
@@ -149,9 +149,9 @@ function getSubform(ve:NotesXspViewEntry) {
  var subform = ("Durian"===fruit) ? "inPlaceDurian" : "inPlaceFruit";
  return subform;
 }
-</code></pre> 
+</code></pre>
 <br>The snippet of code that determines what control to load lists all possible forms. To make this useful you should stick to the <code>inPlace</code> and <code>inLine</code> prefixes. The former lives only inside your page, but the later would be a distinct control. Also note, that I hand over the documentUniqueId, so my control can load the appropriate document. 
-<br> 
+<br>
 <pre><code class="language-xml">
 &lt;xp:td id="dynamicCell" colspan="3"&gt;
  &lt;xe:inPlaceForm id="inPlaceFruit" partialEvents="true"&gt;
@@ -163,9 +163,9 @@ function getSubform(ve:NotesXspViewEntry) {
   &lt;/xc:inlineDurian&gt;
  &lt;/xe:inPlaceForm&gt;
 &lt;/xp:td&gt;
-</code></pre> 
+</code></pre>
 <br> The last 2 pieces in the puzzle are the save button and the mechanism that hides the inline form again. The button is simple: 
-<br> 
+<br>
 <pre><code class="language-xml">
 &lt;xp:button value="Save" id="button1"&gt;
  &lt;xp:eventHandler event="onclick" submit="true"
@@ -173,7 +173,7 @@ function getSubform(ve:NotesXspViewEntry) {
   &lt;xp:this.action&gt;&lt;![CDATA[#{javascript:saveAndClose(document1, this);}]]&gt;&lt;/xp:this.action&gt;
  &lt;/xp:eventHandler&gt;
 &lt;/xp:button&gt;
-</code></pre> 
+</code></pre>
 <br> While the JS code is a little trickier. The control doesn't "know" that it is in a inline edit form, nor does it know the name, so a "getComponent" would be a wild guess. It might work for convention over code, but I opted for a different approach: travel up the component tree until I hit a <code>com.ibm.xsp.extlib.component.dynamiccontent.UIInPlaceForm</code> and if I find it, toggle it: 
 <pre><code class="language-js">
 function saveAndClose(doc:NotesXspDocument, uiControl) {
@@ -187,7 +187,7 @@ function saveAndClose(doc:NotesXspDocument, uiControl) {
   parent.toggle();
  }
 }
-</code></pre> 
+</code></pre>
 <br> There are a few variations one could think of: provide the control name as component parameter, provide another parameter for the (partial update - which would need to be the repeat control) and general layout considerations. From an interaction view, the inline forms beat any dialog, because users are not limited to have only one form open at a time. 
 <br>As usual YMMV</div>
 					<hr />

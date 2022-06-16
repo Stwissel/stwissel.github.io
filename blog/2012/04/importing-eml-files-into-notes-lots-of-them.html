@@ -121,91 +121,91 @@ ga('send', 'pageview');
 					<hr />
 					<div>My friend and Lotus Champion <a href="https://connections.zenithcomp.co.th/profiles/html/profileView.do?key=978e80f3-e6d1-4510-907e-051a09e4fb63&amp;lang=en_us">Weerapong Panpai</a> from <a href="http://www.zenithcomp.co.th">Zenith</a> in Thailand asked me " <i>How difficult is it to do a bulk import of <a href="http://en.wikipedia.org/wiki/MIME">eml files</a> into Lotus Notes</i>"? MIME as a format is plain ASCII, so on first look it seems simple. 
 <br> However on a closer look you might guess where the author of an <a href="http://www.imdb.com/title/tt1375666/">outstanding movie</a> got his inspiration from. RFC 2045 <a href="http://tools.ietf.org/html/rfc2045#section-2.5">nicely states</a>:" <i>NOTE: The previous four definitions are clearly circular. This is unavoidable, since the overall structure of a MIME message is indeed recursive.</i>" So trying to parse that messages on my own was clearly out of the question. Luckily there is ready code available. On one side there is JavaEE and the the <a href="http://docs.oracle.com/javaee/6/api/javax/mail/internet/MimeMessage.html">MimeMessage</a> and on the other <a href="http://james.apache.org/mime4j/">Apache James</a>. An implementation of the <code>javax.mail.internet</code> classes is hidden somewhere in the Notes client, so that would favour MimeMessage. However I found it easier to work with the mime4j classes. Here is what I came up with: 
-<div class="java5"> <span class="kw2">package</span> <span class="co2">com.notessensei.mimeimport</span> <span class="sy0">;</span> 
- <br> 
- <br> <span class="kw2">import</span> <span class="co2">java.io.IOException</span> <span class="sy0">;</span> 
- <br> <span class="kw2">import</span> <span class="co2">java.io.InputStream</span> <span class="sy0">;</span> 
- <br> 
- <br> <span class="kw2">import</span> <span class="co2">lotus.domino.Document</span> <span class="sy0">;</span> 
- <br> <span class="kw2">import</span> <span class="co2">lotus.domino.NotesException</span> <span class="sy0">;</span> 
- <br> <span class="kw2">import</span> <span class="co2">lotus.domino.Session</span> <span class="sy0">;</span> 
- <br> 
- <br> <span class="kw2">import</span> <span class="co2">org.apache.james.mime4j.MimeException</span> <span class="sy0">;</span> 
- <br> <span class="kw2">import</span> <span class="co2">org.apache.james.mime4j.parser.ContentHandler</span> <span class="sy0">;</span> 
- <br> <span class="kw2">import</span> <span class="co2">org.apache.james.mime4j.parser.MimeStreamParser</span> <span class="sy0">;</span> 
- <br> 
- <br> 
- <br> <span class="kw2">public</span> <span class="kw2">class</span> Mime2Doc <span class="br0">{</span> 
+<div class="java5"><span class="kw2">package</span><span class="co2">com.notessensei.mimeimport</span><span class="sy0">;</span>
+ <br>
+ <br><span class="kw2">import</span><span class="co2">java.io.IOException</span><span class="sy0">;</span>
+ <br><span class="kw2">import</span><span class="co2">java.io.InputStream</span><span class="sy0">;</span>
+ <br>
+ <br><span class="kw2">import</span><span class="co2">lotus.domino.Document</span><span class="sy0">;</span>
+ <br><span class="kw2">import</span><span class="co2">lotus.domino.NotesException</span><span class="sy0">;</span>
+ <br><span class="kw2">import</span><span class="co2">lotus.domino.Session</span><span class="sy0">;</span>
+ <br>
+ <br><span class="kw2">import</span><span class="co2">org.apache.james.mime4j.MimeException</span><span class="sy0">;</span>
+ <br><span class="kw2">import</span><span class="co2">org.apache.james.mime4j.parser.ContentHandler</span><span class="sy0">;</span>
+ <br><span class="kw2">import</span><span class="co2">org.apache.james.mime4j.parser.MimeStreamParser</span><span class="sy0">;</span>
+ <br>
+ <br>
+ <br><span class="kw2">public</span><span class="kw2">class</span> Mime2Doc <span class="br0">{</span>
  <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw2">public</span> <span class="kw3">void</span> importMail <span class="br0">(</span>Session s, <a href="http://www.google.com/search?sitesearch=java.sun.com&amp;q=allinurl%3Aj2se%2F1+5+0%2Fdocs%2Fapi+InputStream"><span class="kw166">InputStream</span></a> in, <a href="http://www.google.com/search?sitesearch=java.sun.com&amp;q=allinurl%3Aj2se%2F1+5+0%2Fdocs%2Fapi+Document"><span class="kw166">Document</span></a> doc <span class="br0">)</span> <span class="kw2">throws</span> NotesException, MimeException, <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/io/IOException.html"><span class="kw20">IOException</span></a> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; doc. <span class="me1">replaceItemValue</span> <span class="br0">(</span> <span class="st0">"Form"</span>, <span class="st0">"Memo"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; MimeStreamParser parser = <span class="kw2">new</span> MimeStreamParser <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?sitesearch=java.sun.com&amp;q=allinurl%3Aj2se%2F1+5+0%2Fdocs%2Fapi+ContentHandler"><span class="kw166">ContentHandler</span></a> h = <span class="kw2">new</span> DocContentHandler <span class="br0">(</span>s, doc <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; parser. <span class="me1">setContentHandler</span> <span class="br0">(</span>h <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; parser. <span class="me1">parse</span> <span class="br0">(</span>in <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; <span class="br0">}</span> 
- <br> <span class="br0">}</span> 
+ <br> &nbsp; &nbsp; <span class="kw2">public</span><span class="kw3">void</span> importMail <span class="br0">(</span>Session s, <a href="http://www.google.com/search?sitesearch=java.sun.com&amp;q=allinurl%3Aj2se%2F1+5+0%2Fdocs%2Fapi+InputStream"><span class="kw166">InputStream</span></a> in, <a href="http://www.google.com/search?sitesearch=java.sun.com&amp;q=allinurl%3Aj2se%2F1+5+0%2Fdocs%2Fapi+Document"><span class="kw166">Document</span></a> doc <span class="br0">)</span><span class="kw2">throws</span> NotesException, MimeException, <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/io/IOException.html"><span class="kw20">IOException</span></a><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; doc. <span class="me1">replaceItemValue</span><span class="br0">(</span><span class="st0">"Form"</span>, <span class="st0">"Memo"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; MimeStreamParser parser = <span class="kw2">new</span> MimeStreamParser <span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?sitesearch=java.sun.com&amp;q=allinurl%3Aj2se%2F1+5+0%2Fdocs%2Fapi+ContentHandler"><span class="kw166">ContentHandler</span></a> h = <span class="kw2">new</span> DocContentHandler <span class="br0">(</span>s, doc <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; parser. <span class="me1">setContentHandler</span><span class="br0">(</span>h <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; parser. <span class="me1">parse</span><span class="br0">(</span>in <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; <span class="br0">}</span>
+ <br><span class="br0">}</span>
 </div> The bulk of the work happens inside the <a href="http://james.apache.org/mime4j/apidocs/org/apache/james/mime4j/parser/ContentHandler.html">ContentHandler</a>. Using a Stack (that works <a href="http://en.wikipedia.org/wiki/LIFO_(computing)">LIFO</a>) I can track Mime entries inside mime entries inside mime entries. Still the code is <a href="/blog/downloads/2012/DocContentHandler.java">just below 100 lines</a>. 
 <br> The final piece in the puzzle is the class that helps to <a href="/blog/downloads/2012/MimePartInfo.java">track the MIME Parts</a> that are put onto the Stack and returns MIME-Type and encoding derived from the header fields. You are <a href="/blog/downloads/SHWL-8TMKWK">ready to test</a>.I used a directory full of eml files to test: 
-<div class="java"> <span class="kw1">package</span> <span class="co2">com.notessensei.mimeimport</span> <span class="sy0">;</span> 
- <br> 
- <br> <span class="kw1">import</span> <span class="co2">java.io.File</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">java.io.FileInputStream</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">java.io.FileNotFoundException</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">java.io.IOException</span> <span class="sy0">;</span> 
- <br> 
- <br> <span class="kw1">import</span> <span class="co2">org.apache.james.mime4j.MimeException</span> <span class="sy0">;</span> 
- <br> 
- <br> <span class="kw1">import</span> <span class="co2">lotus.domino.Document</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">lotus.domino.NotesException</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">lotus.domino.NotesFactory</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">lotus.domino.NotesThread</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">lotus.domino.Session</span> <span class="sy0">;</span> 
- <br> <span class="kw1">import</span> <span class="co2">lotus.domino.Database</span> <span class="sy0">;</span> 
- <br> 
- <br> <span class="kw1">public</span> <span class="kw1">class</span> Tester <span class="br0">{</span> 
- <br> 
- <br> &nbsp; &nbsp; <span class="kw1">public</span> <span class="kw1">static</span> <span class="kw4">void</span> main <span class="br0">(</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> <span class="br0">[</span> <span class="br0">]</span> args <span class="br0">)</span> <span class="br0">{</span> 
- <br> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// Change these for your own test</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">final</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> WORKDIR <span class="sy0">=</span> <span class="st0">"/home/user/testingmime/"</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">final</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> EXTENSION <span class="sy0">=</span> <span class="st0">".eml"</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">final</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> DBNAME <span class="sy0">=</span> <span class="st0">"testmail.nsf"</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">final</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> SERVER <span class="sy0">=</span> <span class="st0">""</span> <span class="sy0">;</span> 
- <br> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; NotesThread. <span class="me1">sinitThread</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">try</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Session s <span class="sy0">=</span> NotesFactory. <span class="me1">createSession</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Database db <span class="sy0">=</span> s. <span class="me1">getDatabase</span> <span class="br0">(</span>SERVER, DBNAME <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afile+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">File</span></a> folder <span class="sy0">=</span> <span class="kw1">new</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afile+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">File</span></a> <span class="br0">(</span>WORKDIR <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afile+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">File</span></a> <span class="br0">[</span> <span class="br0">]</span> tobeImported <span class="sy0">=</span> folder. <span class="me1">listFiles</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Mime2Doc md <span class="sy0">=</span> <span class="kw1">new</span> Mime2Doc <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">for</span> <span class="br0">(</span> <span class="kw4">int</span> i <span class="sy0">=</span> <span class="nu0">0</span> <span class="sy0">;</span> i <span class="sy0">&lt;</span> tobeImported. <span class="me1">length</span> <span class="sy0">;</span> i <span class="sy0">++</span> <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afile+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">File</span></a> f <span class="sy0">=</span> tobeImported <span class="br0">[</span>i <span class="br0">]</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span>f. <span class="me1">isFile</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">&amp;&amp;</span> f. <span class="me1">getName</span> <span class="br0">(</span> <span class="br0">)</span>. <span class="me1">endsWith</span> <span class="br0">(</span>EXTENSION <span class="br0">)</span> <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Asystem+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">System</span></a>. <span class="me1">out</span>. <span class="me1">println</span> <span class="br0">(</span> <span class="st0">"File: "</span> <span class="sy0">+</span>f. <span class="me1">getName</span> <span class="br0">(</span> <span class="br0">)</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Adocument+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Document</span></a> doc <span class="sy0">=</span> db. <span class="me1">createDocument</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afileinputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">FileInputStream</span></a> in <span class="sy0">=</span> <span class="kw1">new</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afileinputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">FileInputStream</span></a> <span class="br0">(</span>f <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; md. <span class="me1">importMail</span> <span class="br0">(</span>s,in, doc <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. <span class="me1">recycle</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Asystem+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">System</span></a>. <span class="me1">out</span>. <span class="me1">println</span> <span class="br0">(</span> <span class="st0">"--- DONE ---"</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// Cleanup</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; db. <span class="me1">recycle</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw1">catch</span> <span class="br0">(</span>NotesException e <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e. <span class="me1">printStackTrace</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw1">catch</span> <span class="br0">(</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afilenotfoundexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">FileNotFoundException</span></a> e <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e. <span class="me1">printStackTrace</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw1">catch</span> <span class="br0">(</span>MimeException e <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e. <span class="me1">printStackTrace</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw1">catch</span> <span class="br0">(</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aioexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">IOException</span></a> e <span class="br0">)</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e. <span class="me1">printStackTrace</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw1">finally</span> <span class="br0">{</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; NotesThread. <span class="me1">stermThread</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> 
- <br> &nbsp; &nbsp; <span class="br0">}</span> 
- <br> <span class="br0">}</span> 
+<div class="java"><span class="kw1">package</span><span class="co2">com.notessensei.mimeimport</span><span class="sy0">;</span>
+ <br>
+ <br><span class="kw1">import</span><span class="co2">java.io.File</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">java.io.FileInputStream</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">java.io.FileNotFoundException</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">java.io.IOException</span><span class="sy0">;</span>
+ <br>
+ <br><span class="kw1">import</span><span class="co2">org.apache.james.mime4j.MimeException</span><span class="sy0">;</span>
+ <br>
+ <br><span class="kw1">import</span><span class="co2">lotus.domino.Document</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">lotus.domino.NotesException</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">lotus.domino.NotesFactory</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">lotus.domino.NotesThread</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">lotus.domino.Session</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span><span class="co2">lotus.domino.Database</span><span class="sy0">;</span>
+ <br>
+ <br><span class="kw1">public</span><span class="kw1">class</span> Tester <span class="br0">{</span>
+ <br>
+ <br> &nbsp; &nbsp; <span class="kw1">public</span><span class="kw1">static</span><span class="kw4">void</span> main <span class="br0">(</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a><span class="br0">[</span><span class="br0">]</span> args <span class="br0">)</span><span class="br0">{</span>
+ <br>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// Change these for your own test</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">final</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> WORKDIR <span class="sy0">=</span><span class="st0">"/home/user/testingmime/"</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">final</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> EXTENSION <span class="sy0">=</span><span class="st0">".eml"</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">final</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> DBNAME <span class="sy0">=</span><span class="st0">"testmail.nsf"</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">final</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> SERVER <span class="sy0">=</span><span class="st0">""</span><span class="sy0">;</span>
+ <br>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; NotesThread. <span class="me1">sinitThread</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">try</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Session s <span class="sy0">=</span> NotesFactory. <span class="me1">createSession</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Database db <span class="sy0">=</span> s. <span class="me1">getDatabase</span><span class="br0">(</span>SERVER, DBNAME <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afile+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">File</span></a> folder <span class="sy0">=</span><span class="kw1">new</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afile+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">File</span></a><span class="br0">(</span>WORKDIR <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afile+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">File</span></a><span class="br0">[</span><span class="br0">]</span> tobeImported <span class="sy0">=</span> folder. <span class="me1">listFiles</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Mime2Doc md <span class="sy0">=</span><span class="kw1">new</span> Mime2Doc <span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">for</span><span class="br0">(</span><span class="kw4">int</span> i <span class="sy0">=</span><span class="nu0">0</span><span class="sy0">;</span> i <span class="sy0">&lt;</span> tobeImported. <span class="me1">length</span><span class="sy0">;</span> i <span class="sy0">++</span><span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afile+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">File</span></a> f <span class="sy0">=</span> tobeImported <span class="br0">[</span>i <span class="br0">]</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span>f. <span class="me1">isFile</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">&amp;&amp;</span> f. <span class="me1">getName</span><span class="br0">(</span><span class="br0">)</span>. <span class="me1">endsWith</span><span class="br0">(</span>EXTENSION <span class="br0">)</span><span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Asystem+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">System</span></a>. <span class="me1">out</span>. <span class="me1">println</span><span class="br0">(</span><span class="st0">"File: "</span><span class="sy0">+</span>f. <span class="me1">getName</span><span class="br0">(</span><span class="br0">)</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Adocument+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Document</span></a> doc <span class="sy0">=</span> db. <span class="me1">createDocument</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afileinputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">FileInputStream</span></a> in <span class="sy0">=</span><span class="kw1">new</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afileinputstream+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">FileInputStream</span></a><span class="br0">(</span>f <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; md. <span class="me1">importMail</span><span class="br0">(</span>s,in, doc <span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; doc. <span class="me1">recycle</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Asystem+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">System</span></a>. <span class="me1">out</span>. <span class="me1">println</span><span class="br0">(</span><span class="st0">"--- DONE ---"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// Cleanup</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; db. <span class="me1">recycle</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw1">catch</span><span class="br0">(</span>NotesException e <span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e. <span class="me1">printStackTrace</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw1">catch</span><span class="br0">(</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Afilenotfoundexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">FileNotFoundException</span></a> e <span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e. <span class="me1">printStackTrace</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw1">catch</span><span class="br0">(</span>MimeException e <span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e. <span class="me1">printStackTrace</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw1">catch</span><span class="br0">(</span><a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aioexception+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">IOException</span></a> e <span class="br0">)</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e. <span class="me1">printStackTrace</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw1">finally</span><span class="br0">{</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; NotesThread. <span class="me1">stermThread</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br> &nbsp; &nbsp; <span class="br0">}</span>
+ <br><span class="br0">}</span>
 </div> As usual: YMMV!</div>
 					<hr />
 					<p>

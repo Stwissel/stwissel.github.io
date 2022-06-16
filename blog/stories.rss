@@ -6,7 +6,503 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Thu, 16 Jun 2022 15:35:36 +0000</pubdate>
+	<pubdate>Thu, 16 Jun 2022 15:47:46 +0000</pubdate>
+<item>
+	<title>Case insensitive deserialization</title>
+	<description>&lt;p&gt;Growing up in Windows with &lt;a href="https://en.wikipedia.org/wiki/BASIC"&gt;BASIC&lt;/a&gt; you learn case doesn't matter, so &lt;code&gt;Color&lt;/code&gt; is the same as &lt;code&gt;COLOR&lt;/code&gt; or &lt;code&gt;cOLOR&lt;/code&gt; when it comes to variable names. Same applies to &lt;code&gt;@Formula&lt;/code&gt; or item names in Notes documents.&lt;/p&gt;
+&lt;p&gt;On the other side, &lt;a href="https://en.wikipedia.org/wiki/Linux"&gt;Linux&lt;/a&gt;, &lt;a href="https://en.wikipedia.org/wiki/Java_(programming_language)"&gt;Java&lt;/a&gt;, &lt;a href="https://en.wikipedia.org/wiki/JavaScript"&gt;JavaScript&lt;/a&gt; and &lt;a href="https://www.json.org/json-en.html"&gt;JSON&lt;/a&gt; are very much case sensitive.&lt;/p&gt;
+&lt;p&gt;This poses a challenge when deserializing (handcrafted) JSON files.&lt;/p&gt;
+&lt;h2&gt;The Task at hand&lt;/h2&gt;
+&lt;p&gt;Deserialization of JSON into a Java class instance &lt;a href="https://www.baeldung.com/jackson-deserialization"&gt;can be done&lt;/a&gt; using &lt;a href="https://github.com/FasterXML/jackson"&gt;jackson&lt;/a&gt;. This is also what the &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html"&gt;JsonObject&lt;/a&gt; in &lt;a href="https://vertx.io"&gt;vert.x&lt;/a&gt; uses when you call &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html#mapTo-java.lang.Class-"&gt;&lt;code&gt;json.mapTo(SomeClass)&lt;/code&gt;&lt;/a&gt;. Not using vert.x? You can use the &lt;a href="https://www.baeldung.com/jackson-object-mapper-tutorial"&gt;&lt;code&gt;ObjectMapper&lt;/code&gt;&lt;/a&gt;. Let's look at a sample Java class&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.vertx.core.json.JsonObject;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class JsonTest {
+
+  public static fromJson(final JsonObject source) {
+    return source.mapTo(JsonTest.class);
+  }
+
+  private String color;
+  private String shape;
+  private int answer;
+  private boolean pretty;
+
+  /* GETTERS and SETTERS omitted for brevity
+     Let your IDE add them for you */
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now you want to deserialize a good JSON, which works as expected:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-json"&gt;{
+  "color": "Red",
+  "shape": "round",
+  "answer": 11,
+  "pretty": true
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;but the very moment your JSON isn't following proper capitalization, like human provided JSON,&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-json"&gt;{
+  "Color": "Red",
+  "Shape": "square",
+  "Answer": 42,
+  "pretty": true,
+  "ignore": "this"
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;deserialization will fail. We need to fix that.&lt;/p&gt;</description>
+	<link>2022/06/case-insensitive-deserialization.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>77851ba0-e6f9-11ec-8a41-85f9122bc611</guid>
+	<pubDate>08 June 2022</pubDate>
+
+</item>
+<item>
+	<title>Dance the OAuth with me</title>
+	<description>&lt;p&gt;&lt;a href="https://www.oauth.com"&gt;OAuth&lt;/a&gt; and its cousin &lt;a href="https://openid.net"&gt;OICD&lt;/a&gt; are the ubiquitous methods to &lt;a href="https://openid.net/gainpoc/"&gt;gain&lt;/a&gt; identity and authorization information. Since it is a &lt;a href="https://www.lexico.com/en/definition/menage_a_trois"&gt;m?nage ? trois&lt;/a&gt; between a user, an &lt;a href="https://en.wikipedia.org/wiki/Identity_provider"&gt;Identity provider (IdP)&lt;/a&gt; and an application, refered to as "Service provider", it is hard to trouble shoot.&lt;/p&gt;
+&lt;h2&gt;A play in five acts&lt;/h2&gt;
+&lt;p&gt;In the recent &lt;a href="https://opensource.hcltechsw.com/domino-keep-docs/"&gt;Project KEEP&lt;/a&gt; we build an IdP into the API, so you have the choice of just using Domino or using an external IdP.&lt;/p&gt;
+&lt;p&gt;To ensure it works as expected several dependent HTTPS calls were needed. Each call would harvest some information into environment variables for the following step&lt;/p&gt;
+&lt;h3&gt;Act 0 - initial setup&lt;/h3&gt;
+&lt;p&gt;Store several variables into the environment:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;code&gt;UserName&lt;/code&gt;: the user you will simulate to approve&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;Password&lt;/code&gt;: their password&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;HOST&lt;/code&gt;: The starting URL for the first call&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;state&lt;/code&gt;: a random string, need to stay the same through the sequence&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;client_id&lt;/code&gt;: The application configured as service provider&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;client_secret&lt;/code&gt;: The service provider "password"&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;scope&lt;/code&gt;: the scope (or a subset) you have configured for the service provider&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;redirect_uri&lt;/code&gt;: one of the redirection URIs you have configured for the service provider&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;An OAuth flow contains basic authentication calls, so you need to ensure proper &lt;a href="https://en.wikipedia.org/wiki/Transport_Layer_Security"&gt;TLS&lt;/a&gt; connections.&lt;/p&gt;
+&lt;p&gt;&lt;img src="/blog/images/2022/OAuthDance.svg" alt="OAuth Dance"&gt;&lt;/p&gt;</description>
+	<link>2022/06/dance-the-oauth-with-me.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>d4acca20-e579-11ec-b9b8-f1cad397bc73</guid>
+	<pubDate>06 June 2022</pubDate>
+
+</item>
+<item>
+	<title>Yes No Maybe Boolean deserialization with Jackson</title>
+	<description>&lt;p&gt;The &lt;a href="https://en.wikipedia.org/wiki/Robustness_principle"&gt;Robustness principle&lt;/a&gt; demands: be lenient in what you accept and strict in what you emit. I was facing this challenge when deserializing boolean values.&lt;/p&gt;
+&lt;h3&gt;What is true&lt;/h3&gt;
+&lt;p&gt;Glancing at data, we can spot, mostly easily what looks trueish:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;true&lt;/li&gt;
+ &lt;li&gt;"&lt;strong&gt;T&lt;/strong&gt;rue"&lt;/li&gt;
+ &lt;li&gt;"&lt;strong&gt;Y&lt;/strong&gt;es"&lt;/li&gt;
+ &lt;li&gt;1&lt;/li&gt;
+ &lt;li&gt;"&lt;strong&gt;S&lt;/strong&gt;i"&lt;/li&gt;
+ &lt;li&gt;"&lt;strong&gt;J&lt;/strong&gt;a"&lt;/li&gt;
+ &lt;li&gt;"&lt;strong&gt;A&lt;/strong&gt;ctive"&lt;/li&gt;
+ &lt;li&gt;"&lt;strong&gt;i&lt;/strong&gt;sActive"&lt;/li&gt;
+ &lt;li&gt;"&lt;strong&gt;e&lt;/strong&gt;nabled"&lt;/li&gt;
+ &lt;li&gt;"&lt;strong&gt;o&lt;/strong&gt;n"&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The last three options aren't as clear cut, they depend on your use case. Using a simple class, lets try to deserialize from &lt;a href="https://www.json.org/json-en.html"&gt;JSON&lt;/a&gt; to an instance of a &lt;a href="https://www.java.com/"&gt;Java&lt;/a&gt; class instance using &lt;a href="https://github.com/FasterXML/jackson"&gt;Jackson&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Java doesn't have native support for JSON, so we need to rely on libraries like &lt;a href="https://github.com/FasterXML/jackson"&gt;Jackson&lt;/a&gt;, &lt;a href="https://github.com/google/gson"&gt;Google GSON&lt;/a&gt; (or any other listed on the &lt;a href="https://www.json.org/json-en.html"&gt;JSON&lt;/a&gt; page). I choose Jackson, since it is the library underpinning the &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html"&gt;JsonObject&lt;/a&gt; of the &lt;a href="https://vertx.io/"&gt;Eclipse Vert.x&lt;/a&gt; Framework I'm fond of. Over at &lt;a href="https://www.baeldung.com/"&gt;Baeldung&lt;/a&gt; you will find more &lt;a href="https://www.baeldung.com/jackson-object-mapper-tutorial"&gt;generic Jackson tutorials&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Let's look at a simple Java class (Yes, Java14 will make it &lt;a href="https://vladmihalcea.com/java-records-guide/"&gt;less verbose&lt;/a&gt;), that sports &lt;code&gt;fromJson()&lt;/code&gt; and &lt;code&gt;toJson()&lt;/code&gt; as well as convenient overwrite of &lt;code&gt;equals()&lt;/code&gt; and &lt;code&gt;toString()&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;package com.notessensei.blogsamples;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.vertx.core.json.JsonObject;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Component {
+
+  public static Component fromJson(final JsonObject source) {
+    return source.mapTo(Component.class);
+  }
+
+  private String name;
+  private boolean active = false;
+
+  public Component() {
+    // Default empty constructor required
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public boolean getActive() {
+    return active;
+  }
+
+  public void setActive(boolean isActive) {
+    this.active = isActive;
+  }
+
+  public JsonObject toJson() {
+    return JsonObject.mapFrom(this);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof Component) {
+      return this.toString().equals(obj.toString());
+    }
+    return super.equals(obj);
+  }
+
+  @Override
+  public String toString() {
+    return this.toJson().encode();
+  }
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Trying to instantiate a class instance with the following JSON will work:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-json"&gt;{
+  "name": "Heater",
+  "active": false
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class="language-json"&gt;{
+  "name": "Aircon"
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class="language-json"&gt;{
+  "name": "Fridge",
+  "active": true,
+  "PowerConsumption": {
+    "unit": "kw",
+    "measure": 7
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;However it will fail with those:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-json"&gt;{
+  "name": "System1",
+  "active": "on"
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class="language-json"&gt;{
+  "name": "System2",
+  "active": "yes"
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;You get the charming error &lt;em&gt;Cannot deserialize value of type &lt;code&gt;boolean&lt;/code&gt; from String "yes": only "true"/"True"/"TRUE" or "false"/"False"/"FALSE" recognized`&lt;/em&gt;. Interestingly numbers work.&lt;/p&gt;
+&lt;p&gt;On a side note: &lt;a href="https://github.com/FasterXML/jackson"&gt;Jackson&lt;/a&gt; uses the presence of getters/setters to decide (de)serialization and needs &lt;code&gt;getActive&lt;/code&gt; and &lt;code&gt;setActive&lt;/code&gt; or &lt;code&gt;isActive&lt;/code&gt;. When you name your variable &lt;code&gt;isActive&lt;/code&gt; Eclipse would generate &lt;code&gt;setActive&lt;/code&gt; and &lt;code&gt;isActive&lt;/code&gt; instead of &lt;code&gt;getIsActive&lt;/code&gt; / &lt;code&gt;isIsActive&lt;/code&gt; and &lt;code&gt;setIsActive&lt;/code&gt;. So simply avoid the &lt;code&gt;is...&lt;/code&gt; prefix for internal variables.&lt;/p&gt;</description>
+	<link>2022/05/yes-no-maybe-booleans.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>f7d5b920-ce05-11ec-a659-7f18fb299d1b</guid>
+	<pubDate>07 May 2022</pubDate>
+
+</item>
+<item>
+	<title>The Quest for a software documentation system</title>
+	<description>&lt;p&gt;Software documentation is a thankless business and never complete. Picking the right system can make or break your documentation success&lt;/p&gt;
+&lt;h3&gt;Contenders&lt;/h3&gt;
+&lt;p&gt;We have a number of options commonly used, each with strengh and weaknesses.&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href="https://www.xml.com/articles/2017/01/19/what-dita/"&gt;DITA&lt;/a&gt;: The OASIS Open Darwin Information Typing Architecture. Extremly powerful, especially the concept of single source definition: You define an item once and just reference it. XML based, suitable for complex documentation, but with a super steep learning curve, effectively prohibit community contributions&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://jekyllrb.com"&gt;jekyll&lt;/a&gt;: Markdown driven template engine, best known for driving &lt;a href="https://pages.github.com"&gt;GitHub Pages&lt;/a&gt;. With the &lt;a href="https://just-the-docs.github.io/just-the-docs/"&gt;Just-the-docs&lt;/a&gt; template it makes documentation creation a simple task in your repository's &lt;code&gt;/doc&lt;/code&gt; directory. Running site generation and hosting is build into github, so no GitHub action or other CI/CD pipeline needed. Lacks good tooling for multi-version documentation&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://maven.apache.org/plugins/maven-site-plugin/"&gt;Maven sites&lt;/a&gt;: a good option when Java is your language. Tightly coupled to the build process it produces full reporting and JavaDoc. Can be a pain to setup&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://readthedocs.org"&gt;Read the docs&lt;/a&gt;: Great destination for OpenSource documentation or your &lt;a href="https://readthedocs.com"&gt;corporate documentation&lt;/a&gt; if the build server can reach it. Uses the &lt;a href="https://www.mkdocs.org"&gt;MKDocs&lt;/a&gt; rendering engine&lt;/li&gt;
+ &lt;li&gt;and &lt;a href="https://document360.com/blog/software-documentation-tools/"&gt;many&lt;/a&gt;, did I say &lt;a href="https://www.process.st/software-documentation/"&gt;many more&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I found the tools quite impressive and somehow wanting at the same time. So taking a step back, it is worth to look at requirements&lt;/p&gt;</description>
+	<link>2022/03/quest-for-software-documentation-system.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>db4e1a90-9fa2-11ec-bec4-9fa5fdc87e87</guid>
+	<pubDate>09 March 2022</pubDate>
+
+</item>
+<item>
+	<title>Maven JNA macOS and LD_LIBRARY_PATH</title>
+	<description>&lt;p&gt;When running Java applications on a &lt;code&gt;*nix&lt;/code&gt; style of operating system that need to load native libraries, you will need to set the &lt;a href="https://linuxhint.com/what-is-ld-library-path/"&gt;LD_LIBRARY_PATH&lt;/a&gt; environment variable (&lt;a href="https://medium.com/macos-is-not-linux-and-other-nix-reflections/d-o-y-ou-ld-library-path-you-6ab0a6135a33"&gt;or something similar&lt;/a&gt;). That's not an issue on Linux.&lt;/p&gt;
+&lt;h3&gt;macOS: I won't let you, it's for your own good&lt;/h3&gt;
+&lt;p&gt;On &lt;a href="https://en.wikipedia.org/wiki/MacOS"&gt;macOS&lt;/a&gt; the &lt;a href="https://support.apple.com/en-sg/guide/security/secb7ea06b49/web"&gt;System Integrity Protection (SIP)&lt;/a&gt; prevents these variables to be set in &lt;a href="https://stackoverflow.com/questions/60126159/how-to-set-ld-library-path-dyld-library-path-on-macos"&gt;your shell (bash, zsh)&lt;/a&gt;. It works inside Eclipse, when you define environment parameters, but not in any shell script. Unfortunately &lt;a href="https://maven.apache.org"&gt;Maven&lt;/a&gt;'s command line &lt;code&gt;mvn&lt;/code&gt; is a shell script.&lt;/p&gt;
+&lt;h3&gt;The Notes challenge&lt;/h3&gt;
+&lt;p&gt;Since the Notes client is a cross-platform product, the library locations aren't where a macOS program would look for:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;The application directory. That's where the &lt;strong&gt;Java&lt;/strong&gt; runtime is at home, not the notes executable&lt;/li&gt;
+ &lt;li&gt;In a library location, here looking for &lt;code&gt;notes&lt;/code&gt; instead of &lt;code&gt;libnotes.dylib&lt;/code&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;/Users/[YOURNAME]/Library/Frameworks/notes.framework/&lt;/code&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;/Library/Frameworks/notes.framework/&lt;/code&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;/System/Library/Frameworks/notes.framework/&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;You could try to symlink the first library: &lt;code&gt;ln -s /Applications/HCL\ Notes.app/Contents/MacOS/libnotes.dylib ~/Library/Frameworks/notes.framework/notes&lt;/code&gt; (after creating the rewuired directories) to run into the next challenge.&lt;/p&gt;</description>
+	<link>2022/01/maven-jna-macos-and-ld_library_path.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>624428a0-7398-11ec-9bb6-e9198cdc4c3b</guid>
+	<pubDate>12 January 2022</pubDate>
+
+</item>
+<item>
+	<title>Async Java with vert.x</title>
+	<description>&lt;p&gt;I wrote about &lt;a href="/blog/2020/11/streams-and-functional-programming-in-java.html"&gt;more modern&lt;/a&gt; Java syntax &lt;a href="/blog/2021/01/collecting-java-streams.html"&gt;and streams&lt;/a&gt; before.&lt;br&gt; There is more to it. &lt;a href="https://en.wikipedia.org/wiki/Non-blocking_I/O_%28Java%29"&gt;Non Blocking I/O&lt;/a&gt; and &lt;a href="https://en.wikipedia.org/wiki/Event_loop"&gt;Event Loops&lt;/a&gt; allow for&lt;br&gt;&lt;a href="https://www.quora.com/Why-is-Node-js-so-much-faster?share=1"&gt;better performance&lt;/a&gt;. It's not a magic bullet, some readjustment is required&lt;/p&gt;
+&lt;h2&gt;Adjusting methods, exceptions and return values&lt;/h2&gt;
+&lt;p&gt;Initially it might look daunting, but the adjustments are not too big. Let's look at some examples. A classic Java method looks like this:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;String someResult throws DidnWorkException {
+    // Working code goes here
+    if (someCondition) {
+        throw new DidnWorkException();
+    }
+    return "It worked";
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Its asynchronous counter-part looks like this:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;Future&amp;lt;String&amp;gt; someResult() {
+    return Future.future(promise -&amp;gt; {
+        // Working code goes here
+        if (someCondition) {
+            promise.fail("It didn't work"); // Could use a Throwable too
+        } else {
+            promise.complete("It worked");
+        }
+    });
+}
+&lt;/code&gt;&lt;/pre&gt;</description>
+	<link>2022/01/async-java-with-vertx.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>5f447370-6e85-11ec-b6b7-31691e9a39a5</guid>
+	<pubDate>06 January 2022</pubDate>
+
+</item>
+<item>
+	<title>Deploying your frontend as webJar</title>
+	<description>&lt;p&gt;In an API driven world back-end and front-end are clearly separated and might live on different servers alltogether. However for smaller applications serving static files happens from the same place as your backend lives&lt;/p&gt;
+&lt;h3&gt;So many choices&lt;/h3&gt;
+&lt;p&gt;The &lt;a href="https://www.nginx.com/"&gt;web server&lt;/a&gt; that proxies your application server could have a rule for static files, your firewall could so that, you use a static directory on your application server or pack, that's the story here, your front-end into a jar. I'm not discussing the merits of the different approaches here, that's a story for another time, but describe the workflow and tools for the JAR approach.&lt;/p&gt;
+&lt;h3&gt;vert.x static routes&lt;/h3&gt;
+&lt;p&gt;In &lt;a href="https://vertx.io"&gt;Vertx&lt;/a&gt; a static route can be declared with a &lt;a href="https://vertx.io/docs/vertx-web/java/#_serving_static_resources"&gt;few lines&lt;/a&gt; of code:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;Router router = Router.router(vertx);
+router.route("/ui/*")
+      .handler(StaticHandler.create("uitarget"));
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Vertx will then look for the folder &lt;code&gt;uitarget&lt;/code&gt; in its current working directory or on the classpath. So you will need to put your jar on the classpath&lt;/p&gt;
+&lt;h3&gt;The swagger-ui example&lt;/h3&gt;
+&lt;p&gt;There are &lt;a href="https://www.webjars.org/"&gt;lots of prepackaged UI jars&lt;/a&gt; available and &lt;a href="https://www.webjars.org/documentation#vertx"&gt;easy to integrate into vert.x&lt;/a&gt;. For example the &lt;a href="https://swagger.io/tools/swagger-ui/"&gt;Swagger UI&lt;/a&gt;. Define a dependency in your &lt;code&gt;pom.xml&lt;/code&gt; and a one liner to access the code:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-xml"&gt;&amp;lt;dependency&amp;gt;
+    &amp;lt;groupId&amp;gt;org.webjars&amp;lt;/groupId&amp;gt;
+    &amp;lt;artifactId&amp;gt;swagger-ui&amp;lt;/artifactId&amp;gt;
+    &amp;lt;version&amp;gt;4.1.3&amp;lt;/version&amp;gt;
+&amp;lt;/dependency&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;Router router = Router.router(vertx);
+router.route("/assets/lib/*").handler(StaticHandler.create("META-INF/resources/webjars"));
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;Packing your own front-end&lt;/h3&gt;
+&lt;p&gt;Most modern build front-ends owe their executable form to an &lt;code&gt;npm build&lt;/code&gt; command. If you are not sure check the documentation for &lt;a href="https://reactjs.org/"&gt;React&lt;/a&gt;, &lt;a href="https://angular.io/"&gt;Angular&lt;/a&gt;, &lt;a href="https://angular.io/"&gt;Lightning&lt;/a&gt;, &lt;a href="https://vuejs.org/"&gt;Vue&lt;/a&gt;, &lt;a href="https://ionicframework.com/"&gt;Ionic&lt;/a&gt; or whatever framework you fancy.&lt;/p&gt;
+&lt;p&gt;There are two plugins for &lt;a href="https://maven.apache.org/"&gt;maven&lt;/a&gt; that can process front-end work:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;The &lt;a href="https://github.com/eirslett/frontend-maven-plugin"&gt;Frontend Maven Plugin&lt;/a&gt;: Specialized module that handles download of NodeJS and running your NodeJS based build tools. Great when you don't have NodeJS installed anyway&lt;/li&gt;
+ &lt;li&gt;The &lt;a href="https://www.mojohaus.org/exec-maven-plugin/"&gt;Exec Maven Plugin&lt;/a&gt;: Generic plugin to run stuff. Doesn't download NodeJS for you. More work to setup (that's what I picked)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The steps you will need to perform, actually not you, but your &lt;code&gt;mvn package&lt;/code&gt; run:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;run &lt;code&gt;npm install&lt;/code&gt;&lt;/li&gt;
+ &lt;li&gt;run &lt;code&gt;npm build&lt;/code&gt;&lt;/li&gt;
+ &lt;li&gt;move files into the target directory structure&lt;/li&gt;
+ &lt;li&gt;build the Jar&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;All of this can be wrapped into your &lt;code&gt;pom.xml&lt;/code&gt;. I usually add the front-end as a module to the whole project, so a build is always complete&lt;/p&gt;</description>
+	<link>2021/12/deploying-your-frontend-as-webjar.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>a32c0030-6705-11ec-817f-4bcc5378b126</guid>
+	<pubDate>27 December 2021</pubDate>
+
+</item>
+<item>
+	<title>Refresh local git repositories</title>
+	<description>&lt;p&gt;I keep all my software that is under version control below a few directories only. E.g. OpenSource projects I cloned to learn from them live below &lt;code&gt;~/OpenSource&lt;/code&gt;. Keeping up with updates requires to pull them all.&lt;/p&gt;
+&lt;h3&gt;Pulling the main branch&lt;/h3&gt;
+&lt;p&gt;My little helper does:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;change into each first level sub directory&lt;/li&gt;
+ &lt;li&gt;check if it is under version control&lt;/li&gt;
+ &lt;li&gt;capture the current branch&lt;/li&gt;
+ &lt;li&gt;switch to &lt;code&gt;main&lt;/code&gt; or &lt;code&gt;master&lt;/code&gt; branch, depending on which one is there&lt;/li&gt;
+ &lt;li&gt;capture the name of the tracked remote&lt;/li&gt;
+ &lt;li&gt;fetch all remotes&lt;/li&gt;
+ &lt;li&gt;pull the tracked remote&lt;/li&gt;
+ &lt;li&gt;switch back to the branch it was in&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The script does not check if the current branch is dirty (preventing checkout) or pushing back changes. Enjoy&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-bash"&gt;#!/bin/bash
+# Pull all repos below the current working directory
+
+do_the_sync() {
+  for f in *; do
+      if [ -d $f -a ! -h $f ]; then
+         cd -- "$f";
+         if [ -d ".git" ]; then
+            curBranch=$(git branch --show-current)
+            mainBranch=nn
+            echo "Working on $f";
+            if [ "`git branch --list main`" ]; then
+              mainBranch=main
+            else
+              mainBranch=master
+            fi
+            remoteBranch=$(git rev-parse --abbrev-ref ${mainBranch}@{upstream})
+            IFS='/' read -r remoteSrv string &amp;lt;&amp;lt;&amp;lt; "$remoteBranch"
+            echo "working on $mainBranch tracking $remoteSrv"
+            git fetch --all
+            git pull $remoteSrv
+            git checkout $curBranch
+         fi
+         cd ..
+      fi;
+  done;
+};
+
+do_the_sync
+echo "DONE!"
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2021/12/refresh-local-git-repositories.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>516554b0-63f7-11ec-9248-c18c40a7135e</guid>
+	<pubDate>23 December 2021</pubDate>
+
+</item>
+<item>
+	<title>Spotless code with a git hook</title>
+	<description>&lt;p&gt;When developing software in a team, a source of constant annoyment is code formatting. Each IDE has slightly different ideas about it, not even getting into the &lt;a href="https://www.jwz.org/doc/tabs-vs-spaces.html"&gt;tabs vs. spaces&lt;/a&gt; debate. Especially annoying in Java land is the import sort order&lt;/p&gt;
+&lt;h3&gt;Automation to the rescue&lt;/h3&gt;
+&lt;p&gt;I switch between editors (if you need to know: &lt;a href="https://www.eclipse.org"&gt;Eclipse&lt;/a&gt;, &lt;a href="https://code.visualstudio.com"&gt;Visual Studio Code&lt;/a&gt;, &lt;a href="https://www.oxygenxml.com"&gt;OxygenXML&lt;/a&gt;, &lt;a href="https://www.jetbrains.com/idea/"&gt;IntelliJ&lt;/a&gt;, &lt;a href="https://www.sublimetext.com"&gt;Sublime&lt;/a&gt;, &lt;a href="https://www.geany.org"&gt;Geany&lt;/a&gt;, &lt;a href="https://www.nano-editor.org"&gt;nano&lt;/a&gt; or &lt;a href="https://en.wikipedia.org/wiki/Vi"&gt;vi (ESC :!wq)&lt;/a&gt;) frequently, so an editor specific solution isn't an option.&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://github.com/diffplug/spotless"&gt;Spotless&lt;/a&gt; to the rescue. It's a neat project using &lt;a href="https://maven.apache.org"&gt;Maven&lt;/a&gt; or &lt;a href="https://gradle.org"&gt;Gradle&lt;/a&gt; to format pretty (pun inteded) much all code types I use. The documentation states:&lt;/p&gt;
+&lt;blockquote&gt;
+ &lt;p&gt;Spotless can format &amp;lt;antlr | c | c# | c++ | css | flow | graphql | groovy | html | java | javascript | json | jsx | kotlin | less | license headers | markdown | objective-c | protobuf | python | scala | scss | sql | typeScript | vue | yaml | anything&amp;gt; using &amp;lt;gradle | maven | anything&amp;gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3&gt;Setup&lt;/h3&gt;
+&lt;p&gt;I opted for the eclipse defined Java formatting, using almost the Google formatting rules with the notable exception not merging line breaks back.&lt;/p&gt;
+&lt;p&gt;There are 3 steps involved for the &lt;a href="https://github.com/diffplug/spotless/tree/main/plugin-maven"&gt;Maven setup&lt;/a&gt;:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;Obtaining the formatting files, &lt;a href="https://github.com/diffplug/spotless/blob/main/ECLIPSE_SCREENSHOTS.md"&gt;outlined here&lt;/a&gt;. Just make sure you are happy with the format first&lt;/li&gt;
+ &lt;li&gt;Add the maven plugin (see below)&lt;/li&gt;
+ &lt;li&gt;Add a git hook (see below)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;pom.xml&lt;/h3&gt;
+&lt;p&gt;This is what I added to my &lt;code&gt;pom.xml&lt;/code&gt;. By default spotless would run &lt;code&gt;check&lt;/code&gt; only, so I added &lt;code&gt;apply&lt;/code&gt; to enforce the formatting&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-xml"&gt;&amp;lt;properties&amp;gt;
+   &amp;lt;spotless.version&amp;gt;2.4.1&amp;lt;/spotless.version&amp;gt;
+&amp;lt;/properties&amp;gt;
+
+&amp;lt;build&amp;gt;
+    &amp;lt;plugins&amp;gt;
+        &amp;lt;plugin&amp;gt;
+            &amp;lt;groupId&amp;gt;com.diffplug.spotless&amp;lt;/groupId&amp;gt;
+            &amp;lt;artifactId&amp;gt;spotless-maven-plugin&amp;lt;/artifactId&amp;gt;
+            &amp;lt;version&amp;gt;${spotless.version}&amp;lt;/version&amp;gt;
+            &amp;lt;executions&amp;gt;
+               &amp;lt;execution&amp;gt;
+                 &amp;lt;goals&amp;gt;
+                   &amp;lt;goal&amp;gt;apply&amp;lt;/goal&amp;gt;
+                 &amp;lt;/goals&amp;gt;
+               &amp;lt;/execution&amp;gt;
+            &amp;lt;/executions&amp;gt;
+            &amp;lt;configuration&amp;gt;
+                &amp;lt;formats&amp;gt;
+                    &amp;lt;format&amp;gt;
+                        &amp;lt;!-- Markdown, JSON and gitignore --&amp;gt;
+                        &amp;lt;includes&amp;gt;
+                            &amp;lt;include&amp;gt;*.md&amp;lt;/include&amp;gt;
+                            &amp;lt;include&amp;gt;*.json&amp;lt;/include&amp;gt;
+                            &amp;lt;include&amp;gt;.gitignore&amp;lt;/include&amp;gt;
+                        &amp;lt;/includes&amp;gt;
+                        &amp;lt;trimTrailingWhitespace /&amp;gt;
+                        &amp;lt;endWithNewline /&amp;gt;
+                        &amp;lt;indent&amp;gt;
+                            &amp;lt;spaces&amp;gt;true&amp;lt;/spaces&amp;gt;
+                            &amp;lt;spacesPerTab&amp;gt;2&amp;lt;/spacesPerTab&amp;gt;
+                        &amp;lt;/indent&amp;gt;
+                    &amp;lt;/format&amp;gt;
+                &amp;lt;/formats&amp;gt;
+                &amp;lt;!-- ECLIPSE Java format --&amp;gt;
+                &amp;lt;java&amp;gt;
+                    &amp;lt;toggleOffOn /&amp;gt;
+                    &amp;lt;importOrder&amp;gt;
+                        &amp;lt;file&amp;gt;${maven.multiModuleProjectDirectory}/spotless.importorder&amp;lt;/file&amp;gt;
+                    &amp;lt;/importOrder&amp;gt;
+                    &amp;lt;removeUnusedImports /&amp;gt;
+                    &amp;lt;eclipse&amp;gt;
+                        &amp;lt;file&amp;gt;${maven.multiModuleProjectDirectory}/eclipse-java-keep-style.xml&amp;lt;/file&amp;gt;
+                    &amp;lt;/eclipse&amp;gt;
+                &amp;lt;/java&amp;gt;
+            &amp;lt;/configuration&amp;gt;
+        &amp;lt;/plugin&amp;gt;
+    &amp;lt;/plugins&amp;gt;
+&amp;lt;/build&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;A few remarks:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;I run &lt;code&gt;apply&lt;/code&gt; rather than &lt;code&gt;check&lt;/code&gt;&lt;/li&gt;
+ &lt;li&gt;the directory variable &lt;code&gt;${maven.multiModuleProjectDirectory}&lt;/code&gt; is needed, so sub projects work&lt;/li&gt;
+ &lt;li&gt;you want to extend the configuration to include JS/TS eventually&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;.git/hooks/pre-commit&lt;/h3&gt;
+&lt;p&gt;Create or edit your &lt;code&gt;[projectroot]/.git/hooks/pre-commit&lt;/code&gt; file:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-bash"&gt;#!/bin/bash
+# Run formatting on pre-commit
+files=`git status --porcelain | cut -c 4-`
+fulllist=''
+for f in $files; do
+    fulllist+=(.*)$(basename $f)$'\n'
+done;
+list=`echo "${fulllist}" | paste -s -d, /dev/stdin`
+echo Working on $list
+# Activate Java 11
+export JAVA_HOME=`/usr/libexec/java_home -v 11.0`
+/usr/local/bin/mvn spotless:apply -Dspotless.check.skip=false -DspotlessFiles=$list
+&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;
+ &lt;li&gt;You might not need the line with Java&lt;/li&gt;
+ &lt;li&gt;swap &lt;code&gt;apply&lt;/code&gt; for &lt;code&gt;check&lt;/code&gt; when you just want to check&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2021/12/spotless-code-with-a-git-hook.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>38926a10-59cd-11ec-8058-07b29c73246e</guid>
+	<pubDate>10 December 2021</pubDate>
+
+</item>
+<item>
+	<title>Factory based dependency injection</title>
+	<description>&lt;p&gt;&lt;a href="https://en.wikipedia.org/wiki/No_Man_Is_an_Island_(album)"&gt;No man is an island&lt;/a&gt; and no code you write lives without dependencies (even your low-level assembly code depends on the processor's microcode). Testing (with) dependencies can be [insert expletive]&lt;/p&gt;
+&lt;h3&gt;Dependency injection to the rescue&lt;/h3&gt;
+&lt;p&gt;The general approach to make dependent code testable is &lt;a href="https://en.wikipedia.org/wiki/Dependency_injection"&gt;Dependency injection&lt;/a&gt;. Instead of calling out and create an instance of the dependency, the dependency is hand over as parameter. This could be in a constructor, a property setter or as method parameter.&lt;/p&gt;
+&lt;p&gt;A key requirement for successful dependency injection: the injected object gets injected as an &lt;a href="https://docs.oracle.com/javase/tutorial/java/concepts/interface.html"&gt;Interface&lt;/a&gt; rather than a concrete class. So &lt;a href="https://amzn.to/3ozoD9k"&gt;do your homework&lt;/a&gt; and build your apps around interfaces.&lt;/p&gt;
+&lt;p&gt;An example to illustrate how not to do, and how to change:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;public Optional&amp;lt;Customer&amp;gt; findCustomer(final String id) {
+ // Some processing here, omitted for clarity
+
+ // actual find
+ final CustomerDbFind find = CustomerDb.getFinder();
+ return Optional.ofNullable(find.customerById(id));
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;When you try to test this function, you depend on the static method of the &lt;code&gt;CustomerDb&lt;/code&gt; which is a pain to mock out. So one consideration could be to hand the &lt;code&gt;CustomerDb&lt;/code&gt; as dependency. But this would violate "provide interface, not class". The conclusion, presuming &lt;code&gt;CustomerDbFind&lt;/code&gt; is an interface will be:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;public Optional&amp;lt;Customer&amp;gt; findCustomer(final CustomerDbFind find, final String id) {
+ // Some processing here, omitted for clarity
+
+ // actual find
+
+ return Optional.ofNullable(find.customerById(id));
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This now allows to construct the dependency outside the method to test by implementing the interface or using a &lt;a href="https://site.mockito.org"&gt;Mock library&lt;/a&gt;&lt;/p&gt;
+&lt;h3&gt;Not so fast&lt;/h3&gt;</description>
+	<link>2021/12/factory-based-dependency-injection.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>f5e53190-58c6-11ec-a5a2-1d9fd86b9254</guid>
+	<pubDate>09 December 2021</pubDate>
+
+</item>
 
 </channel>
 </rss>

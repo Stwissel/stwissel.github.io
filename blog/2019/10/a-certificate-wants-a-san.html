@@ -128,20 +128,20 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>A certificate wants a SAN</small></h1>
 					<hr />
-					<div><p>Following my recent blog about <a href="/blog/2019/10/create-your-own-ca.html">creating you own CA</a> you will find out, like I did, that the certs are quite wanting.</p> 
-<h3>The Subject Alternate Name (SAN)</h3> 
-<p>Even after importing the <code>ca-chain.cert.pem</code> into your keyring / keystore Chrome will barf at the certificate, complaining about a missing <a href="https://">SAN</a>.</p> 
-<p>The idea of a SAN is to allow additional name variations to be recognised for one given certificate, reducing the effort for multi-purpose servers. E.g.: <code>myawesomesite.com</code>, <code>www.myawesomesite.com</code>, <code>myawesomesite.io</code>, <code>www.myawesomesite.com</code>, <code>crazydata.com</code></p> 
-<p>I tried really hard, but at the time of writing, it seems the only way to create SAN for your certs is to provide a configuration file. I didn't find a command line option (short of various attempts on redirection and pipeing).</p> 
-<p>The hack I came up with:</p> 
-<p>Edit the <code>intermediate\openssl.cnf</code> and add to the <code>[ server_cert ]</code> section one line: <code>subjectAltName = @alt_names</code>. The <code>@</code> sign tells OpenSSL to look for a section with that name and expand its content as the parameter.</p> 
-<p>Using the following shell script generates a certificate that works for:</p> 
-<ul> 
- <li>www.domain (e.g. <code>www.awesome.io</code>)</li> 
- <li>domain (e.g. <code>awesome.io</code>)</li> 
- <li>domain.local (e.g. <code>awesome.io.local</code>)</li> 
-</ul> 
-<p>The last one is helpful when you want to try SSL on localhost and amend your <code>hosts</code> file to contain <code>awesome.io.local</code></p> 
+					<div><p>Following my recent blog about <a href="/blog/2019/10/create-your-own-ca.html">creating you own CA</a> you will find out, like I did, that the certs are quite wanting.</p>
+<h3>The Subject Alternate Name (SAN)</h3>
+<p>Even after importing the <code>ca-chain.cert.pem</code> into your keyring / keystore Chrome will barf at the certificate, complaining about a missing <a href="https://">SAN</a>.</p>
+<p>The idea of a SAN is to allow additional name variations to be recognised for one given certificate, reducing the effort for multi-purpose servers. E.g.: <code>myawesomesite.com</code>, <code>www.myawesomesite.com</code>, <code>myawesomesite.io</code>, <code>www.myawesomesite.com</code>, <code>crazydata.com</code></p>
+<p>I tried really hard, but at the time of writing, it seems the only way to create SAN for your certs is to provide a configuration file. I didn't find a command line option (short of various attempts on redirection and pipeing).</p>
+<p>The hack I came up with:</p>
+<p>Edit the <code>intermediate\openssl.cnf</code> and add to the <code>[ server_cert ]</code> section one line: <code>subjectAltName = @alt_names</code>. The <code>@</code> sign tells OpenSSL to look for a section with that name and expand its content as the parameter.</p>
+<p>Using the following shell script generates a certificate that works for:</p>
+<ul>
+ <li>www.domain (e.g. <code>www.awesome.io</code>)</li>
+ <li>domain (e.g. <code>awesome.io</code>)</li>
+ <li>domain.local (e.g. <code>awesome.io.local</code>)</li>
+</ul>
+<p>The last one is helpful when you want to try SSL on localhost and amend your <code>hosts</code> file to contain <code>awesome.io.local</code></p>
 <pre><code class="language-bash">#!/bin/bash
 # Create new server certificates with the KEEP intermediate CA
 if [ -z "$1" ]
@@ -163,9 +163,9 @@ openssl ca -config $CONFNAME -extensions server_cert -days 375 -notext -md sha25
 chmod 444 intermediate/certs/$SSL_DOMAIN_NAME.cert.pem
 openssl pkcs12 -export -in intermediate/certs/$SSL_DOMAIN_NAME.cert.pem -inkey intermediate/private/$SSL_DOMAIN_NAME.key.pem -out intermediate/private/$SSL_DOMAIN_NAME.pfx -certfile intermediate/certs/ca-chain.cert.pem
 rm $CONFNAME
-</code></pre> 
-<p>This will settle the <em>Subject Alternate Name</em> challenge. There are a more challenges to be had. Depending on what application you use, you need to import your intermediate keychain <code>ca-chain.cert.pem</code> in multiple places in different formats (Remember, I urged you not to do that in production!).</p> 
-<p>On Mac and Linux you have a keychain, but NodeJS and Java don't recognize them. Edge (and its older sibling) have their own key store, as has Firefox. Python, depending on version and library, has its own ideas about keys too. So manual management is a PITA.</p> 
+</code></pre>
+<p>This will settle the <em>Subject Alternate Name</em> challenge. There are a more challenges to be had. Depending on what application you use, you need to import your intermediate keychain <code>ca-chain.cert.pem</code> in multiple places in different formats (Remember, I urged you not to do that in production!).</p>
+<p>On Mac and Linux you have a keychain, but NodeJS and Java don't recognize them. Edge (and its older sibling) have their own key store, as has Firefox. Python, depending on version and library, has its own ideas about keys too. So manual management is a PITA.</p>
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>

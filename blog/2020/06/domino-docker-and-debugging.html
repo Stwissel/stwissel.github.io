@@ -125,25 +125,25 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Domino Docker and Debugging</small></h1>
 					<hr />
-					<div><p>Given that Domino once was build to run on 486 capacity of servers, Docker and <a href="https://www.docker.com/blog/why-domino-is-using-docker/">Domino</a> are posed to be a match made in heaven (eventually). Jesse shared shared his <a href="https://frostillic.us/blog/posts/2020/6/28/weekend-domino-apps-in-docker-experimentation">Weekend Domino-Apps-in-Docker Experimentation</a>, Paul shared his <a href="https://paulswithers.github.io/blog/2019/12/04/domino-on-docker">learning points</a> and <a href="http://blog.nashcom.de/">Daniel</a> provided the invaluable <a href="https://github.com/IBM/domino-docker">Domino on Docker build scripts</a>. So it's time to contribute my share. The topic is slightly more exotic</p> 
-<h3>Debug a Java application running on Domino in a Docker container</h3> 
-<p>Before we can get cooking, we need to know what ingredients we need:</p> 
-<ul> 
- <li>The <a href="https://github.com/IBM/domino-docker">Domino on Docker build scripts</a> including the required Domino Linux installer</li> 
- <li>Some general understanding how Daniel's <a href="https://www.nashcom.de/nshweb/pages/startscript.htm">Domino Startup Script</a> works</li> 
- <li>Docker desktop installed on our machine (I use macOS, but I know <a href="https://twitter.com/lotusgeek">someone</a>, who can share his Windows experience)</li> 
- <li>Basic understanding of <a href="https://docs.docker.com/get-started/">Docker</a></li> 
- <li>A <a href="https://www.projectkeep.io">Java project</a> that shall be debugged. I use <a href="https://maven.apache.org/">Apache Maven</a>, as discussed <a href="blog/2020/04/my-maven-starter-template.html">before</a>, but <a href="https://gradle.org/">Gradle</a> will do just fine</li> 
- <li>Understanding how to <a href="https://www.vogella.com/tutorials/EclipseDebugging/article.html">debug Java</a></li> 
-</ul> 
-<p><strong>Our objective</strong>: Create a Domino image that loads the Java application from its host file system, so we do not need to rebuild the container on Java changed. An instance of this image shall allow to connect a debugger to that Java application</p> 
-<h3>Foundation: the Domino image</h3> 
-<p>First we have to build a Domino Docker image, configure a server using a docker volume. This has been mapped out in the <a href="https://github.com/IBM/domino-docker">domino-docker</a> project and its <a href="https://ibm.github.io/domino-docker/">slighly hidden documentation</a>. Just a quick recap:</p> 
-<ul> 
- <li>Build the image using <code>./build domino</code></li> 
- <li>Create a volume using <code>docker volume create keep_data</code></li> 
- <li>Run the instance once to setup the domino</li> 
-</ul> 
+					<div><p>Given that Domino once was build to run on 486 capacity of servers, Docker and <a href="https://www.docker.com/blog/why-domino-is-using-docker/">Domino</a> are posed to be a match made in heaven (eventually). Jesse shared shared his <a href="https://frostillic.us/blog/posts/2020/6/28/weekend-domino-apps-in-docker-experimentation">Weekend Domino-Apps-in-Docker Experimentation</a>, Paul shared his <a href="https://paulswithers.github.io/blog/2019/12/04/domino-on-docker">learning points</a> and <a href="http://blog.nashcom.de/">Daniel</a> provided the invaluable <a href="https://github.com/IBM/domino-docker">Domino on Docker build scripts</a>. So it's time to contribute my share. The topic is slightly more exotic</p>
+<h3>Debug a Java application running on Domino in a Docker container</h3>
+<p>Before we can get cooking, we need to know what ingredients we need:</p>
+<ul>
+ <li>The <a href="https://github.com/IBM/domino-docker">Domino on Docker build scripts</a> including the required Domino Linux installer</li>
+ <li>Some general understanding how Daniel's <a href="https://www.nashcom.de/nshweb/pages/startscript.htm">Domino Startup Script</a> works</li>
+ <li>Docker desktop installed on our machine (I use macOS, but I know <a href="https://twitter.com/lotusgeek">someone</a>, who can share his Windows experience)</li>
+ <li>Basic understanding of <a href="https://docs.docker.com/get-started/">Docker</a></li>
+ <li>A <a href="https://www.projectkeep.io">Java project</a> that shall be debugged. I use <a href="https://maven.apache.org/">Apache Maven</a>, as discussed <a href="blog/2020/04/my-maven-starter-template.html">before</a>, but <a href="https://gradle.org/">Gradle</a> will do just fine</li>
+ <li>Understanding how to <a href="https://www.vogella.com/tutorials/EclipseDebugging/article.html">debug Java</a></li>
+</ul>
+<p><strong>Our objective</strong>: Create a Domino image that loads the Java application from its host file system, so we do not need to rebuild the container on Java changed. An instance of this image shall allow to connect a debugger to that Java application</p>
+<h3>Foundation: the Domino image</h3>
+<p>First we have to build a Domino Docker image, configure a server using a docker volume. This has been mapped out in the <a href="https://github.com/IBM/domino-docker">domino-docker</a> project and its <a href="https://ibm.github.io/domino-docker/">slighly hidden documentation</a>. Just a quick recap:</p>
+<ul>
+ <li>Build the image using <code>./build domino</code></li>
+ <li>Create a volume using <code>docker volume create keep_data</code></li>
+ <li>Run the instance once to setup the domino</li>
+</ul>
 <pre><code class="language-bash">docker run -it -e "ServerName=Server1" \
     -e "OrganizationName=MyOrg" \
     -e "AdminFirstName=Doctor" \
@@ -156,9 +156,9 @@ ga('send', 'pageview');
     --stop-timeout=60 \
     --name server1 \
     hclcom/domino:11.0.1
-</code></pre> 
-<p>We shut down the instance once you have confirmed it works. We don't need it thereafter, we only need the volume and image. Of course there's no harm keeping it around</p><h3>The application image</h3> 
-<p>Docker is like <a href="http://quotegeek.com/quotes-from-movies/shrek/7316/">Ogres</a>, so for our application we build another layer. Big advantage of this approach: when a newer Domino image becomes available (I heared 12.0 will be awesome), we only need to change one line in our own <a href="https://docs.docker.com/engine/reference/builder/">dockerfile</a> and nothing in the Domino image</p> 
+</code></pre>
+<p>We shut down the instance once you have confirmed it works. We don't need it thereafter, we only need the volume and image. Of course there's no harm keeping it around</p><h3>The application image</h3>
+<p>Docker is like <a href="http://quotegeek.com/quotes-from-movies/shrek/7316/">Ogres</a>, so for our application we build another layer. Big advantage of this approach: when a newer Domino image becomes available (I heared 12.0 will be awesome), we only need to change one line in our own <a href="https://docs.docker.com/engine/reference/builder/">dockerfile</a> and nothing in the Domino image</p>
 <pre><code class="language-bash">############################################################################
 # Copyright Nash!Com, Daniel Nashed 2019, 2020 - APACHE 2.0 see LICENSE
 # Copyright IBM Corporation 2015, 2019 - APACHE 2.0 see LICENSE
@@ -195,17 +195,17 @@ EXPOSE 1352 80 389 8880 8889 8890 8000
 ENTRYPOINT ["/domino_docker_entrypoint.sh"]
 
 USER notes
-</code></pre> 
-<p>Let us break down what that docker file does:</p> 
-<ul> 
- <li>It is based on the Domino image <code>hclcom/domino:11.0.1</code> we built in the previous step</li> 
- <li>It creates directories under <code>/opt/hcl</code> where you also can find the Domino binaries</li> 
- <li>It copies and makes executable scripts and Jar files</li> 
- <li>It ammends the <code>rc_domino_config</code> file to point to the scripts we just copied</li> 
- <li>It exposed a few more ports: <code>8880, 8889, 8890</code> are application specific, <code>8000</code> is our debug port</li> 
-</ul> 
-<h3>The scripts</h3> 
-<p>The most interesting one is the <code>post_startup_script</code> than runs once Domino is up and running. It will run the Java application, waiting for the debugger to be ready:</p> 
+</code></pre>
+<p>Let us break down what that docker file does:</p>
+<ul>
+ <li>It is based on the Domino image <code>hclcom/domino:11.0.1</code> we built in the previous step</li>
+ <li>It creates directories under <code>/opt/hcl</code> where you also can find the Domino binaries</li>
+ <li>It copies and makes executable scripts and Jar files</li>
+ <li>It ammends the <code>rc_domino_config</code> file to point to the scripts we just copied</li>
+ <li>It exposed a few more ports: <code>8880, 8889, 8890</code> are application specific, <code>8000</code> is our debug port</li>
+</ul>
+<h3>The scripts</h3>
+<p>The most interesting one is the <code>post_startup_script</code> than runs once Domino is up and running. It will run the Java application, waiting for the debugger to be ready:</p>
 <pre><code class="language-bash">#!/bin/sh
 # Starts the vert.x tasks that talks to Domino
 export DEBUG=true
@@ -223,21 +223,21 @@ export LOG_DIR=$NOTESDATA/logs
 cd $NOTESDATA
 echo "Java will start in debug mode"
 $JAVA_HOME/bin/java -jar -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=y $V_PATH &gt; $LOG_DIR/vertx.log 2&gt;&amp;1 &amp;
-</code></pre> 
-<p>Let us break this down:</p> 
-<ul> 
- <li>The <code>export</code> statements establish where to find what</li> 
- <li>The Java app is run from the Domino data directory</li> 
- <li>The <code>-agentlib:jdwp=transport=dt_socket</code> tells the JVM to open a debug session via a socket connection</li> 
- <li>The <code>address=8000,suspend=y</code> declares the port and that the application shall wait until the debugger has attached</li> 
- <li>Finally <code>2&gt;&amp;1 &amp;</code> tells us: StdOut and StdErr go to the same place and the app will run in the background</li> 
-</ul> 
-<h3>Eclipse debugger</h3> 
-<p>In Eclipse we create a new "Run Configuration" as "Remote Java Application" with a Standard (Socket Attach) connection type and host/port localhost/8000. You can't deploy this to a K8S environment since we will load the Jar from our local disk. Of course you can modify the setup to load the Jars for a different location</p> 
-<p><img src="/blog/images/2020/EclipseDebugger.png" alt="Remote Eclipse Debugger"></p> 
-<h3>Building and starting the new image</h3> 
-<p>Build the image based on the docker file: <code>docker build --tag hclcom/keep:debug</code></p> 
-<p>We are reusing the volume created for a vanilla Domino server, so all the configuration is completed, IDs and names.nsf exist. We now create a new instance based on the new image</p> 
+</code></pre>
+<p>Let us break this down:</p>
+<ul>
+ <li>The <code>export</code> statements establish where to find what</li>
+ <li>The Java app is run from the Domino data directory</li>
+ <li>The <code>-agentlib:jdwp=transport=dt_socket</code> tells the JVM to open a debug session via a socket connection</li>
+ <li>The <code>address=8000,suspend=y</code> declares the port and that the application shall wait until the debugger has attached</li>
+ <li>Finally <code>2&gt;&amp;1 &amp;</code> tells us: StdOut and StdErr go to the same place and the app will run in the background</li>
+</ul>
+<h3>Eclipse debugger</h3>
+<p>In Eclipse we create a new "Run Configuration" as "Remote Java Application" with a Standard (Socket Attach) connection type and host/port localhost/8000. You can't deploy this to a K8S environment since we will load the Jar from our local disk. Of course you can modify the setup to load the Jars for a different location</p>
+<p><img src="/blog/images/2020/EclipseDebugger.png" alt="Remote Eclipse Debugger"></p>
+<h3>Building and starting the new image</h3>
+<p>Build the image based on the docker file: <code>docker build --tag hclcom/keep:debug</code></p>
+<p>We are reusing the volume created for a vanilla Domino server, so all the configuration is completed, IDs and names.nsf exist. We now create a new instance based on the new image</p>
 <pre><code class="language-bash">#!/bin/bash
 # Start my local domino server for debug
 docker run -it \
@@ -253,8 +253,8 @@ docker run -it \
  --stop-timeout=60 \
  --name Server1Debug \
  hclcom/keep:debug
-</code></pre> 
-<p>Lots of steps. However once setup, you can simply restart the instance using <a href="https://www.docker.com/products/docker-desktop">Docker desktop</a> whenever your Java has changed. There are a few Gremlins building the whole thing on Windows, running seems to be fine. This might be the time to give <a href="https://devblogs.microsoft.com/commandline/wsl2-will-be-generally-available-in-windows-10-version-2004/">WSL</a> another look.</p> 
+</code></pre>
+<p>Lots of steps. However once setup, you can simply restart the instance using <a href="https://www.docker.com/products/docker-desktop">Docker desktop</a> whenever your Java has changed. There are a few Gremlins building the whole thing on Windows, running seems to be fine. This might be the time to give <a href="https://devblogs.microsoft.com/commandline/wsl2-will-be-generally-available-in-windows-10-version-2004/">WSL</a> another look.</p>
 <p>As usual YMMV. Next stop: more automation building production ready images</p></div>
 					<hr />
 					<p>
@@ -281,7 +281,7 @@ categories:  <a href="/blog/categories/docker.html">Docker</a>  <a href="/blog/c
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-							posted by <b>P��lmi</b> on <i>Tuesday 30 June 2020 AD</i>:<br /> <p>Great job , Can��t wait for more automation building production</p>
+							posted by <b>Pálmi</b> on <i>Tuesday 30 June 2020 AD</i>:<br /> <p>Great job , Can´t wait for more automation building production</p>
 
 							<hr style="clear : both" />
 						</li> 					</ol>

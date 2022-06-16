@@ -118,32 +118,32 @@ ga('send', 'pageview');
 						<small><a href="/blog/2018/03/salesforce-heroku-jwt.html">Authenticate from Salesforce to Heroku with JWT</a></small>
 					</h1>
 					<hr />
-					<div><p><a href="https://heroku.com">Heroku</a> PAAS is an easy and flexible way to extend Salesforce functionality.<br> Its easy to call out to a Heroku REST service build with a method of your choice: Java, JavaScript, Ruby etc.<br> The usual sticky point between two platforms is the <strong>identity of the caller</strong>.</p> 
-<p>In a lot of cases the only requirement is "a valid Salesforce user", eventually with some additional claims added.<br> For this scenario a <a href="https://jwt.io/">JWT</a> Bearer authentication (<a href="https://tools.ietf.org/html/rfc7519">RFC 7519</a>) is a good pick.</p> 
-<p>When you look around, most examples revolve around a JWT token being issued after some means of authentication from the same system that was authenticated against.<br> This scenario is different: The Salesforce server issues the JWT token and code on Heroku validates the token as authorization.<br> The beauty of the approach: <strong>no extra calls</strong> need to be made to get this working.</p> 
-<p>What you will need:</p> 
-<ul> 
- <li>A valid certificate, in this case self signed is good enough (it won't be used by a browser)</li> 
- <li><a href="https://openssl.org">OpenSSL</a> installed on your computer</li> 
- <li>A Heroku account</li> 
-</ul> 
-<h3>Preparing the certificate</h3> 
-<p>In Salesforce setup open <a href="https://help.salesforce.com/articleView?id=security_keys_about.htm&amp;type=5">Certificate and Key management</a>.<br> Create or pick a key. Note down the name. For this article I will use <em>YourCertNameHere</em>. Open the key and click on <em>Download Certificate</em>.<br> The cert will be downloaded in crt format. We use this file to extract the <strong>public</strong> key that Heroku will use to verify the signature. To get the key use:</p> 
+					<div><p><a href="https://heroku.com">Heroku</a> PAAS is an easy and flexible way to extend Salesforce functionality.<br> Its easy to call out to a Heroku REST service build with a method of your choice: Java, JavaScript, Ruby etc.<br> The usual sticky point between two platforms is the <strong>identity of the caller</strong>.</p>
+<p>In a lot of cases the only requirement is "a valid Salesforce user", eventually with some additional claims added.<br> For this scenario a <a href="https://jwt.io/">JWT</a> Bearer authentication (<a href="https://tools.ietf.org/html/rfc7519">RFC 7519</a>) is a good pick.</p>
+<p>When you look around, most examples revolve around a JWT token being issued after some means of authentication from the same system that was authenticated against.<br> This scenario is different: The Salesforce server issues the JWT token and code on Heroku validates the token as authorization.<br> The beauty of the approach: <strong>no extra calls</strong> need to be made to get this working.</p>
+<p>What you will need:</p>
+<ul>
+ <li>A valid certificate, in this case self signed is good enough (it won't be used by a browser)</li>
+ <li><a href="https://openssl.org">OpenSSL</a> installed on your computer</li>
+ <li>A Heroku account</li>
+</ul>
+<h3>Preparing the certificate</h3>
+<p>In Salesforce setup open <a href="https://help.salesforce.com/articleView?id=security_keys_about.htm&amp;type=5">Certificate and Key management</a>.<br> Create or pick a key. Note down the name. For this article I will use <em>YourCertNameHere</em>. Open the key and click on <em>Download Certificate</em>.<br> The cert will be downloaded in crt format. We use this file to extract the <strong>public</strong> key that Heroku will use to verify the signature. To get the key use:</p>
 <pre><code class="language-bash">openssl x509 -pubkey -noout -in YourCertNameHere.crt
-</code></pre> 
-<p>The String we need is between the BEGIN and END lines, excluding the lines. You can store it into a file or create a Heroku environment variable.<br> Since it is a public key, you don't need to guard it as fiercly as your private keys.</p> 
-<h3>The APEX code</h3> 
-<p>Before making a call-out to Heroku, you need to componse the signed JWT token. That's done in just a few lines:</p> 
+</code></pre>
+<p>The String we need is between the BEGIN and END lines, excluding the lines. You can store it into a file or create a Heroku environment variable.<br> Since it is a public key, you don't need to guard it as fiercly as your private keys.</p>
+<h3>The APEX code</h3>
+<p>Before making a call-out to Heroku, you need to componse the signed JWT token. That's done in just a few lines:</p>
 <pre><code class="language-java">public static String getJWTBearer(String subject, String keyName) {
     Auth.JWT jwt = new Auth.JWT();
     jwt.setSub(subject);
     Auth.JWS myJws = new Auth.JWS(jwt, keyName);
     return myJws.getCompactSerialization();
 }
-</code></pre> 
-<p>You might opt to add additional claims beside the subject, when your use case does require that.<br> The header value gets added to the <code>Authorization</code> header as <code>Bearer</code> authorization.</p> 
-<h3>Java code</h3> 
-<p>I'm using the <a href="https://github.com/jwtk/jjwt">jjwt</a> library which is available on <a href="https://search.maven.org/#artifactdetails%7Cio.jsonwebtoken%7Cjjwt%7C0.9.0%7Cjar">Maven Central</a>.<br> It makes it simple to retrieve a claim. An expired claim or an invalid signature will throw an error, so wrap it into a try/catch.</p> 
+</code></pre>
+<p>You might opt to add additional claims beside the subject, when your use case does require that.<br> The header value gets added to the <code>Authorization</code> header as <code>Bearer</code> authorization.</p>
+<h3>Java code</h3>
+<p>I'm using the <a href="https://github.com/jwtk/jjwt">jjwt</a> library which is available on <a href="https://search.maven.org/#artifactdetails%7Cio.jsonwebtoken%7Cjjwt%7C0.9.0%7Cjar">Maven Central</a>.<br> It makes it simple to retrieve a claim. An expired claim or an invalid signature will throw an error, so wrap it into a try/catch.</p>
 <pre><code class="language-java">import java.security.Key;
 import java.security.KeyFactory;
 import java.security.spec.X509EncodedKeySpec;
@@ -162,9 +162,9 @@ public class JwtVerifier {
   return Jwts.parser().setSigningKey(realKey).parseClaimsJws(token).getBody();
  }
 }
-</code></pre> 
-<p>The only catch in the code was the need for <code>MimeDecoder</code> instead of a standard <code>Decoder</code> for Base64 decoding.<br> The subject, typically the user, can be retrieved using <code>claims.getSubject()</code></p> 
-<p>Next stop, for another blog entry: the NodeJS equivalent.</p> 
+</code></pre>
+<p>The only catch in the code was the need for <code>MimeDecoder</code> instead of a standard <code>Decoder</code> for Base64 decoding.<br> The subject, typically the user, can be retrieved using <code>claims.getSubject()</code></p>
+<p>Next stop, for another blog entry: the NodeJS equivalent.</p>
 <p>As usual YMMV!</p></div>
 					<hr />
 					<p>
@@ -185,37 +185,37 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 						<small><a href="/blog/2018/03/letsencrypt-java-keystore.html">Using LetsEncrypt certificates in your JKS</a></small>
 					</h1>
 					<hr />
-					<div><p>Dealing with certificates in Java is always fun. The keystore Java uses is different from the certificate files you are used to in your web server or node.js.</p> 
-<p>Salesforce is build on Java, so we have to make peace with the Keystore. This article outlines the steps to use a LetsEncrypt certificate in a keystore. You will need:</p> 
-<ul> 
- <li>Internet connection</li> 
- <li><a href="https://openssl.org">OpenSSL</a> installed</li> 
- <li>Able to run the <a href="https://letsencrypt.org/how-it-works/">LetsEncrypt challenge</a></li> 
- <li>Access to your DNS to add a record (for the challenge)</li> 
- <li>Java runtime installed</li> 
- <li>Public IP address</li> 
-</ul> 
-<p>For this sample I will use the Domain ���demo.example.com���</p> 
-<h3>Obtaining a PEM certficate from LetsEncrypt</h3> 
-<p>Easiest is to use the certbot utility on a Linux machine (e.g. spin up an instance on Heroku). DigitalOcean has <a href="https://www.digitalocean.com/community/tutorials/how-to-use-certbot-standalone-mode-to-retrieve-let-s-encrypt-ssl-certificates">detailed instructions</a>.<br> There used to be a tls-sni challenge which was marked insecure, so you want to the DNS challenge.</p> 
-<p><code>sudo certbot certonly --manual --preferred-challenges dns -d demo.example.com</code></p> 
-<h3>Convert PEM to PKCS12 format</h3> 
-<p>First concatenate all PEM files into one. Presuming you used the Letsencrypt mechanism:</p> 
-<p><code>sudo cat /etc/letsencrypt/life/demo.example.com/*.pem &gt; fullcert.pem</code></p> 
-<p>Then use OpenSSL to convert that into PKCS12 format. Note: if you do that on a Windows command prompt you must <em>run the command prompt as administrator</em> otherwise you just get an error</p> 
-<p><code>openssl pkcs12 -export -out fullchain.pkcs12 -in fullchain.pem</code></p> 
-<h3>Prepare a Java JSK keystore</h3> 
-<p>You can't just create an empty keystore, so create a new temp key and specify a new keystore, then delete that key. That gives you the <a href="https://docs.oracle.com/cd/E35976_01/server.740/es_admin/src/tadm_ssl_convert_pem_to_jks.html">empty keystore</a>:</p> 
+					<div><p>Dealing with certificates in Java is always fun. The keystore Java uses is different from the certificate files you are used to in your web server or node.js.</p>
+<p>Salesforce is build on Java, so we have to make peace with the Keystore. This article outlines the steps to use a LetsEncrypt certificate in a keystore. You will need:</p>
+<ul>
+ <li>Internet connection</li>
+ <li><a href="https://openssl.org">OpenSSL</a> installed</li>
+ <li>Able to run the <a href="https://letsencrypt.org/how-it-works/">LetsEncrypt challenge</a></li>
+ <li>Access to your DNS to add a record (for the challenge)</li>
+ <li>Java runtime installed</li>
+ <li>Public IP address</li>
+</ul>
+<p>For this sample I will use the Domain “demo.example.com”</p>
+<h3>Obtaining a PEM certficate from LetsEncrypt</h3>
+<p>Easiest is to use the certbot utility on a Linux machine (e.g. spin up an instance on Heroku). DigitalOcean has <a href="https://www.digitalocean.com/community/tutorials/how-to-use-certbot-standalone-mode-to-retrieve-let-s-encrypt-ssl-certificates">detailed instructions</a>.<br> There used to be a tls-sni challenge which was marked insecure, so you want to the DNS challenge.</p>
+<p><code>sudo certbot certonly --manual --preferred-challenges dns -d demo.example.com</code></p>
+<h3>Convert PEM to PKCS12 format</h3>
+<p>First concatenate all PEM files into one. Presuming you used the Letsencrypt mechanism:</p>
+<p><code>sudo cat /etc/letsencrypt/life/demo.example.com/*.pem &gt; fullcert.pem</code></p>
+<p>Then use OpenSSL to convert that into PKCS12 format. Note: if you do that on a Windows command prompt you must <em>run the command prompt as administrator</em> otherwise you just get an error</p>
+<p><code>openssl pkcs12 -export -out fullchain.pkcs12 -in fullchain.pem</code></p>
+<h3>Prepare a Java JSK keystore</h3>
+<p>You can't just create an empty keystore, so create a new temp key and specify a new keystore, then delete that key. That gives you the <a href="https://docs.oracle.com/cd/E35976_01/server.740/es_admin/src/tadm_ssl_convert_pem_to_jks.html">empty keystore</a>:</p>
 <pre><code class="language-bash">keytool -genkey -keyalg RSA -alias sfdcsec -keystore sfdcsec.ks
 keytool -delete -alias sfdcsec -keystore sfdcsec.ks
-</code></pre> 
-<h3>Import pkcs12 into JKS</h3> 
-<p>Almost final steps. Don't forget your passwords</p> 
-<p><code>keytool -v -importkeystore -srckeystore fullchain.pkcs12 -destkeystore sfdcsec.ks -deststoretype JKS</code></p> 
-<h3>Adjust alias for Salesforce import</h3> 
-<p>The Salesforce import utility is picky about Alias names. The previous import created the entry<br> <code>Alias name: 1</code> which needs to be updated:</p> 
-<p><code>keytool -keystore sfdcsec.ks -changealias -alias 1 -destalias demo_example_com</code></p> 
-<p>And voilah, you have a properly signed certificate for your Salesforce instance. Downside: to be repeated every 90 days.</p> 
+</code></pre>
+<h3>Import pkcs12 into JKS</h3>
+<p>Almost final steps. Don't forget your passwords</p>
+<p><code>keytool -v -importkeystore -srckeystore fullchain.pkcs12 -destkeystore sfdcsec.ks -deststoretype JKS</code></p>
+<h3>Adjust alias for Salesforce import</h3>
+<p>The Salesforce import utility is picky about Alias names. The previous import created the entry<br><code>Alias name: 1</code> which needs to be updated:</p>
+<p><code>keytool -keystore sfdcsec.ks -changealias -alias 1 -destalias demo_example_com</code></p>
+<p>And voilah, you have a properly signed certificate for your Salesforce instance. Downside: to be repeated every 90 days.</p>
 <p>As usual YMMV!</p></div>
 					<hr />
 					<p>
@@ -236,39 +236,39 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 						<small><a href="/blog/2018/03/a-filtering-proxy-server-with-vertx.html">A filtering proxy server with vert.x</a></small>
 					</h1>
 					<hr />
-					<div><h3>Scenario</h3> 
-<p>You have this nice application running in your (cloud or on premises) environment and then <a href="http://ec.europa.eu/justice/smedataprotect/index_en.htm">a big scare</a> hits. Suddenly you need to remove or mask different streams of data depending on all sorts of conditions your legal department is <strike>torturing</strike> advising you.</p> 
-<p>Until your applications natively can do that, you might resort to a content filter that sits as a proxy between you and the application (technically it is a <a href="https://en.wikipedia.org/wiki/Reverse_proxy">reverse proxy</a>, but that's fine print).</p> 
-<p>To explore the feasibility of such an approach I created <a href="https://stwissel.github.io/SampleProxy/">SampleProxy</a> based on work of <a href="https://github.com/vietj/vertx-http-proxy">Julien Viet</a> using <a href="http://vertx.io">vert.x</a> as my runtime environment.</p> 
-<h3>Requirements</h3> 
-<ul> 
- <li>Needs to be a <strong>content filter</strong>, not a URL blocker</li> 
- <li>Need to provide functionality for practical use out-of-the-box, but needs to be extensible (configuration over code)</li> 
- <li>Need to be able to filter HTML, JSON, XML and Text. No need to filter binary formats. Contemplating about JavaScript (you could use the text filter for that)</li> 
- <li>Filter based on mime-type and URL as standard, but extensible to use <strong>anything</strong> in the request or reply to decide what to filter</li> 
- <li>Configurable FilterChain: a filter decides what to filter (with the mime-type as minimum condition) and hands actual filter operation to a chain of subfilters that do the actual stream manipulation</li> 
- <li>configurable subfilters. E.g. a filter that can remove JSON nodes from JSON data should read the qualifier from a configuration, so the same filter class can be reused for different filter purposes</li> 
- <li>CSS isn't on the radar yet, but contributions would be happily accepted</li> 
-</ul> 
-<h3>The flow</h3> 
-<p><img src="/blog/images/2018/ProxyDataFlow.png" alt="Flow from browser to proxy to application and back"></p> 
-<h3>Things I learned along the way</h3> 
-<p>There are always a few lessons to be had, here are some from this project:</p> 
-<ul> 
- <li>http is a chunked beast. When you send larger amount of content, probability approaches 1 that your server uses <a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding">chunked</a> - until HTTP/2 resolves us from it. A hard choice needs to be made to either use a stream based processing of a chunk (think <a href="https://en.wikipedia.org/wiki/Simple_API_for_XML">SAX</a>) or collecting the Junks to be able to process a <a href="https://en.wikipedia.org/wiki/Document_Object_Model">DOM</a>. To be fully flexible I opted for a DOM/Object based approach, but you are free to create whatever you deem necessary</li> 
- <li><a href="https://jsoup.org/">Jsoup</a> is a reliable HTML parser. It supports <a href="https://www.w3.org/TR/selectors-3/">CSS selectors</a> that make addressing HTML elements a breeze. Solves one of the hardest problems: targeting</li> 
- <li>Targeting JSON data is much harder that it needs to be, the very moment Arrays appear in your JSON structure. There is <a href="https://tools.ietf.org/html/rfc6901">RFC6901 JSON Pointer</a>, but it targets exactly one element, while a typical use case would be: "from the list (array) of discussion posts, pick the list of comments and those who have an eMail, mask them". So I implemented 2 variations: a simple path style address <code>/discussion/posts/comments/email</code> which automatically traverses arrays and an <a href="https://gist.github.com/Stwissel/900acc8ed6a46131530ab89bb70b9f9d">XPath based</a> approach where I convert JSON to a strict XML syntax and back. More <a href="/blog/2018/02/query-a-json-object-like-xpath.html">detail here</a>, examples in a future post</li> 
-</ul> 
-<h3>Items on the ToDo list</h3> 
-<ul> 
- <li>Better documentation</li> 
- <li>Code cleanup</li> 
- <li>Tests</li> 
- <li>Deploy to Heroku button</li> 
- <li>More filters</li> 
-</ul> 
-<h3>Your turn</h3> 
-<p>Go <a href="https://stwissel.github.io/SampleProxy/">check it out</a> and let me know what you think! (Yeah - documentation needs some work).</p> 
+					<div><h3>Scenario</h3>
+<p>You have this nice application running in your (cloud or on premises) environment and then <a href="http://ec.europa.eu/justice/smedataprotect/index_en.htm">a big scare</a> hits. Suddenly you need to remove or mask different streams of data depending on all sorts of conditions your legal department is <strike>torturing</strike> advising you.</p>
+<p>Until your applications natively can do that, you might resort to a content filter that sits as a proxy between you and the application (technically it is a <a href="https://en.wikipedia.org/wiki/Reverse_proxy">reverse proxy</a>, but that's fine print).</p>
+<p>To explore the feasibility of such an approach I created <a href="https://stwissel.github.io/SampleProxy/">SampleProxy</a> based on work of <a href="https://github.com/vietj/vertx-http-proxy">Julien Viet</a> using <a href="http://vertx.io">vert.x</a> as my runtime environment.</p>
+<h3>Requirements</h3>
+<ul>
+ <li>Needs to be a <strong>content filter</strong>, not a URL blocker</li>
+ <li>Need to provide functionality for practical use out-of-the-box, but needs to be extensible (configuration over code)</li>
+ <li>Need to be able to filter HTML, JSON, XML and Text. No need to filter binary formats. Contemplating about JavaScript (you could use the text filter for that)</li>
+ <li>Filter based on mime-type and URL as standard, but extensible to use <strong>anything</strong> in the request or reply to decide what to filter</li>
+ <li>Configurable FilterChain: a filter decides what to filter (with the mime-type as minimum condition) and hands actual filter operation to a chain of subfilters that do the actual stream manipulation</li>
+ <li>configurable subfilters. E.g. a filter that can remove JSON nodes from JSON data should read the qualifier from a configuration, so the same filter class can be reused for different filter purposes</li>
+ <li>CSS isn't on the radar yet, but contributions would be happily accepted</li>
+</ul>
+<h3>The flow</h3>
+<p><img src="/blog/images/2018/ProxyDataFlow.png" alt="Flow from browser to proxy to application and back"></p>
+<h3>Things I learned along the way</h3>
+<p>There are always a few lessons to be had, here are some from this project:</p>
+<ul>
+ <li>http is a chunked beast. When you send larger amount of content, probability approaches 1 that your server uses <a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding">chunked</a> - until HTTP/2 resolves us from it. A hard choice needs to be made to either use a stream based processing of a chunk (think <a href="https://en.wikipedia.org/wiki/Simple_API_for_XML">SAX</a>) or collecting the Junks to be able to process a <a href="https://en.wikipedia.org/wiki/Document_Object_Model">DOM</a>. To be fully flexible I opted for a DOM/Object based approach, but you are free to create whatever you deem necessary</li>
+ <li><a href="https://jsoup.org/">Jsoup</a> is a reliable HTML parser. It supports <a href="https://www.w3.org/TR/selectors-3/">CSS selectors</a> that make addressing HTML elements a breeze. Solves one of the hardest problems: targeting</li>
+ <li>Targeting JSON data is much harder that it needs to be, the very moment Arrays appear in your JSON structure. There is <a href="https://tools.ietf.org/html/rfc6901">RFC6901 JSON Pointer</a>, but it targets exactly one element, while a typical use case would be: "from the list (array) of discussion posts, pick the list of comments and those who have an eMail, mask them". So I implemented 2 variations: a simple path style address <code>/discussion/posts/comments/email</code> which automatically traverses arrays and an <a href="https://gist.github.com/Stwissel/900acc8ed6a46131530ab89bb70b9f9d">XPath based</a> approach where I convert JSON to a strict XML syntax and back. More <a href="/blog/2018/02/query-a-json-object-like-xpath.html">detail here</a>, examples in a future post</li>
+</ul>
+<h3>Items on the ToDo list</h3>
+<ul>
+ <li>Better documentation</li>
+ <li>Code cleanup</li>
+ <li>Tests</li>
+ <li>Deploy to Heroku button</li>
+ <li>More filters</li>
+</ul>
+<h3>Your turn</h3>
+<p>Go <a href="https://stwissel.github.io/SampleProxy/">check it out</a> and let me know what you think! (Yeah - documentation needs some work).</p>
 <p><strong>Caveat</strong> (a.k.a disclaimer): this is a prototype and work in progress, YMMV!</p></div>
 					<hr />
 					<p>

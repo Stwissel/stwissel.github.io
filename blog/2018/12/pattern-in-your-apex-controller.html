@@ -125,33 +125,33 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Pattern in your Apex Controller</small></h1>
 					<hr />
-					<div><p>A (software) <a href="https://en.wikipedia.org/wiki/Software_design_pattern">design pattern</a> is a general, reusable solution to a commonly occurring problem withing a given context. <a href="https://en.wikipedia.org/wiki/Christopher_Alexander">Christoper Alexander</a> inspired the <a href="https://en.wikipedia.org/wiki/Design_Patterns">Gang of four</a> to apply pattern to software and enumerate 23 classic software pattern.</p> 
-<p>This article discusses how to use some of them in the context of <a href="https://en.wikipedia.org/wiki/Salesforce.com#Apex">Apex</a> controllers.</p> 
-<h3>The context: Same same, but different</h3> 
-<p>You are creating an application to support construction on force.com that will serve multiple countries. Part of the requirements is to compute a risk score for any given project. While <a href="https://www.iso.org/news/2012/12/Ref1685.html">ISO standards</a> form the foundation of the assessment, each jurisdiction has some specialties that alter the logic eventually.</p> 
-<p>This is just one of the requirements, you have many more that follow the <code>pattern</code> <a href="https://www.samesamebutdifferent.site/2017/08/same-same-but-different-origin/">Same Same - But different</a>.</p> 
-<h3>Patterns used</h3> 
-<ul> 
- <li><a href="https://en.wikipedia.org/wiki/Interface-based_programming">Interface based programming</a></li> 
- <li><a href="https://msdn.microsoft.com/en-us/library/aa480019.aspx">Metadata driven application design</a></li> 
- <li><a href="https://en.wikipedia.org/wiki/Facade_pattern">Facade pattern</a></li> 
- <li><a href="https://en.wikipedia.org/wiki/Factory_method_pattern">Factory pattern</a></li> 
-</ul> 
-<p>Besides those, you want to know <a href="https://trailhead.salesforce.com/en/search?keywords=%22Apex%20Enterprise%20Patterns%22">Apex Enterprise Patterns</a>. Go Trailhead and learn</p><h3>The details</h3> 
-<p>The Apex controller isn't used to retrieve records, that's the job of the <a href="https://developer.salesforce.com/docs/atlas.en-us.lightning.meta/lightning/data_service.htm">Lightning Data Service</a>. It is however used for auxiliary information, like the computation of the risk score or check which part of your component should be rendered or or or. Most of the functionality is needed elsewhere too (like compute risk score in a trigger), so coding it into a <a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_classes_annotation_AuraEnabled.htm"><code>@AuraEnabled</code></a> static method doesn't make much sense.</p> 
-<p>Therefore the Apex controller is implemented as a <a href="https://en.wikipedia.org/wiki/Facade_pattern">Facade</a>. No actual logic is implemented, but execution is delegated to specific classes (sample below).</p> 
-<p>The controller shouldn't contain logic to pick the concrete class, since each new country you start business in would require a change to the controller. Picking the right class is left to a <a href="https://en.wikipedia.org/wiki/Factory_method_pattern">factory</a>. A common approach for factories is to have a factory class with one factory method. You can design that class static or to be instantiated, depending on the amount of context your factory needs. In my case I used a static <code>RiskAssessmentFactory</code> class with a single static method <code>RiskAssessor getRiskAssessor(String countryId)</code> that would return....</p> 
-<p>An instance of an interface (e.g. <code>RiskAssessor</code>)! This is an important element of maintainability. A factory method should always return an (instance of an) <a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_classes_interfaces.htm">interface</a>. Not a base class or one specific class, but an interface. Returning a concrete class defeats the very purpose of the factory pattern, returning a base class limits the flexibility of your solution. Factory and Interface belong together like <a href="https://en.wikipedia.org/wiki/Laurel_and_Hardy">Stand and Ollie</a>, <a href="https://www.historyhit.com/julius-caesar-and-cleopatra-a-match-made-in-power/">Caesar and Cleopatra</a> or <a href="https://en.wikipedia.org/wiki/Peanut_butter_and_jelly_sandwich">peanut butter and jelly</a>.</p> 
-<p>Repeat after me:</p> 
-<h4>A factory method returns an instance of an interface</h4> 
-<p>When you define your factory without interfaces, on each call a kitten must die and an <a href="https://plugon.us/theartist/a-unicorn-candle-that-cries-rainbows-e7631">unicorn cries</a>.</p> 
-<h3>Where does the metadata fit in?</h3> 
-<p>Analyzing the business requirements, you notice that the rules are quite similar, just some of the factors are different. E.g. in one jurisdiction number of stories is multiplied by 1.2, in another by 1.5 and in another not considered (= multiplied by 0).</p> 
-<p>So you design a <a href="https://help.salesforce.com/articleView?id=custommetadatatypes_overview.htm&amp;type=5">custom metadata object</a> (don't make the mistake and use a custom object - it will only add headache to your sandbox testing) and create records for your countries, so the same class can cater for multiple jurisdictions. Your factory will read that meta data before instantiating a class that implements the <code>RiskAssesor</code> interface.</p> 
-<p>To maintain your flexibility, after all you suspect that the building code for <a href="https://en.wikipedia.org/wiki/Category:Fictional_African_countries">Zamunda</a> is vastly different, the metadata record contains a field <code>CustomRiskClass</code>. When that field isn't empty your factory will not instantiate the common base class, but use this class. Storing the class name in metadata allows you to keep your country specific implementations in their own <a href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_dev2gp.htm">package</a>.</p> 
-<p>A country package would as a minimum contain the meta data record. If the need for a custom class arises, that class would be in the country package too.</p> 
-<h3>A sample</h3> 
-<p>Fair warning: that code is typed here, probably not ready for copy and paste.</p> 
+					<div><p>A (software) <a href="https://en.wikipedia.org/wiki/Software_design_pattern">design pattern</a> is a general, reusable solution to a commonly occurring problem withing a given context. <a href="https://en.wikipedia.org/wiki/Christopher_Alexander">Christoper Alexander</a> inspired the <a href="https://en.wikipedia.org/wiki/Design_Patterns">Gang of four</a> to apply pattern to software and enumerate 23 classic software pattern.</p>
+<p>This article discusses how to use some of them in the context of <a href="https://en.wikipedia.org/wiki/Salesforce.com#Apex">Apex</a> controllers.</p>
+<h3>The context: Same same, but different</h3>
+<p>You are creating an application to support construction on force.com that will serve multiple countries. Part of the requirements is to compute a risk score for any given project. While <a href="https://www.iso.org/news/2012/12/Ref1685.html">ISO standards</a> form the foundation of the assessment, each jurisdiction has some specialties that alter the logic eventually.</p>
+<p>This is just one of the requirements, you have many more that follow the <code>pattern</code> <a href="https://www.samesamebutdifferent.site/2017/08/same-same-but-different-origin/">Same Same - But different</a>.</p>
+<h3>Patterns used</h3>
+<ul>
+ <li><a href="https://en.wikipedia.org/wiki/Interface-based_programming">Interface based programming</a></li>
+ <li><a href="https://msdn.microsoft.com/en-us/library/aa480019.aspx">Metadata driven application design</a></li>
+ <li><a href="https://en.wikipedia.org/wiki/Facade_pattern">Facade pattern</a></li>
+ <li><a href="https://en.wikipedia.org/wiki/Factory_method_pattern">Factory pattern</a></li>
+</ul>
+<p>Besides those, you want to know <a href="https://trailhead.salesforce.com/en/search?keywords=%22Apex%20Enterprise%20Patterns%22">Apex Enterprise Patterns</a>. Go Trailhead and learn</p><h3>The details</h3>
+<p>The Apex controller isn't used to retrieve records, that's the job of the <a href="https://developer.salesforce.com/docs/atlas.en-us.lightning.meta/lightning/data_service.htm">Lightning Data Service</a>. It is however used for auxiliary information, like the computation of the risk score or check which part of your component should be rendered or or or. Most of the functionality is needed elsewhere too (like compute risk score in a trigger), so coding it into a <a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_classes_annotation_AuraEnabled.htm"><code>@AuraEnabled</code></a> static method doesn't make much sense.</p>
+<p>Therefore the Apex controller is implemented as a <a href="https://en.wikipedia.org/wiki/Facade_pattern">Facade</a>. No actual logic is implemented, but execution is delegated to specific classes (sample below).</p>
+<p>The controller shouldn't contain logic to pick the concrete class, since each new country you start business in would require a change to the controller. Picking the right class is left to a <a href="https://en.wikipedia.org/wiki/Factory_method_pattern">factory</a>. A common approach for factories is to have a factory class with one factory method. You can design that class static or to be instantiated, depending on the amount of context your factory needs. In my case I used a static <code>RiskAssessmentFactory</code> class with a single static method <code>RiskAssessor getRiskAssessor(String countryId)</code> that would return....</p>
+<p>An instance of an interface (e.g. <code>RiskAssessor</code>)! This is an important element of maintainability. A factory method should always return an (instance of an) <a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_classes_interfaces.htm">interface</a>. Not a base class or one specific class, but an interface. Returning a concrete class defeats the very purpose of the factory pattern, returning a base class limits the flexibility of your solution. Factory and Interface belong together like <a href="https://en.wikipedia.org/wiki/Laurel_and_Hardy">Stand and Ollie</a>, <a href="https://www.historyhit.com/julius-caesar-and-cleopatra-a-match-made-in-power/">Caesar and Cleopatra</a> or <a href="https://en.wikipedia.org/wiki/Peanut_butter_and_jelly_sandwich">peanut butter and jelly</a>.</p>
+<p>Repeat after me:</p>
+<h4>A factory method returns an instance of an interface</h4>
+<p>When you define your factory without interfaces, on each call a kitten must die and an <a href="https://plugon.us/theartist/a-unicorn-candle-that-cries-rainbows-e7631">unicorn cries</a>.</p>
+<h3>Where does the metadata fit in?</h3>
+<p>Analyzing the business requirements, you notice that the rules are quite similar, just some of the factors are different. E.g. in one jurisdiction number of stories is multiplied by 1.2, in another by 1.5 and in another not considered (= multiplied by 0).</p>
+<p>So you design a <a href="https://help.salesforce.com/articleView?id=custommetadatatypes_overview.htm&amp;type=5">custom metadata object</a> (don't make the mistake and use a custom object - it will only add headache to your sandbox testing) and create records for your countries, so the same class can cater for multiple jurisdictions. Your factory will read that meta data before instantiating a class that implements the <code>RiskAssesor</code> interface.</p>
+<p>To maintain your flexibility, after all you suspect that the building code for <a href="https://en.wikipedia.org/wiki/Category:Fictional_African_countries">Zamunda</a> is vastly different, the metadata record contains a field <code>CustomRiskClass</code>. When that field isn't empty your factory will not instantiate the common base class, but use this class. Storing the class name in metadata allows you to keep your country specific implementations in their own <a href="https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_dev2gp.htm">package</a>.</p>
+<p>A country package would as a minimum contain the meta data record. If the need for a custom class arises, that class would be in the country package too.</p>
+<h3>A sample</h3>
+<p>Fair warning: that code is typed here, probably not ready for copy and paste.</p>
 <pre><code class="language-java">public interface RiskAssessor {
  RiskAssessor setMetadata(CountryRiskConfig_mdt countryMetadata);
  int isoRisk(ProjectPlan__c theProject);
@@ -176,8 +176,8 @@ public class RiskAssessmentFactory {
 public virtual class RiskAssessorDefault implements RiskAssessor {
  // TODO: implement interfaces here
 }
-</code></pre> 
-<p>The <code>RiskAssessorDefault</code> class is defined using the <code>virtual</code> keyword, so you can subclass it as need arises. To be clear: the subclassing helps to avoid duplicate code, it doesn't break the need for interfaces.</p> 
+</code></pre>
+<p>The <code>RiskAssessorDefault</code> class is defined using the <code>virtual</code> keyword, so you can subclass it as need arises. To be clear: the subclassing helps to avoid duplicate code, it doesn't break the need for interfaces.</p>
 <p>As usual: YMMV</p></div>
 					<hr />
 					<p>

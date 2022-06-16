@@ -126,7 +126,7 @@ ga('send', 'pageview');
 <br> Unfortunately the API only offers authentication via SAML, OAuth or BasicAuth are missing. So any application interacting with the API needs to do <a href="https://www.google.com.sg/search?q=SAML+Dance+Connections+Cloud">The SAML Dance</a>. That's annoying when you have an UI to use, and a formidable challenge when you have a command line application, like a cron Job running unsupervised at interval. 
 <br> One lovely step in the process: the IBM IdP returns a HTML page with a hidden form containing the SAML assertion result to be posted back to the application provider. Quite interesting, when your application provider is a command line app. Let's get to work. 
 <br> The script is written in <a href="https://nodejs.org">node.js</a> and uses <a href="https://www.npmjs.com/package/request">request</a> and <a href="https://www.npmjs.com/package/fast-html-parser">fast-html-parser</a> npm package. The first step is to load the login form (which comes with a first set of cookies) 
-<br> 
+<br>
 <pre><code class="language-js">
 var requestOptionsTemplate = {
     headers: {
@@ -145,9 +145,9 @@ function scLoginPart1() {
     requestOptions.url = 'https://apps.na.collabserv.com/manage/account/dashboardHandler/input';
     request(requestOptions, scLoginPart2);
 }
-</code></pre> 
+</code></pre>
 <br> The function calls the URL where the login form can be found. The result gets delivered to the function <code>scLoginPart2</code>. That function makes use of a global configuration variable <code>config</code> that was created through <code>const config = require("./config.json")</code> and contains all the credentials we need. Step2 submits the form and hands over to Step3. 
-<br> 
+<br>
 <pre><code class="language-js">
 function scLoginPart2(err, httpResponse, body) {
     if (err) {
@@ -181,9 +181,9 @@ function captureCookies(response) {
     // Array, allows for duplicate coolie names
     return outgoingCookies;
 }
-</code></pre> 
+</code></pre>
 <br> Part 3 / 4 finally collect all the cookies we need, so to turn attention to getting the API token in step 5 
-<br> 
+<br>
 <pre><code class="language-js">
 function scLoginPart3(err, httpResponse, body) {
     if (err) {
@@ -215,8 +215,8 @@ function scLoginPart4(err, httpResponse, body) {
     // Now we have some cookies in app, we need the SAML dance for api.notes
     scLoginPart5(cookieHarvest)
 }
-</code></pre> 
-<br> In Part 5 we first request the URL with actual data (devices in our case), but get another SAML dance step, since we have <code>apps.na</code> vs <code>api.notes</code> in the URL<br> 
+</code></pre>
+<br> In Part 5 we first request the URL with actual data (devices in our case), but get another SAML dance step, since we have <code>apps.na</code> vs <code>api.notes</code> in the URL<br>
 <pre><code class="language-js">
 function scLoginPart5(incomingCookies) {
     console.log("Executing SAML postback to SmartCloud");
@@ -226,9 +226,9 @@ function scLoginPart5(incomingCookies) {
     requestOptions.url = 'https://api.notes.ap.collabserv.com/api/traveler/devices';
     request(requestOptions, scLoginPart6);
 }
-</code></pre> 
+</code></pre>
 <br> Part 6 is the interesting one. If not authenticated against the <code>api.notes</code> URL yet, the server will return an HTML form with a JavaScript action that posts that form, containing the SAML assertion to the api URL. Since we don't use a browser to handle that automatically, we need to grab the html, extract the form and post it ourselves 
-<br> 
+<br>
 <pre><code class="language-js">
 function scLoginPart6(err, httpResponse, body) {
     if (err) {
@@ -270,9 +270,9 @@ function scLoginPart6(err, httpResponse, body) {
     }
 
 }
-</code></pre> 
+</code></pre>
 <br> Part 7 then processes an successful redirect to get our first actual payload. 
-<br> 
+<br>
 <pre><code class="language-js">
 function scLoginPart7(err, response, body) {
     if (err) {
@@ -291,7 +291,7 @@ function scLoginPart7(err, response, body) {
         doSomethingUseful(goodBody, resultCookies);
     });
 }
-</code></pre> 
+</code></pre>
 <br> The error path in the code isn't very well modeled, so there's work left to do. So there were just <a href="https://www.youtube.com/watch?v=rP0vn9PZ3kU" title="That pun is only for old German bags">7 bridges to cross</a>. 
 <br> As usual YMMV.</div>
 					<hr />

@@ -131,26 +131,26 @@ ga('send', 'pageview');
 					<h1><small>email Dashboard for the rest of us - Part 2</small></h1>
 					<hr />
 					<div>In <a href="/blog/2015/04/email-dashboard-for-the-rest-of-us-part-1.html">Part 1</a> I introduced a potential set of Java interfaces for the dashboard. In this installment I'll have a look on how to extract this data from a mail database. There are several considerations to be taken into account: 
-<ul> 
- <li>The source needs to supply data only from a defined range of dates - I will use 14 as an example</li> 
+<ul>
+ <li>The source needs to supply data only from a defined range of dates - I will use 14 as an example</li>
  <li>The type of entries needed are: 
-  <ul> 
-   <li>eMails</li> 
-   <li>replies</li> 
-   <li>Calendar entries</li> 
-   <li>Followups I'm waiting for</li> 
-   <li>Followups I need to action</li> 
-  </ul></li> 
- <li>Data needs to be in details and in summary (counts)</li> 
- <li>People involved come in Notes addresses, groups and internet addresses, they need to be dealt with</li> 
+  <ul>
+   <li>eMails</li>
+   <li>replies</li>
+   <li>Calendar entries</li>
+   <li>Followups I'm waiting for</li>
+   <li>Followups I need to action</li>
+  </ul></li>
+ <li>Data needs to be in details and in summary (counts)</li>
+ <li>People involved come in Notes addresses, groups and internet addresses, they need to be dealt with</li>
 </ul> Since I have <a href="http://en.wiktionary.org/wiki/if_all_you_have_is_a_hammer,_everything_looks_like_a_nail">more than a hammer</a>, I can split the data retrieval into different tooling. Dealing with names vs. groups is something best done with LDAP code or lookups into an address book. So I leave that to Java later on. Also running a counter when reading individual entries works quite well in Java. 
 <br> Everything else, short of the icons for the people, can be supplied by a classis Notes view (your knowledge of formula language finally pays off).To make this really fast, two things need to be taken care of: 
-<ol> 
- <li>All information needed has to be in the view, so a <code>ViewNavigator</code> is sufficient in providing the data. ViewNavigators are fast</li> 
- <li>The view should only contain relevant data: in my example 14 days. Now the tempation would be big to use @Today in the view selection formula - which is a bad idea for performance. I will use a static value, that is replaced by Java code on an as-needed basis</li> 
+<ol>
+ <li>All information needed has to be in the view, so a <code>ViewNavigator</code> is sufficient in providing the data. ViewNavigators are fast</li>
+ <li>The view should only contain relevant data: in my example 14 days. Now the tempation would be big to use @Today in the view selection formula - which is a bad idea for performance. I will use a static value, that is replaced by Java code on an as-needed basis</li>
 </ol> So here we go. My view called <code>($DashboardProvider)</code> consists of one view selection formula and 5 columns: 
-<br> 
-<h4>View Selection Formula</h4> 
+<br>
+<h4>View Selection Formula</h4>
 <pre><code class="language-pascal">
 ExcludedForms := "Group":"Mailrule":"Person":"(GroupCalendar)":"STMeeting":
                  "Personal Stationery":"NonDelivery Report":"eProductivityShadowEmail";
@@ -165,9 +165,9 @@ SELECT @IsNotMember(Form;ExcludedForms)
        &amp; !@IsAvailable($Conflict)
        &amp; (EntryDate &gt; StartDay)
        &amp; (EntryDate &lt; EndDay)
-</code></pre> 
+</code></pre>
 <br> One little catch here: repeating entries and multi-day events carry all date values, so this needs to be taken care of in the Java class 
-<h4>Column 1: Date as number (categorized)</h4> 
+<h4>Column 1: Date as number (categorized)</h4>
 <pre><code class="language-pascal">
 FullDate := @If(FollowUpDate != ""; @Date(FollowUpDate);
                 CalendarDateTime!="";CalendarDateTime;
@@ -175,15 +175,15 @@ FullDate := @If(FollowUpDate != ""; @Date(FollowUpDate);
                 PostedDate != ""; PostedDate;
                 @Created);
 @Year(FullDate)*10000+@Month(FullDate)*100+@Day(FullDate)
-</code></pre> 
-<h4>Column 2: The form (almost)</h4> 
+</code></pre>
+<h4>Column 2: The form (almost)</h4>
 <pre><code class="language-pascal">
 @If(FollowUpDate != "";
     @If(From=@UserName;"FollowupWaiting";
         "FollowupAction");
     Form)
-</code></pre> 
-<h4>Column 3: The person</h4> 
+</code></pre>
+<h4>Column 3: The person</h4>
 <pre><code class="language-pascal">
 eMailNames := @If(From=@UserName;SendTo;From);
 allNames   := @If(@IsAvailable(Chair);Chair;eMailNames);
@@ -198,15 +198,15 @@ elements   := @Elements(candidates)+1;
                            @Subset(tmp;1)))
 );
 @If(result="";@Name([Abbreviate];@UserName);result)
-</code></pre> 
-<h4>Column 4: Start time (mostly needed for calendar)</h4> 
+</code></pre>
+<h4>Column 4: Start time (mostly needed for calendar)</h4>
 <pre><code class="language-pascal">
 @If(@IsAvailable(StartDateTime);@Time(StartDateTime);"")
-</code></pre> 
-<h4>Column 5: the subject</h4> 
+</code></pre>
+<h4>Column 5: the subject</h4>
 <pre><code class="language-pascal">
 Subject
-</code></pre> 
+</code></pre>
 <br> Using this view, all information that will form the data for the email dashbaord can be retrieved easily. The next task at hand, for the next installment: build a Java implementation that checks the view, the selection formula and implements our interfaces defined in the first article. 
 <br> Stay tuned!</div>
 					<hr />

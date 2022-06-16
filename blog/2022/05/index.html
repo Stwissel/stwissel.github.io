@@ -118,24 +118,24 @@ ga('send', 'pageview');
 						<small><a href="/blog/2022/05/yes-no-maybe-booleans.html">Yes No Maybe Boolean deserialization with Jackson</a></small>
 					</h1>
 					<hr />
-					<div><p>The <a href="https://en.wikipedia.org/wiki/Robustness_principle">Robustness principle</a> demands: be lenient in what you accept and strict in what you emit. I was facing this challenge when deserializing boolean values.</p> 
-<h3>What is true</h3> 
-<p>Glancing at data, we can spot, mostly easily what looks trueish:</p> 
-<ul> 
- <li>true</li> 
- <li>"<strong>T</strong>rue"</li> 
- <li>"<strong>Y</strong>es"</li> 
- <li>1</li> 
- <li>"<strong>S</strong>i"</li> 
- <li>"<strong>J</strong>a"</li> 
- <li>"<strong>A</strong>ctive"</li> 
- <li>"<strong>i</strong>sActive"</li> 
- <li>"<strong>e</strong>nabled"</li> 
- <li>"<strong>o</strong>n"</li> 
-</ul> 
-<p>The last three options aren't as clear cut, they depend on your use case. Using a simple class, lets try to deserialize from <a href="https://www.json.org/json-en.html">JSON</a> to an instance of a <a href="https://www.java.com/">Java</a> class instance using <a href="https://github.com/FasterXML/jackson">Jackson</a>.</p> 
-<p>Java doesn't have native support for JSON, so we need to rely on libraries like <a href="https://github.com/FasterXML/jackson">Jackson</a>, <a href="https://github.com/google/gson">Google GSON</a> (or any other listed on the <a href="https://www.json.org/json-en.html">JSON</a> page). I choose Jackson, since it is the library underpinning the <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">JsonObject</a> of the <a href="https://vertx.io/">Eclipse Vert.x</a> Framework I'm fond of. Over at <a href="https://www.baeldung.com/">Baeldung</a> you will find more <a href="https://www.baeldung.com/jackson-object-mapper-tutorial">generic Jackson tutorials</a>.</p> 
-<p>Let's look at a simple Java class (Yes, Java14 will make it <a href="https://vladmihalcea.com/java-records-guide/">less verbose</a>), that sports <code>fromJson()</code> and <code>toJson()</code> as well as convenient overwrite of <code>equals()</code> and <code>toString()</code></p> 
+					<div><p>The <a href="https://en.wikipedia.org/wiki/Robustness_principle">Robustness principle</a> demands: be lenient in what you accept and strict in what you emit. I was facing this challenge when deserializing boolean values.</p>
+<h3>What is true</h3>
+<p>Glancing at data, we can spot, mostly easily what looks trueish:</p>
+<ul>
+ <li>true</li>
+ <li>"<strong>T</strong>rue"</li>
+ <li>"<strong>Y</strong>es"</li>
+ <li>1</li>
+ <li>"<strong>S</strong>i"</li>
+ <li>"<strong>J</strong>a"</li>
+ <li>"<strong>A</strong>ctive"</li>
+ <li>"<strong>i</strong>sActive"</li>
+ <li>"<strong>e</strong>nabled"</li>
+ <li>"<strong>o</strong>n"</li>
+</ul>
+<p>The last three options aren't as clear cut, they depend on your use case. Using a simple class, lets try to deserialize from <a href="https://www.json.org/json-en.html">JSON</a> to an instance of a <a href="https://www.java.com/">Java</a> class instance using <a href="https://github.com/FasterXML/jackson">Jackson</a>.</p>
+<p>Java doesn't have native support for JSON, so we need to rely on libraries like <a href="https://github.com/FasterXML/jackson">Jackson</a>, <a href="https://github.com/google/gson">Google GSON</a> (or any other listed on the <a href="https://www.json.org/json-en.html">JSON</a> page). I choose Jackson, since it is the library underpinning the <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">JsonObject</a> of the <a href="https://vertx.io/">Eclipse Vert.x</a> Framework I'm fond of. Over at <a href="https://www.baeldung.com/">Baeldung</a> you will find more <a href="https://www.baeldung.com/jackson-object-mapper-tutorial">generic Jackson tutorials</a>.</p>
+<p>Let's look at a simple Java class (Yes, Java14 will make it <a href="https://vladmihalcea.com/java-records-guide/">less verbose</a>), that sports <code>fromJson()</code> and <code>toJson()</code> as well as convenient overwrite of <code>equals()</code> and <code>toString()</code></p>
 <pre><code class="language-java">package com.notessensei.blogsamples;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -191,17 +191,17 @@ public class Component {
   }
 
 }
-</code></pre> 
-<p>Trying to instantiate a class instance with the following JSON will work:</p> 
+</code></pre>
+<p>Trying to instantiate a class instance with the following JSON will work:</p>
 <pre><code class="language-json">{
   "name": "Heater",
   "active": false
 }
-</code></pre> 
+</code></pre>
 <pre><code class="language-json">{
   "name": "Aircon"
 }
-</code></pre> 
+</code></pre>
 <pre><code class="language-json">{
   "name": "Fridge",
   "active": true,
@@ -210,19 +210,19 @@ public class Component {
     "measure": 7
   }
 }
-</code></pre> 
-<p>However it will fail with those:</p> 
+</code></pre>
+<p>However it will fail with those:</p>
 <pre><code class="language-json">{
   "name": "System1",
   "active": "on"
 }
-</code></pre> 
+</code></pre>
 <pre><code class="language-json">{
   "name": "System2",
   "active": "yes"
 }
-</code></pre> 
-<p>You get the charming error <em>Cannot deserialize value of type <code>boolean</code> from String "yes": only "true"/"True"/"TRUE" or "false"/"False"/"FALSE" recognized`</em>. Interestingly numbers work.</p> 
+</code></pre>
+<p>You get the charming error <em>Cannot deserialize value of type <code>boolean</code> from String "yes": only "true"/"True"/"TRUE" or "false"/"False"/"FALSE" recognized`</em>. Interestingly numbers work.</p>
 <p>On a side note: <a href="https://github.com/FasterXML/jackson">Jackson</a> uses the presence of getters/setters to decide (de)serialization and needs <code>getActive</code> and <code>setActive</code> or <code>isActive</code>. When you name your variable <code>isActive</code> Eclipse would generate <code>setActive</code> and <code>isActive</code> instead of <code>getIsActive</code> / <code>isIsActive</code> and <code>setIsActive</code>. So simply avoid the <code>is...</code> prefix for internal variables.</p></div>
 					<hr />
  <a href="/blog/2022/05/yes-no-maybe-booleans.html">Read more</a>

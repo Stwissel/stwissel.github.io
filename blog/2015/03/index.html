@@ -119,9 +119,9 @@ ga('send', 'pageview');
 					</h1>
 					<hr />
 					<div>For a recent project I revisited the idea of <a href="blog/2014/09/rethinking-the-mimedocument-data-source.html">storing XML documents</a> as MIME entries in Notes - while preserving some of the fields for use in views and the Notes client. <a href="https://twitter.com/gidgerby">Jesse</a> suggested I should have a look at <a href="http://www.javacodegeeks.com/2014/11/java-annotations-tutorial.html">annotations</a>. Turns out, it is easier that it sound. To create an annotation that works at runtime, I need a one liner only: 
-<br> <code>@Retention(RetentionPolicy.RUNTIME) public @interface ItemPathMappings { String[] value(); }</code> 
+<br><code>@Retention(RetentionPolicy.RUNTIME) public @interface ItemPathMappings { String[] value(); }</code>
 <br> To further improve usefulness, I created a "BaseConfiguration" my classes will inherit from, that contains the common properties I want all my classes (and documents) to have. You might want to adjust it to your needs: 
-<br> 
+<br>
 <pre><code class="language-java">
 ackage com.notessensei.domino;
 import java.io.Serializable;
@@ -158,7 +158,7 @@ public abstract class BaseConfiguration implements Serializable, Comparable&lt;B
         return Serializer.toXMLString(this);
     }
 }
-</code></pre> 
+</code></pre>
 <br> The next building block is my Serializer support with a couple of static methods, that make dealing with XML and JSON easier. 
 <pre><code class="language-java">
 package com.notessensei.domino;
@@ -239,9 +239,9 @@ public class Serializer {
         return targetClass.cast(um.unmarshal(in));
     }
 }
-</code></pre> 
+</code></pre>
 <br> The key piece is for the XML serialization/deserialization to work is the abstract class <code>AbstractXmlDocument</code>. That class contains the load and save methods that interact with Domino's MIME capabilities as well as executing the XPath expressions to store the Notes fields. The implementations of this abstract class will have annotations that combine the Notes field name, the type and the XPath expression. An implementation would look like this: 
-<br> 
+<br>
 <pre><code class="language-java">
 package com.notessensei.domino.xmldocument;
 import javax.xml.bind.JAXBException;
@@ -308,7 +308,7 @@ public class ApplicationXmlDocument extends AbstractXmlDocument {
 }
 </code></pre> ## 
 <br> Here is the base class: 
-<br> 
+<br>
 <pre><code class="language-java">
 package com.notessensei.domino.xmldocument;
 
@@ -699,7 +699,7 @@ public abstract class AbstractXmlDocument {
 
     }
 }
-</code></pre> 
+</code></pre>
 <br> As time permits I will provide a full working example. 
 <br> YMMV!</div>
 					<hr />
@@ -725,33 +725,33 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
 <h3>develop local, deploy (Bluemix) global</h3> The task at hand is to develop a Java <a href="https://developer.ibm.com/wasdev/blog/2013/03/29/introducing_the_liberty_profile/">Liberty</a> based application, that uses CouchDB/Cloudant as its NoSQL data store. I want to be able to develop/test the application while being completely <a href="http://offlinefirst.org/">offline</a> and deploy it to Bluemix. I don't want any code to have conditions offline/online, but rather use configuration of the runtimes for it. 
 <br> Luckily I have access to <a href="https://twitter.com/Sai_Vennam">really smart developers</a> (thx Sai), so I succeeded. 
 <br> This is what I found out, I needed to do. The list serves as reference for myself and others living in a latency/bandwidth challenged environment. 
-<ol> 
+<ol>
  <li><b>Read</b>: There are a number of articles around, that contain bits and pieces of the information required. In no specific order: 
-  <ul> 
-   <li>Refresh on Java <a href="http://docs.oracle.com/cd/E19857-01/820-1639/bhano/index.html">Naming References and Binding Information</a></li> 
-   <li>Sai Vennam introduces <a href="https://developer.ibm.com/bluemix/2014/07/08/cloudant_on_bluemix/">Cloudant on Bluemix</a></li> 
-   <li><a href="http://www-01.ibm.com/support/knowledgecenter/SSAW57_8.5.5/com.ibm.websphere.wlp.nd.doc/ae/twlp_setup.html?cp=SSAW57_8.5.5%2F1-6-0">Setting up the liberty profile</a></li> 
-   <li><a href="https://www-01.ibm.com/support/knowledgecenter/was_beta_liberty/com.ibm.websphere.wlp.nd.multiplatform.doc/ae/twlp_couchdb_create.html">Cloudant in the liberty profile</a></li> 
-  </ul> </li> 
+  <ul>
+   <li>Refresh on Java <a href="http://docs.oracle.com/cd/E19857-01/820-1639/bhano/index.html">Naming References and Binding Information</a></li>
+   <li>Sai Vennam introduces <a href="https://developer.ibm.com/bluemix/2014/07/08/cloudant_on_bluemix/">Cloudant on Bluemix</a></li>
+   <li><a href="http://www-01.ibm.com/support/knowledgecenter/SSAW57_8.5.5/com.ibm.websphere.wlp.nd.doc/ae/twlp_setup.html?cp=SSAW57_8.5.5%2F1-6-0">Setting up the liberty profile</a></li>
+   <li><a href="https://www-01.ibm.com/support/knowledgecenter/was_beta_liberty/com.ibm.websphere.wlp.nd.multiplatform.doc/ae/twlp_couchdb_create.html">Cloudant in the liberty profile</a></li>
+  </ul> </li>
  <li><b>Install</b>: This is a big jump forward. No more looking for older versions, but rather bleeding edge. Tools of the trade: 
-  <ul> 
-   <li><a href="http://git-scm.com/">GIT</a>. When you are on Windows or Mac, try the nice GUI of <a href="http://sourcetreeapp.com/">SourceTree</a>, and don't forget to learn <a href="https://github.com/nvie/gitflow">git-flow</a> (best explained <a href="https://www.atlassian.com/git/">here</a>)</li> 
-   <li>A current version of the <a href="http://eclipse.org/downloads/">Eclipse IDE</a> (Luna at the time of writing, the Java edition suffices)</li> 
-   <li>The <a href="https://developer.ibm.com/wasdev/downloads/liberty-profile-beta/">liberty profile beta</a>. The Beta is necessary, since it contains some of the features, notably couchdb, which are available in Bluemix by default. Use the option to drag the link onto your running Eclipse client</li> 
-   <li><a href="http://maven.apache.org/">Maven</a> - the Java way to resolve dependencies (guess where bower and npm got their ideas from)</li> 
-   <li><a href="http://curl.haxx.se/">CURL</a> (that's my little command line ninja stuff, you can get away without it)</li> 
-   <li>Apache <a href="http://couchdb.apache.org/">CouchDB</a></li> 
-  </ul> </li> 
+  <ul>
+   <li><a href="http://git-scm.com/">GIT</a>. When you are on Windows or Mac, try the nice GUI of <a href="http://sourcetreeapp.com/">SourceTree</a>, and don't forget to learn <a href="https://github.com/nvie/gitflow">git-flow</a> (best explained <a href="https://www.atlassian.com/git/">here</a>)</li>
+   <li>A current version of the <a href="http://eclipse.org/downloads/">Eclipse IDE</a> (Luna at the time of writing, the Java edition suffices)</li>
+   <li>The <a href="https://developer.ibm.com/wasdev/downloads/liberty-profile-beta/">liberty profile beta</a>. The Beta is necessary, since it contains some of the features, notably couchdb, which are available in Bluemix by default. Use the option to drag the link onto your running Eclipse client</li>
+   <li><a href="http://maven.apache.org/">Maven</a> - the Java way to resolve dependencies (guess where bower and npm got their ideas from)</li>
+   <li><a href="http://curl.haxx.se/">CURL</a> (that's my little command line ninja stuff, you can get away without it)</li>
+   <li>Apache <a href="http://couchdb.apache.org/">CouchDB</a></li>
+  </ul> </li>
  <li><b>Configure</b>: Java loves indirection. So there are a few moving parts as well (details below) 
-  <ul> 
-   <li>The Cloudant service in Bluemix</li> 
-   <li>The JNDI name in the web.xml. Bluemix will discover the Cloudant service and create the matching entries in the server.xml automagically</li> 
-   <li>A local profile for a server running the Liberty 9.0 profile</li> 
-   <li>The configuration for the local CouchDB in the local server.xml</li> 
-   <li>Replication between your local CouchDB instance and the Cloudant server database (if you want to keep the data in sync)</li> 
-  </ul> </li> 
+  <ul>
+   <li>The Cloudant service in Bluemix</li>
+   <li>The JNDI name in the web.xml. Bluemix will discover the Cloudant service and create the matching entries in the server.xml automagically</li>
+   <li>A local profile for a server running the Liberty 9.0 profile</li>
+   <li>The configuration for the local CouchDB in the local server.xml</li>
+   <li>Replication between your local CouchDB instance and the Cloudant server database (if you want to keep the data in sync)</li>
+  </ul> </li>
 </ol> The flow of the data access looks like this 
-<br> 
+<br>
 <img src="/blog/images/2015/BlueMixLocal.jpg" border="0" alt="Develop local, deploy global"></div>
 					<hr />
  <a href="/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html">Read more</a>

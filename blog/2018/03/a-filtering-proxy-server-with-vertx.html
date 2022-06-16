@@ -125,39 +125,39 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>A filtering proxy server with vert.x</small></h1>
 					<hr />
-					<div><h3>Scenario</h3> 
-<p>You have this nice application running in your (cloud or on premises) environment and then <a href="http://ec.europa.eu/justice/smedataprotect/index_en.htm">a big scare</a> hits. Suddenly you need to remove or mask different streams of data depending on all sorts of conditions your legal department is <strike>torturing</strike> advising you.</p> 
-<p>Until your applications natively can do that, you might resort to a content filter that sits as a proxy between you and the application (technically it is a <a href="https://en.wikipedia.org/wiki/Reverse_proxy">reverse proxy</a>, but that's fine print).</p> 
-<p>To explore the feasibility of such an approach I created <a href="https://stwissel.github.io/SampleProxy/">SampleProxy</a> based on work of <a href="https://github.com/vietj/vertx-http-proxy">Julien Viet</a> using <a href="http://vertx.io">vert.x</a> as my runtime environment.</p> 
-<h3>Requirements</h3> 
-<ul> 
- <li>Needs to be a <strong>content filter</strong>, not a URL blocker</li> 
- <li>Need to provide functionality for practical use out-of-the-box, but needs to be extensible (configuration over code)</li> 
- <li>Need to be able to filter HTML, JSON, XML and Text. No need to filter binary formats. Contemplating about JavaScript (you could use the text filter for that)</li> 
- <li>Filter based on mime-type and URL as standard, but extensible to use <strong>anything</strong> in the request or reply to decide what to filter</li> 
- <li>Configurable FilterChain: a filter decides what to filter (with the mime-type as minimum condition) and hands actual filter operation to a chain of subfilters that do the actual stream manipulation</li> 
- <li>configurable subfilters. E.g. a filter that can remove JSON nodes from JSON data should read the qualifier from a configuration, so the same filter class can be reused for different filter purposes</li> 
- <li>CSS isn't on the radar yet, but contributions would be happily accepted</li> 
-</ul> 
-<h3>The flow</h3> 
-<p><img src="/blog/images/2018/ProxyDataFlow.png" alt="Flow from browser to proxy to application and back"></p> 
-<h3>Things I learned along the way</h3> 
-<p>There are always a few lessons to be had, here are some from this project:</p> 
-<ul> 
- <li>http is a chunked beast. When you send larger amount of content, probability approaches 1 that your server uses <a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding">chunked</a> - until HTTP/2 resolves us from it. A hard choice needs to be made to either use a stream based processing of a chunk (think <a href="https://en.wikipedia.org/wiki/Simple_API_for_XML">SAX</a>) or collecting the Junks to be able to process a <a href="https://en.wikipedia.org/wiki/Document_Object_Model">DOM</a>. To be fully flexible I opted for a DOM/Object based approach, but you are free to create whatever you deem necessary</li> 
- <li><a href="https://jsoup.org/">Jsoup</a> is a reliable HTML parser. It supports <a href="https://www.w3.org/TR/selectors-3/">CSS selectors</a> that make addressing HTML elements a breeze. Solves one of the hardest problems: targeting</li> 
- <li>Targeting JSON data is much harder that it needs to be, the very moment Arrays appear in your JSON structure. There is <a href="https://tools.ietf.org/html/rfc6901">RFC6901 JSON Pointer</a>, but it targets exactly one element, while a typical use case would be: "from the list (array) of discussion posts, pick the list of comments and those who have an eMail, mask them". So I implemented 2 variations: a simple path style address <code>/discussion/posts/comments/email</code> which automatically traverses arrays and an <a href="https://gist.github.com/Stwissel/900acc8ed6a46131530ab89bb70b9f9d">XPath based</a> approach where I convert JSON to a strict XML syntax and back. More <a href="/blog/2018/02/query-a-json-object-like-xpath.html">detail here</a>, examples in a future post</li> 
-</ul> 
-<h3>Items on the ToDo list</h3> 
-<ul> 
- <li>Better documentation</li> 
- <li>Code cleanup</li> 
- <li>Tests</li> 
- <li>Deploy to Heroku button</li> 
- <li>More filters</li> 
-</ul> 
-<h3>Your turn</h3> 
-<p>Go <a href="https://stwissel.github.io/SampleProxy/">check it out</a> and let me know what you think! (Yeah - documentation needs some work).</p> 
+					<div><h3>Scenario</h3>
+<p>You have this nice application running in your (cloud or on premises) environment and then <a href="http://ec.europa.eu/justice/smedataprotect/index_en.htm">a big scare</a> hits. Suddenly you need to remove or mask different streams of data depending on all sorts of conditions your legal department is <strike>torturing</strike> advising you.</p>
+<p>Until your applications natively can do that, you might resort to a content filter that sits as a proxy between you and the application (technically it is a <a href="https://en.wikipedia.org/wiki/Reverse_proxy">reverse proxy</a>, but that's fine print).</p>
+<p>To explore the feasibility of such an approach I created <a href="https://stwissel.github.io/SampleProxy/">SampleProxy</a> based on work of <a href="https://github.com/vietj/vertx-http-proxy">Julien Viet</a> using <a href="http://vertx.io">vert.x</a> as my runtime environment.</p>
+<h3>Requirements</h3>
+<ul>
+ <li>Needs to be a <strong>content filter</strong>, not a URL blocker</li>
+ <li>Need to provide functionality for practical use out-of-the-box, but needs to be extensible (configuration over code)</li>
+ <li>Need to be able to filter HTML, JSON, XML and Text. No need to filter binary formats. Contemplating about JavaScript (you could use the text filter for that)</li>
+ <li>Filter based on mime-type and URL as standard, but extensible to use <strong>anything</strong> in the request or reply to decide what to filter</li>
+ <li>Configurable FilterChain: a filter decides what to filter (with the mime-type as minimum condition) and hands actual filter operation to a chain of subfilters that do the actual stream manipulation</li>
+ <li>configurable subfilters. E.g. a filter that can remove JSON nodes from JSON data should read the qualifier from a configuration, so the same filter class can be reused for different filter purposes</li>
+ <li>CSS isn't on the radar yet, but contributions would be happily accepted</li>
+</ul>
+<h3>The flow</h3>
+<p><img src="/blog/images/2018/ProxyDataFlow.png" alt="Flow from browser to proxy to application and back"></p>
+<h3>Things I learned along the way</h3>
+<p>There are always a few lessons to be had, here are some from this project:</p>
+<ul>
+ <li>http is a chunked beast. When you send larger amount of content, probability approaches 1 that your server uses <a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding">chunked</a> - until HTTP/2 resolves us from it. A hard choice needs to be made to either use a stream based processing of a chunk (think <a href="https://en.wikipedia.org/wiki/Simple_API_for_XML">SAX</a>) or collecting the Junks to be able to process a <a href="https://en.wikipedia.org/wiki/Document_Object_Model">DOM</a>. To be fully flexible I opted for a DOM/Object based approach, but you are free to create whatever you deem necessary</li>
+ <li><a href="https://jsoup.org/">Jsoup</a> is a reliable HTML parser. It supports <a href="https://www.w3.org/TR/selectors-3/">CSS selectors</a> that make addressing HTML elements a breeze. Solves one of the hardest problems: targeting</li>
+ <li>Targeting JSON data is much harder that it needs to be, the very moment Arrays appear in your JSON structure. There is <a href="https://tools.ietf.org/html/rfc6901">RFC6901 JSON Pointer</a>, but it targets exactly one element, while a typical use case would be: "from the list (array) of discussion posts, pick the list of comments and those who have an eMail, mask them". So I implemented 2 variations: a simple path style address <code>/discussion/posts/comments/email</code> which automatically traverses arrays and an <a href="https://gist.github.com/Stwissel/900acc8ed6a46131530ab89bb70b9f9d">XPath based</a> approach where I convert JSON to a strict XML syntax and back. More <a href="/blog/2018/02/query-a-json-object-like-xpath.html">detail here</a>, examples in a future post</li>
+</ul>
+<h3>Items on the ToDo list</h3>
+<ul>
+ <li>Better documentation</li>
+ <li>Code cleanup</li>
+ <li>Tests</li>
+ <li>Deploy to Heroku button</li>
+ <li>More filters</li>
+</ul>
+<h3>Your turn</h3>
+<p>Go <a href="https://stwissel.github.io/SampleProxy/">check it out</a> and let me know what you think! (Yeah - documentation needs some work).</p>
 <p><strong>Caveat</strong> (a.k.a disclaimer): this is a prototype and work in progress, YMMV!</p></div>
 					<hr />
 					<p>

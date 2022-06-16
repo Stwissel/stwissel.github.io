@@ -124,24 +124,24 @@ ga('send', 'pageview');
 					<hr />
 					<div>After having <a href="http://vertx.io">Vert.x</a> and Domino <a href="/blog/2016/02/vertx-and-domino.html">co-exist</a>, the door opens for a few interesting applications of the new found capabilities. One sticky point in each application landscape is authentication and authorization. This installment is about authorization. 
 <br> The typical flow: 
-<ol> 
- <li>you access a web resource</li> 
- <li>provide some identity mechanism (in the simplest case: username and password)</li> 
- <li>in exchange get some prove of identity</li> 
- <li>that allows you to access protected resources.</li> 
+<ol>
+ <li>you access a web resource</li>
+ <li>provide some identity mechanism (in the simplest case: username and password)</li>
+ <li>in exchange get some prove of identity</li>
+ <li>that allows you to access protected resources.</li>
 </ol> In Basic authentication you have to provide that prove every time in form of an encoded username/password header. Since that limits you to username and password, all other mechanism provide you in return for your valid credentials with a "ticket" (technically a "Bearer Token") that opens access. 
 <br> I tend to compare this with a movie theater: if you want to enter the room where the movie plays you need a ticket. The guy checking it, only is interested: is it valid for that show. He doesn't care if you paid in cash, with a card, got it as a present or won in a lucky draw. Did you buy it just now, or online or yesterday, he doesn't care. He cares only: is it valid. Same applies to our web servers. 
 <br> In the IBM world the standard here is an <a href="https://en.wikipedia.org/wiki/IBM_Lightweight_Third-Party_Authentication">LTPA token</a> that gets delivered as cookie. Now cookies (besides being fattening) come with their <a href="http://www.rafayhackingarticles.net/2011/07/facebook-cookie-stealing-and-session.html">own little set of trouble</a> and are kind of frowned upon in contemporary web application development. 
 <br> The current web API token darling is <a href="https://jwt.io/">JSON Web Token</a> (JWT). They are an interesting concept since they sign the data provided. Be clear: they don't encrypt it, so you need to be careful if you want to store sensitive information (and encrypt that first). 
 <h3>Now how to put that into Domino?</h3> The sequence matches the typical flow: 
-<ol> 
- <li>User authenticates with credentials</li> 
- <li>server creates a JWT</li> 
- <li>stores JWT and credentials in a map, so when the user comes back with the token, the original credentials can be retrieved</li> 
- <li>delivers JWT to caller</li> 
- <li>Caller uses JWT for next calls in the header</li> 
+<ol>
+ <li>User authenticates with credentials</li>
+ <li>server creates a JWT</li>
+ <li>stores JWT and credentials in a map, so when the user comes back with the token, the original credentials can be retrieved</li>
+ <li>delivers JWT to caller</li>
+ <li>Caller uses JWT for next calls in the header</li>
 </ol> It isn't rocket science to get that to work.First some preliminary steps. Since we use cryptographic features, we need a keystore. You can easily create one using <code>keytool</code>. To make my life easier I created a small script to generate all I need: 
-<br> 
+<br>
 <pre><code class="language-bash">
 # !/bin/sh
 # Generate a keystore file with a given password
@@ -154,9 +154,9 @@ keytool -genkey -keystore keystore.jceks -storetype jceks -storepass $1 -keyalg 
 keytool -genkeypair -keystore keystore.jceks -storetype jceks -storepass $1 -keyalg EC -keysize 256 -alias ES256 -keypass $1 -sigalg SHA256withECDSA -dname "CN=,OU=,O=,L=,ST=,C=" -validity 360
 keytool -genkeypair -keystore keystore.jceks -storetype jceks -storepass $1 -keyalg EC -keysize 256 -alias ES384 -keypass $1 -sigalg SHA384withECDSA -dname "CN=,OU=,O=,L=,ST=,C=" -validity 360
 keytool -genkeypair -keystore keystore.jceks -storetype jceks -storepass $1 -keyalg EC -keysize 256 -alias ES512 -keypass $1 -sigalg SHA512withECDSA -dname "CN=,OU=,O=,L=,ST=,C=" -validity 360
-</code></pre> 
+</code></pre>
 <br> you call the function with the password you would like to use: <code>makekeys Sup3rs3cr3t</code>. In vert.x you provide a route protection (e.g. /api) and a login route. This is done quite easily. To get the whole picture about vert.x and verticles, you might want to <a href="http://vertx.io/docs/vertx-web/java/">check the tutorial</a> first (comes in <a href="http://vertx.io/docs/vertx-web/js/">JavaScript flavour</a> too). 
-<br> 
+<br>
 <pre><code class="language-java">
 // Getting the parameters from the environment, so it's not hardcoded
 final String jwtPassword = System.getenv("JWT_PASSWORD");
@@ -182,9 +182,9 @@ router.route().handler(BodyHandler.create());
 // Secured routes, except the login root
 router.route("/api").handler(JWTAuthHandler.create(jwt, "/api/login"));
 router.post("/api/login").handler(this::loginHandler);
-</code></pre> 
+</code></pre>
 <br> In case you wonder about the syntax. That's Java8 goodness. The missing piece now is the loginHandler. There we face an extra challenge. Rule number one for all event loop driven enviornments (like NodeJS too): You do not block the event queue. Now an authentication can take a little longer, so we need to wrap that call into a <a href="">future</a> (Java's way of saying: I <a href="">promise</a>. Sounds much more complicated than it actually is: 
-<br> 
+<br>
 <pre><code class="language-java">
 public void loginHandler(final RoutingContext ctx) {
 
@@ -223,7 +223,7 @@ public String validateNotesUser(final String userName, final String password) {
     NotesThread.stermThread();
     return result;
 }
-</code></pre> 
+</code></pre>
 <br> I skipped the part where token and user gets stored in a lookup map. That's an story for another time. Now the result coming back from successfully posting to /api/login is a bearer token. This token needs to be send in all future requests as a header: <code>Authorization: Bearer <i>token</i></code>. There will be more about vert.x and Domino</div>
 					<hr />
 					<p>

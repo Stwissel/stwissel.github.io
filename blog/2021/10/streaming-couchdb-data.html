@@ -122,16 +122,16 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Streaming CouchDB data</small></h1>
 					<hr />
-					<div><p>I'm a confessing fan of <a href="http://couchdb.apache.org/">CouchDB</a>, <a href="https://en.wikipedia.org/wiki/Stream_(computing)">stream programming</a> and the <a href="https://www.npmjs.com/package/nano">official CouchDB NodeJS library</a>. Nano supports returning data as <a href="https://nodejs.org/api/stream.html">NodeJS Stream</a>, so you can <a href="https://www.codemag.com/article/1803071/Getting-Started-with-Node-Streams">pipe it away</a>. Most examples use file streams or <a href="https://nodejs.org/api/process.html#process_process_stdout"><code>process.stdout</code></a>, while my goal was to process individual documents that are part of the stream</p> 
-<h3>You can't walk into the same stream a second time</h3> 
-<p>This old Buddhist saying holds true for NodeJS streams too. So any processing needs to happen in the chain of the stream. Let's start with the simple example of reading all documents from a couchDB:</p> 
+					<div><p>I'm a confessing fan of <a href="http://couchdb.apache.org/">CouchDB</a>, <a href="https://en.wikipedia.org/wiki/Stream_(computing)">stream programming</a> and the <a href="https://www.npmjs.com/package/nano">official CouchDB NodeJS library</a>. Nano supports returning data as <a href="https://nodejs.org/api/stream.html">NodeJS Stream</a>, so you can <a href="https://www.codemag.com/article/1803071/Getting-Started-with-Node-Streams">pipe it away</a>. Most examples use file streams or <a href="https://nodejs.org/api/process.html#process_process_stdout"><code>process.stdout</code></a>, while my goal was to process individual documents that are part of the stream</p>
+<h3>You can't walk into the same stream a second time</h3>
+<p>This old Buddhist saying holds true for NodeJS streams too. So any processing needs to happen in the chain of the stream. Let's start with the simple example of reading all documents from a couchDB:</p>
 <pre><code class="language-javascript">const Nano = require("nano");
 const nano = Nano(couchDBURL);
 nano.listAsStream({ include_docs: true }).pipe(process.stdout);
-</code></pre> 
-<p>This little snippet will read out all documents in your couchDB. You need to supply the <code>couchDBURL</code> value, e.g. <code>http://localhost:5984/test</code>. On a closer look, we see that the data returned arrives in continious buffers that don't match JSON document boundaries, so processing one document after the other needs extra work.</p> 
-<p>A <a href="https://strongloop.com/strongblog/practical-examples-of-the-new-node-js-streams-api/">blog entry</a> in the StrongLoop blog provides the first clue what to do. To process CouchDB stream data we need both a <a href="https://nodejs.org/api/stream.html#stream_class_stream_transform">Transform stream</a> to chop incoming data into line by line and a <a href="https://nodejs.org/api/stream.html#stream_implementing_a_writable_stream">writable stream</a> for our results.</p> 
-<p>Our code, finally will look like this:</p> 
+</code></pre>
+<p>This little snippet will read out all documents in your couchDB. You need to supply the <code>couchDBURL</code> value, e.g. <code>http://localhost:5984/test</code>. On a closer look, we see that the data returned arrives in continious buffers that don't match JSON document boundaries, so processing one document after the other needs extra work.</p>
+<p>A <a href="https://strongloop.com/strongblog/practical-examples-of-the-new-node-js-streams-api/">blog entry</a> in the StrongLoop blog provides the first clue what to do. To process CouchDB stream data we need both a <a href="https://nodejs.org/api/stream.html#stream_class_stream_transform">Transform stream</a> to chop incoming data into line by line and a <a href="https://nodejs.org/api/stream.html#stream_implementing_a_writable_stream">writable stream</a> for our results.</p>
+<p>Our code, finally will look like this:</p>
 <pre><code class="language-javascript">const Nano = require("nano");
 const { Writable, Transform } = require("stream");
 
@@ -144,14 +144,14 @@ const streamOneDb = (couchDBURL, resultCallback) =&gt; {
     .pipe(jsonMaker())
     .pipe(documentWriter(resultCallback));
 };
-</code></pre> 
-<p>Let's have a closer look at the new functions, the first two implement <code>transform</code>, the last one <code>writable</code>:</p> 
-<ul> 
- <li><code>lineSplitter</code>, as the name implies, cuts the buffer into separate lines for processing. As far as I could tell, CouchDB documents always returned on one line</li> 
- <li><code>jsonMaker</code>, extracts the documents and discards the wrapper with document count that surrounds them</li> 
- <li><code>documentWriter</code>, writing out the JSON object using a callback</li> 
-</ul><h3>Splitting lines</h3> 
-<p>The little special: a chunk might end in the middle of a line, so we keep the last line around for the next iteration until it gets flushed out. The <code>callback()</code> triggers the next step in the pipe.</p> 
+</code></pre>
+<p>Let's have a closer look at the new functions, the first two implement <code>transform</code>, the last one <code>writable</code>:</p>
+<ul>
+ <li><code>lineSplitter</code>, as the name implies, cuts the buffer into separate lines for processing. As far as I could tell, CouchDB documents always returned on one line</li>
+ <li><code>jsonMaker</code>, extracts the documents and discards the wrapper with document count that surrounds them</li>
+ <li><code>documentWriter</code>, writing out the JSON object using a callback</li>
+</ul><h3>Splitting lines</h3>
+<p>The little special: a chunk might end in the middle of a line, so we keep the last line around for the next iteration until it gets flushed out. The <code>callback()</code> triggers the next step in the pipe.</p>
 <pre><code class="language-javascript">const lineSplitter = () =&gt;
   new Transform({
     objectMode: true,
@@ -175,10 +175,10 @@ const streamOneDb = (couchDBURL, resultCallback) =&gt; {
       callback();
     },
   });
-</code></pre> 
-<p><strong>Nota bene</strong>: the call to <code>lineSplitter()</code> returns a new instance, not executes the split, since each instance can only be used for one stream at all. I tried to just define the function and found NodeJS terminating without a trace when the same instance was used on a second stream.</p> 
-<h3>Extracting documents</h3> 
-<p>You might want to adjust this function when you are interested in other data.</p> 
+</code></pre>
+<p><strong>Nota bene</strong>: the call to <code>lineSplitter()</code> returns a new instance, not executes the split, since each instance can only be used for one stream at all. I tried to just define the function and found NodeJS terminating without a trace when the same instance was used on a second stream.</p>
+<h3>Extracting documents</h3>
+<p>You might want to adjust this function when you are interested in other data.</p>
 <pre><code class="language-javascript">const jsonMaker = () =&gt;
   new Transform({
     objectMode: true,
@@ -199,10 +199,10 @@ const streamOneDb = (couchDBURL, resultCallback) =&gt; {
       callback();
     },
   });
-</code></pre> 
-<p><strong>Nota bene</strong>: Streams process buffers or strings, not JSON Objects, so we need to stringify/parse between the modules</p> 
-<h3>Writing out</h3> 
-<p>In the last step we take the document and process it with whatever we need to do.</p> 
+</code></pre>
+<p><strong>Nota bene</strong>: Streams process buffers or strings, not JSON Objects, so we need to stringify/parse between the modules</p>
+<h3>Writing out</h3>
+<p>In the last step we take the document and process it with whatever we need to do.</p>
 <pre><code class="language-javascript">const documentWriter = (resultCallback) =&gt;
   new Writable({
     write(chunk, encoding, callback) {
@@ -213,8 +213,8 @@ const streamOneDb = (couchDBURL, resultCallback) =&gt; {
       callback();
     },
   });
-</code></pre> 
-<p>So far we have tried it on databases with 500k small documents and databases with documents exceeding 1MB JSON. Works like a charm.<br> I wonder if that would make a good addition to the <code>nano</code> library? The source is <a href="https://gist.github.com/Stwissel/00d1a065096ab342a7509cfa1e97ba39">available as gist</a></p> 
+</code></pre>
+<p>So far we have tried it on databases with 500k small documents and databases with documents exceeding 1MB JSON. Works like a charm.<br> I wonder if that would make a good addition to the <code>nano</code> library? The source is <a href="https://gist.github.com/Stwissel/00d1a065096ab342a7509cfa1e97ba39">available as gist</a></p>
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>

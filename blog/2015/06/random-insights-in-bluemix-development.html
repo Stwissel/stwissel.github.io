@@ -120,20 +120,20 @@ ga('send', 'pageview');
 					<h1><small>Random insights in Bluemix development (a.k.a Die Leiden des Jungen W)</small></h1>
 					<hr />
 					<div>Each platform comes with it's own little challenges, things that work differently than you expect. Those little things can easily steal a few hours. This post collects some of my random insights: 
-<ul> 
+<ul>
  <li><h3>Development cycle</h3> I'm a big fan of <a href="/blog/2015/03/develop-local-deploy-cloud-global-java-and-couchdb.html">offline development</a>. My preferred way is to use a local git repository and push my code to <a href="https://hub.jazz.net/">Bluemix DevOps service</a> to handle compilation and deployment. It comes with a few caveats 
-  <ul> 
-   <li>When you do anything beyond basic <b>Java</b>, you want to use <a href="http://maven.apache.org">Apache Maven</a>. The dependency management is worth the learning curve. If you started with the Java boilerplate, you end up with an ANT project. Take some time, to not only mavenize it, but adjust the directories to follow the maven standards. This involves shuffling a few files around (<code>/src</code> vs. <code>/src/main/java</code> and <code>/bin</code> vs. <code>/target/main/java</code> for starters) and edit the pom.xml to remove the custom path</li> 
-   <li>Make sure you clear out the path in the build job on Devops, maven already deploys to target. If you have specified target in Devops, you end with the code in target/target and the deploy task won't find anything</li> 
-   <li>Learn about the <a href="https://developer.ibm.com/wasdev/websphere-liberty/">liberty profile</a> and its available feature, so you can properly specify <code>&lt;scope&gt;provided&lt;/scope&gt;</code> in the POM.xml</li> 
-   <li>In node.js, when you manually install a module in <code>node_modules</code>, that isn't pulled from a repository through an entry in <code>package.json</code>, that module will not be visible to standard build and deploy, since (surprise surprise) node_modules are excluded from version control and build checkout.<br> Now there are a bunch of workarounds described, but I'll sum it up: don't bother. Either you move your module into a repository DevOps can reach or you build the application locally and use <code>cf push</code></li> 
-   <li><code>manifest.yml</code> is your friend. Learn about it. Especially the path command. When deploying a maven build your path will be <code>/target/[name-of-app]-[maven-version].war</code></li> 
-   <li>You can specify a buildpack and environment parameters in a manifest. Works like a charm. However removing them from the manifest has no effect. You have to manually unset the values using the cf tool. Also the buildpack needs to be reset manually, so be careful there!</li> 
-  </ul> </li> 
+  <ul>
+   <li>When you do anything beyond basic <b>Java</b>, you want to use <a href="http://maven.apache.org">Apache Maven</a>. The dependency management is worth the learning curve. If you started with the Java boilerplate, you end up with an ANT project. Take some time, to not only mavenize it, but adjust the directories to follow the maven standards. This involves shuffling a few files around (<code>/src</code> vs. <code>/src/main/java</code> and <code>/bin</code> vs. <code>/target/main/java</code> for starters) and edit the pom.xml to remove the custom path</li>
+   <li>Make sure you clear out the path in the build job on Devops, maven already deploys to target. If you have specified target in Devops, you end with the code in target/target and the deploy task won't find anything</li>
+   <li>Learn about the <a href="https://developer.ibm.com/wasdev/websphere-liberty/">liberty profile</a> and its available feature, so you can properly specify <code>&lt;scope&gt;provided&lt;/scope&gt;</code> in the POM.xml</li>
+   <li>In node.js, when you manually install a module in <code>node_modules</code>, that isn't pulled from a repository through an entry in <code>package.json</code>, that module will not be visible to standard build and deploy, since (surprise surprise) node_modules are excluded from version control and build checkout.<br> Now there are a bunch of workarounds described, but I'll sum it up: don't bother. Either you move your module into a repository DevOps can reach or you build the application locally and use <code>cf push</code></li>
+   <li><code>manifest.yml</code> is your friend. Learn about it. Especially the path command. When deploying a maven build your path will be <code>/target/[name-of-app]-[maven-version].war</code></li>
+   <li>You can specify a buildpack and environment parameters in a manifest. Works like a charm. However removing them from the manifest has no effect. You have to manually unset the values using the cf tool. Also the buildpack needs to be reset manually, so be careful there!</li>
+  </ul> </li>
  <li><h3>Services</h3> The <i>automagical</i> configuration of services is one of the things to love in Bluemix. This especially holds true for Java 
-  <ul> 
-   <li>The samples suggest to use the <code>VCAP_SERVICES</code> environment variable to get credentials and urls for your services. In short: don't. The Java Liberty build pack does a nice job making the values available though JNDI or Spring. So simply use those. To make sure that <code>Java:comp/env</code> can see them properly, don't forget to reference them in <code>web.xml</code></li> 
-   <li>In diversion from this: I found the <a href="https://developer.ibm.com/messaging/2015/05/22/getting-started-with-java-apps-using-the-mq-light-service-for-bluemix/">mqLite Java classes</a> less stressful that configuring JMS via JNDI. The developers did a good job making that library too work automagical on Bluemix.</li> 
+  <ul>
+   <li>The samples suggest to use the <code>VCAP_SERVICES</code> environment variable to get credentials and urls for your services. In short: don't. The Java Liberty build pack does a nice job making the values available though JNDI or Spring. So simply use those. To make sure that <code>Java:comp/env</code> can see them properly, don't forget to reference them in <code>web.xml</code></li>
+   <li>In diversion from this: I found the <a href="https://developer.ibm.com/messaging/2015/05/22/getting-started-with-java-apps-using-the-mq-light-service-for-bluemix/">mqLite Java classes</a> less stressful that configuring JMS via JNDI. The developers did a good job making that library too work automagical on Bluemix.</li>
    <li>For some services (e.g. JAX-RS 2.0 client; <a href="">BlueMix SSO</a>) you do have to touch the server.xml.<br> The two methods are <a href="https://www.ng.bluemix.net/docs/starters/liberty/index.html#optionsforpushinglibertyapplications__PackagedServer">a packaged server</a> or <a href="https://www.ng.bluemix.net/docs/starters/liberty/index.html#optionsforpushinglibertyapplications__ServerDirectory">a server directory</a>. The former requires a local liberty profile installed, so I prefer the later. It is actually easier than it sounds. In your (Maven) project, you create new directories <code>DefaultServer</code> and <code>DefaultServer/apps</code> (case sensitive!). You create/edit the server.xml in the DefaultServer directory. Then check for your maven plugin in <code>pom.xml</code> and change the output directory (in bold):<br> <pre><code class="language-xml">
 &lt;plugin&gt;
   &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
@@ -145,22 +145,22 @@ ga('send', 'pageview');
     <b>&lt;outputDirectory&gt;${basedir}/defaultServer/apps&lt;/outputDirectory&gt;</b>
   &lt;/configuration&gt;
 &lt;/plugin&gt;
-</code></pre><br> Then you can deploy your application using <code>mvn install</code> and <code>cf push [appname] -p defaultServer</code>. These two commands work in DevOps too! </li> 
-   <li>The SSO service is "Single Sign <b>On</b>", there is no real "Single Sign <b>Out</b>". That's not an issue specific to Bluemix, but something all SSO solutions struggle with, just to be clear what to expect. The login dialog is ugly, but fully customizable. The nature of SSO (Corporate and/or a public provider) makes it a minimal provider: identity only, no roles, attributes or groups. In the spirit of micro services: build a rest based service for that</li> 
-  </ul> </li> 
+</code></pre><br> Then you can deploy your application using <code>mvn install</code> and <code>cf push [appname] -p defaultServer</code>. These two commands work in DevOps too! </li>
+   <li>The SSO service is "Single Sign <b>On</b>", there is no real "Single Sign <b>Out</b>". That's not an issue specific to Bluemix, but something all SSO solutions struggle with, just to be clear what to expect. The login dialog is ugly, but fully customizable. The nature of SSO (Corporate and/or a public provider) makes it a minimal provider: identity only, no roles, attributes or groups. In the spirit of micro services: build a rest based service for that</li>
+  </ul> </li>
  <li><h3>Node-RED</h3> While it is advertised as IoT tool, there is much more to this little gem 
-  <ul> 
-   <li>Node-RED runs on Bluemix, your local PC or even a Rasberry Pi. For the later head over to <a href="http://thethingbox.io/">The Thingbox</a> to get your ready OS image</li> 
-   <li>Node-RED can be easily expanded, there are tons of ready modules at <a href="http://flows.nodered.org/">Node-RED flows</a>. Not all are suitable for Bluemix (e.g. the ones talking Bluetooth), but a local Node-RED can easily talk to a Bluemix Node-RED making it easy for applications to run distributed</li> 
-   <li>My little favourite: connect a HTTP post input directly to a Cloudant output. Node-RED converts the encoded form into a JSON object you can drop into the database as is. You might want to add a small <a href="http://stackoverflow.com/questions/23593878/node-js-equivalent-for-gson-json-creation">filter</a> (a compute node) to avoid data contamination</li> 
-  </ul> </li> <!--
+  <ul>
+   <li>Node-RED runs on Bluemix, your local PC or even a Rasberry Pi. For the later head over to <a href="http://thethingbox.io/">The Thingbox</a> to get your ready OS image</li>
+   <li>Node-RED can be easily expanded, there are tons of ready modules at <a href="http://flows.nodered.org/">Node-RED flows</a>. Not all are suitable for Bluemix (e.g. the ones talking Bluetooth), but a local Node-RED can easily talk to a Bluemix Node-RED making it easy for applications to run distributed</li>
+   <li>My little favourite: connect a HTTP post input directly to a Cloudant output. Node-RED converts the encoded form into a JSON object you can drop into the database as is. You might want to add a small <a href="http://stackoverflow.com/questions/23593878/node-js-equivalent-for-gson-json-creation">filter</a> (a compute node) to avoid data contamination</li>
+  </ul> </li><!--
 <li><h3></h3>
 <ul>
 <li></li>
 <li></li>
 </ul>
 </li>
---> 
+-->
 </ul> As usual YMMV</div>
 					<hr />
 					<p>

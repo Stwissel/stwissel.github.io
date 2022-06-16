@@ -118,9 +118,9 @@ ga('send', 'pageview');
 						<small><a href="/blog/2020/11/schema-mapping-with-java-functional-interfaces.html">Schema mapping with Java functional interfaces</a></small>
 					</h1>
 					<hr />
-					<div><p>Mapping one data structure into another is a never ending chore since COBOL's <code>MOVE CORRESPONDING</code>. One to one mappings are trivial, onnce computation is needed, clean code can become messy, really fast</p> 
-<h3>Map with Functions</h3> 
-<p>We will use the following, simplified, scenario with source and target formats:</p> 
+					<div><p>Mapping one data structure into another is a never ending chore since COBOL's <code>MOVE CORRESPONDING</code>. One to one mappings are trivial, onnce computation is needed, clean code can become messy, really fast</p>
+<h3>Map with Functions</h3>
+<p>We will use the following, simplified, scenario with source and target formats:</p>
 <pre><code class="language-java">{
  "FirstName" : "Peter",
  "LastName" : "Pan",
@@ -128,15 +128,15 @@ ga('send', 'pageview');
  "ToC" : "accepted",
  "Marketing" : "no"
 }
-</code></pre> 
-<p>Desired Result:</p> 
+</code></pre>
+<p>Desired Result:</p>
 <pre><code class="language-java">{
  "fullname" : "Peter Pan",
  "birthday" : "1873-11-23",
  "gdpr" : true
 }
-</code></pre> 
-<p>In our case only <code>DoB</code> has a simple mapping to <code>birthday</code> all others need computation or are dropped. So to keep code clean we will use a map with mapping functions, so each computation can be in its own method. The defaults 1:1 and drop functions get defined first.</p> 
+</code></pre>
+<p>In our case only <code>DoB</code> has a simple mapping to <code>birthday</code> all others need computation or are dropped. So to keep code clean we will use a map with mapping functions, so each computation can be in its own method. The defaults 1:1 and drop functions get defined first.</p>
 <pre><code class="language-java">final Map&lt;String, Function&lt;JsonObject, JsonObject&gt;&gt; functionList = new HashMap&lt;&gt;();
 
 Function&lt;JsonObject, JsonObject&gt; simple(final String fieldNameIn, final String fieldNameOut) {
@@ -147,8 +147,8 @@ Function&lt;JsonObject, JsonObject&gt; drop() {
  return in -&gt; new JsonObject();
 }
 
-</code></pre> 
-<p>Each of the functions returns an Json object that <strong>only</strong> returns a value for the one field it gets called for. We will use a collector to aggregate the values. Since we are planning to use streams and functional interfaces, we need a helper class.</p> 
+</code></pre>
+<p>Each of the functions returns an Json object that <strong>only</strong> returns a value for the one field it gets called for. We will use a collector to aggregate the values. Since we are planning to use streams and functional interfaces, we need a helper class.</p>
 <pre><code class="language-java">class MapHelper() {
  JsonObject source;
  Function&lt;JsonObject, JsonObject&gt; mapper;
@@ -163,7 +163,7 @@ MapHelper getMapHelper(final JsonObject source, final Map.Entry&lt;String, Objec
     result.mapper = this.functionList.getOrDefault(incoming.getKey(), drop());
     return result;
   }
-</code></pre> 
+</code></pre>
 <p>Since each function will return some JSON, that needs to be merged together, we use a Java <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html">Collector</a> to accumulate the values</p></div>
 					<hr />
  <a href="/blog/2020/11/schema-mapping-with-java-functional-interfaces.html">Read more</a>
@@ -185,16 +185,16 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 						<small><a href="/blog/2020/11/streams-and-functional-programming-in-java.html">Streams and Functional programming in Java</a></small>
 					</h1>
 					<hr />
-					<div><p>I'm late to the party embracing <a href="https://www.baeldung.com/java-8-streams">Streams</a> and <a href="https://www.baeldung.com/java-8-functional-interfaces">functional interfaces</a> in Java. Using them for a while taught me the beauty and how things fit together nicely</p> 
-<h3>Moving parts</h3> 
-<ul> 
- <li>At the beginning a class implementing the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html">Stream interface</a> emits items, that can be manipulated using <code>map</code> and <code>filter</code> operationf</li> 
- <li>The map and filter operations are supported by the Interfaces in <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/package-summary.html">java.util.function</a> (we get to the samples later)</li> 
- <li>At the end the result gets "collected", in its simplest form using <code>.forEach</code> or, more sophisticated using a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html">Collector</a> with many <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collectors.html">ready baked options</a></li> 
-</ul> 
-<h3>What's the big deal?</h3> 
-<p>short answer: clean, terse and clutter free code.</p> 
-<p>long answer: an example. Lets say you have a <code>mammal</code> class which gets subclassed by <code>cat</code> and <code>dog</code> (and others). You have a collection of these mamals and need to extract all dogs over weight 50. Weight is not a property of mammal. There might be null values in your collection. Classic code would look like this:</p> 
+					<div><p>I'm late to the party embracing <a href="https://www.baeldung.com/java-8-streams">Streams</a> and <a href="https://www.baeldung.com/java-8-functional-interfaces">functional interfaces</a> in Java. Using them for a while taught me the beauty and how things fit together nicely</p>
+<h3>Moving parts</h3>
+<ul>
+ <li>At the beginning a class implementing the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html">Stream interface</a> emits items, that can be manipulated using <code>map</code> and <code>filter</code> operationf</li>
+ <li>The map and filter operations are supported by the Interfaces in <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/package-summary.html">java.util.function</a> (we get to the samples later)</li>
+ <li>At the end the result gets "collected", in its simplest form using <code>.forEach</code> or, more sophisticated using a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html">Collector</a> with many <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collectors.html">ready baked options</a></li>
+</ul>
+<h3>What's the big deal?</h3>
+<p>short answer: clean, terse and clutter free code.</p>
+<p>long answer: an example. Lets say you have a <code>mammal</code> class which gets subclassed by <code>cat</code> and <code>dog</code> (and others). You have a collection of these mamals and need to extract all dogs over weight 50. Weight is not a property of mammal. There might be null values in your collection. Classic code would look like this:</p>
 <pre><code class="language-java">List&lt;Dog&gt; getHeavyDogs(final List&lt;Mammal&gt; mammals) {
     List&lt;Dog&gt; result = new ArrayList&lt;&gt;();
     for (int i = 0; i &lt; mammals.size(); i++) {
@@ -207,7 +207,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>
     }
     return result;
   }
-</code></pre> 
+</code></pre>
 <p>We all seen this type of code. In a functional and stream style this would look different. We have a little <a href="https://en.wikipedia.org/wiki/Duck_typing">duck typing</a> going on here. When a method looks like a functional interface, it can be used as this function. E.g. a method that takes one value and returns a boolean can be used as a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/Predicate.html">Predicate</a>, which comes in handy for filter operations. Another nifty syntax: you can address methods, both static and instance using the <code>::</code> (double colon) syntax. So when you could use a lambda <code>x -&gt; this.doSomething(x)</code> you can simply write <code>this::doSomething</code> and the compiler will sort it out (<code>System.out::println</code> anyone?)</p></div>
 					<hr />
  <a href="/blog/2020/11/streams-and-functional-programming-in-java.html">Read more</a>

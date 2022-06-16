@@ -138,21 +138,21 @@ ga('send', 'pageview');
 					<hr />
 					<div>The iNotes HTTP API wasn't designed for consumption outside the iNotes web client. This becomes apparent when looking at <code>Form=l_GetOutline_JSON</code> or <code>Form=l_JSVars</code> that return JavaScript and not JSON! The difference? JSON contains data only, while JavaScript contains <code>function</code> definitions too. 
 <br> To make use of data included in the JavaScript there are 2 possibilities: 
-<ul> 
- <li>do some elaborate String operation</li> 
- <li>actually run JavaScript</li> 
+<ul>
+ <li>do some elaborate String operation</li>
+ <li>actually run JavaScript</li>
 </ul> Since Java 6, the JDK contains a JavaScript engine, that originally was developed as <a href="https://developer.mozilla.rg/en-US/docs/Mozilla/Projects/Rhino">Mozilla Rhino</a>. The most recent incarnation in Java 8 is <a href="http://openjdk.java.net/projects/nashorn/">Nashorn</a> (which is German for Rhino). When you use an older JDK, think "older JS", nice functions like <code>JSON.stringify </code> or <code>JSON.parse</code> are missing and need to be <a href="https://github.com/douglascrockford/JSON-js">added from elsewhere</a>. 
 <br> Turning the outline information into something Java useful we need to parse the returned JSON, lets see how that works. The Outline is a little more complex that it might seem. The JSON delivers 6 values (in an array) about the outline entries: 
-<ol start="0"> 
- <li>The hierarchical sequence number. Something like 1 or 3.1 or 3.2.1 - depending on the level. The numbers have gaps where entries in the Outline are hidden from the web</li> 
- <li>The hierarchy level starting with 0. So Asia\South-East\Singapore would be level 2</li> 
- <li>The Label of the entry. Can be different from the actual name of the element</li> 
- <li>The full path to the image for that entry. We'll strip that to get the name without a path, so we can use our own icons</li> 
- <li>The full URL to that entry. It has the View Label (Name) and its UNID or system name in the string. We need the UNID for the unread count, so we'll extract that</li> 
- <li>Can something be dragged there. 1 = Yes, it is a real folder, 0 = probably not, it is a view or a label only. "Probably" since e.g. you should be able to drag into the "Delete" view</li> 
+<ol start="0">
+ <li>The hierarchical sequence number. Something like 1 or 3.1 or 3.2.1 - depending on the level. The numbers have gaps where entries in the Outline are hidden from the web</li>
+ <li>The hierarchy level starting with 0. So Asia\South-East\Singapore would be level 2</li>
+ <li>The Label of the entry. Can be different from the actual name of the element</li>
+ <li>The full path to the image for that entry. We'll strip that to get the name without a path, so we can use our own icons</li>
+ <li>The full URL to that entry. It has the View Label (Name) and its UNID or system name in the string. We need the UNID for the unread count, so we'll extract that</li>
+ <li>Can something be dragged there. 1 = Yes, it is a real folder, 0 = probably not, it is a view or a label only. "Probably" since e.g. you should be able to drag into the "Delete" view</li>
 </ol>Since that lends itself to some complexity, I created a OutlineInfo class that contains the OutlineEntry objects and that one gets filled in the JavaScript function. 
 <br> Then the code turns out quite lean: 
-<br> 
+<br>
 <pre><code class="language-java">
 public OutlineInfo getOutlineInfo(String code, String outline) {
         ScriptEngine engine = new ScriptEngineManager().getEngineByExtension("js");
@@ -161,7 +161,7 @@ public OutlineInfo getOutlineInfo(String code, String outline) {
         OutlineInfo result = (OutlineInfo) jsFunc.invokeFunction("getOutlineObject", outline);
         return result;
 }
-</code></pre> 
+</code></pre>
 <br> The String <code>code</code> contains our JavaScript function. In a working system I probably would keep the engine around somewhere to save the spinup time. <code>outline</code> contains what came back from the call to iNotes. The JavaScript code is equally lean: 
 <pre><code class="language-js">
 function getOutlineObject(raw) {
@@ -180,9 +180,9 @@ function getOutlineObject(raw) {
     return result;
 
 }
-</code></pre> 
+</code></pre>
 <br> Instead of <code>OutlineInfo</code> you could use a <a href="http://docs.oracle.com/javase/6/docs/api/java/util/Collection.html">Java collection</a> to return the value, so I won't list the class here. The <code>OutlineEntry</code> is more interesting, so you can run the sample yourself: 
-<br> 
+<br>
 <pre><code class="language-java">
 package com.notessensei.demo;
 
@@ -302,7 +302,7 @@ public class OutlineEntry {
     }
 
 }
-</code></pre> 
+</code></pre>
 <br> Now the challenge: provide a faster way to generate a collection of <code>OutlineEntry</code> objects! The code above takes on my system between 100 and 150ms</div>
 					<hr />
 					<p>

@@ -118,9 +118,9 @@ ga('send', 'pageview');
 						<small><a href="/blog/2021/10/java-streams-filters-with-side-effects.html">Java Streams filters with side effects</a></small>
 					</h1>
 					<hr />
-					<div><p>Once you get used to <a href="/blog/2020/11/streams-and-functional-programming-in-java.html">stream programming</a> and the pattern of <a href="/blog/2021/01/collecting-java-streams.html">create, select, manipulate and collect</a> your code will never look the same</p> 
-<h3>Putting side effects to good (?) use</h3> 
-<p>The pure teachings tell us, <a href="https://www.baeldung.com/java-stream-filter-lambda">filters</a> should select objects for processing and <strong>not</strong> have any side effects or do processing on their own. But ignoring the teachings could produce clean code (I probably will roast in debug hell for this). Let's look at an example:</p> 
+					<div><p>Once you get used to <a href="/blog/2020/11/streams-and-functional-programming-in-java.html">stream programming</a> and the pattern of <a href="/blog/2021/01/collecting-java-streams.html">create, select, manipulate and collect</a> your code will never look the same</p>
+<h3>Putting side effects to good (?) use</h3>
+<p>The pure teachings tell us, <a href="https://www.baeldung.com/java-stream-filter-lambda">filters</a> should select objects for processing and <strong>not</strong> have any side effects or do processing on their own. But ignoring the teachings could produce clean code (I probably will roast in debug hell for this). Let's look at an example:</p>
 <pre><code class="language-java">final Collection&lt;MyNotification&gt; notifications = getNotifications();
 final Iterator&lt;MyNotification&gt; iter = notifications.iterator();
 
@@ -139,8 +139,8 @@ while(iter.hasNext()) {
     reportWrongNotification(n);
   }
 }
-</code></pre> 
-<p>This gets messy very fast and all selection logic is confined to the if conditions in one function (which initially looks like a good idea). How about rewriting the code <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html">Stream</a> style? It will be more boiler plate, but better segregation:</p> 
+</code></pre>
+<p>This gets messy very fast and all selection logic is confined to the if conditions in one function (which initially looks like a good idea). How about rewriting the code <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html">Stream</a> style? It will be more boiler plate, but better segregation:</p>
 <pre><code class="language-java">final Stream&lt;MyNotification&gt; notifications = getNotifications();
 
 notifications
@@ -149,8 +149,8 @@ notifications
   .filter(this::specialNoDelay)
   .filter(this::standard)
   .forEach(this::reportWrongNotification);
-</code></pre> 
-<p>The filter functions would look like this:</p> 
+</code></pre>
+<p>The filter functions would look like this:</p>
 <pre><code class="language-java">boolean highPriority(final MyNotification n) {
   if (n.priority == Priority.high) {
     sendHighPriority(n);
@@ -166,15 +166,15 @@ boolean groupSend(final MyNotification n) {
   }
   return true; // Furhter processing required
 }
-</code></pre> 
-<p>You get the idea. With proper JavaDoc method headers, this code looks more maintainable.<br> We can push this a little further (as explored on <a href="https://stackoverflow.com/questions/69670736/how-to-apply-a-collection-of-filters-to-a-java-stream">Stackoverflow</a>). Imagin the number of process steps might vary and you don't want to update that code for every variation. You could do something like this:</p> 
+</code></pre>
+<p>You get the idea. With proper JavaDoc method headers, this code looks more maintainable.<br> We can push this a little further (as explored on <a href="https://stackoverflow.com/questions/69670736/how-to-apply-a-collection-of-filters-to-a-java-stream">Stackoverflow</a>). Imagin the number of process steps might vary and you don't want to update that code for every variation. You could do something like this:</p>
 <pre><code class="language-java">final Stream&lt;MyNotification&gt; notifications = getNotifications();
 final Stream&lt;Predicate&lt;MyNotifications&gt;&gt; filters = getFilters();
 
 notifications
   .filter(filters.reduce(f -&gt; true, Predicate::and))
   .forEach(this::reportWrongNotification);
-</code></pre> 
+</code></pre>
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>
@@ -195,16 +195,16 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 						<small><a href="/blog/2021/10/streaming-couchdb-data.html">Streaming CouchDB data</a></small>
 					</h1>
 					<hr />
-					<div><p>I'm a confessing fan of <a href="http://couchdb.apache.org/">CouchDB</a>, <a href="https://en.wikipedia.org/wiki/Stream_(computing)">stream programming</a> and the <a href="https://www.npmjs.com/package/nano">official CouchDB NodeJS library</a>. Nano supports returning data as <a href="https://nodejs.org/api/stream.html">NodeJS Stream</a>, so you can <a href="https://www.codemag.com/article/1803071/Getting-Started-with-Node-Streams">pipe it away</a>. Most examples use file streams or <a href="https://nodejs.org/api/process.html#process_process_stdout"><code>process.stdout</code></a>, while my goal was to process individual documents that are part of the stream</p> 
-<h3>You can't walk into the same stream a second time</h3> 
-<p>This old Buddhist saying holds true for NodeJS streams too. So any processing needs to happen in the chain of the stream. Let's start with the simple example of reading all documents from a couchDB:</p> 
+					<div><p>I'm a confessing fan of <a href="http://couchdb.apache.org/">CouchDB</a>, <a href="https://en.wikipedia.org/wiki/Stream_(computing)">stream programming</a> and the <a href="https://www.npmjs.com/package/nano">official CouchDB NodeJS library</a>. Nano supports returning data as <a href="https://nodejs.org/api/stream.html">NodeJS Stream</a>, so you can <a href="https://www.codemag.com/article/1803071/Getting-Started-with-Node-Streams">pipe it away</a>. Most examples use file streams or <a href="https://nodejs.org/api/process.html#process_process_stdout"><code>process.stdout</code></a>, while my goal was to process individual documents that are part of the stream</p>
+<h3>You can't walk into the same stream a second time</h3>
+<p>This old Buddhist saying holds true for NodeJS streams too. So any processing needs to happen in the chain of the stream. Let's start with the simple example of reading all documents from a couchDB:</p>
 <pre><code class="language-javascript">const Nano = require("nano");
 const nano = Nano(couchDBURL);
 nano.listAsStream({ include_docs: true }).pipe(process.stdout);
-</code></pre> 
-<p>This little snippet will read out all documents in your couchDB. You need to supply the <code>couchDBURL</code> value, e.g. <code>http://localhost:5984/test</code>. On a closer look, we see that the data returned arrives in continious buffers that don't match JSON document boundaries, so processing one document after the other needs extra work.</p> 
-<p>A <a href="https://strongloop.com/strongblog/practical-examples-of-the-new-node-js-streams-api/">blog entry</a> in the StrongLoop blog provides the first clue what to do. To process CouchDB stream data we need both a <a href="https://nodejs.org/api/stream.html#stream_class_stream_transform">Transform stream</a> to chop incoming data into line by line and a <a href="https://nodejs.org/api/stream.html#stream_implementing_a_writable_stream">writable stream</a> for our results.</p> 
-<p>Our code, finally will look like this:</p> 
+</code></pre>
+<p>This little snippet will read out all documents in your couchDB. You need to supply the <code>couchDBURL</code> value, e.g. <code>http://localhost:5984/test</code>. On a closer look, we see that the data returned arrives in continious buffers that don't match JSON document boundaries, so processing one document after the other needs extra work.</p>
+<p>A <a href="https://strongloop.com/strongblog/practical-examples-of-the-new-node-js-streams-api/">blog entry</a> in the StrongLoop blog provides the first clue what to do. To process CouchDB stream data we need both a <a href="https://nodejs.org/api/stream.html#stream_class_stream_transform">Transform stream</a> to chop incoming data into line by line and a <a href="https://nodejs.org/api/stream.html#stream_implementing_a_writable_stream">writable stream</a> for our results.</p>
+<p>Our code, finally will look like this:</p>
 <pre><code class="language-javascript">const Nano = require("nano");
 const { Writable, Transform } = require("stream");
 
@@ -217,12 +217,12 @@ const streamOneDb = (couchDBURL, resultCallback) =&gt; {
     .pipe(jsonMaker())
     .pipe(documentWriter(resultCallback));
 };
-</code></pre> 
-<p>Let's have a closer look at the new functions, the first two implement <code>transform</code>, the last one <code>writable</code>:</p> 
-<ul> 
- <li><code>lineSplitter</code>, as the name implies, cuts the buffer into separate lines for processing. As far as I could tell, CouchDB documents always returned on one line</li> 
- <li><code>jsonMaker</code>, extracts the documents and discards the wrapper with document count that surrounds them</li> 
- <li><code>documentWriter</code>, writing out the JSON object using a callback</li> 
+</code></pre>
+<p>Let's have a closer look at the new functions, the first two implement <code>transform</code>, the last one <code>writable</code>:</p>
+<ul>
+ <li><code>lineSplitter</code>, as the name implies, cuts the buffer into separate lines for processing. As far as I could tell, CouchDB documents always returned on one line</li>
+ <li><code>jsonMaker</code>, extracts the documents and discards the wrapper with document count that surrounds them</li>
+ <li><code>documentWriter</code>, writing out the JSON object using a callback</li>
 </ul></div>
 					<hr />
  <a href="/blog/2021/10/streaming-couchdb-data.html">Read more</a>

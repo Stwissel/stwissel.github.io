@@ -122,9 +122,9 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Async Java with vert.x</small></h1>
 					<hr />
-					<div><p>I wrote about <a href="/blog/2020/11/streams-and-functional-programming-in-java.html">more modern</a> Java syntax <a href="/blog/2021/01/collecting-java-streams.html">and streams</a> before.<br> There is more to it. <a href="https://en.wikipedia.org/wiki/Non-blocking_I/O_%28Java%29">Non Blocking I/O</a> and <a href="https://en.wikipedia.org/wiki/Event_loop">Event Loops</a> allow for<br> <a href="https://www.quora.com/Why-is-Node-js-so-much-faster?share=1">better performance</a>. It's not a magic bullet, some readjustment is required</p> 
-<h2>Adjusting methods, exceptions and return values</h2> 
-<p>Initially it might look daunting, but the adjustments are not too big. Let's look at some examples. A classic Java method looks like this:</p> 
+					<div><p>I wrote about <a href="/blog/2020/11/streams-and-functional-programming-in-java.html">more modern</a> Java syntax <a href="/blog/2021/01/collecting-java-streams.html">and streams</a> before.<br> There is more to it. <a href="https://en.wikipedia.org/wiki/Non-blocking_I/O_%28Java%29">Non Blocking I/O</a> and <a href="https://en.wikipedia.org/wiki/Event_loop">Event Loops</a> allow for<br><a href="https://www.quora.com/Why-is-Node-js-so-much-faster?share=1">better performance</a>. It's not a magic bullet, some readjustment is required</p>
+<h2>Adjusting methods, exceptions and return values</h2>
+<p>Initially it might look daunting, but the adjustments are not too big. Let's look at some examples. A classic Java method looks like this:</p>
 <pre><code class="language-java">String someResult throws DidnWorkException {
     // Working code goes here
     if (someCondition) {
@@ -132,8 +132,8 @@ ga('send', 'pageview');
     }
     return "It worked";
 }
-</code></pre> 
-<p>Its asynchronous counter-part looks like this:</p> 
+</code></pre>
+<p>Its asynchronous counter-part looks like this:</p>
 <pre><code class="language-java">Future&lt;String&gt; someResult() {
     return Future.future(promise -&gt; {
         // Working code goes here
@@ -144,8 +144,8 @@ ga('send', 'pageview');
         }
     });
 }
-</code></pre><h3>Update</h3> 
-<p><a href="https://www.linkedin.com/in/pmlopes/">Paulo Lopes</a>, one of the Redhat vert.x core maintainers, suggested to restructure the method to make it clearer (and eliminate a lambda). Here is his take:</p> 
+</code></pre><h3>Update</h3>
+<p><a href="https://www.linkedin.com/in/pmlopes/">Paulo Lopes</a>, one of the Redhat vert.x core maintainers, suggested to restructure the method to make it clearer (and eliminate a lambda). Here is his take:</p>
 <pre><code class="language-java">Future&lt;String&gt; someResult() {
   // we promise that we will write something in the future
   Promise&lt;String&gt; promise = Promise.promise();
@@ -160,39 +160,39 @@ ga('send', 'pageview');
   // we return the future (read-side) of the promise
   return promise.future();
 }
-</code></pre> 
-<p>His comment: <em>It doesn't make much of a difference in terms of executed code, it's more of a readability pattern. You now read the code as if it was sequentially which makes it easier to reason (for some of us)</em></p> 
-<p>The main difference: an async function does not throw errors, but return successed or failures.<br> A failure will always return a <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html"><code>Throwable</code></a>,<br> even if you only provided a String as error explanation. When the body of your method might throw something, you wrap it in a try/catch as you are used to. Calling such a method is slightly different. In classic Java you code:</p> 
+</code></pre>
+<p>His comment: <em>It doesn't make much of a difference in terms of executed code, it's more of a readability pattern. You now read the code as if it was sequentially which makes it easier to reason (for some of us)</em></p>
+<p>The main difference: an async function does not throw errors, but return successed or failures.<br> A failure will always return a <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html"><code>Throwable</code></a>,<br> even if you only provided a String as error explanation. When the body of your method might throw something, you wrap it in a try/catch as you are used to. Calling such a method is slightly different. In classic Java you code:</p>
 <pre><code class="language-java">try {
     System.out.println(someResult());
 } catch (Exception e) {
     logger.error(e);
 }
-</code></pre> 
-<p>while the async call looks like this:</p> 
+</code></pre>
+<p>while the async call looks like this:</p>
 <pre><code class="language-java">someResult()
   .onFailure(logger::error)  //Java8 style shortcut for (e -&gt; logger.error(e))
   .onSuccess(System.out::println);
-</code></pre> 
-<p>There are <a href="https://vertx.io/docs/apidocs/io/vertx/core/Future.html">more variations</a> available what to do with a returned Future:</p> 
-<ul> 
- <li><code>otherwise</code>: return a value or call a function when the future failed</li> 
- <li><code>recover</code>: call a future instead of the failed one and return its value</li> 
- <li><code>onComplete</code>: run code when it is done, regardless of success or failure</li> 
-</ul> 
-<p>There are a few more. Future functions can <a href="https://vertx.io/docs/vertx-core/java/#_future_composition">be chained</a> using<br> <code>compose</code> or <a href="https://vertx.io/docs/vertx-core/java/#_future_coordination">run in parallel</a> using <a href="https://vertx.io/docs/apidocs/io/vertx/core/CompositeFuture.html">CompositeFuture</a></p> 
-<p>One common pattern with Futures: Only check if a future succeeded or failed and not requiring a return value to look at.<br> In this case we use a <code>Future&lt;Void&gt;</code> <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Void.html">Void</a> is a <code>java.lang</code> class.</p> 
-<h3>More samples</h3> 
-<p>Chaining multiple Futures (looks like <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">JavaScript promises</a>, isn't it?):</p> 
+</code></pre>
+<p>There are <a href="https://vertx.io/docs/apidocs/io/vertx/core/Future.html">more variations</a> available what to do with a returned Future:</p>
+<ul>
+ <li><code>otherwise</code>: return a value or call a function when the future failed</li>
+ <li><code>recover</code>: call a future instead of the failed one and return its value</li>
+ <li><code>onComplete</code>: run code when it is done, regardless of success or failure</li>
+</ul>
+<p>There are a few more. Future functions can <a href="https://vertx.io/docs/vertx-core/java/#_future_composition">be chained</a> using<br><code>compose</code> or <a href="https://vertx.io/docs/vertx-core/java/#_future_coordination">run in parallel</a> using <a href="https://vertx.io/docs/apidocs/io/vertx/core/CompositeFuture.html">CompositeFuture</a></p>
+<p>One common pattern with Futures: Only check if a future succeeded or failed and not requiring a return value to look at.<br> In this case we use a <code>Future&lt;Void&gt;</code> <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Void.html">Void</a> is a <code>java.lang</code> class.</p>
+<h3>More samples</h3>
+<p>Chaining multiple Futures (looks like <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">JavaScript promises</a>, isn't it?):</p>
 <pre><code class="language-java">myFirstMethod()
    .compose(v -&gt; mySecondMethod())
    .compose(secondResult -&gt; thirdMethod(someVal, secondResult))
    .compose(this::numberFour)
    .onSuccess(System.out::println)
    .onFailure(logger::error);
-</code></pre> 
-<p>The first call <code>myFirstMethod()</code> returns a <code>Future&lt;Void&gt;</code>. By convention we use <code>v</code> to indicate that it either returns <code>Void</code> or we don't need the actual result, but only the fact of success or failure. The <code>::</code> syntax takes a little while to get used to.</p> 
-<p>When the sequence of a Future execution doesn't matter, e.g. calling a few independent services, but we only continue when they are all done, <a href="https://vertx.io/docs/apidocs/io/vertx/core/CompositeFuture.html">CompositeFuture</a> is our friend. Lets say we have a series of services we need to call and assemble the result as a <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">JsonObject</a>:</p> 
+</code></pre>
+<p>The first call <code>myFirstMethod()</code> returns a <code>Future&lt;Void&gt;</code>. By convention we use <code>v</code> to indicate that it either returns <code>Void</code> or we don't need the actual result, but only the fact of success or failure. The <code>::</code> syntax takes a little while to get used to.</p>
+<p>When the sequence of a Future execution doesn't matter, e.g. calling a few independent services, but we only continue when they are all done, <a href="https://vertx.io/docs/apidocs/io/vertx/core/CompositeFuture.html">CompositeFuture</a> is our friend. Lets say we have a series of services we need to call and assemble the result as a <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">JsonObject</a>:</p>
 <pre><code class="language-java">Future&lt;JsonObject&gt; callAllServices(List&lt;Supplier&lt;Future&lt;JsonObject&gt;&gt; services) {
     return Future.future(promise -&gt; {
         List&lt;Future&lt;JsonObject&gt;&gt; list = services.stream()
@@ -207,8 +207,8 @@ ga('send', 'pageview');
            });
     });
 }
-</code></pre> 
-<p>The method will call all Suppliers and return a result when <strong>all</strong> services return successful. When your business logic allows to live with available service only, the method looks slightly different (look carefully):</p> 
+</code></pre>
+<p>The method will call all Suppliers and return a result when <strong>all</strong> services return successful. When your business logic allows to live with available service only, the method looks slightly different (look carefully):</p>
 <pre><code class="language-java">Future&lt;JsonObject&gt; callAvailableServices(List&lt;Supplier&lt;Future&lt;JsonObject&gt;&gt; services) {
     return Future.future(promise -&gt; {
         List&lt;Future&lt;JsonObject&gt;&gt; list = services.stream()
@@ -224,8 +224,8 @@ ga('send', 'pageview');
            });
     });
 }
-</code></pre> 
-<p>The difference is the call to <code>CompositeFuture.any</code> and filtering out results with <code>.filter(Future::succeeded)</code>. On lesson learned. Using Streams and Futures and composition: actual work lives best in distinct functions that implement <a href="https://www.baeldung.com/java-8-functional-interfaces">common interfaces</a></p> 
+</code></pre>
+<p>The difference is the call to <code>CompositeFuture.any</code> and filtering out results with <code>.filter(Future::succeeded)</code>. On lesson learned. Using Streams and Futures and composition: actual work lives best in distinct functions that implement <a href="https://www.baeldung.com/java-8-functional-interfaces">common interfaces</a></p>
 <p>The dense syntax takes a while to get used to and there <a href="https://vertx.io/docs/vertx-core/java/#_future_results">is more to learn</a>, so YMMV</p></div>
 					<hr />
 					<p>

@@ -125,27 +125,27 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Vert.x and OpenAPI</small></h1>
 					<hr />
-					<div><p>In the shiny new world of the <a href="https://www.gartner.com/smarterwithgartner/welcome-to-the-api-economy/">API Economy</a> your API definition and its enforcement is everything. The current <a href="https://xkcd.com/927/">standard</a> for REST based APIs is <a href="https://www.openapis.org/">OpenAPI</a>. What it gives you is a JSON or YAML file that describes how your API looks like. There is a whole zoo of tools around that allow to visualize, edit, run Mock servers or generate client and server code.</p> 
-<p>My favorite editor for OpenAPI specs is <a href="https://www.apicur.io/">Apicurio</a>, a project driven by <a href="https://www.redhat.com">RedHat</a>. It strikes a nice balance between being UI driven and leaving you access to the full source code of your specification.</p> 
-<h3>What to do with it</h3> 
-<p>Your API specification defines:</p> 
-<ul> 
- <li>the endpoints (a.k.a the URLS that you can use)</li> 
- <li>the mime types that can be sent or will received</li> 
- <li>the parameters in the path (the URL)</li> 
- <li>the parameters in the query (the part that looks like <code>?color=red&amp;shape=circle</code>)</li> 
- <li>the body to send and receive</li> 
- <li>the authentication / authorization requirements</li> 
- <li>the potential <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status">status codes</a> (we love 2xx)</li> 
-</ul> 
-<p>To handle all this, it smells like boilerplate or, if you are lucky, ready library. <a href="http://vertx.io/">vert.x</a> has the later. It provides the <a href="https://vertx.io/docs/vertx-web-api-contract/java/">API Contract</a> module that is designed to handle all this for you. You simply add the module to your <code>pom.xml</code> and load your json or yaml OpenApi specification file:</p> 
+					<div><p>In the shiny new world of the <a href="https://www.gartner.com/smarterwithgartner/welcome-to-the-api-economy/">API Economy</a> your API definition and its enforcement is everything. The current <a href="https://xkcd.com/927/">standard</a> for REST based APIs is <a href="https://www.openapis.org/">OpenAPI</a>. What it gives you is a JSON or YAML file that describes how your API looks like. There is a whole zoo of tools around that allow to visualize, edit, run Mock servers or generate client and server code.</p>
+<p>My favorite editor for OpenAPI specs is <a href="https://www.apicur.io/">Apicurio</a>, a project driven by <a href="https://www.redhat.com">RedHat</a>. It strikes a nice balance between being UI driven and leaving you access to the full source code of your specification.</p>
+<h3>What to do with it</h3>
+<p>Your API specification defines:</p>
+<ul>
+ <li>the endpoints (a.k.a the URLS that you can use)</li>
+ <li>the mime types that can be sent or will received</li>
+ <li>the parameters in the path (the URL)</li>
+ <li>the parameters in the query (the part that looks like <code>?color=red&amp;shape=circle</code>)</li>
+ <li>the body to send and receive</li>
+ <li>the authentication / authorization requirements</li>
+ <li>the potential <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status">status codes</a> (we love 2xx)</li>
+</ul>
+<p>To handle all this, it smells like boilerplate or, if you are lucky, ready library. <a href="http://vertx.io/">vert.x</a> has the later. It provides the <a href="https://vertx.io/docs/vertx-web-api-contract/java/">API Contract</a> module that is designed to handle all this for you. You simply add the module to your <code>pom.xml</code> and load your json or yaml OpenApi specification file:</p>
 <pre><code class="language-xml">&lt;dependency&gt;
  &lt;groupId&gt;io.vertx&lt;/groupId&gt;
  &lt;artifactId&gt;vertx-web-api-contract&lt;/artifactId&gt;
  &lt;version&gt;3.8.1&lt;/version&gt;
 &lt;/dependency&gt;
-</code></pre> 
-<p>The <a href="https://vertx.io/docs/vertx-web-api-contract/java/#_openapi_3">documentation</a> shows the code to turn the OpenApi speccification into a Router factory:</p> 
+</code></pre>
+<p>The <a href="https://vertx.io/docs/vertx-web-api-contract/java/#_openapi_3">documentation</a> shows the code to turn the OpenApi speccification into a Router factory:</p>
 <pre><code class="language-java">OpenAPI3RouterFactory.create(
   vertx,
   "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml",
@@ -158,21 +158,21 @@ ga('send', 'pageview');
       Throwable exception = ar.cause();
     }
   });
-</code></pre> 
-<p>As you can see, you can load the spec from an URL (there's an auth option too). So while your API is evolving using <a href="https://www.apicur.io/">Apicurio</a> you can live load the latest and greated from the live preview (should make some interesting breakages ;-) ).</p> 
-<p>You then add your routes using <code>routerFactory.addHandlerByOperationId("awesomeOperation",this::awesomeOperationHandler)</code>. Vert.x doesn't use the path to match the handler, but the operationId. This allows you to update path information without breaking your code. There is a detailed <a href="https://how-to.vertx.io/web-and-openapi-howto/">how-to document</a> describing the steps.</p> 
-<h3>Generate a skeleton for vert.x</h3> 
-<p>As long as you haven't specified a handler for an operation, Vert.x will automatically reply with <code>501 Not implemented</code> and not throw any error. To give you a headstart, you can generate the base code. First option is to head to <a href="https://start.vertx.io/">start.vertx.io</a> to generate a standard project skeleton, saving you the manual work of creating all dependencies in your <code>pom.xml</code> file. Using "<em>Show dependency panel</em>" provides a convenient way to pick the modules you need.</p> 
-<p>But there are better ways. You can use an <a href="https://openapi-generator.tech/">OpenAPI Generator</a> or the advanced <a href="https://vertx-starter.jetdrone.xyz/#maven">Vert.x Starter</a> courtesy of <a href="https://www.linkedin.com/in/pmlopes/">Paulo Lopes</a>. In his tool you specify what it shall generate in a dropdown that defaults to "<em>Empty Project</em>". Once you change that to "<em>OpenAPI Server</em>" the form will alloow you to upload your OpenAPI specification and you get a complete project rendered with all handler stubs including the security handler. There's also a <a href="https://vertx-starter.jetdrone.xyz/#npm">JavaScript</a> version available.</p><h3>Auto-load route handlers</h3> 
-<p>Having a skeleton for starters makes it easy to understand the moving parts. However when your API is still rapidly evolving you constantly need to edit your verticle containing the <a href="https://vertx.io/docs/apidocs/io/vertx/ext/web/api/contract/openapi3/OpenAPI3RouterFactory.html">RouterFactory</a> to add new handlers using <a href="https://vertx.io/docs/apidocs/io/vertx/ext/web/api/contract/openapi3/OpenAPI3RouterFactory.html#addHandlerByOperationId-java.lang.String-io.vertx.core.Handler-"><code>addHandlerByOperationId</code></a>. So I thought: a little <a href="https://stackoverflow.com/questions/37628/what-is-reflection-and-why-is-it-useful">reflection</a> can go a long way.</p> 
-<p>What if the OperationId determines the class name of the handler to use? I used the following constraints:</p> 
-<ul> 
- <li>All handlers are members of the same Java package</li> 
- <li>All handlers use the same constructor. What worked for me: a constructor giving the handler access to vert.x and my configuration in form of a JSON object</li> 
- <li>The name of the handler is <em>OperationId</em>Handler where, to conform with Java practises the first letter would be capitalized</li> 
-</ul> 
-<p>As a result a few lines of code will try to load handler classes for all routes presented in the OpenAPI specs.</p> 
-<h4>Starting the verticle</h4> 
+</code></pre>
+<p>As you can see, you can load the spec from an URL (there's an auth option too). So while your API is evolving using <a href="https://www.apicur.io/">Apicurio</a> you can live load the latest and greated from the live preview (should make some interesting breakages ;-) ).</p>
+<p>You then add your routes using <code>routerFactory.addHandlerByOperationId("awesomeOperation",this::awesomeOperationHandler)</code>. Vert.x doesn't use the path to match the handler, but the operationId. This allows you to update path information without breaking your code. There is a detailed <a href="https://how-to.vertx.io/web-and-openapi-howto/">how-to document</a> describing the steps.</p>
+<h3>Generate a skeleton for vert.x</h3>
+<p>As long as you haven't specified a handler for an operation, Vert.x will automatically reply with <code>501 Not implemented</code> and not throw any error. To give you a headstart, you can generate the base code. First option is to head to <a href="https://start.vertx.io/">start.vertx.io</a> to generate a standard project skeleton, saving you the manual work of creating all dependencies in your <code>pom.xml</code> file. Using "<em>Show dependency panel</em>" provides a convenient way to pick the modules you need.</p>
+<p>But there are better ways. You can use an <a href="https://openapi-generator.tech/">OpenAPI Generator</a> or the advanced <a href="https://vertx-starter.jetdrone.xyz/#maven">Vert.x Starter</a> courtesy of <a href="https://www.linkedin.com/in/pmlopes/">Paulo Lopes</a>. In his tool you specify what it shall generate in a dropdown that defaults to "<em>Empty Project</em>". Once you change that to "<em>OpenAPI Server</em>" the form will alloow you to upload your OpenAPI specification and you get a complete project rendered with all handler stubs including the security handler. There's also a <a href="https://vertx-starter.jetdrone.xyz/#npm">JavaScript</a> version available.</p><h3>Auto-load route handlers</h3>
+<p>Having a skeleton for starters makes it easy to understand the moving parts. However when your API is still rapidly evolving you constantly need to edit your verticle containing the <a href="https://vertx.io/docs/apidocs/io/vertx/ext/web/api/contract/openapi3/OpenAPI3RouterFactory.html">RouterFactory</a> to add new handlers using <a href="https://vertx.io/docs/apidocs/io/vertx/ext/web/api/contract/openapi3/OpenAPI3RouterFactory.html#addHandlerByOperationId-java.lang.String-io.vertx.core.Handler-"><code>addHandlerByOperationId</code></a>. So I thought: a little <a href="https://stackoverflow.com/questions/37628/what-is-reflection-and-why-is-it-useful">reflection</a> can go a long way.</p>
+<p>What if the OperationId determines the class name of the handler to use? I used the following constraints:</p>
+<ul>
+ <li>All handlers are members of the same Java package</li>
+ <li>All handlers use the same constructor. What worked for me: a constructor giving the handler access to vert.x and my configuration in form of a JSON object</li>
+ <li>The name of the handler is <em>OperationId</em>Handler where, to conform with Java practises the first letter would be capitalized</li>
+</ul>
+<p>As a result a few lines of code will try to load handler classes for all routes presented in the OpenAPI specs.</p>
+<h4>Starting the verticle</h4>
 <pre><code class="language-java">@Override
     public void start(final Promise&lt;Void&gt; startFuture) {
         // String fileName =
@@ -189,8 +189,8 @@ ga('send', 'pageview');
                     }
                 });
     }
-</code></pre> 
-<h4>Getting all operationIds from the OpenAPI spec</h4> 
+</code></pre>
+<h4>Getting all operationIds from the OpenAPI spec</h4>
 <pre><code class="language-java">/**
      * Extracts the operationId from the openapi.json file to get a list of required
      * mount points
@@ -217,8 +217,8 @@ ga('send', 'pageview');
         });
         return result;
     }
-</code></pre> 
-<h4>Mounting routes</h4> 
+</code></pre>
+<h4>Mounting routes</h4>
 <pre><code class="language-java">      private void mountHandlersAndListen(final OpenAPI3RouterFactory routerFactory, final Promise&lt;Void&gt; startFuture) {
         final RouterFactoryOptions rfo = new RouterFactoryOptions();
         rfo.setMountNotImplementedHandler(true).setRequireSecurityHandlers(true);
@@ -249,8 +249,8 @@ ga('send', 'pageview');
         this.server.requestHandler(this.router).listen();
         startFuture.complete();
     }
-</code></pre> 
-<h4>Load available handlers</h4> 
+</code></pre>
+<h4>Load available handlers</h4>
 <pre><code class="language-java">      private void loadHandlers(final OpenAPI3RouterFactory routerFactory, final String id) {
         final String className = "com.somepackage.handlers."
                 + id.substring(0, 1).toUpperCase()
@@ -270,9 +270,9 @@ ga('send', 'pageview');
             this.logger.warn("Could not load Handler:" + className);
         }
     }
-</code></pre> 
-<h3>Conclusion</h3> 
-<p>Using this approach you don't need to touch your router Verticle. Once the OpenAPI spec is updated, the log will contain a warning about a missing class.<br> Implementing that class is the only action to get your new route operational.</p> 
+</code></pre>
+<h3>Conclusion</h3>
+<p>Using this approach you don't need to touch your router Verticle. Once the OpenAPI spec is updated, the log will contain a warning about a missing class.<br> Implementing that class is the only action to get your new route operational.</p>
 <p>As ususal YMMV!</p></div>
 					<hr />
 					<p>

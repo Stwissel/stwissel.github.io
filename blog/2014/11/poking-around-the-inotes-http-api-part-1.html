@@ -138,108 +138,108 @@ ga('send', 'pageview');
 					<hr />
 					<div>With the rise of web applications, something interesting happened: applications gained an <i>observable API</i>. Delivered over HTTP(s) with a few commands (GET, POST etc.) it became easier to find out " <i>what is going on</i>". Tools like <a href="https://www.wireshark.org/">Wireshark</a>, <a href="http://www.telerik.com/fiddler">Fiddler</a>, <a href="http://www.charlesproxy.com/">Charlesproxy</a> or <a href="https://code.google.com/p/tcpmon/">TCPMon</a> sit between your HTTP consuming client and the HTTP generating server. In browser applications the build in <a href="https://developer.mozilla.org/en-US/docs/Tools">developer tools</a> (Ctrl-Shift-I) provide the same level of access. 
 <br> So anything flowing over HTTP is <a href="https://twitter.com/notessensei/status/535980806108233728">effectively an API</a>. This led to the idea of the <a href="http://www.forbes.com/sites/ciocentral/2012/08/29/welcome-to-the-api-economy/">API economy</a> (but that's a story for another time). Intercepting <a href="/blog/2014/11/custom-experience-for-ibm-connections-cloud-project-muse.html">HTTP(s) traffic</a> can be easier and more fun, than trying to customise <a href="http://www-10.lotus.com/ldd/dominowiki.nsf/xpViewCategories.xsp?lookupName=Lotus%20iNotes%20customization">customise</a> a backend you might not have access to. (Of course there is <a href="http://www.dslreports.com/shownews/Concern-Arises-Over-Verizons-New-Sneaky-Stealth-Cookie-131034">evil interception</a> too). Point is case, iNotes is quite a stack: 
-<br> <a href="/blog/images/2014/iNotesIn3d.png"> <img src="/blog/images/2014/iNotesIn3d2.png" border="0" alt="3d view of the iNotes client"></a> 
-<br> 
+<br><a href="/blog/images/2014/iNotesIn3d.png"> <img src="/blog/images/2014/iNotesIn3d2.png" border="0" alt="3d view of the iNotes client"></a>
+<br>
 <br>So I poked around the iNotes API, this is what I found:All URLs mentioned need to be prefixed with <code>
  <https: yourserver path-to-your-mail.nsf></https:></code>. There are <code>GET</code> and <code>POST</code> methods used. I haven't seen any OPTIONS, PUT or DELETE operations. 
-<ul> 
- <li>All interactions need to provide the cookies, so your <code><a href="https://docs.oracle.com/javase/7/docs/api/java/net/HttpURLConnection.html">HTTPUrlConnection</a></code> won't cut it. You want use use at least the <a href="http://hc.apache.org/">Apache HTTP client</a>. When SAML is your access authorization of choice, you want to check the insights on <a href="http://cxf.apache.org/docs/jax-rs-saml.html">Apache CXF</a> and SAML, as well as make yourself familiar with <a href="http://shiro.apache.org/">Apache Shiro</a> and <a href="https://github.com/bujiio/buji-pac4j">pac4j</a></li> 
+<ul>
+ <li>All interactions need to provide the cookies, so your <code><a href="https://docs.oracle.com/javase/7/docs/api/java/net/HttpURLConnection.html">HTTPUrlConnection</a></code> won't cut it. You want use use at least the <a href="http://hc.apache.org/">Apache HTTP client</a>. When SAML is your access authorization of choice, you want to check the insights on <a href="http://cxf.apache.org/docs/jax-rs-saml.html">Apache CXF</a> and SAML, as well as make yourself familiar with <a href="http://shiro.apache.org/">Apache Shiro</a> and <a href="https://github.com/bujiio/buji-pac4j">pac4j</a></li>
  <li>The general syntax for reading document related information is <code>viewname/unid?OpenDocument</code>. The interesting part is the <code>&amp;Form=</code> parameter. This is what I found so far: 
-  <ul> 
-   <li><code>s_MailMemoReadBodyContent</code>: Only ready the body content</li> 
-   <li><code>l_JSVars</code>: Returns all regular Notes fields in JSON format (and the names of the RTFields)</li> 
-   <li><code>l_MailMessageHeader</code>: Raw mime header, some HTML (notably &lt;br&gt; needs to be filtered out)</li> 
-   <li><code>l_MailMessageHeader&amp;PresetFields=FullMessage;1 </code>: Raw complete MIME message (same as above)</li> 
-  </ul></li> 
- <li>Reading data from a view, which we usually do using <code>($Inbox)?ReadViewEntries</code> is better done using <code>iNotes/Proxy/?OpenDocument&amp;Form=s_ReadViewEntries&amp;PresetFields=FolderName;($Inbox),UnreadCountInfo;1</code>. It will deliver an attribute <code>unread="true"</code>, that makes it easy to distinguish messages. Adding <code>UnreadOnly;1</code> to the PresetFields will only show unread entries</li> 
- <li>Retrieving a list of folders can be done using <code>iNotes/Proxy/?EditDocument&amp;Form=l_GetOutline_JSON&amp;charset=UTF-8</code> it comes back as JavaScript snippet inside something JSON like. Some parsing required</li> 
- <li>Every POST required a large number of fields to complete. If they are missing it won't work. Most important: You needs a <code>%%Nonce</code> field with the <code>&amp;N:</code> value from the <code>ShimmerS</code> cookie</li> 
+  <ul>
+   <li><code>s_MailMemoReadBodyContent</code>: Only ready the body content</li>
+   <li><code>l_JSVars</code>: Returns all regular Notes fields in JSON format (and the names of the RTFields)</li>
+   <li><code>l_MailMessageHeader</code>: Raw mime header, some HTML (notably &lt;br&gt; needs to be filtered out)</li>
+   <li><code>l_MailMessageHeader&amp;PresetFields=FullMessage;1 </code>: Raw complete MIME message (same as above)</li>
+  </ul></li>
+ <li>Reading data from a view, which we usually do using <code>($Inbox)?ReadViewEntries</code> is better done using <code>iNotes/Proxy/?OpenDocument&amp;Form=s_ReadViewEntries&amp;PresetFields=FolderName;($Inbox),UnreadCountInfo;1</code>. It will deliver an attribute <code>unread="true"</code>, that makes it easy to distinguish messages. Adding <code>UnreadOnly;1</code> to the PresetFields will only show unread entries</li>
+ <li>Retrieving a list of folders can be done using <code>iNotes/Proxy/?EditDocument&amp;Form=l_GetOutline_JSON&amp;charset=UTF-8</code> it comes back as JavaScript snippet inside something JSON like. Some parsing required</li>
+ <li>Every POST required a large number of fields to complete. If they are missing it won't work. Most important: You needs a <code>%%Nonce</code> field with the <code>&amp;N:</code> value from the <code>ShimmerS</code> cookie</li>
  <li><b>Moving</b> documents into a folder is a <code>POST</code> operation with the url <code>iNotes/Mail/?EditDocument&amp;Form=h_PageUI</code>. The payload fields are: 
-  <table padding="2" margin="2" border="0"> 
-   <tbody> 
-    <tr> 
-     <th>Field</th> 
-     <th>Value</th> 
-     <th>Remark</th> 
-    </tr> 
-    <tr> 
-     <td>s_ViewName</td> 
-     <td>($Inbox)</td> 
-     <td>Folder the documents came from</td> 
-    </tr> 
-    <tr> 
-     <td>h_SetCommand</td> 
-     <td>h_ShimmerMoveCopyDocsToFolder</td> 
-     <td>That's what we want to do</td> 
-    </tr> 
-    <tr> 
-     <td>h_DestFolder</td> 
-     <td>UNID</td> 
-     <td>Name or UNID as retrieved from GetOutline</td> 
-    </tr> 
-    <tr> 
-     <td>h_Move</td> 
-     <td>1</td> 
-     <td>1 = move, 0 = copy</td> 
-    </tr> 
-    <tr> 
-     <td>h_EditAction</td> 
-     <td>h_Next</td> 
-     <td>Will result in a HTTP 200, form processes</td> 
-    </tr> 
-    <tr> 
-     <td>h_SetDeleteList</td> 
-     <td>UNID;UNID;UNID</td> 
-     <td>semicolon separated list of documents</td> 
-    </tr> 
-    <tr> 
-     <td>h_SetDeleteListCS</td> 
-     <td></td> 
-     <td>that value stays empty (you need the = )</td> 
-    </tr> 
-   </tbody> 
-  </table> </li> 
+  <table padding="2" margin="2" border="0">
+   <tbody>
+    <tr>
+     <th>Field</th>
+     <th>Value</th>
+     <th>Remark</th>
+    </tr>
+    <tr>
+     <td>s_ViewName</td>
+     <td>($Inbox)</td>
+     <td>Folder the documents came from</td>
+    </tr>
+    <tr>
+     <td>h_SetCommand</td>
+     <td>h_ShimmerMoveCopyDocsToFolder</td>
+     <td>That's what we want to do</td>
+    </tr>
+    <tr>
+     <td>h_DestFolder</td>
+     <td>UNID</td>
+     <td>Name or UNID as retrieved from GetOutline</td>
+    </tr>
+    <tr>
+     <td>h_Move</td>
+     <td>1</td>
+     <td>1 = move, 0 = copy</td>
+    </tr>
+    <tr>
+     <td>h_EditAction</td>
+     <td>h_Next</td>
+     <td>Will result in a HTTP 200, form processes</td>
+    </tr>
+    <tr>
+     <td>h_SetDeleteList</td>
+     <td>UNID;UNID;UNID</td>
+     <td>semicolon separated list of documents</td>
+    </tr>
+    <tr>
+     <td>h_SetDeleteListCS</td>
+     <td></td>
+     <td>that value stays empty (you need the = )</td>
+    </tr>
+   </tbody>
+  </table> </li>
  <li><b>Deleting</b> documents is also a <code>POST</code> operation with the url <code>iNotes/Mail/?EditDocument&amp;Form=l_HaikuErrorStatusJSON</code>. The payload fields are: 
-  <table padding="2" margin="2" border="0"> 
-   <tbody> 
-    <tr> 
-     <th>Field</th> 
-     <th>Value</th> 
-     <th>Remark</th> 
-    </tr> 
-    <tr> 
-     <td>s_ViewName</td> 
-     <td>($Inbox)</td> 
-     <td>Folder the documents came from</td> 
-    </tr> 
-    <tr> 
-     <td>h_SetCommand</td> 
-     <td>h_DeletePages</td> 
-     <td>documents get deleted, not pages</td> 
-    </tr> 
-    <tr> 
-     <td>h_SetEditNextScene</td> 
-     <td>l_HaikuErrorStatusJSON</td> 
-     <td>points to the form</td> 
-    </tr> 
-    <tr> 
-     <td>h_EditAction</td> 
-     <td>h_Next</td> 
-     <td>This will return JSON for the eMails</td> 
-    </tr> 
-    <tr> 
-     <td>h_SetDeleteList</td> 
-     <td>UNID;UNID;UNID</td> 
-     <td>semicolon separated list of documents</td> 
-    </tr> 
-    <tr> 
-     <td>h_SetDeleteListCS, h_AllDocs, h_FolderStorage</td> 
-     <td></td> 
-     <td>that values stays empty (you need the = )</td> 
-    </tr> 
-   </tbody> 
-  </table> There is another parameter h_SetReturnURL we might not need </li> 
- <li>POST to <code>s_GetFolderUnreadCountJSON</code> with <code>s_FolderListNames=FolderName&amp;FolderName=Name|UNID;Name|UNID;Name|UNID</code> to retrieve JSON that indicates all unread documents in the specific views</li> 
+  <table padding="2" margin="2" border="0">
+   <tbody>
+    <tr>
+     <th>Field</th>
+     <th>Value</th>
+     <th>Remark</th>
+    </tr>
+    <tr>
+     <td>s_ViewName</td>
+     <td>($Inbox)</td>
+     <td>Folder the documents came from</td>
+    </tr>
+    <tr>
+     <td>h_SetCommand</td>
+     <td>h_DeletePages</td>
+     <td>documents get deleted, not pages</td>
+    </tr>
+    <tr>
+     <td>h_SetEditNextScene</td>
+     <td>l_HaikuErrorStatusJSON</td>
+     <td>points to the form</td>
+    </tr>
+    <tr>
+     <td>h_EditAction</td>
+     <td>h_Next</td>
+     <td>This will return JSON for the eMails</td>
+    </tr>
+    <tr>
+     <td>h_SetDeleteList</td>
+     <td>UNID;UNID;UNID</td>
+     <td>semicolon separated list of documents</td>
+    </tr>
+    <tr>
+     <td>h_SetDeleteListCS, h_AllDocs, h_FolderStorage</td>
+     <td></td>
+     <td>that values stays empty (you need the = )</td>
+    </tr>
+   </tbody>
+  </table> There is another parameter h_SetReturnURL we might not need </li>
+ <li>POST to <code>s_GetFolderUnreadCountJSON</code> with <code>s_FolderListNames=FolderName&amp;FolderName=Name|UNID;Name|UNID;Name|UNID</code> to retrieve JSON that indicates all unread documents in the specific views</li>
 </ul> The creation of eMail and replies is another story for another time 
 <br> As usual YMMV</div>
 					<hr />
@@ -267,9 +267,9 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
 					<h4>Comments</h4>
 					<ol id="commentList">
 						<li>
-							posted by <b>Juergen</b> on <i>Friday 17 August 2018 AD</i>:<br /> <p>Sehr interessant! Unter anderem ist das eine coole M��glichkeit, Mail-Bodies relativ formatierungs-verlustfrei aus Lotus zu exportieren, in HTML, um dann mit einem HTML-to-PDF-Konvertierer sch��ne PDFs zu bekommen.</p>
-<p>Ein kleines Problem ist mir allerdings hierbei begegnet: Es gibt bei so einem via Java realisiertem Mail-Body-Request mittels s_MailMemoReadBodyContent u. U. encoding-bedingte Abweichungen gegen��ber dem, was iNotes im Vollzugriff ��ber Browser liefert.<br />
-Ich habe eine Mail aus Bulgarien, mit teilw. kyrillischen Zeichen. ��ffne ich diese Mail in iNotes im Browser, werden die Zeichen korrekt dargestellt. Hole ich hingegen den body-Datenstrom ��ber meine Java-Anwendung mit s_MailMemoReadBodyContent, so enth��lt der html-code lauter Fragezeichen an diesen Stellen.</p>
+							posted by <b>Juergen</b> on <i>Friday 17 August 2018 AD</i>:<br /> <p>Sehr interessant! Unter anderem ist das eine coole Möglichkeit, Mail-Bodies relativ formatierungs-verlustfrei aus Lotus zu exportieren, in HTML, um dann mit einem HTML-to-PDF-Konvertierer schöne PDFs zu bekommen.</p>
+<p>Ein kleines Problem ist mir allerdings hierbei begegnet: Es gibt bei so einem via Java realisiertem Mail-Body-Request mittels s_MailMemoReadBodyContent u. U. encoding-bedingte Abweichungen gegenüber dem, was iNotes im Vollzugriff über Browser liefert.<br />
+Ich habe eine Mail aus Bulgarien, mit teilw. kyrillischen Zeichen. Öffne ich diese Mail in iNotes im Browser, werden die Zeichen korrekt dargestellt. Hole ich hingegen den body-Datenstrom über meine Java-Anwendung mit s_MailMemoReadBodyContent, so enthält der html-code lauter Fragezeichen an diesen Stellen.</p>
 <p>bin ratlos, wie ich den Requests so erweitere, dass ich verlustfrei auch solch einen Body exportieren kann. Also dass er mit geeigneten encoding-Angaben und/oder html-maskierten Zeichen geliefert wird.</p>
 
 							<hr style="clear : both" />

@@ -121,16 +121,16 @@ ga('send', 'pageview');
 					<hr />
 					<div>Access control in Lotus Notes and Domino is build around the concept of positive identification, meaning you specify who can read or edit by naming them explicitly or implicitely as members of a role or group. What you can't do is to say: Everybody <b>except</b> these people (or all members of group A but not when they are members of group B). We don't have PreventReader or PreventAuthor fields (which would come in handy from time to time). The only construct is the the -No Access- setting in the ACL which has the highest priority. 
 <br> For web applications there is actually a way how you can implement a PreventReader form (must be web only). You have to be clear that is is NOT a watertight method and can be compromised given enough effort. However it is good enough for most requirements (It doesn't work in Notes clients). These are the steps: 
-<ol> 
- <li>Create a Names field that will hold the entries that can't read an entry (call it PreventReader)</li> 
- <li>Design all your views to only contain hidden columns</li> 
- <li>Create $$ViewTemplates for [ViewNames] form with no embedded view, no $$ViewBody fields, but a Body RichText field and a SaveOptions field, Computed, Formula "0"</li> 
- <li>Create a webqueryopen agent (with a little creativity you can get away with one agent and one form) that prints the columns you want to display into the BODY field. The logic that prints the lines needs to be extended to skip printing when the @UsersNamesList contains a value from the PreventReader field. Since the view columns are otherwise hidden even ?ReadViewEntries wouldn't reveal a thing.</li> 
+<ol>
+ <li>Create a Names field that will hold the entries that can't read an entry (call it PreventReader)</li>
+ <li>Design all your views to only contain hidden columns</li>
+ <li>Create $$ViewTemplates for [ViewNames] form with no embedded view, no $$ViewBody fields, but a Body RichText field and a SaveOptions field, Computed, Formula "0"</li>
+ <li>Create a webqueryopen agent (with a little creativity you can get away with one agent and one form) that prints the columns you want to display into the BODY field. The logic that prints the lines needs to be extended to skip printing when the @UsersNamesList contains a value from the PreventReader field. Since the view columns are otherwise hidden even ?ReadViewEntries wouldn't reveal a thing.</li>
 </ol> However a user could open a direct link to the document. So there are a few additional steps required: 
-<ol start="5"> 
- <li>Create one subform per form. Call them sf[OriginalFormName]. Cut &amp; Paste the whole content short of the PreventReader field into the subform.</li> 
- <li>Create one subform sfUnauthorizedAccessAttempt that has a nice message or throws the user back to the start-page and/or logs the attempt</li> 
- <li>In the now almost empty main forms add a computed subform with the formula @if(@isNotMember(ReventReader;@UserNamesList;"sf"+form;"sfUnauthorizedAccessAttempt")</li> 
+<ol start="5">
+ <li>Create one subform per form. Call them sf[OriginalFormName]. Cut &amp; Paste the whole content short of the PreventReader field into the subform.</li>
+ <li>Create one subform sfUnauthorizedAccessAttempt that has a nice message or throws the user back to the start-page and/or logs the attempt</li>
+ <li>In the now almost empty main forms add a computed subform with the formula @if(@isNotMember(ReventReader;@UserNamesList;"sf"+form;"sfUnauthorizedAccessAttempt")</li>
 </ol> Now if a user gets a direct link (e.g. forwarded by an authorized user), the subform "sfUnauthorizedAccessAttempt" will load instead of the subform with the real data, so our excluded user has nothing to see. 
 <br> As usual: YMMV.</div>
 					<hr />

@@ -125,10 +125,10 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Lightning Datatable and Relationship Queries</small></h1>
 					<hr />
-					<div><p>The <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:datatable/example">Lightning Datatable</a> is a flexible component to show data in a sortable, actionable table. Formatting is automatic provided by the <a href="https://www.lightningdesignsystem.com/">Lightning Design System</a>. Data gets provided as <a href="http://json.org/">JSON array</a>.</p> 
-<h3>The challenge</h3> 
-<p>A prime use case for a data table is to show results returned via <code>@AuraEnabled</code> from a <a href="https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/">SOQL</a> query. Ideally relationship identity fields should turn into links and data from relationship queries (something like <code>MyCustomObj__r.Color</code>) should be usable in the table as well.</p> 
-<p>The tricky part: Relationship fields are returned (IMHO properly) as JSON objects. Datatable can't deal with object values for their columns. A returned value might look like this (deliberately using a generic example):</p> 
+					<div><p>The <a href="https://developer.salesforce.com/docs/component-library/bundle/lightning:datatable/example">Lightning Datatable</a> is a flexible component to show data in a sortable, actionable table. Formatting is automatic provided by the <a href="https://www.lightningdesignsystem.com/">Lightning Design System</a>. Data gets provided as <a href="http://json.org/">JSON array</a>.</p>
+<h3>The challenge</h3>
+<p>A prime use case for a data table is to show results returned via <code>@AuraEnabled</code> from a <a href="https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/">SOQL</a> query. Ideally relationship identity fields should turn into links and data from relationship queries (something like <code>MyCustomObj__r.Color</code>) should be usable in the table as well.</p>
+<p>The tricky part: Relationship fields are returned (IMHO properly) as JSON objects. Datatable can't deal with object values for their columns. A returned value might look like this (deliberately using a generic example):</p>
 <pre><code class="language-javascript">[{
   Id: 'payloadid',
   Color__: 'Blue',
@@ -143,8 +143,8 @@ ga('send', 'pageview');
   },
   Dance__c: 'Tango'
 }];
-</code></pre><h3>Solution Part 1</h3> 
-<p><a href="https://www.linkedin.com/in/abhishek-mohanty-56904914b/">Abhishek</a> had an idea (see also <a href="/blog/2018/08/adding-labels-to-lightning-datatable.html">Part 2</a>) and we put our heads together. To be able to use such a structure in a data table, we need to flatten it out, so instead of having <code>Stuff__r.Shape__r.Size__c</code> we want a flat value <code>Stuff__r_Shape__r_Size__c</code> with simples values (String, Number, Date, boolean). This can be achieved entertaining a few lines of JavaScript running against the JSON returned from your backend query:</p> 
+</code></pre><h3>Solution Part 1</h3>
+<p><a href="https://www.linkedin.com/in/abhishek-mohanty-56904914b/">Abhishek</a> had an idea (see also <a href="/blog/2018/08/adding-labels-to-lightning-datatable.html">Part 2</a>) and we put our heads together. To be able to use such a structure in a data table, we need to flatten it out, so instead of having <code>Stuff__r.Shape__r.Size__c</code> we want a flat value <code>Stuff__r_Shape__r_Size__c</code> with simples values (String, Number, Date, boolean). This can be achieved entertaining a few lines of JavaScript running against the JSON returned from your backend query:</p>
 <pre><code class="language-javascript">const theResponse = response.getReturnValue();
 theResponse.forEach(row =&gt; {
   for (const col in row) {
@@ -171,15 +171,15 @@ function flattenStructure(topObject, prefix, toBeFlattened) {
     }
   }
 }
-</code></pre> 
-<p>With this script as part of your callback function you now have access to a flattened array with all the field values. You might want to modify the code to get rid of the <code>__c</code> and <code>__r</code> parts, so it is easier on the eye.</p> 
-<h3>Solution Part 2</h3> 
-<p>To show the relationship columns as links there are two simple steps:</p> 
-<ul> 
- <li>Define the data type as URL in the columns array <code>type = 'url'</code></li> 
- <li>Specify the <code>typeAttributes</code> to point to the field containing the label</li> 
-</ul> 
-<p>A sample column definition (opening the link in a new tab/window) looks like this:</p> 
+</code></pre>
+<p>With this script as part of your callback function you now have access to a flattened array with all the field values. You might want to modify the code to get rid of the <code>__c</code> and <code>__r</code> parts, so it is easier on the eye.</p>
+<h3>Solution Part 2</h3>
+<p>To show the relationship columns as links there are two simple steps:</p>
+<ul>
+ <li>Define the data type as URL in the columns array <code>type = 'url'</code></li>
+ <li>Specify the <code>typeAttributes</code> to point to the field containing the label</li>
+</ul>
+<p>A sample column definition (opening the link in a new tab/window) looks like this:</p>
 <pre><code class="language-javascript">{
  label: 'Your Stuff',
  fieldName: 'Stuff__r',
@@ -191,8 +191,8 @@ function flattenStructure(topObject, prefix, toBeFlattened) {
    target: '_blank'
   }
 }
-</code></pre> 
-<p>You could provide functionality to automatically generate the field definition array based on the SOQL query you execute, but that's another, Apex style, story for another time.</p> 
+</code></pre>
+<p>You could provide functionality to automatically generate the field definition array based on the SOQL query you execute, but that's another, Apex style, story for another time.</p>
 <p>As usual: YMMV</p></div>
 					<hr />
 					<p>
