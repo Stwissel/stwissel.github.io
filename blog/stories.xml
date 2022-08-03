@@ -6,7 +6,25 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Thu, 16 Jun 2022 19:54:15 +0000</pubdate>
+	<pubdate>Wed, 03 Aug 2022 05:36:35 +0000</pubdate>
+<item>
+	<title>Calling a vert.x async method from a sync method</title>
+	<description>&lt;p&gt;Made popular by &lt;a href="https://nodejs.org/en/"&gt;NodeJS&lt;/a&gt; and &lt;a href="http://es6-features.org/#PromiseUsage"&gt;ES6&lt;/a&gt; &lt;a href="https://www.bmc.com/blogs/asynchronous-programming/"&gt;asynchronous programming&lt;/a&gt; promises (pun intended) better throughput and resource usage by entertaining an &lt;a href="https://en.wikipedia.org/wiki/Event_loop"&gt;Event Loop&lt;/a&gt;. In Java land &lt;a href="https://vertx.io"&gt;vert.x&lt;/a&gt; implements exactly this approach and has proven its mettle, being the foundation of &lt;a href="https://quarkus.io"&gt;Quarkus&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;Your legacy app doesn't magically convert&lt;/h2&gt;
+&lt;p&gt;When you start a new &lt;a href="https://vertx.io"&gt;vert.x&lt;/a&gt; project using the &lt;a href="https://start.vertx.io"&gt;App Generator&lt;/a&gt;, everything is asynchronous from the beginning. Snippets of synchronous code (a.k.a blocking code), you might need to maintain, can be wrapped into &lt;a href="https://vertx.io/docs/vertx-core/java/#blocking_code"&gt;executeBlocking&lt;/a&gt; and handled in their own thread.&lt;/p&gt;
+&lt;p&gt;However when you are about to convert a synchronous application, e.g. a &lt;a href="https://en.wikipedia.org/wiki/Jakarta_Servlet"&gt;servlet&lt;/a&gt; to asynchronous and you can't finish in a sprint/session, things become interesting. The &lt;a href="https://docs.oracle.com/javaee/6/api/javax/servlet/http/HttpServlet.html#doGet%28javax.servlet.http.HttpServletRequest,%20javax.servlet.http.HttpServletResponse%29"&gt;&lt;code&gt;doGet&lt;/code&gt; method&lt;/a&gt; is synchronous by nature. There are a few steps that need to be accomplished:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;Have vert.x running in its own thread. You can't start it on the main thread with its blocking operations&lt;/li&gt;
+ &lt;li&gt;Have a method that returns a &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/Future.html"&gt;vert.x Future&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;Convert that into a Java &lt;a href="https://www.baeldung.com/java-completablefuture"&gt;CompletableFuture&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Let's have a look at the moving parts:&lt;/p&gt;</description>
+	<link>2022/08/calling-a-vertx-async-method-from-a-sync-method.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>9871d820-12e2-11ed-a8ff-2955beb6d3bc</guid>
+	<pubDate>03 August 2022</pubDate>
+
+</item>
 <item>
 	<title>Case insensitive deserialization</title>
 	<description>&lt;p&gt;Growing up in Windows with &lt;a href="https://en.wikipedia.org/wiki/BASIC"&gt;BASIC&lt;/a&gt; you learn case doesn't matter, so &lt;code&gt;Color&lt;/code&gt; is the same as &lt;code&gt;COLOR&lt;/code&gt; or &lt;code&gt;cOLOR&lt;/code&gt; when it comes to variable names. Same applies to &lt;code&gt;@Formula&lt;/code&gt; or item names in Notes documents.&lt;/p&gt;
@@ -61,7 +79,7 @@ public class JsonTest {
 </item>
 <item>
 	<title>Dance the OAuth with me</title>
-	<description>&lt;p&gt;&lt;a href="https://www.oauth.com"&gt;OAuth&lt;/a&gt; and its cousin &lt;a href="https://openid.net"&gt;OICD&lt;/a&gt; are the ubiquitous methods to &lt;a href="https://openid.net/gainpoc/"&gt;gain&lt;/a&gt; identity and authorization information. Since it is a &lt;a href="https://www.lexico.com/en/definition/menage_a_trois"&gt;m?nage ? trois&lt;/a&gt; between a user, an &lt;a href="https://en.wikipedia.org/wiki/Identity_provider"&gt;Identity provider (IdP)&lt;/a&gt; and an application, refered to as "Service provider", it is hard to trouble shoot.&lt;/p&gt;
+	<description>&lt;p&gt;&lt;a href="https://www.oauth.com"&gt;OAuth&lt;/a&gt; and its cousin &lt;a href="https://openid.net"&gt;OIDC&lt;/a&gt; are the ubiquitous methods to &lt;a href="https://openid.net/gainpoc/"&gt;gain&lt;/a&gt; identity and authorization information. Since it is a &lt;a href="https://www.lexico.com/en/definition/menage_a_trois"&gt;m?nage ? trois&lt;/a&gt; between a user, an &lt;a href="https://en.wikipedia.org/wiki/Identity_provider"&gt;Identity provider (IdP)&lt;/a&gt; and an application, refered to as "Service provider", it is hard to trouble shoot.&lt;/p&gt;
 &lt;h2&gt;A play in five acts&lt;/h2&gt;
 &lt;p&gt;In the recent &lt;a href="https://opensource.hcltechsw.com/domino-keep-docs/"&gt;Project KEEP&lt;/a&gt; we build an IdP into the API, so you have the choice of just using Domino or using an external IdP.&lt;/p&gt;
 &lt;p&gt;To ensure it works as expected several dependent HTTPS calls were needed. Each call would harvest some information into environment variables for the following step&lt;/p&gt;
@@ -467,40 +485,6 @@ export JAVA_HOME=`/usr/libexec/java_home -v 11.0`
 	<author>Stephan H. Wissel</author>
 	<guid>38926a10-59cd-11ec-8058-07b29c73246e</guid>
 	<pubDate>10 December 2021</pubDate>
-
-</item>
-<item>
-	<title>Factory based dependency injection</title>
-	<description>&lt;p&gt;&lt;a href="https://en.wikipedia.org/wiki/No_Man_Is_an_Island_(album)"&gt;No man is an island&lt;/a&gt; and no code you write lives without dependencies (even your low-level assembly code depends on the processor's microcode). Testing (with) dependencies can be [insert expletive]&lt;/p&gt;
-&lt;h3&gt;Dependency injection to the rescue&lt;/h3&gt;
-&lt;p&gt;The general approach to make dependent code testable is &lt;a href="https://en.wikipedia.org/wiki/Dependency_injection"&gt;Dependency injection&lt;/a&gt;. Instead of calling out and create an instance of the dependency, the dependency is hand over as parameter. This could be in a constructor, a property setter or as method parameter.&lt;/p&gt;
-&lt;p&gt;A key requirement for successful dependency injection: the injected object gets injected as an &lt;a href="https://docs.oracle.com/javase/tutorial/java/concepts/interface.html"&gt;Interface&lt;/a&gt; rather than a concrete class. So &lt;a href="https://amzn.to/3ozoD9k"&gt;do your homework&lt;/a&gt; and build your apps around interfaces.&lt;/p&gt;
-&lt;p&gt;An example to illustrate how not to do, and how to change:&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-java"&gt;public Optional&amp;lt;Customer&amp;gt; findCustomer(final String id) {
- // Some processing here, omitted for clarity
-
- // actual find
- final CustomerDbFind find = CustomerDb.getFinder();
- return Optional.ofNullable(find.customerById(id));
-
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;When you try to test this function, you depend on the static method of the &lt;code&gt;CustomerDb&lt;/code&gt; which is a pain to mock out. So one consideration could be to hand the &lt;code&gt;CustomerDb&lt;/code&gt; as dependency. But this would violate "provide interface, not class". The conclusion, presuming &lt;code&gt;CustomerDbFind&lt;/code&gt; is an interface will be:&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-java"&gt;public Optional&amp;lt;Customer&amp;gt; findCustomer(final CustomerDbFind find, final String id) {
- // Some processing here, omitted for clarity
-
- // actual find
-
- return Optional.ofNullable(find.customerById(id));
-
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;This now allows to construct the dependency outside the method to test by implementing the interface or using a &lt;a href="https://site.mockito.org"&gt;Mock library&lt;/a&gt;&lt;/p&gt;
-&lt;h3&gt;Not so fast&lt;/h3&gt;</description>
-	<link>2021/12/factory-based-dependency-injection.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>f5e53190-58c6-11ec-a5a2-1d9fd86b9254</guid>
-	<pubDate>09 December 2021</pubDate>
 
 </item>
 

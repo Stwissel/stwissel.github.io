@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Dance the OAuth with me - NotesSensei's Blog</title>
+<title>Calling a vert.x async method from a sync method - NotesSensei's Blog</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -12,14 +12,14 @@ ga('send', 'pageview');
 <meta http-equiv="X-UA-Compatible"  content="chrome=1" />
 <meta http-equiv="Content-Language" content="en" />
 <meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
-<meta property="og:title"     content="wissel.net - Dance the OAuth with me" />
+<meta property="og:title"     content="wissel.net - Calling a vert.x async method from a sync method" />
 <meta property="og:type"      content="blog" />
-<meta property="og:url"       content="https://wissel.net/blog/2022/06/dance-the-oauth-with-me.html" />
+<meta property="og:url"       content="https://wissel.net/blog/2022/08/calling-a-vertx-async-method-from-a-sync-method.html" />
 <meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
 <meta property="og:site_name" content="wissel.net" />
 <meta name="viewport"         content="width=device-width, initial-scale=1.0" />
 <meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
-<meta name="DC.Title"         content="NotesSensei's Weblog - Dance the OAuth with me" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Calling a vert.x async method from a sync method" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
 <meta name="Copyright"        content="2002,2022 Stephan H. Wissel - Creative commons licence" />
@@ -27,11 +27,11 @@ ga('send', 'pageview');
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
 <meta name="description"
-	content="Dance the OAuth with me - OAuth and its cousin OIDC are the ubiquitous methods to gain identity and authorization information. Since it is a ménage à trois between a user, an Identity provider (IdP) and an application, refered to as &#39;Service provider&#39;, it is hard to trouble shoot. A play in five acts In the recent Project KE" />
+	content="Calling a vert.x async method from a sync method - Made popular by NodeJS and ES6 asynchronous programming promises (pun intended) better throughput and resource usage by entertaining an Event Loop. In Java land vert.x implements exactly this approach and has proven its mettle, being the foundation of Quarkus Your legacy app doesn&#39;t magically conver" />
 <meta name="Keywords"
-	content="WebDevelopment," />
+	content="Java,vert.x," />
 <meta name="Abstract"
-	content="Dance the OAuth with me - OAuth and its cousin OIDC are the ubiquitous methods to gain identity and authorization information. Since it is a ménage à trois between a user, an Identity provider (IdP) and an application, refered to as &#39;Service provider&#39;, it is hard to trouble shoot. A play in five acts In the recent Project KE" />
+	content="Calling a vert.x async method from a sync method - Made popular by NodeJS and ES6 asynchronous programming promises (pun intended) better throughput and resource usage by entertaining an Event Loop. In Java land vert.x implements exactly this approach and has proven its mettle, being the foundation of Quarkus Your legacy app doesn&#39;t magically conver" />
 <!--[if lt IE 9]>
 		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
 <![endif]-->
@@ -98,9 +98,12 @@ ga('send', 'pageview');
     <ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2022/">2022</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2022/06/">June</a></li>
+  <li><a href="/blog/2022/08/">August</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
+    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/vertx.html">vert.x</a>
   </li>
 </ul>
 
@@ -108,113 +111,104 @@ ga('send', 'pageview');
 			<div class="span12">
 				
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2022/05/yes-no-maybe-booleans.html"><i class="icon-hand-left"></i>Yes No Maybe Boolean deserialization with Jackson</a>
+					<li><a href="/blog/2022/06/case-insensitive-deserialization.html"><i class="icon-hand-left"></i>Case insensitive deserialization</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2022/06/case-insensitive-deserialization.html">Case insensitive deserialization<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 				<article class="well well-raised">
-					<h1><small>Dance the OAuth with me</small></h1>
+					<h1><small>Calling a vert.x async method from a sync method</small></h1>
 					<hr />
-					<div><p><a href="https://www.oauth.com">OAuth</a> and its cousin <a href="https://openid.net">OIDC</a> are the ubiquitous methods to <a href="https://openid.net/gainpoc/">gain</a> identity and authorization information. Since it is a <a href="https://www.lexico.com/en/definition/menage_a_trois">ménage à trois</a> between a user, an <a href="https://en.wikipedia.org/wiki/Identity_provider">Identity provider (IdP)</a> and an application, refered to as "Service provider", it is hard to trouble shoot.</p>
-<h2>A play in five acts</h2>
-<p>In the recent <a href="https://opensource.hcltechsw.com/domino-keep-docs/">Project KEEP</a> we build an IdP into the API, so you have the choice of just using Domino or using an external IdP.</p>
-<p>To ensure it works as expected several dependent HTTPS calls were needed. Each call would harvest some information into environment variables for the following step</p>
-<h3>Act 0 - initial setup</h3>
-<p>Store several variables into the environment:</p>
+					<div><p>Made popular by <a href="https://nodejs.org/en/">NodeJS</a> and <a href="http://es6-features.org/#PromiseUsage">ES6</a> <a href="https://www.bmc.com/blogs/asynchronous-programming/">asynchronous programming</a> promises (pun intended) better throughput and resource usage by entertaining an <a href="https://en.wikipedia.org/wiki/Event_loop">Event Loop</a>. In Java land <a href="https://vertx.io">vert.x</a> implements exactly this approach and has proven its mettle, being the foundation of <a href="https://quarkus.io">Quarkus</a></p>
+<h2>Your legacy app doesn't magically convert</h2>
+<p>When you start a new <a href="https://vertx.io">vert.x</a> project using the <a href="https://start.vertx.io">App Generator</a>, everything is asynchronous from the beginning. Snippets of synchronous code (a.k.a blocking code), you might need to maintain, can be wrapped into <a href="https://vertx.io/docs/vertx-core/java/#blocking_code">executeBlocking</a> and handled in their own thread.</p>
+<p>However when you are about to convert a synchronous application, e.g. a <a href="https://en.wikipedia.org/wiki/Jakarta_Servlet">servlet</a> to asynchronous and you can't finish in a sprint/session, things become interesting. The <a href="https://docs.oracle.com/javaee/6/api/javax/servlet/http/HttpServlet.html#doGet%28javax.servlet.http.HttpServletRequest,%20javax.servlet.http.HttpServletResponse%29"><code>doGet</code> method</a> is synchronous by nature. There are a few steps that need to be accomplished:</p>
 <ul>
- <li><code>UserName</code>: the user you will simulate to approve</li>
- <li><code>Password</code>: their password</li>
- <li><code>HOST</code>: The starting URL for the first call</li>
- <li><code>state</code>: a random string, need to stay the same through the sequence</li>
- <li><code>client_id</code>: The application configured as service provider</li>
- <li><code>client_secret</code>: The service provider "password"</li>
- <li><code>scope</code>: the scope (or a subset) you have configured for the service provider</li>
- <li><code>redirect_uri</code>: one of the redirection URIs you have configured for the service provider</li>
+ <li>Have vert.x running in its own thread. You can't start it on the main thread with its blocking operations</li>
+ <li>Have a method that returns a <a href="https://vertx.io/docs/apidocs/io/vertx/core/Future.html">vert.x Future</a></li>
+ <li>Convert that into a Java <a href="https://www.baeldung.com/java-completablefuture">CompletableFuture</a></li>
 </ul>
-<p>An OAuth flow contains basic authentication calls, so you need to ensure proper <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a> connections.</p>
-<p><img src="/blog/images/2022/OAuthDance.svg" alt="OAuth Dance"></p><h3>Act 1 - lay of the land</h3>
-<p>Establish the end-points you have to deal with:</p>
-<pre><code class="language-bash">curl --location --request GET "$HOST/.well-known/openid-configuration"
+<p>Let's have a look at the moving parts:</p><h3>Running vert.x in a Thread</h3>
+<p>When starting a servlet, the container calls the <a href="https://www.baeldung.com/intro-to-servlets#1-init"><code>init()</code></a> method. There we can spin off a Thread for our vert.x instance. I'll be using an <a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/atomic/AtomicBoolean.html">AtomicBoolean</a> to ensure vert.x has loaded and deployed one verticle before continuing the init method:</p>
+<pre><code class="language-java">  Vertx vertx;
+  String verticleId;
+  Thread vertxThread;
+  AtomicBoolean vertxDeployed = new AtomicBoolean(false);
+
+  void init() {
+    final Runnable vertxRunner = () -&gt; {
+      this.vertx = Vertx.vertx();
+      this.vertx.deployVerticle("my.verticle.class.name")
+          .onSuccess(id -&gt; {
+            this.verticleId = id;
+            synchronized (this.vertxDeployed) {
+              this.vertxDeployed.set(true);
+              this.vertxDeployed.notify();
+            }
+          })
+          // Failure handling is not production quality
+          .onFailure(System.err::println);
+      System.out.println("End vertxRunner");
+    };
+    this.vertxThread = new Thread(vertxRunner);
+    this.vertxThread.start();
+    while (!this.vertxDeployed.get()) {
+      synchronized (this.vertxDeployed) {
+        this.vertxDeployed.wait();
+      }
+    }
+    // Other init actions go here ...
+  }
 </code></pre>
-<p>Harvest from the JSON response (<a href="https://stedolan.github.io/jq/">JQ</a> is your friend):</p>
+<p>There are a few stumbling blocks you need to be aware of:</p>
 <ul>
- <li><code>authorization_endpoint</code>: URL for the service provider to request authorization</li>
- <li><code>token_endpoint</code>: URL where authorization can be exchanged for access tokens</li>
+ <li>The thread will run until you terminate vert.x, even when your <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html">Thread</a> variable goes out of scope</li>
+ <li>Keep a reachable instance of vert.x, so you can undeploy the verticle(s) which terminates the thread or call <a href="https://vertx.io/docs/apidocs/io/vertx/core/Vertx.html#close--">vertx.close()</a> to shut it down</li>
+ <li>You can't just call <a href="https://docs.oracle.com/javase/10/docs/api/java/lang/Object.html#wait()"><code>wait()</code></a> on an object, since there is the lovely condition called <a href="https://en.wikipedia.org/wiki/Spurious_wakeup">spurious wakeup</a>. The solution is to check the condition in a loop as seen above</li>
 </ul>
-<h3>Act 2 - ask nicely</h3>
-<p>This call initiates the flow and ends with a <code>302</code> status code, sending you to the UI part for granting or revoking access</p>
-<pre><code class="language-bash">curl --location -g --request GET "$authorization_endpoint?client_id=$client_id&amp;response_type=code&amp;state=$state&amp;scope=$scope&amp;redirect_uri=$redirect_uri"
+<h3>Calling the async function</h3>
+<p>Let's say we have a method <code>answerToAllQuestions()</code> that returns a <code>io.vertx.core.Future&lt;Integer&gt;</code> wich we want to call from a <code>doGet</code> method:</p>
+<pre><code class="language-java">Future&lt;Integer&gt; answerToAllQuestions() {
+  return Future.completedFuture(42);
+}
 </code></pre>
-<p>There won't be a body result, but a <code>Location</code> header, you can grab and use in a <code>GET</code> request to retrieve the consent UI. This part in IdP specific, so using a different IdP will change act 3.</p>
-<h3>Act 3 - authenticate and consent</h3>
-<p>Two calls are required. First authenticate with KEEP, then consent for the application to have access:</p>
-<pre><code class="language-bash">curl --location --request POST "$HOST/api/v1/authforoauthflow" \
---header "Content-Type: application/json" \
---data-raw "{'password' : \"$Password\",'username' : \"$UserName\",'scopes' : 'oauth'}"
+<p>The <a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html">java.util.concurrent.CompletableFuture</a> has the method <code>get()</code> to allow us to wait for completion. So we can write:</p>
+<pre><code class="language-java">  @Override
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+    Integer answer = answerToAllQuestions()
+        .toCompletionStage()
+        .toCompletableFuture().get();
+
+        try (PrintWriter w = response.getWriter()) {
+            w.append(answer);
+            w.flush();
+        }
+    }
 </code></pre>
-<p>Harvest the <code>bearer</code> response from the JSON body. The publish you consent. This one is a classic HTML form post, so the header needs to be <code>application/x-www-form-urlencoded</code></p>
-<pre><code class="language-bash">curl --location -g --request POST '{{authorization_endpoint}}/decision' \
---header "Authorization: Bearer $bearer" \
---header 'Content-Type: application/x-www-form-urlencoded' \
---data-urlencode 'response_type=code' \
---data-urlencode "scope=$scope" \
---data-urlencode "state=$state" \
---data-urlencode "client_id=$client_id" \
---data-urlencode "redirect_uri=$redirect_uri" \
---data-urlencode 'decision=allow'
-</code></pre>
-<p>The JSON result will have only two values: <code>state</code> and <code>authorization_code</code>. Capture the <code>authorization_code</code>.</p>
-<h3>Act 4 - gain access</h3>
-<p>The <code>authorization_code</code> has a short livespan, so it needs to get exchanged for an access token and a refresh token. This call works <strong>once</strong>. A second call will fail without Act 3 being repeated. This call again is a classic HTML form post.</p>
-<pre><code class="language-bash">curl --location -g --request POST "$token_endpoint" \
---header 'Content-Type: application/x-www-form-urlencoded' \
---data-urlencode 'grant_type=authorization_code' \
---data-urlencode "code=$authorization_code" \
---data-urlencode "redirect_uri=$redirect_uri" \
---data-urlencode "client_id=$client_id" \
---data-urlencode "client_secret=$client_secret"
-</code></pre>
-<p><strong>Note</strong> In bash environment variables only get resolved in double quotes, hence the mixed use of single and double quotes here.</p>
-<p>The JSON result will contain the <code>access_token</code>, which is your KEEP compliant, short lived JWT and the <code>refresh_token</code> to get a new access token without the need for user interaction. To verify that it is working call this:</p>
-<pre><code class="language-bash">curl --location -g --request POST "$token_endpoint}}" \
---header 'Content-Type: application/x-www-form-urlencoded' \
---data-urlencode 'grant_type=refresh_token' \
---data-urlencode "refresh_token=$app_refresh_token" \
---data-urlencode "scope=$scope" \
---data-urlencode "client_id=$client_id" \
---data-urlencode "client_secret=$client_secret"
-</code></pre>
-<p>Again the <code>access_token</code> is your KEEP JWT. The call will not issue a new refresh token.</p>
-<h3><a href="https://www.merriam-webster.com/dictionary/epilogue">Epilogue</a></h3>
-<p>In just five acts, you can manually retrace the steps the OAuth dance performs to gain access. There's a variation to it: instead of <code>client_id</code> and <code>client_secret</code> being posted in the request body, they can be supplied as basic authentication header:</p>
-<pre><code class="language-bash">curl -p "$client_id:$client_secret" ...
-</code></pre>
+<p>The <code>get()</code> method optional allows to specify a timeout, so we are not at the mercy of the asynchonous operation.<br> I compiled a <a href="https://gist.github.com/Stwissel/e079b2d688535f7db7eb2fec7245373a">command line GIST</a> spiked with <code>println()</code> to demo the steps. Go and <a href="https://gist.github.com/Stwissel/e079b2d688535f7db7eb2fec7245373a">have a look</a>.</p>
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 06 June 2022
+Stephan H Wissel</a> on 03 August 2022
 <span class="divider">|</span>
-<a href="/blog/2022/06/dance-the-oauth-with-me.html#comments">Comments (0)</a>
+<a href="/blog/2022/08/calling-a-vertx-async-method-from-a-sync-method.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
 
 						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2022/06/dance-the-oauth-with-me.html";
+							var permaLink = "https://wissel.net/blog/2022/08/calling-a-vertx-async-method-from-a-sync-method.html";
 						</script>
 					</p>
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_d4acca20-e579-11ec-b9b8-f1cad397bc73" type="button">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_9871d820-12e2-11ed-a8ff-2955beb6d3bc" type="button">
 		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
 	            </button>
 	            </div>
-				<div id="commentform_d4acca20-e579-11ec-b9b8-f1cad397bc73"  class="collapse"></div>
+				<div id="commentform_9871d820-12e2-11ed-a8ff-2955beb6d3bc"  class="collapse"></div>
 				<div class="well well-raised">
 					<h4>Comments</h4>
 					<ol id="commentList">
@@ -224,12 +218,9 @@ categories:  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
 					</ol>
 				</div>
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2022/05/yes-no-maybe-booleans.html"><i class="icon-hand-left"></i>Yes No Maybe Boolean deserialization with Jackson</a>
+					<li><a href="/blog/2022/06/case-insensitive-deserialization.html"><i class="icon-hand-left"></i>Case insensitive deserialization</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2022/06/case-insensitive-deserialization.html">Case insensitive deserialization<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 			</div>
@@ -237,9 +228,12 @@ categories:  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
 		<ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2022/">2022</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2022/06/">June</a></li>
+  <li><a href="/blog/2022/08/">August</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
+    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/vertx.html">vert.x</a>
   </li>
 </ul>
 
@@ -302,7 +296,7 @@ categories:  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
 	</footer>
 
 	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/2022/06/dance-the-oauth-with-me.html";
+		var permaLink = "https://wissel.net/blog/2022/08/calling-a-vertx-async-method-from-a-sync-method.html";
 	</script>
 		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
@@ -324,7 +318,7 @@ categories:  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
 	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 	<script type="text/javascript">
 		var onloadCallback = function() {
-    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "d4acca20-e579-11ec-b9b8-f1cad397bc73");
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "9871d820-12e2-11ed-a8ff-2955beb6d3bc");
  		};
 	</script>
 
