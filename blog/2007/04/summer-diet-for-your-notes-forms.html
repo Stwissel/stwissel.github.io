@@ -27,11 +27,11 @@ ga('send', 'pageview');
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
 <meta name="description"
-	content="Summer diet for your Notes Forms - The title I wanted to give this post was &#39;Spring clean your notes forms&#39;, but then it did get delayed.... One hallmark of Notes applications is their durability. It is quite common to find applications being in use, that root back into R3 or R4. Quite a number of these applications still look like t" />
+	content="Summer diet for your Notes Forms - The title I wanted to give this post was Spring clean your notes forms, but then it did get delayed.... One hallmark of Notes applications is their durability. It is quite common to find applications being in use, that root back into R3 or R4. Quite a number of these applications still look like tha" />
 <meta name="Keywords"
 	content="Show-N-Tell Thursday," />
 <meta name="Abstract"
-	content="Summer diet for your Notes Forms - The title I wanted to give this post was &#39;Spring clean your notes forms&#39;, but then it did get delayed.... One hallmark of Notes applications is their durability. It is quite common to find applications being in use, that root back into R3 or R4. Quite a number of these applications still look like t" />
+	content="Summer diet for your Notes Forms - The title I wanted to give this post was Spring clean your notes forms, but then it did get delayed.... One hallmark of Notes applications is their durability. It is quite common to find applications being in use, that root back into R3 or R4. Quite a number of these applications still look like tha" />
 <!--[if lt IE 9]>
 		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
 <![endif]-->
@@ -122,158 +122,154 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Summer diet for your Notes Forms</small></h1>
 					<hr />
-					<div>The title I wanted to give this post was "Spring clean your notes forms", but then it did get delayed.... 
-<br>One hallmark of Notes applications is their durability. It is quite common to find applications being in use, that root back into R3 or R4. Quite a number of these applications still look like that too. That's the flip-site of not needing to rip-and-replace. Sometimes you also will find, that older forms load slower and behave odd at times. Before you start beautifying your applications, it is a good idea to do some spring cleaning. To do so I use Domino's DXL to extract a form in XML, filter it through a XSLT transformation and reimport that into the database. 
-<br>The LotusScript code is very straight forward, has been well covered on developer works and the help file and looks like this: 
-<br>
-<br><tt>&nbsp; Set importer = session.CreateDXLImporter(stream, dbCopy)<br> &nbsp;importer.ReplicaRequiredForReplaceOrUpdate = False<br> &nbsp;importer.DesignImportOption = DXLIMPORTOPTION_CREATE<br> &nbsp;Call importer.Process</tt>
-<p> <br>The "meat" is in the transformation. The XSLT file consist of 4 principal sections that contain templates. In section 1 we find the start of the output including the wrapper and calls to various templates. In section 2 design elements are filtered out, in section 3 design elements are tweaked, finally in section 4 the remaining DXL is copied 1:1 to the resulting document; . The sequence of the sections is not relevant, since XSLT uses priorities not sequence to determine what element to apply. What are the elements you can or should spring clean: <br> </p>
+					<div><p>The title I wanted to give this post was <strong>Spring clean your notes forms</strong>, but then it did get delayed....<br> One hallmark of Notes applications is their durability. It is quite common to find applications being in use, that root back into R3 or R4. Quite a number of these applications still look like that too. That's the flip-site of not needing to rip-and-replace. Sometimes you also will find, that older forms load slower and behave odd at times. Before you start beautifying your applications, it is a good idea to do some spring cleaning. To do so I use Domino's DXL to extract a form in XML, filter it through a XSLT transformation and reimport that into the database.<br> The LotusScript code is very straight forward, has been well covered on developer works and the help file and looks like this:</p>
+<pre><code class="language-vb">Set importer = session.CreateDXLImporter(stream, dbCopy)
+importer.ReplicaRequiredForReplaceOrUpdate = False
+importer.DesignImportOption = DXLIMPORTOPTION_CREATE
+Call importer.Process&lt;
+</code></pre>
+<p>The "<strong>meat</strong>" is in the transformation. The XSLT file consist of 4 principal sections that contain templates. In section 1 we find the start of the output including the wrapper and calls to various templates. In section 2 design elements are filtered out, in section 3 design elements are tweaked, finally in section 4 the remaining DXL is copied 1:1 to the resulting document; . The sequence of the sections is not relevant, since XSLT uses priorities not sequence to determine what element to apply. What are the elements you can or should spring clean:</p>
 <ul>
- <li>In DXL I found NotesItems between the &lt;/body&gt; and the &lt;/form&gt; tag. Removing this from the form makes the form smaller, load faster without any change in behavior. </li>
- <li>Font information is encoded inside the &lt;run&gt; tag. The &lt;run&gt; tag is similar to HTML's &lt;span&gt;. When you designed and re-designed forms over and over, there will be &lt;run&gt; tags that only contain a font change, but not actual any characters. Filtering that out lightens the form </li>
- <li>Filter out all paragraph formats and/or fonts to be able to apply a new look &amp; feel more easily </li>
- <li>Convert access controlled sections into subforms (to work in the web) </li>
+ <li>In DXL I found NotesItems between the <code>&lt;/body&gt;</code> and the <code>&lt;/form&gt;</code> tag. Removing this from the form makes the form smaller, load faster without any change in behavior.</li>
+ <li>Font information is encoded inside the <code>&lt;run&gt;</code> tag. The <code>&lt;run&gt;</code> tag is similar to HTML's <code>&lt;span&gt;</code>. When you designed and re-designed forms over and over, there will be <code>&lt;run&gt;</code> tags that only contain a font change, but not actual any characters. Filtering that out lightens the form - Filter out all paragraph formats and/or fonts to be able to apply a new look &amp; feel more easily</li>
+ <li>Convert access controlled sections into subforms (to work in the web)</li>
  <li>Remove (all) LotusScript code and move it to libraries (see an upcoming SnTT post on "Classical Forms" about that).</li>
 </ul>
-<br>Let us look at some code....ont size=2 face="sans-serif"&gt;Section 1 starts the whole stylesheet. 
-<br>&nbsp; <xsl:template>
- &lt; ont=""&gt; match="/"&gt; 
- <br>&nbsp; &nbsp; &nbsp; &nbsp; 
- <database></database> 
- <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <!-- We get the
-attribute from the first element which might be a database or a form --> 
- <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <xsl:attribute>
-  &lt; ont=""&gt; name="replicaid"&gt; 
-  <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <!--
-Get the replicaid -->
-  <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-  <xsl:value-of>
-   &lt; ont=""&gt; select="/child::node()[1]/@replicaid"/&gt; 
-   <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-   <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-   <xsl:attribute>
-    &lt; ont=""&gt; name="version"&gt; 
-    <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <!--
-Get the designer version -->
-    <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-    <xsl:value-of>
-     &lt; ont=""&gt; select="/child::node()[1]/@version"/&gt; 
-     <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-     <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <!-- get all other
-attributes -->
-     <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-     <xsl:apply-templates>
-      &lt; ont=""&gt; &nbsp;select="@*"/&gt; 
-      <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <!-- apply the templates
-for regular forms -->
-      <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-      <xsl:apply-templates>
-       &lt; ont=""&gt; /&gt; 
-       <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <!-- apply the templates
-for the additional generation like LotusScript and Suforms -->
-       <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-       <xsl:apply-templates>
-        &lt; ont=""&gt; mode="genSub" /&gt; 
-        <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-        <xsl:apply-templates>
-         &lt; ont=""&gt; mode="genLS" /&gt; 
-         <br>&nbsp; &nbsp; &nbsp; &nbsp; 
-         <br>&nbsp; &nbsp; &nbsp; &nbsp; 
-         <br>&nbsp; &nbsp; 
-         <br>
-         <br>
-         <br>Section 2 features match clauses with no content inside the template. It is closed in the opening tag using /&gt;. If a tag should be filtered, but its content be processed you just have the 
-         <xsl:apply-templates /> statement as the only content. 
-         <br>&nbsp; &nbsp; <!--
-&nbsp;Filter out &nbsp;change of font if there is not content inside-->
-         <br>&nbsp; &nbsp; 
-         <xsl:template>
-          &lt; ont=""&gt; match="d:run[node()[last()=1][self::d:font" /&gt; 
-          <br>
-          <br>&nbsp; &nbsp; &lt;!-- Filter out items after the body tag --&gt; 
-          <br>&nbsp; &nbsp; &lt;xsl:template match="d:form/d:item" /&gt; 
-          <br>&nbsp; &nbsp; &lt;!-- Filter out all font information : radical cut if you want to redo the fonts --&gt; 
-          <br>&nbsp; &nbsp; &lt;xsl:template match="d:font" /&gt; 
-          <br>
-          <br>(There is actually much more in the stylesheet, so check the sample stylesheet in the download section). 
-          <br>
-          <br>Section 3 features some tweaks to existing elements: 
-          <br>&nbsp;&lt;xsl:template match="d:richtext"&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &lt;richtext&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;!-- Add a hidden field for Debug information and update all hidden fields to use that formula instead of hide='read edit copy preview previewedit' --&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;xsl:if test="count(//d:fieldname='isNotDebug'=0"&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;pardef hide="read edit print copy preview previewedit"&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;xsl:attribute name="id"&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;xsl:value-of select="$pardefcount"/&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/xsl:attribute&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/pardef&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;par&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;xsl:attribute name="def"&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;xsl:value-of select="$pardefcount"/&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/xsl:attribute&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;run&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;font color="red"/&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;field type="number" kind="computedfordisplay" name="isNotDebug"&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;code event="defaultvalue"&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;formula&gt;@isNotMember("ebugquot;;@UserRoles)&lt;/formula&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/code&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/field&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/run&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/par&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/xsl:if&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;xsl:apply-templates/&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &lt;/richtext&gt; 
-          <br>&nbsp; &nbsp; &lt;/xsl:template&gt; 
-          <br>
-          <br>Check the stylesheet for more element tweaks and a few interesting concepts. 
-          <br>
-          <br>&lt;!-- Replace all paragraph definition where hide='read edit copy preview previewedit' with hidewhen isNotDebug --&gt; 
-          <br>&nbsp; &nbsp; &lt;xsl:template 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; match="d:pardefhide='read edit copy preview previewedit' or @hide='read edit print copy preview previewedit'quot;&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &lt;pardef&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;xsl:attribute name="id"&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;xsl:value-of select="@id"/&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/xsl:attribute&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;code event="hidewhen"&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;formula&gt;isNotDebug&lt;/formula&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/code&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &lt;/pardef&gt; 
-          <br>&nbsp; &nbsp; &lt;/xsl:template&gt; 
-          <br>
-          <br>Section 4 has been used in many other examples before. It leverages on the fact, that the match="*" has the lowest priority and only is applied if there is no other suitable template: 
-          <br>&nbsp; &nbsp; &lt;xsl:template match="*"&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &lt;xsl:variable name="curTagname" select="name()"/&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &lt;xsl:element name="$curTagname"&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;!-- Walk through the attributes --&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;xsl:apply-templates select="@*"/&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;!-- process the children --&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;xsl:apply-templates/&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &lt;/xsl:element&gt; 
-          <br>&nbsp; &nbsp; &lt;/xsl:template&gt; 
-          <br>
-          <br>&nbsp; &nbsp; &lt;xsl:template match="@*"&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &lt;xsl:variable name="curAttName" select="name()"/&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &lt;xsl:attribute name="$curAttName"&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;xsl:value-of select="."/&gt; 
-          <br>&nbsp; &nbsp; &nbsp; &nbsp; &lt;/xsl:attribute&gt; 
-          <br>&nbsp; &nbsp; &lt;/xsl:template&gt; 
-          <br>
-          <br>&nbsp; &nbsp; &lt;!-- make sure nothing is copied in the additional modes if not defined by a template--&gt; 
-          <br>&nbsp; &nbsp; &nbsp;&lt;xsl:template mode="genSub" match="*"/&gt; 
-          <br>&nbsp; &nbsp; &lt;xsl:template mode="genLS" match="*"/&gt; 
-          <br>
-          <br>Before you send back that DXL into a datbase you could scrub it further by removing pardef sections that have identical definitions. However this would require a second run with another stylesheet or some good old LotusScript code. 
-         </xsl:template>&lt;&gt; 
-        </xsl:apply-templates>&lt;&gt; 
-       </xsl:apply-templates>&lt;&gt; 
-      </xsl:apply-templates>&lt;&gt; 
-     </xsl:apply-templates>&lt;&gt; 
-    </xsl:value-of>&lt;&gt; 
-   </xsl:attribute>&lt;&gt; 
-  </xsl:value-of>&lt;&gt; 
- </xsl:attribute>&lt;&gt; 
-</xsl:template>&lt;&gt;</div>
+<p>Let us look at some code....</p><p>Section 1 starts the whole stylesheet.</p>
+<pre><code class="language-xml">    &lt;xsl:template match="/"&gt;
+        &lt;database&gt;
+            &lt;!-- We get the attribute from the first element which might be a database or a form --&gt;
+            &lt;xsl:attribute name="replicaid"&gt;
+                &lt;!-- Get the replicaid --&gt;
+                &lt;xsl:value-of select="/child::node()[1]/@replicaid"/&gt;
+            &lt;/xsl:attribute&gt;
+            &lt;xsl:attribute name="version"&gt;
+                &lt;!-- Get the designer version --&gt;
+                &lt;xsl:value-of select="/child::node()[1]/@version"/&gt;
+            &lt;/xsl:attribute&gt;
+            &lt;!-- get all other attributes --&gt;
+            &lt;xsl:apply-templates select="@*"/&gt;
+            &lt;!-- apply the templates for regular forms --&gt;
+            &lt;xsl:apply-templates/&gt;
+            &lt;!-- apply the templates for the additional generation like LotusScript and Suforms --&gt;
+            &lt;xsl:apply-templates mode="genLS" select="/d:form/d:globals"/&gt;
+            &lt;xsl:apply-templates mode="genSub" select="//d:section[@accessfieldkind]"/&gt;
+            &lt;xsl:apply-templates mode="genRead" select="//d:section[@accessfieldkind]"/&gt;
+        &lt;/database&gt;
+
+    &lt;/xsl:template&gt;
+</code></pre>
+<p>Section 2 features match clauses with no content inside the template. It is closed in the opening tag using <code>/&gt;</code>. If a tag should be filtered, but its content be processed you just have the <code>&lt;xsl:apply-templates /&gt;</code> statement as the only content.</p>
+<pre><code class="language-xml">    &lt;!-- Section 2: Filter out elements we do not want or need --&gt;
+    &lt;!--  Filter out  change of font if there is not content inside--&gt;
+    &lt;xsl:template match="d:run[node()[last()=1][self::d:font]]"/&gt;
+
+    &lt;!-- Filter out the note infoand update info --&gt;
+    &lt;xsl:template match="d:noteinfo"/&gt;
+    &lt;xsl:template match="d:updatedby"/&gt;
+    &lt;xsl:template match="d:wassignedby"/&gt;
+
+    &lt;!-- remove a form background color --&gt;
+    &lt;xsl:template match="d:form/@bgcolor" /&gt;
+
+
+    &lt;!-- Filter out items after the body tag --&gt;
+    &lt;xsl:template match="d:form/d:item"/&gt;
+
+    &lt;!-- Filter out attributes --&gt;
+    &lt;xsl:template match="@replicaid"/&gt;
+    &lt;xsl:template match="@version"/&gt;
+    &lt;xsl:template match="@milestonebuild"/&gt;
+
+    &lt;!-- remove left margin values from pardefs, so they use the default dangerous!!!! --&gt;
+    &lt;xsl:template match="@leftmargin"/&gt;
+    &lt;xsl:template match="@firstlineleftmargin"/&gt;
+
+    &lt;!-- Filter font information we don't want --&gt;
+    &lt;xsl:template match="d:font/@truetype"/&gt;
+    &lt;xsl:template match="d:font/@name"/&gt;
+    &lt;xsl:template match="d:font/@pitch"/&gt;
+    &lt;xsl:template match="d:font/@familyid"/&gt;
+</code></pre>
+<p>There is actually much more in the stylesheet, so check the sample stylesheet in the download section.</p>
+<p>Section 3 features some tweaks to existing elements:</p>
+<pre><code class="language-xml">&lt;xsl:template match="d:richtext"&gt;
+        &lt;richtext&gt;
+            &lt;!-- Add a hidden field for Debug information and update all hidden fields to use that formula instead of hide='read edit copy preview previewedit' --&gt;
+            &lt;xsl:if test="count(//d:field[@name='isNotDebug'])=0"&gt;
+                &lt;pardef hide="read edit print copy preview previewedit"&gt;
+                    &lt;xsl:attribute name="id"&gt;
+                        &lt;xsl:value-of select="$pardefcount"/&gt;
+                    &lt;/xsl:attribute&gt;
+                &lt;/pardef&gt;
+                &lt;par&gt;
+                    &lt;xsl:attribute name="def"&gt;
+                        &lt;xsl:value-of select="$pardefcount"/&gt;
+                    &lt;/xsl:attribute&gt;
+                    &lt;run&gt;
+                        &lt;font color="red"/&gt;
+                        &lt;field type="number" kind="computedfordisplay" name="isNotDebug"&gt;
+                            &lt;code event="defaultvalue"&gt;
+                                &lt;formula&gt;@isNotMember("[Debug]";@UserRoles)&lt;/formula&gt;
+                            &lt;/code&gt;
+                        &lt;/field&gt;
+                    &lt;/run&gt;
+                &lt;/par&gt;
+            &lt;/xsl:if&gt;
+            &lt;xsl:apply-templates/&gt;
+        &lt;/richtext&gt;
+    &lt;/xsl:template&gt;
+
+    &lt;!-- Replace all paragraph definition where hide='read edit copy preview previewedit' with hidewhen isNotDebug --&gt;
+    &lt;xsl:template
+        match="d:pardef[@hide='read edit copy preview previewedit' or @hide='read edit print copy preview previewedit']"&gt;
+        &lt;pardef&gt;
+            &lt;xsl:attribute name="id"&gt;
+                &lt;xsl:value-of select="@id"/&gt;
+            &lt;/xsl:attribute&gt;
+            &lt;code event="hidewhen"&gt;
+                &lt;formula&gt;isNotDebug&lt;/formula&gt;
+            &lt;/code&gt;
+        &lt;/pardef&gt;
+    &lt;/xsl:template&gt;
+
+    &lt;!-- change the ugly fucsia font to light gray --&gt;
+    &lt;xsl:template match="d:font/@color[node()='fucisa']"&gt;
+        &lt;xsl:attribute name="color"&gt;gray&lt;/xsl:attribute&gt;
+    &lt;/xsl:template&gt;
+
+    &lt;!-- standardize on 9pt for 8 and 9 pt font sizes --&gt;
+    &lt;xsl:template match="d:font/@size['8pt' or '9pt']"&gt;
+        &lt;xsl:attribute name="size"&gt;9pt&lt;/xsl:attribute&gt;
+    &lt;/xsl:template&gt;
+
+    &lt;!-- remove font sizes for the rest --&gt;
+    &lt;xsl:template match="d:font/@size[not ('8pt' or '9pt')]"/&gt;
+
+    &lt;!-- more radical approach : remove all font information --&gt;
+    &lt;!-- xsl:template match="d:font" / --&gt;
+</code></pre>
+<p>Section 4 has been used in many other examples before. It leverages on the fact, that the match="*" has the lowest priority and only is applied if there is no other suitable template:</p>
+<pre><code class="language-xml">    &lt;!-- Section 4 : Copy any element 1:1 from source to target --&gt;
+    &lt;xsl:template match="*"&gt;
+        &lt;xsl:variable name="curTagname" select="name()"/&gt;
+        &lt;xsl:element name="{$curTagname}"&gt;
+            &lt;!-- Walk through the attributes --&gt;
+            &lt;xsl:apply-templates select="@*"/&gt;
+            &lt;!-- process the children --&gt;
+            &lt;xsl:apply-templates/&gt;
+        &lt;/xsl:element&gt;
+    &lt;/xsl:template&gt;
+
+    &lt;xsl:template match="@*"&gt;
+        &lt;xsl:variable name="curAttName" select="name()"/&gt;
+        &lt;xsl:attribute name="{$curAttName}"&gt;
+            &lt;xsl:value-of select="."/&gt;
+        &lt;/xsl:attribute&gt;
+    &lt;/xsl:template&gt;
+</code></pre>
+<p>Before you send back that DXL into a datbase you could scrub it further by removing pardef sections that have identical definitions. However this would require a second run with another stylesheet or some good old LotusScript code.</p>
+<p>As usual YMMV</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
