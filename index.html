@@ -100,6 +100,42 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2022/10/github-actions-graalvm.html">CI/CD, Github Actions, and GraalVM Native Image</a></small></h1>
+					<hr />
+					<div><p><a href="https://www.graalvm.org/">GraalVM</a> is a promising polyglot runtime for Java, JavaScript, Python, Ruby and <a href="https://webassembly.org/">WASM</a>.<br> It can produce native images. Unsurprisingly <em>with great powers come</em> ... lots of things to learn.</p>
+<h3>GraalVM Native Image Benefits</h3>
+<p>A native image has a number of benefits over an JVM based application, mainly owed to the extensive analysis done at build time.<br> Some of advantages mentioned:</p>
+<ul>
+ <li>Runtime speed ~ 25% above the same code running on an JVM</li>
+ <li>Ahead of Time compilation can lead to up to 9 times less memory consumption than running on an JVM</li>
+ <li>Code executes faster with a smaller memory footprint than comparable Go applications ( but still is bigger/slower than C by a whisk)</li>
+ <li>Warmup time got moved to build time, improving startup time</li>
+</ul>
+<h3>Building the image</h3>
+<p>Build has been greatly improved with tooling available:</p>
+<ul>
+ <li>a <a href="https://graalvm.github.io/native-build-tools/latest/maven-plugin.html">Maven plugin</a> (also available for <a href="https://graalvm.github.io/native-build-tools/latest/gradle-plugin.html">Gradle</a>), eliminating the need of extensive commandline foo.</li>
+ <li>a GitHub action to <a href="https://github.com/marketplace/actions/github-action-for-graalvm">install the GraalVM tooing</a> in a pipeline</li>
+ <li>reduced memory consumption, so most apps will fit into the GitHub build container limit of 7GB memory</li>
+ <li>option for a non-optimized fast build, useful for testing correctness</li>
+</ul>
+<h3>Thoughts and conclusions</h3>
+<p>A big step in the right direction making native images more accessible. There's still room for improvements, like caching the build images and more samples. What Oracle solved nicely: If you are a GraalVM Enterprise customer, accessing GraalVM Enterprise edition is done using an access token, fully compatible to any build system. No messing around with downloads and manual installations required.</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 18 October 2022
+<span class="divider">|</span>
+<a href="/blog/2022/10/github-actions-graalvm.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2022/10/github-actions-graalvm.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2022/10/java-development-error-prone.html">Streamlining Lage-scale Java Development using Error Prone</a></small></h1>
 					<hr />
 					<div><p>It has been a while since I attended an in-person conference. Finally this October I managed to attend <a href="https://www.oracle.com/cloudworld/javaone/">JavaOne</a> in Las Vegas. I shall report on interesting sessions.</p>
@@ -546,69 +582,6 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2021/12/deploying-your-frontend-as-webjar.html";
-						</script>
-					</p></p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2021/12/refresh-local-git-repositories.html">Refresh local git repositories</a></small></h1>
-					<hr />
-					<div><p>I keep all my software that is under version control below a few directories only. E.g. OpenSource projects I cloned to learn from them live below <code>~/OpenSource</code>. Keeping up with updates requires to pull them all.</p>
-<h3>Pulling the main branch</h3>
-<p>My little helper does:</p>
-<ul>
- <li>change into each first level sub directory</li>
- <li>check if it is under version control</li>
- <li>capture the current branch</li>
- <li>switch to <code>main</code> or <code>master</code> branch, depending on which one is there</li>
- <li>capture the name of the tracked remote</li>
- <li>fetch all remotes</li>
- <li>pull the tracked remote</li>
- <li>switch back to the branch it was in</li>
-</ul>
-<p>The script does not check if the current branch is dirty (preventing checkout) or pushing back changes. Enjoy</p>
-<pre><code class="language-bash">#!/bin/bash
-# Pull all repos below the current working directory
-
-do_the_sync() {
-  for f in *; do
-      if [ -d $f -a ! -h $f ]; then
-         cd -- "$f";
-         if [ -d ".git" ]; then
-            curBranch=$(git branch --show-current)
-            mainBranch=nn
-            echo "Working on $f";
-            if [ "`git branch --list main`" ]; then
-              mainBranch=main
-            else
-              mainBranch=master
-            fi
-            remoteBranch=$(git rev-parse --abbrev-ref ${mainBranch}@{upstream})
-            IFS='/' read -r remoteSrv string &lt;&lt;&lt; "$remoteBranch"
-            echo "working on $mainBranch tracking $remoteSrv"
-            git fetch --all
-            git pull $remoteSrv
-            git checkout $curBranch
-         fi
-         cd ..
-      fi;
-  done;
-};
-
-do_the_sync
-echo "DONE!"
-</code></pre>
-<p>As usual YMMV</p></div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 23 December 2021
-<span class="divider">|</span>
-<a href="/blog/2021/12/refresh-local-git-repositories.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/github.html">GitHub</a>  <a href="/blog/categories/software.html">Software</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2021/12/refresh-local-git-repositories.html";
 						</script>
 					</p></p>
 				</article>

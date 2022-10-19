@@ -6,7 +6,34 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Tue, 18 Oct 2022 21:41:59 +0000</pubdate>
+	<pubdate>Wed, 19 Oct 2022 02:51:07 +0000</pubdate>
+<item>
+	<title>CI/CD, Github Actions, and GraalVM Native Image</title>
+	<description>&lt;p&gt;&lt;a href="https://www.graalvm.org/"&gt;GraalVM&lt;/a&gt; is a promising polyglot runtime for Java, JavaScript, Python, Ruby and &lt;a href="https://webassembly.org/"&gt;WASM&lt;/a&gt;.&lt;br&gt; It can produce native images. Unsurprisingly &lt;em&gt;with great powers come&lt;/em&gt; ... lots of things to learn.&lt;/p&gt;
+&lt;h3&gt;GraalVM Native Image Benefits&lt;/h3&gt;
+&lt;p&gt;A native image has a number of benefits over an JVM based application, mainly owed to the extensive analysis done at build time.&lt;br&gt; Some of advantages mentioned:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;Runtime speed ~ 25% above the same code running on an JVM&lt;/li&gt;
+ &lt;li&gt;Ahead of Time compilation can lead to up to 9 times less memory consumption than running on an JVM&lt;/li&gt;
+ &lt;li&gt;Code executes faster with a smaller memory footprint than comparable Go applications ( but still is bigger/slower than C by a whisk)&lt;/li&gt;
+ &lt;li&gt;Warmup time got moved to build time, improving startup time&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Building the image&lt;/h3&gt;
+&lt;p&gt;Build has been greatly improved with tooling available:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;a &lt;a href="https://graalvm.github.io/native-build-tools/latest/maven-plugin.html"&gt;Maven plugin&lt;/a&gt; (also available for &lt;a href="https://graalvm.github.io/native-build-tools/latest/gradle-plugin.html"&gt;Gradle&lt;/a&gt;), eliminating the need of extensive commandline foo.&lt;/li&gt;
+ &lt;li&gt;a GitHub action to &lt;a href="https://github.com/marketplace/actions/github-action-for-graalvm"&gt;install the GraalVM tooing&lt;/a&gt; in a pipeline&lt;/li&gt;
+ &lt;li&gt;reduced memory consumption, so most apps will fit into the GitHub build container limit of 7GB memory&lt;/li&gt;
+ &lt;li&gt;option for a non-optimized fast build, useful for testing correctness&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Thoughts and conclusions&lt;/h3&gt;
+&lt;p&gt;A big step in the right direction making native images more accessible. There's still room for improvements, like caching the build images and more samples. What Oracle solved nicely: If you are a GraalVM Enterprise customer, accessing GraalVM Enterprise edition is done using an access token, fully compatible to any build system. No messing around with downloads and manual installations required.&lt;/p&gt;</description>
+	<link>2022/10/github-actions-graalvm.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>8b6bb240-4f37-11ed-bf58-75c7d10c023d</guid>
+	<pubDate>18 October 2022</pubDate>
+
+</item>
 <item>
 	<title>Streamlining Lage-scale Java Development using Error Prone</title>
 	<description>&lt;p&gt;It has been a while since I attended an in-person conference. Finally this October I managed to attend &lt;a href="https://www.oracle.com/cloudworld/javaone/"&gt;JavaOne&lt;/a&gt; in Las Vegas. I shall report on interesting sessions.&lt;/p&gt;
@@ -366,60 +393,6 @@ router.route("/assets/lib/*").handler(StaticHandler.create("META-INF/resources/w
 	<author>Stephan H. Wissel</author>
 	<guid>a32c0030-6705-11ec-817f-4bcc5378b126</guid>
 	<pubDate>27 December 2021</pubDate>
-
-</item>
-<item>
-	<title>Refresh local git repositories</title>
-	<description>&lt;p&gt;I keep all my software that is under version control below a few directories only. E.g. OpenSource projects I cloned to learn from them live below &lt;code&gt;~/OpenSource&lt;/code&gt;. Keeping up with updates requires to pull them all.&lt;/p&gt;
-&lt;h3&gt;Pulling the main branch&lt;/h3&gt;
-&lt;p&gt;My little helper does:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;change into each first level sub directory&lt;/li&gt;
- &lt;li&gt;check if it is under version control&lt;/li&gt;
- &lt;li&gt;capture the current branch&lt;/li&gt;
- &lt;li&gt;switch to &lt;code&gt;main&lt;/code&gt; or &lt;code&gt;master&lt;/code&gt; branch, depending on which one is there&lt;/li&gt;
- &lt;li&gt;capture the name of the tracked remote&lt;/li&gt;
- &lt;li&gt;fetch all remotes&lt;/li&gt;
- &lt;li&gt;pull the tracked remote&lt;/li&gt;
- &lt;li&gt;switch back to the branch it was in&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;The script does not check if the current branch is dirty (preventing checkout) or pushing back changes. Enjoy&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-bash"&gt;#!/bin/bash
-# Pull all repos below the current working directory
-
-do_the_sync() {
-  for f in *; do
-      if [ -d $f -a ! -h $f ]; then
-         cd -- "$f";
-         if [ -d ".git" ]; then
-            curBranch=$(git branch --show-current)
-            mainBranch=nn
-            echo "Working on $f";
-            if [ "`git branch --list main`" ]; then
-              mainBranch=main
-            else
-              mainBranch=master
-            fi
-            remoteBranch=$(git rev-parse --abbrev-ref ${mainBranch}@{upstream})
-            IFS='/' read -r remoteSrv string &amp;lt;&amp;lt;&amp;lt; "$remoteBranch"
-            echo "working on $mainBranch tracking $remoteSrv"
-            git fetch --all
-            git pull $remoteSrv
-            git checkout $curBranch
-         fi
-         cd ..
-      fi;
-  done;
-};
-
-do_the_sync
-echo "DONE!"
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
-	<link>2021/12/refresh-local-git-repositories.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>516554b0-63f7-11ec-9248-c18c40a7135e</guid>
-	<pubDate>23 December 2021</pubDate>
 
 </item>
 
