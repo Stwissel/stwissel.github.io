@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Beyond Java 8: The Cool Stuff - NotesSensei's Blog</title>
+<title>Async testing with vert.x - NotesSensei's Blog</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -12,14 +12,14 @@ ga('send', 'pageview');
 <meta http-equiv="X-UA-Compatible"  content="chrome=1" />
 <meta http-equiv="Content-Language" content="en" />
 <meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
-<meta property="og:title"     content="wissel.net - Beyond Java 8: The Cool Stuff" />
+<meta property="og:title"     content="wissel.net - Async testing with vert.x" />
 <meta property="og:type"      content="blog" />
-<meta property="og:url"       content="https://wissel.net/blog/2022/10/beyond-java-8.html" />
+<meta property="og:url"       content="https://wissel.net/blog/2022/11/async-testing-with-vertx.html" />
 <meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
 <meta property="og:site_name" content="wissel.net" />
 <meta name="viewport"         content="width=device-width, initial-scale=1.0" />
 <meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
-<meta name="DC.Title"         content="NotesSensei's Weblog - Beyond Java 8: The Cool Stuff" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Async testing with vert.x" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
 <meta name="Copyright"        content="2002,2022 Stephan H. Wissel - Creative commons licence" />
@@ -27,11 +27,11 @@ ga('send', 'pageview');
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
 <meta name="description"
-	content="Beyond Java 8: The Cool Stuff - Java is evolving rapidly. Henri Tremblay is walking through the cool stuff. Henri is, besides other activities a contributor to EasyMock From Java 7 (2011) to Java 19 (2022) Unless stated otherwise Java 17 (2021) LTS will work for the examples. Henri used a trading app to walk through upgrading step" />
+	content="Async testing with vert.x - Test driven development gets interesting when actions might or might not complete somewhen in the future. Point in case: HTTP requests (fetch returns a promise) vert.x and jUnit5 I frequently write little tests, that spin up an http sever before the test, run individual tests using a WebClient. All " />
 <meta name="Keywords"
-	content="Domino,Singapore," />
+	content="Java,vert.x," />
 <meta name="Abstract"
-	content="Beyond Java 8: The Cool Stuff - Java is evolving rapidly. Henri Tremblay is walking through the cool stuff. Henri is, besides other activities a contributor to EasyMock From Java 7 (2011) to Java 19 (2022) Unless stated otherwise Java 17 (2021) LTS will work for the examples. Henri used a trading app to walk through upgrading step" />
+	content="Async testing with vert.x - Test driven development gets interesting when actions might or might not complete somewhen in the future. Point in case: HTTP requests (fetch returns a promise) vert.x and jUnit5 I frequently write little tests, that spin up an http sever before the test, run individual tests using a WebClient. All " />
 <!--[if lt IE 9]>
 		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
 <![endif]-->
@@ -98,12 +98,12 @@ ga('send', 'pageview');
     <ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2022/">2022</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2022/10/">October</a></li>
+  <li><a href="/blog/2022/11/">November</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/domino.html">Domino</a>
+    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/singapore.html">Singapore</a>
+    <span class="divider">|</span><a href="/blog/categories/vertx.html">vert.x</a>
   </li>
 </ul>
 
@@ -111,59 +111,94 @@ ga('send', 'pageview');
 			<div class="span12">
 				
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2022/10/tdd-paradox.html"><i class="icon-hand-left"></i>Test-Driven Development Is a Paradox</a>
+					<li><a href="/blog/2022/10/beyond-java-8.html"><i class="icon-hand-left"></i>Beyond Java 8: The Cool Stuff</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2022/11/async-testing-with-vertx.html">Async testing with vert.x<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 				<article class="well well-raised">
-					<h1><small>Beyond Java 8: The Cool Stuff</small></h1>
+					<h1><small>Async testing with vert.x</small></h1>
 					<hr />
-					<div><p>Java is evolving rapidly. <a href="https://twitter.com/henri_tremblay">Henri Tremblay</a> is walking through the cool stuff. Henri is, besides other activities a contributor to <a href="https://easymock.org/">EasyMock</a></p>
-<h3>From Java 7 (2011) to Java 19 (2022)</h3>
-<p>Unless stated otherwise Java 17 (2021) LTS will work for <a href="https://github.com/henri-tremblay/javathecoolstuff">the examples</a>. Henri used a trading app to walk through upgrading steps.</p>
-<p>Impressive: just moving from Java 8 to Java 19 shows double digit performance improvements</p>
-<p>Some of the tips:</p>
-<ul>
- <li>use the <a href="https://www.baeldung.com/java-clock">java.time.Clock</a> object for anything date/time, Don't use <code>Date</code>. Inject the clock object.</li>
- <li>use <a href="https://www.baeldung.com/java-comparator-comparable">Comparators</a></li>
- <li>use <a href="https://mkyong.com/java8/java-8-stream-read-a-file-line-by-line/">Files.lines</a> to read by line</li>
- <li>use the <a href="https://github.com/apache/maven-mvnd">Maven deamon</a> to speed compilation</li>
- <li>Be careful with <code>stream().findAny()</code> - in most cases a <code>Map</code> performs way better</li>
- <li>Use <code>"""</code> text blocks (why o why did Java not pick the tripple backtick)</li>
- <li>Use <code>Files.writeString</code> if it is a String you write</li>
- <li>Use <a href="https://www.baeldung.com/jlink">jlink</a> and <a href="https://www.baeldung.com/jar-windows-executables">jpackage</a> for distribution</li>
- <li>Use <a href="https://docs.oracle.com/en/java/javase/13/language/switch-expressions.html">switch expressions</a> which returns values (not convinced about that yet)</li>
- <li>Use <a href="https://www.baeldung.com/java-record-keyword">Records</a> for immutable data</li>
- <li>Use the new <a href="https://www.baeldung.com/java-pattern-matching-instanceof">instanceof</a> syntax</li>
- <li>Use the new <a href="https://www.baeldung.com/java-17-random-number-generators">RandomGenerator</a> for better performance</li>
- <li>Sealed types allow tighter controls</li>
-</ul>
-<p>A quite enjoyable session</p></div>
+					<div><p><a href="https://amzn.to/3fzbkEg">Test driven development</a> gets interesting when actions might or might not complete somewhen in the future. Point in case: HTTP requests (<a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API">fetch</a> returns a promise)</p>
+<h3>vert.x and jUnit5</h3>
+<p>I frequently write little tests, that spin up an <a href="https://vertx.io/docs/apidocs/io/vertx/core/http/HttpServer.html">http sever</a> before the test, run individual tests using a <a href="https://vertx.io/docs/apidocs/io/vertx/ext/web/client/WebClient.html">WebClient</a>. All these operations run asynchronous, returning a <a href="https://vertx.io/docs/apidocs/io/vertx/core/Future.html">vert.x Future</a> (In JavaScript Land the equivalent would be a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">promise</a>)</p>
+<p>To make this pain free, vert.x provides a <a href="https://vertx.io/docs/vertx-junit5/java/">full integration</a> into <a href="https://junit.org/junit5/">jUnit 5</a>. Using the annotation <code>@ExtendWith(VertxExtension.class)</code> vert.x provides two injectable parameters: <a href="https://vertx.io/docs/apidocs/io/vertx/core/Vertx.html">Vertx</a> and <a href="https://vertx.io/docs/apidocs/io/vertx/junit5/VertxTestContext.html">VertxTestContext</a>. Add the simple mental rule: All async operations need to interact with the <a href="https://vertx.io/docs/apidocs/io/vertx/junit5/VertxTestContext.html">VertxTestContext</a>.</p><h3>Sample test to get started</h3>
+<p>This is a simple test skeleton, loading an http server for every request. Most likely in a real test you would spin-up the server once using <code>@BeforeAll</code> instead of <code>@BeforeEach</code>. Matching the <code>@BeforeEach</code> you will need an <code>@AfterEach</code> to wind down the server. Fun part: it apparently work without, until it doesn't. Welcome to the asynchronous world. So save yourself the head scratching and prepare both methods.</p>
+<pre><code class="language-java">@BeforeEach
+    void beforeEach(final Vertx vertx, final VertxTestContext testContext) throws Exception {
+        final Router router = Router.router(vertx);
+        router.route().handler(BodyHandler.create());
+        router.route().handler(this::echo);
+        vertx.createHttpServer()
+                .requestHandler(router)
+                .listen(thePort)
+                .onFailure(testContext::failNow)
+                .onSuccess(h -&gt; {
+                    this.server = h;
+                    testContext.completeNow();
+                });
+    }
+
+    @AfterEach
+    void afterEach(final Vertx vertx, final VertxTestContext testContext) throws Exception {
+        this.server.close()
+                .onFailure(testContext::failNow)
+                .onSuccess(v -&gt; testContext.completeNow());
+    }
+</code></pre>
+<p>To have a little more fun, my test uses a <a href="https://junit.org/junit5/docs/current/user-guide/#writing-tests-parameterized-tests"><code>@ParameterizedTest</code></a> that allows to run a test multiple times with different inputs. I used the <a href="https://junit.org/junit5/docs/current/api/org.junit.jupiter.params/org/junit/jupiter/params/provider/MethodSource.html"><code>@MethodSource</code></a> annotation that calls this method:</p>
+<pre><code class="language-java">    static Stream&lt;Arguments&gt; testCases() {
+        return Stream.of(
+                Arguments.of("color", "red"),
+                Arguments.of("dance", "tango"),
+                Arguments.of("food", "noodles"),
+                Arguments.of("sky", "blue"),
+                Arguments.of("happy", "ness"));
+    }
+</code></pre>
+<p>To successfully run the <a href="https://vertx.io/docs/vertx-junit5/java/#_parameterized_tests_with_methodsource">paramterized Test</a>, the <code>@MethodSource</code> provided parameters preceed the <a href="https://vertx.io/docs/apidocs/io/vertx/core/Vertx.html">Vertx</a> and <a href="https://vertx.io/docs/apidocs/io/vertx/junit5/VertxTestContext.html">VertxTestContext</a>. So your test method looks like this:</p>
+<pre><code class="language-java">@ParameterizedTest
+    @MethodSource("testCases")
+    void test2(final String key, final String value, final Vertx vertx,
+            final VertxTestContext testContext) {
+        final WebClient client = WebClient.create(vertx);
+        final JsonObject body = new JsonObject().put(key, value);
+        client.post(thePort, "localhost", "/")
+                .putHeader("ContentType", "application/json")
+                .sendJson(body)
+                .onFailure(testContext::failNow)
+                .onSuccess(result -&gt; {
+                    testContext.verify(() -&gt; {
+                        Assertions.assertEquals(200, result.statusCode());
+                        Assertions.assertEquals(body, result.bodyAsJsonObject());
+                    });
+                    testContext.completeNow();
+                });
+    }
+</code></pre>
+<p>There's more to async testing, so <a href="https://vertx.io/docs/vertx-junit5/java/">read the documentation</a>. The sample class can be <a href="https://gist.github.com/Stwissel/06e0ee2ded07460cce80248435fef5e5">found here</a>.</p>
+<p>As usual YMMV</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 20 October 2022
+Stephan H Wissel</a> on 03 November 2022
 <span class="divider">|</span>
-<a href="/blog/2022/10/beyond-java-8.html#comments">Comments (0)</a>
+<a href="/blog/2022/11/async-testing-with-vertx.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/categories/singapore.html">Singapore</a> 
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
 
 						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2022/10/beyond-java-8.html";
+							var permaLink = "https://wissel.net/blog/2022/11/async-testing-with-vertx.html";
 						</script>
 					</p>
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_7f06e5d0-508e-11ed-b82f-f378cff35c71" type="button">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_2b95a890-5b6b-11ed-a872-8949e2147baa" type="button">
 		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
 	            </button>
 	            </div>
-				<div id="commentform_7f06e5d0-508e-11ed-b82f-f378cff35c71"  class="collapse"></div>
+				<div id="commentform_2b95a890-5b6b-11ed-a872-8949e2147baa"  class="collapse"></div>
 				<div class="well well-raised">
 					<h4>Comments</h4>
 					<ol id="commentList">
@@ -173,12 +208,9 @@ categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/c
 					</ol>
 				</div>
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2022/10/tdd-paradox.html"><i class="icon-hand-left"></i>Test-Driven Development Is a Paradox</a>
+					<li><a href="/blog/2022/10/beyond-java-8.html"><i class="icon-hand-left"></i>Beyond Java 8: The Cool Stuff</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2022/11/async-testing-with-vertx.html">Async testing with vert.x<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 			</div>
@@ -186,12 +218,12 @@ categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/c
 		<ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2022/">2022</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2022/10/">October</a></li>
+  <li><a href="/blog/2022/11/">November</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/domino.html">Domino</a>
+    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
   </li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/singapore.html">Singapore</a>
+    <span class="divider">|</span><a href="/blog/categories/vertx.html">vert.x</a>
   </li>
 </ul>
 
@@ -254,7 +286,7 @@ categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/c
 	</footer>
 
 	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/2022/10/beyond-java-8.html";
+		var permaLink = "https://wissel.net/blog/2022/11/async-testing-with-vertx.html";
 	</script>
 		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
@@ -276,7 +308,7 @@ categories:  <a href="/blog/categories/domino.html">Domino</a>  <a href="/blog/c
 	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 	<script type="text/javascript">
 		var onloadCallback = function() {
-    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "7f06e5d0-508e-11ed-b82f-f378cff35c71");
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "2b95a890-5b6b-11ed-a872-8949e2147baa");
  		};
 	</script>
 

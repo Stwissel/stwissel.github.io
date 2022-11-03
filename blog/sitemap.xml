@@ -6,7 +6,19 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Sun, 23 Oct 2022 05:08:45 +0000</pubdate>
+	<pubdate>Thu, 03 Nov 2022 12:46:22 +0000</pubdate>
+<item>
+	<title>Async testing with vert.x</title>
+	<description>&lt;p&gt;&lt;a href="https://amzn.to/3fzbkEg"&gt;Test driven development&lt;/a&gt; gets interesting when actions might or might not complete somewhen in the future. Point in case: HTTP requests (&lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API"&gt;fetch&lt;/a&gt; returns a promise)&lt;/p&gt;
+&lt;h3&gt;vert.x and jUnit5&lt;/h3&gt;
+&lt;p&gt;I frequently write little tests, that spin up an &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/http/HttpServer.html"&gt;http sever&lt;/a&gt; before the test, run individual tests using a &lt;a href="https://vertx.io/docs/apidocs/io/vertx/ext/web/client/WebClient.html"&gt;WebClient&lt;/a&gt;. All these operations run asynchronous, returning a &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/Future.html"&gt;vert.x Future&lt;/a&gt; (In JavaScript Land the equivalent would be a &lt;a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise"&gt;promise&lt;/a&gt;)&lt;/p&gt;
+&lt;p&gt;To make this pain free, vert.x provides a &lt;a href="https://vertx.io/docs/vertx-junit5/java/"&gt;full integration&lt;/a&gt; into &lt;a href="https://junit.org/junit5/"&gt;jUnit 5&lt;/a&gt;. Using the annotation &lt;code&gt;@ExtendWith(VertxExtension.class)&lt;/code&gt; vert.x provides two injectable parameters: &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/Vertx.html"&gt;Vertx&lt;/a&gt; and &lt;a href="https://vertx.io/docs/apidocs/io/vertx/junit5/VertxTestContext.html"&gt;VertxTestContext&lt;/a&gt;. Add the simple mental rule: All async operations need to interact with the &lt;a href="https://vertx.io/docs/apidocs/io/vertx/junit5/VertxTestContext.html"&gt;VertxTestContext&lt;/a&gt;.&lt;/p&gt;</description>
+	<link>2022/11/async-testing-with-vertx.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>2b95a890-5b6b-11ed-a872-8949e2147baa</guid>
+	<pubDate>03 November 2022</pubDate>
+
+</item>
 <item>
 	<title>Beyond Java 8: The Cool Stuff</title>
 	<description>&lt;p&gt;Java is evolving rapidly. &lt;a href="https://twitter.com/henri_tremblay"&gt;Henri Tremblay&lt;/a&gt; is walking through the cool stuff. Henri is, besides other activities a contributor to &lt;a href="https://easymock.org/"&gt;EasyMock&lt;/a&gt;&lt;/p&gt;
@@ -361,27 +373,6 @@ public class Component {
 	<author>Stephan H. Wissel</author>
 	<guid>db4e1a90-9fa2-11ec-bec4-9fa5fdc87e87</guid>
 	<pubDate>09 March 2022</pubDate>
-
-</item>
-<item>
-	<title>Maven JNA macOS and LD_LIBRARY_PATH</title>
-	<description>&lt;p&gt;When running Java applications on a &lt;code&gt;*nix&lt;/code&gt; style of operating system that need to load native libraries, you will need to set the &lt;a href="https://linuxhint.com/what-is-ld-library-path/"&gt;LD_LIBRARY_PATH&lt;/a&gt; environment variable (&lt;a href="https://medium.com/macos-is-not-linux-and-other-nix-reflections/d-o-y-ou-ld-library-path-you-6ab0a6135a33"&gt;or something similar&lt;/a&gt;). That's not an issue on Linux.&lt;/p&gt;
-&lt;h3&gt;macOS: I won't let you, it's for your own good&lt;/h3&gt;
-&lt;p&gt;On &lt;a href="https://en.wikipedia.org/wiki/MacOS"&gt;macOS&lt;/a&gt; the &lt;a href="https://support.apple.com/en-sg/guide/security/secb7ea06b49/web"&gt;System Integrity Protection (SIP)&lt;/a&gt; prevents these variables to be set in &lt;a href="https://stackoverflow.com/questions/60126159/how-to-set-ld-library-path-dyld-library-path-on-macos"&gt;your shell (bash, zsh)&lt;/a&gt;. It works inside Eclipse, when you define environment parameters, but not in any shell script. Unfortunately &lt;a href="https://maven.apache.org"&gt;Maven&lt;/a&gt;'s command line &lt;code&gt;mvn&lt;/code&gt; is a shell script.&lt;/p&gt;
-&lt;h3&gt;The Notes challenge&lt;/h3&gt;
-&lt;p&gt;Since the Notes client is a cross-platform product, the library locations aren't where a macOS program would look for:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;The application directory. That's where the &lt;strong&gt;Java&lt;/strong&gt; runtime is at home, not the notes executable&lt;/li&gt;
- &lt;li&gt;In a library location, here looking for &lt;code&gt;notes&lt;/code&gt; instead of &lt;code&gt;libnotes.dylib&lt;/code&gt;&lt;/li&gt;
- &lt;li&gt;&lt;code&gt;/Users/[YOURNAME]/Library/Frameworks/notes.framework/&lt;/code&gt;&lt;/li&gt;
- &lt;li&gt;&lt;code&gt;/Library/Frameworks/notes.framework/&lt;/code&gt;&lt;/li&gt;
- &lt;li&gt;&lt;code&gt;/System/Library/Frameworks/notes.framework/&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;You could try to symlink the first library: &lt;code&gt;ln -s /Applications/HCL\ Notes.app/Contents/MacOS/libnotes.dylib ~/Library/Frameworks/notes.framework/notes&lt;/code&gt; (after creating the rewuired directories) to run into the next challenge.&lt;/p&gt;</description>
-	<link>2022/01/maven-jna-macos-and-ld_library_path.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>624428a0-7398-11ec-9bb6-e9198cdc4c3b</guid>
-	<pubDate>12 January 2022</pubDate>
 
 </item>
 
