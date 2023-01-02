@@ -100,6 +100,66 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2023/01/wait-for-service-availability.html">Please wait until that HTTP service is ready</a></small></h1>
+					<hr />
+					<div><p>Our brave new world of <a href="https://kubernetes.io/">containers</a> and <a href="https://microservices.io/">microservices</a><br> runs on a combination of <a href="https://yaml.org/">YAML</a> and <a href="https://linux.die.net/man/1/bash">shell scripts</a>.<br> Getting them to run in the desired sequence can be a challenge.</p>
+<h3>When ready isn't ready</h3>
+<p>All container environments have a "depends" clause, so the container runtime can determine the correct startup sequence<br> for the zoo of containers comprising the application to be launched. Each container will usually signal when it is ready.<br> However <em>ready</em> can mean different things to different applications.</p>
+<p>In the container world it <i>should</i> be: the service is available.<br> However it <i>could</i> be: service was successfully started, but might be busy with house keeping.<br> In the later case the start scripts of the dependent services need to do their own waiting</p>
+<h3><a href="https://curl.se/">curl</a> to the rescue</h3>
+<p>Curl is the <a href="https://amzn.to/3jHi8RN">Swiss Army Knive</a> of network tools. It probably takes a lifetime to understand all its possibilities. Make sure you have the current version, at least <a href="https://curl.se/changes.html#7_52_0">7.52.0</a> from 2016.<br> Whipping up a little shell script provides what we need:</p>
+<pre><code class="language-bash">#!/bin/bash
+# Wait for a http service to be available
+export TARGET=http://baseservice.local/
+curl -v \
+     --retry 10 \
+     --retry-delay 20 \
+     --retry-connrefused \
+     $TARGET
+
+if [ "$?" -ne 0 ]; then
+  echo "Failed to reach $TARGET"
+  exit 1
+else
+  echo "$TARGET has replied!"
+fi
+</code></pre>
+<p>Let's break it down:</p>
+<ul>
+ <li><code>export TARGET</code> defines the URL you want to reach. Works for both <code>http</code> and <code>https</code>. Potentially works for other protocols supported by <a href="https://curl.se/">curl</a> as well, but I haven't tested that (yet). You might swap it out for <code>$1</code> to capture the first parameter called</li>
+ <li><code>\</code> denominates line continuation. The whole command needs to be on one line which is hard to read. <code>\</code> tells <a href="https://www.linux.org/">Linux</a> to treat the following line as belonging to the current one. On windows you need to replace <code>\</code> with <code>^</code> and alter the syntax according to <a href="https://learn.microsoft.com/en-us/powershell/">Powershell</a></li>
+ <li><a href="https://curl.se/docs/manpage.html#-v"><code>curl -v</code></a> Verbose output, so the logs tell the full story. When you work with privat <a href="https://en.wikipedia.org/wiki/Certificate_authority">CA</a> or <a href="https://en.wikipedia.org/wiki/Self-signed_certificate">self signed certificates</a> (Don't do self signed, use <a href="https://www.wissel.net/blog/2019/10/create-your-own-ca.html">your own CA</a>), you need to add <a href="https://curl.se/docs/manpage.html#-k"><code>-k</code></a> or <a href="https://curl.se/docs/manpage.html#-k"><code>--insecure</code></a> to make this work</li>
+ <li><a href="https://curl.se/docs/manpage.html#--retry"><code>--retry 10</code></a> try the connection 10 times</li>
+ <li><a href="https://curl.se/docs/manpage.html#--retry-delay"><code>--retry-delay 20</code></a> Wait 20 sec until the next try</li>
+ <li><a href="https://curl.se/docs/manpage.html#--retry-connrefused"><code>--retry-connrefused</code></a> retry even on "connection refused" responses. By default curl retries only http responses not in the <code>2xx</code> range. Connection refused is HTTP's way telling you: there's nothing taking your call, which curl, without <a href="https://curl.se/docs/manpage.html#--retry-connrefused"><code>--retry-connrefused</code></a> takes as final, fatal error and terminates retries. When you have <a href="https://curl.se/changes.html#7_71_0">curl v7.71.0</a> (from 2020 or later), you can use <a href="https://curl.se/docs/manpage.html#--retry-all-errors"><code>--retry-all-errors</code></a> instead. The documentation warns <i>This option is the "sledgehammer" of retrying.</i> Use it wisely</li>
+ <li><code>if [ "$?" -ne 0 ]; then</code> Commands usually return a numeric result. Anything other than <code>0</code> indicates a failure condition of some sort. When curl has exhausted the number of retries a value greater 0 will be returned. To capture the return value we us <code>$?</code></li>
+ <li><code>return 1</code> We indicate that our script failed. So it can be called from other scripts</li>
+</ul>
+<p>We could swap out <code>$TARGET</code> for <code>$1</code> which makes the script callable handing over the target URL e.g <code>waitforme.sh http://someURL</code></p>
+<h3>Beyond containers</h3>
+<p>The script is also useful in "classic" situations, where you start a service in the background (which by definition is asynchonous). Your local environment uses anything like:</p>
+<ul>
+ <li><code>./startdb &amp;</code></li>
+ <li><code>systemctl start myservice</code></li>
+ <li><code>domino[_container] start</code></li>
+</ul>
+<p>You can use the curl retry for any automation. Adjust the wait time and the retry time to your needs.</p>
+<p>As usual <strong>YMMV</strong></p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 02 January 2023
+<span class="divider">|</span>
+<a href="/blog/2023/01/wait-for-service-availability.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/containers.html">Containers</a>  <a href="/blog/categories/development.html">Development</a>  <a href="/blog/categories/k8s.html">K8S</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2023/01/wait-for-service-availability.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2022/12/on-technical-interviews.html">On Technical Interviews</a></small></h1>
 					<hr />
 					<div><p>When the HCL Labs is hiring engineers, we conduct technical interviews. I had and have the priviledge to interview, hire and work with incredible talented individuals in the process. Lets look behind the curtain of the process.</p>
@@ -475,130 +535,6 @@ categories:  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
 						</script>
 					</p></p>
 				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2022/05/yes-no-maybe-booleans.html">Yes No Maybe Boolean deserialization with Jackson</a></small></h1>
-					<hr />
-					<div><p>The <a href="https://en.wikipedia.org/wiki/Robustness_principle">Robustness principle</a> demands: be lenient in what you accept and strict in what you emit. I was facing this challenge when deserializing boolean values.</p>
-<h3>What is true</h3>
-<p>Glancing at data, we can spot, mostly easily what looks trueish:</p>
-<ul>
- <li>true</li>
- <li>"<strong>T</strong>rue"</li>
- <li>"<strong>Y</strong>es"</li>
- <li>1</li>
- <li>"<strong>S</strong>i"</li>
- <li>"<strong>J</strong>a"</li>
- <li>"<strong>A</strong>ctive"</li>
- <li>"<strong>i</strong>sActive"</li>
- <li>"<strong>e</strong>nabled"</li>
- <li>"<strong>o</strong>n"</li>
-</ul>
-<p>The last three options aren't as clear cut, they depend on your use case. Using a simple class, lets try to deserialize from <a href="https://www.json.org/json-en.html">JSON</a> to an instance of a <a href="https://www.java.com/">Java</a> class instance using <a href="https://github.com/FasterXML/jackson">Jackson</a>.</p>
-<p>Java doesn't have native support for JSON, so we need to rely on libraries like <a href="https://github.com/FasterXML/jackson">Jackson</a>, <a href="https://github.com/google/gson">Google GSON</a> (or any other listed on the <a href="https://www.json.org/json-en.html">JSON</a> page). I choose Jackson, since it is the library underpinning the <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">JsonObject</a> of the <a href="https://vertx.io/">Eclipse Vert.x</a> Framework I'm fond of. Over at <a href="https://www.baeldung.com/">Baeldung</a> you will find more <a href="https://www.baeldung.com/jackson-object-mapper-tutorial">generic Jackson tutorials</a>.</p>
-<p>Let's look at a simple Java class (Yes, Java14 will make it <a href="https://vladmihalcea.com/java-records-guide/">less verbose</a>), that sports <code>fromJson()</code> and <code>toJson()</code> as well as convenient overwrite of <code>equals()</code> and <code>toString()</code></p>
-<pre><code class="language-java">package com.notessensei.blogsamples;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import io.vertx.core.json.JsonObject;
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class Component {
-
-  public static Component fromJson(final JsonObject source) {
-    return source.mapTo(Component.class);
-  }
-
-  private String name;
-  private boolean active = false;
-
-  public Component() {
-    // Default empty constructor required
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public boolean getActive() {
-    return active;
-  }
-
-  public void setActive(boolean isActive) {
-    this.active = isActive;
-  }
-
-  public JsonObject toJson() {
-    return JsonObject.mapFrom(this);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (obj instanceof Component) {
-      return this.toString().equals(obj.toString());
-    }
-    return super.equals(obj);
-  }
-
-  @Override
-  public String toString() {
-    return this.toJson().encode();
-  }
-
-}
-</code></pre>
-<p>Trying to instantiate a class instance with the following JSON will work:</p>
-<pre><code class="language-json">{
-  "name": "Heater",
-  "active": false
-}
-</code></pre>
-<pre><code class="language-json">{
-  "name": "Aircon"
-}
-</code></pre>
-<pre><code class="language-json">{
-  "name": "Fridge",
-  "active": true,
-  "PowerConsumption": {
-    "unit": "kw",
-    "measure": 7
-  }
-}
-</code></pre>
-<p>However it will fail with those:</p>
-<pre><code class="language-json">{
-  "name": "System1",
-  "active": "on"
-}
-</code></pre>
-<pre><code class="language-json">{
-  "name": "System2",
-  "active": "yes"
-}
-</code></pre>
-<p>You get the charming error <em>Cannot deserialize value of type <code>boolean</code> from String "yes": only "true"/"True"/"TRUE" or "false"/"False"/"FALSE" recognized`</em>. Interestingly numbers work.</p>
-<p>On a side note: <a href="https://github.com/FasterXML/jackson">Jackson</a> uses the presence of getters/setters to decide (de)serialization and needs <code>getActive</code> and <code>setActive</code> or <code>isActive</code>. When you name your variable <code>isActive</code> Eclipse would generate <code>setActive</code> and <code>isActive</code> instead of <code>getIsActive</code> / <code>isIsActive</code> and <code>setIsActive</code>. So simply avoid the <code>is...</code> prefix for internal variables.</p></div>
-					<hr />
- <a href="/blog/2022/05/yes-no-maybe-booleans.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 07 May 2022
-<span class="divider">|</span>
-<a href="/blog/2022/05/yes-no-maybe-booleans.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2022/05/yes-no-maybe-booleans.html";
-						</script>
-					</p></p>
-				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/all.html" title="That's a loooong list!">Older entries<i class="icon-hand-right"></i></a>
 					</li>
@@ -673,10 +609,12 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 						<li ><a href="/blog/categories/buyingbroadband.html">Buying Broadband</a></li>
 						<li ><a href="/blog/categories/caldav.html">calDAV</a></li>
 						<li ><a href="/blog/categories/cloudcomputing.html">Cloud Computing</a></li>
+						<li ><a href="/blog/categories/containers.html">Containers</a></li>
 						<li ><a href="/blog/categories/continuousintegration.html">Continuous integration</a></li>
 						<li ><a href="/blog/categories/couchdb.html">CouchDB</a></li>
 						<li ><a href="/blog/categories/coursera.html">Coursera</a></li>
 						<li ><a href="/blog/categories/cycling.html">Cycling</a></li>
+						<li ><a href="/blog/categories/development.html">Development</a></li>
 						<li ><a href="/blog/categories/docker.html">Docker</a></li>
 						<li ><a href="/blog/categories/domino.html">Domino</a></li>
 						<li ><a href="/blog/categories/dxlmagic.html">DXLMagic</a></li>
@@ -694,6 +632,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 						<li ><a href="/blog/categories/intercultural.html">Intercultural</a></li>
 						<li ><a href="/blog/categories/java.html">Java</a></li>
 						<li ><a href="/blog/categories/javascript.html">JavaScript</a></li>
+						<li ><a href="/blog/categories/k8s.html">K8S</a></li>
 						<li ><a href="/blog/categories/learning.html">Learning</a></li>
 						<li ><a href="/blog/categories/lightning.html">Lightning</a></li>
 						<li ><a href="/blog/categories/linux.html">Linux</a></li>
@@ -755,6 +694,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 						<li ><a href="/blog/2020/">2020</a></li>
 						<li ><a href="/blog/2021/">2021</a></li>
 						<li ><a href="/blog/2022/">2022</a></li>
+						<li ><a href="/blog/2023/">2023</a></li>
 						<li ><a href="/blog/all.html" title="That's a long list!">Complete archive</a></li>
 					</ul>
 				</aside>
@@ -792,8 +732,9 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
 						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
 						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
-						<li><a href="http://about.me/stephan.wissel/#" title="Another identity site, nothing much here">About Me</a></li>
-						<li><a href="https://www.stickermule.com/unlock?ref_id=7600480701&utm_medium=link&utm_source=invite">Stickers by Stickermule</a></li>
+						<li><a href="https://about.me/stephan.wissel/#" title="Another identity site, nothing much here">About Me</a></li>
+						<li><a href="https://github.com/Stwissel">GitHub</a></li>
+						<li><a href="https://bitbucket.org/stwissel/">Bitbucket</a></li>
 						<li><a href="https://www.twitter.com/notessensei">Twitter</a></li>
 					</ul>
 				</div>

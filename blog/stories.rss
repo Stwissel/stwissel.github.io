@@ -6,7 +6,58 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Mon, 12 Dec 2022 10:00:46 +0000</pubdate>
+	<pubdate>Mon, 02 Jan 2023 06:50:11 +0000</pubdate>
+<item>
+	<title>Please wait until that HTTP service is ready</title>
+	<description>&lt;p&gt;Our brave new world of &lt;a href="https://kubernetes.io/"&gt;containers&lt;/a&gt; and &lt;a href="https://microservices.io/"&gt;microservices&lt;/a&gt;&lt;br&gt; runs on a combination of &lt;a href="https://yaml.org/"&gt;YAML&lt;/a&gt; and &lt;a href="https://linux.die.net/man/1/bash"&gt;shell scripts&lt;/a&gt;.&lt;br&gt; Getting them to run in the desired sequence can be a challenge.&lt;/p&gt;
+&lt;h3&gt;When ready isn't ready&lt;/h3&gt;
+&lt;p&gt;All container environments have a "depends" clause, so the container runtime can determine the correct startup sequence&lt;br&gt; for the zoo of containers comprising the application to be launched. Each container will usually signal when it is ready.&lt;br&gt; However &lt;em&gt;ready&lt;/em&gt; can mean different things to different applications.&lt;/p&gt;
+&lt;p&gt;In the container world it &lt;i&gt;should&lt;/i&gt; be: the service is available.&lt;br&gt; However it &lt;i&gt;could&lt;/i&gt; be: service was successfully started, but might be busy with house keeping.&lt;br&gt; In the later case the start scripts of the dependent services need to do their own waiting&lt;/p&gt;
+&lt;h3&gt;&lt;a href="https://curl.se/"&gt;curl&lt;/a&gt; to the rescue&lt;/h3&gt;
+&lt;p&gt;Curl is the &lt;a href="https://amzn.to/3jHi8RN"&gt;Swiss Army Knive&lt;/a&gt; of network tools. It probably takes a lifetime to understand all its possibilities. Make sure you have the current version, at least &lt;a href="https://curl.se/changes.html#7_52_0"&gt;7.52.0&lt;/a&gt; from 2016.&lt;br&gt; Whipping up a little shell script provides what we need:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-bash"&gt;#!/bin/bash
+# Wait for a http service to be available
+export TARGET=http://baseservice.local/
+curl -v \
+     --retry 10 \
+     --retry-delay 20 \
+     --retry-connrefused \
+     $TARGET
+
+if [ "$?" -ne 0 ]; then
+  echo "Failed to reach $TARGET"
+  exit 1
+else
+  echo "$TARGET has replied!"
+fi
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Let's break it down:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;code&gt;export TARGET&lt;/code&gt; defines the URL you want to reach. Works for both &lt;code&gt;http&lt;/code&gt; and &lt;code&gt;https&lt;/code&gt;. Potentially works for other protocols supported by &lt;a href="https://curl.se/"&gt;curl&lt;/a&gt; as well, but I haven't tested that (yet). You might swap it out for &lt;code&gt;$1&lt;/code&gt; to capture the first parameter called&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;\&lt;/code&gt; denominates line continuation. The whole command needs to be on one line which is hard to read. &lt;code&gt;\&lt;/code&gt; tells &lt;a href="https://www.linux.org/"&gt;Linux&lt;/a&gt; to treat the following line as belonging to the current one. On windows you need to replace &lt;code&gt;\&lt;/code&gt; with &lt;code&gt;^&lt;/code&gt; and alter the syntax according to &lt;a href="https://learn.microsoft.com/en-us/powershell/"&gt;Powershell&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://curl.se/docs/manpage.html#-v"&gt;&lt;code&gt;curl -v&lt;/code&gt;&lt;/a&gt; Verbose output, so the logs tell the full story. When you work with privat &lt;a href="https://en.wikipedia.org/wiki/Certificate_authority"&gt;CA&lt;/a&gt; or &lt;a href="https://en.wikipedia.org/wiki/Self-signed_certificate"&gt;self signed certificates&lt;/a&gt; (Don't do self signed, use &lt;a href="https://www.wissel.net/blog/2019/10/create-your-own-ca.html"&gt;your own CA&lt;/a&gt;), you need to add &lt;a href="https://curl.se/docs/manpage.html#-k"&gt;&lt;code&gt;-k&lt;/code&gt;&lt;/a&gt; or &lt;a href="https://curl.se/docs/manpage.html#-k"&gt;&lt;code&gt;--insecure&lt;/code&gt;&lt;/a&gt; to make this work&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://curl.se/docs/manpage.html#--retry"&gt;&lt;code&gt;--retry 10&lt;/code&gt;&lt;/a&gt; try the connection 10 times&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://curl.se/docs/manpage.html#--retry-delay"&gt;&lt;code&gt;--retry-delay 20&lt;/code&gt;&lt;/a&gt; Wait 20 sec until the next try&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://curl.se/docs/manpage.html#--retry-connrefused"&gt;&lt;code&gt;--retry-connrefused&lt;/code&gt;&lt;/a&gt; retry even on "connection refused" responses. By default curl retries only http responses not in the &lt;code&gt;2xx&lt;/code&gt; range. Connection refused is HTTP's way telling you: there's nothing taking your call, which curl, without &lt;a href="https://curl.se/docs/manpage.html#--retry-connrefused"&gt;&lt;code&gt;--retry-connrefused&lt;/code&gt;&lt;/a&gt; takes as final, fatal error and terminates retries. When you have &lt;a href="https://curl.se/changes.html#7_71_0"&gt;curl v7.71.0&lt;/a&gt; (from 2020 or later), you can use &lt;a href="https://curl.se/docs/manpage.html#--retry-all-errors"&gt;&lt;code&gt;--retry-all-errors&lt;/code&gt;&lt;/a&gt; instead. The documentation warns &lt;i&gt;This option is the "sledgehammer" of retrying.&lt;/i&gt; Use it wisely&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;if [ "$?" -ne 0 ]; then&lt;/code&gt; Commands usually return a numeric result. Anything other than &lt;code&gt;0&lt;/code&gt; indicates a failure condition of some sort. When curl has exhausted the number of retries a value greater 0 will be returned. To capture the return value we us &lt;code&gt;$?&lt;/code&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;return 1&lt;/code&gt; We indicate that our script failed. So it can be called from other scripts&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;We could swap out &lt;code&gt;$TARGET&lt;/code&gt; for &lt;code&gt;$1&lt;/code&gt; which makes the script callable handing over the target URL e.g &lt;code&gt;waitforme.sh http://someURL&lt;/code&gt;&lt;/p&gt;
+&lt;h3&gt;Beyond containers&lt;/h3&gt;
+&lt;p&gt;The script is also useful in "classic" situations, where you start a service in the background (which by definition is asynchonous). Your local environment uses anything like:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;code&gt;./startdb &amp;amp;&lt;/code&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;systemctl start myservice&lt;/code&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;domino[_container] start&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;You can use the curl retry for any automation. Adjust the wait time and the retry time to your needs.&lt;/p&gt;
+&lt;p&gt;As usual &lt;strong&gt;YMMV&lt;/strong&gt;&lt;/p&gt;</description>
+	<link>2023/01/wait-for-service-availability.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>1f239d20-8a5e-11ed-8d75-0b9a30c900e1</guid>
+	<pubDate>02 January 2023</pubDate>
+
+</item>
 <item>
 	<title>On Technical Interviews</title>
 	<description>&lt;p&gt;When the HCL Labs is hiring engineers, we conduct technical interviews. I had and have the priviledge to interview, hire and work with incredible talented individuals in the process. Lets look behind the curtain of the process.&lt;/p&gt;
@@ -296,120 +347,6 @@ public class JsonTest {
 	<author>Stephan H. Wissel</author>
 	<guid>d4acca20-e579-11ec-b9b8-f1cad397bc73</guid>
 	<pubDate>06 June 2022</pubDate>
-
-</item>
-<item>
-	<title>Yes No Maybe Boolean deserialization with Jackson</title>
-	<description>&lt;p&gt;The &lt;a href="https://en.wikipedia.org/wiki/Robustness_principle"&gt;Robustness principle&lt;/a&gt; demands: be lenient in what you accept and strict in what you emit. I was facing this challenge when deserializing boolean values.&lt;/p&gt;
-&lt;h3&gt;What is true&lt;/h3&gt;
-&lt;p&gt;Glancing at data, we can spot, mostly easily what looks trueish:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;true&lt;/li&gt;
- &lt;li&gt;"&lt;strong&gt;T&lt;/strong&gt;rue"&lt;/li&gt;
- &lt;li&gt;"&lt;strong&gt;Y&lt;/strong&gt;es"&lt;/li&gt;
- &lt;li&gt;1&lt;/li&gt;
- &lt;li&gt;"&lt;strong&gt;S&lt;/strong&gt;i"&lt;/li&gt;
- &lt;li&gt;"&lt;strong&gt;J&lt;/strong&gt;a"&lt;/li&gt;
- &lt;li&gt;"&lt;strong&gt;A&lt;/strong&gt;ctive"&lt;/li&gt;
- &lt;li&gt;"&lt;strong&gt;i&lt;/strong&gt;sActive"&lt;/li&gt;
- &lt;li&gt;"&lt;strong&gt;e&lt;/strong&gt;nabled"&lt;/li&gt;
- &lt;li&gt;"&lt;strong&gt;o&lt;/strong&gt;n"&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;The last three options aren't as clear cut, they depend on your use case. Using a simple class, lets try to deserialize from &lt;a href="https://www.json.org/json-en.html"&gt;JSON&lt;/a&gt; to an instance of a &lt;a href="https://www.java.com/"&gt;Java&lt;/a&gt; class instance using &lt;a href="https://github.com/FasterXML/jackson"&gt;Jackson&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;Java doesn't have native support for JSON, so we need to rely on libraries like &lt;a href="https://github.com/FasterXML/jackson"&gt;Jackson&lt;/a&gt;, &lt;a href="https://github.com/google/gson"&gt;Google GSON&lt;/a&gt; (or any other listed on the &lt;a href="https://www.json.org/json-en.html"&gt;JSON&lt;/a&gt; page). I choose Jackson, since it is the library underpinning the &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html"&gt;JsonObject&lt;/a&gt; of the &lt;a href="https://vertx.io/"&gt;Eclipse Vert.x&lt;/a&gt; Framework I'm fond of. Over at &lt;a href="https://www.baeldung.com/"&gt;Baeldung&lt;/a&gt; you will find more &lt;a href="https://www.baeldung.com/jackson-object-mapper-tutorial"&gt;generic Jackson tutorials&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;Let's look at a simple Java class (Yes, Java14 will make it &lt;a href="https://vladmihalcea.com/java-records-guide/"&gt;less verbose&lt;/a&gt;), that sports &lt;code&gt;fromJson()&lt;/code&gt; and &lt;code&gt;toJson()&lt;/code&gt; as well as convenient overwrite of &lt;code&gt;equals()&lt;/code&gt; and &lt;code&gt;toString()&lt;/code&gt;&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-java"&gt;package com.notessensei.blogsamples;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import io.vertx.core.json.JsonObject;
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class Component {
-
-  public static Component fromJson(final JsonObject source) {
-    return source.mapTo(Component.class);
-  }
-
-  private String name;
-  private boolean active = false;
-
-  public Component() {
-    // Default empty constructor required
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public boolean getActive() {
-    return active;
-  }
-
-  public void setActive(boolean isActive) {
-    this.active = isActive;
-  }
-
-  public JsonObject toJson() {
-    return JsonObject.mapFrom(this);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (obj instanceof Component) {
-      return this.toString().equals(obj.toString());
-    }
-    return super.equals(obj);
-  }
-
-  @Override
-  public String toString() {
-    return this.toJson().encode();
-  }
-
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Trying to instantiate a class instance with the following JSON will work:&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-json"&gt;{
-  "name": "Heater",
-  "active": false
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class="language-json"&gt;{
-  "name": "Aircon"
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class="language-json"&gt;{
-  "name": "Fridge",
-  "active": true,
-  "PowerConsumption": {
-    "unit": "kw",
-    "measure": 7
-  }
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;However it will fail with those:&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-json"&gt;{
-  "name": "System1",
-  "active": "on"
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;pre&gt;&lt;code class="language-json"&gt;{
-  "name": "System2",
-  "active": "yes"
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;You get the charming error &lt;em&gt;Cannot deserialize value of type &lt;code&gt;boolean&lt;/code&gt; from String "yes": only "true"/"True"/"TRUE" or "false"/"False"/"FALSE" recognized`&lt;/em&gt;. Interestingly numbers work.&lt;/p&gt;
-&lt;p&gt;On a side note: &lt;a href="https://github.com/FasterXML/jackson"&gt;Jackson&lt;/a&gt; uses the presence of getters/setters to decide (de)serialization and needs &lt;code&gt;getActive&lt;/code&gt; and &lt;code&gt;setActive&lt;/code&gt; or &lt;code&gt;isActive&lt;/code&gt;. When you name your variable &lt;code&gt;isActive&lt;/code&gt; Eclipse would generate &lt;code&gt;setActive&lt;/code&gt; and &lt;code&gt;isActive&lt;/code&gt; instead of &lt;code&gt;getIsActive&lt;/code&gt; / &lt;code&gt;isIsActive&lt;/code&gt; and &lt;code&gt;setIsActive&lt;/code&gt;. So simply avoid the &lt;code&gt;is...&lt;/code&gt; prefix for internal variables.&lt;/p&gt;</description>
-	<link>2022/05/yes-no-maybe-booleans.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>f7d5b920-ce05-11ec-a659-7f18fb299d1b</guid>
-	<pubDate>07 May 2022</pubDate>
 
 </item>
 
