@@ -6,15 +6,17 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Mon, 02 Jan 2023 06:50:19 +0000</pubdate>
+	<pubdate>Mon, 02 Jan 2023 07:13:20 +0000</pubdate>
 <item>
 	<title>Please wait until that HTTP service is ready</title>
-	<description>&lt;p&gt;Our brave new world of &lt;a href="https://kubernetes.io/"&gt;containers&lt;/a&gt; and &lt;a href="https://microservices.io/"&gt;microservices&lt;/a&gt;&lt;br&gt; runs on a combination of &lt;a href="https://yaml.org/"&gt;YAML&lt;/a&gt; and &lt;a href="https://linux.die.net/man/1/bash"&gt;shell scripts&lt;/a&gt;.&lt;br&gt; Getting them to run in the desired sequence can be a challenge.&lt;/p&gt;
+	<description>&lt;p&gt;Our brave new world of &lt;a href="https://kubernetes.io/"&gt;containers&lt;/a&gt; and &lt;a href="https://microservices.io/"&gt;microservices&lt;/a&gt; runs on a combination of &lt;a href="https://yaml.org/"&gt;YAML&lt;/a&gt; and &lt;a href="https://linux.die.net/man/1/bash"&gt;shell scripts&lt;/a&gt;.&lt;br&gt; Getting them to run in the desired sequence can be a challenge.&lt;/p&gt;
 &lt;h3&gt;When ready isn't ready&lt;/h3&gt;
-&lt;p&gt;All container environments have a "depends" clause, so the container runtime can determine the correct startup sequence&lt;br&gt; for the zoo of containers comprising the application to be launched. Each container will usually signal when it is ready.&lt;br&gt; However &lt;em&gt;ready&lt;/em&gt; can mean different things to different applications.&lt;/p&gt;
-&lt;p&gt;In the container world it &lt;i&gt;should&lt;/i&gt; be: the service is available.&lt;br&gt; However it &lt;i&gt;could&lt;/i&gt; be: service was successfully started, but might be busy with house keeping.&lt;br&gt; In the later case the start scripts of the dependent services need to do their own waiting&lt;/p&gt;
+&lt;p&gt;All container environments have a "depends" clause, so the container runtime can determine the correct startup sequence for the zoo of containers comprising the application to be launched. Each container will usually signal when it is ready.&lt;/p&gt;
+&lt;p&gt;However &lt;em&gt;ready&lt;/em&gt; can mean different things to different applications.&lt;/p&gt;
+&lt;p&gt;In the container world it &lt;i&gt;should&lt;/i&gt; be: the service is available.&lt;br&gt; However it &lt;i&gt;could&lt;/i&gt; be: service was successfully started, but might be busy with house keeping. In the later case the start scripts of the dependent services need to do their own waiting&lt;/p&gt;
 &lt;h3&gt;&lt;a href="https://curl.se/"&gt;curl&lt;/a&gt; to the rescue&lt;/h3&gt;
-&lt;p&gt;Curl is the &lt;a href="https://amzn.to/3jHi8RN"&gt;Swiss Army Knive&lt;/a&gt; of network tools. It probably takes a lifetime to understand all its possibilities. Make sure you have the current version, at least &lt;a href="https://curl.se/changes.html#7_52_0"&gt;7.52.0&lt;/a&gt; from 2016.&lt;br&gt; Whipping up a little shell script provides what we need:&lt;/p&gt;
+&lt;p&gt;Curl is the &lt;a href="https://amzn.to/3jHi8RN"&gt;Swiss Army Knive&lt;/a&gt; of network tools. It probably takes a lifetime to understand all its possibilities. Make sure you have the current version, but at least &lt;a href="https://curl.se/changes.html#7_52_0"&gt;7.52.0&lt;/a&gt; from 2016.&lt;/p&gt;
+&lt;p&gt;Whipping up a little shell script provides what we need:&lt;/p&gt;
 &lt;pre&gt;&lt;code class="language-bash"&gt;#!/bin/bash
 # Wait for a http service to be available
 export TARGET=http://baseservice.local/
@@ -34,7 +36,7 @@ fi
 &lt;p&gt;Let's break it down:&lt;/p&gt;
 &lt;ul&gt;
  &lt;li&gt;&lt;code&gt;export TARGET&lt;/code&gt; defines the URL you want to reach. Works for both &lt;code&gt;http&lt;/code&gt; and &lt;code&gt;https&lt;/code&gt;. Potentially works for other protocols supported by &lt;a href="https://curl.se/"&gt;curl&lt;/a&gt; as well, but I haven't tested that (yet). You might swap it out for &lt;code&gt;$1&lt;/code&gt; to capture the first parameter called&lt;/li&gt;
- &lt;li&gt;&lt;code&gt;\&lt;/code&gt; denominates line continuation. The whole command needs to be on one line which is hard to read. &lt;code&gt;\&lt;/code&gt; tells &lt;a href="https://www.linux.org/"&gt;Linux&lt;/a&gt; to treat the following line as belonging to the current one. On windows you need to replace &lt;code&gt;\&lt;/code&gt; with &lt;code&gt;^&lt;/code&gt; and alter the syntax according to &lt;a href="https://learn.microsoft.com/en-us/powershell/"&gt;Powershell&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;\&lt;/code&gt; denominates line continuation. The whole command needs to be on one line which is hard to read. &lt;code&gt;\&lt;/code&gt; tells &lt;a href="https://www.linux.org/"&gt;Linux&lt;/a&gt; to treat the following line as belonging to the current one. On Windows you need to replace &lt;code&gt;\&lt;/code&gt; with &lt;code&gt;^&lt;/code&gt; and alter the syntax according to &lt;a href="https://learn.microsoft.com/en-us/powershell/"&gt;Powershell&lt;/a&gt;&lt;/li&gt;
  &lt;li&gt;&lt;a href="https://curl.se/docs/manpage.html#-v"&gt;&lt;code&gt;curl -v&lt;/code&gt;&lt;/a&gt; Verbose output, so the logs tell the full story. When you work with privat &lt;a href="https://en.wikipedia.org/wiki/Certificate_authority"&gt;CA&lt;/a&gt; or &lt;a href="https://en.wikipedia.org/wiki/Self-signed_certificate"&gt;self signed certificates&lt;/a&gt; (Don't do self signed, use &lt;a href="https://www.wissel.net/blog/2019/10/create-your-own-ca.html"&gt;your own CA&lt;/a&gt;), you need to add &lt;a href="https://curl.se/docs/manpage.html#-k"&gt;&lt;code&gt;-k&lt;/code&gt;&lt;/a&gt; or &lt;a href="https://curl.se/docs/manpage.html#-k"&gt;&lt;code&gt;--insecure&lt;/code&gt;&lt;/a&gt; to make this work&lt;/li&gt;
  &lt;li&gt;&lt;a href="https://curl.se/docs/manpage.html#--retry"&gt;&lt;code&gt;--retry 10&lt;/code&gt;&lt;/a&gt; try the connection 10 times&lt;/li&gt;
  &lt;li&gt;&lt;a href="https://curl.se/docs/manpage.html#--retry-delay"&gt;&lt;code&gt;--retry-delay 20&lt;/code&gt;&lt;/a&gt; Wait 20 sec until the next try&lt;/li&gt;
