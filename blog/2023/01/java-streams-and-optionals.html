@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Java style guide: Functions, Streams and Optionals - NotesSensei's Blog</title>
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-72033-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible"  content="chrome=1" />
+<meta http-equiv="Content-Language" content="en" />
+<meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
+<meta property="og:title"     content="wissel.net - Java style guide: Functions, Streams and Optionals" />
+<meta property="og:type"      content="blog" />
+<meta property="og:url"       content="https://wissel.net/blog/2023/01/java-streams-and-optionals.html" />
+<meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
+<meta property="og:site_name" content="wissel.net" />
+<meta name="viewport"         content="width=device-width, initial-scale=1.0" />
+<meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Java style guide: Functions, Streams and Optionals" />
+<meta name="Author"           content="Stephan H. Wissel" />
+<meta name="ICBM"             content="1.2994, 103.8425" />
+<meta name="Copyright"        content="2002,2022 Stephan H. Wissel - Creative commons licence" />
+<meta name="twitter:site"     content="@notessensei" />
+<meta name="twitter:card"     content="summary" />
+<meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
+<meta name="description"
+	content="Java style guide: Functions, Streams and Optionals - Over the years I developed a certain style developing in Java (and other languages) that made my code more readable. This isn&#39;t about the formatting style guide (Just stick to Google) or making code spotless, but about style. Objectives Code needs to be testable, easy to adopt and understandable whe" />
+<meta name="Keywords"
+	content="Development,Java," />
+<meta name="Abstract"
+	content="Java style guide: Functions, Streams and Optionals - Over the years I developed a certain style developing in Java (and other languages) that made my code more readable. This isn&#39;t about the formatting style guide (Just stick to Google) or making code spotless, but about style. Objectives Code needs to be testable, easy to adopt and understandable whe" />
+<!--[if lt IE 9]>
+		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Raleway&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
+
+
+<link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="https://feeds.feedburner.com/Wisselnetfeed" />
+
+<meta name="Revisit-After" content="90 Days" />
+</head>
+<body class="line-numbers">
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<a class="btn btn-navbar" data-toggle="collapse"
+				data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+				class="icon-bar"></span> <span class="icon-bar"></span>
+			</a> <a class="brand" href="/">wissel.net</a>
+			<div class="nav-collapse">
+				<ul class="nav">
+					<li><a href="/index.html">Home</a></li>
+					<li class="active"><a href="/blog/">Blog</a></li>
+					<li><a href="/blog/series.html">Series</a></li>
+					<li><a href="/blog/downloads/">Downloads</a></li>
+					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
+					<li><a href="/blog/imprint.html">About / Imprint</a></li>
+				</ul>
+				<form action="//www.google.com/cse" id="cse-search-box"
+					class="navbar-search pull-right">
+					<div>
+						<input type="hidden" name="cx"
+							value="partner-pub-4562257798204150:muo14ionenw" /> <input
+							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
+							name="q" class="search-query span2" placeholder="Search" />
+						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+<div class="navbar-spacer"></div>
+
+	<div class="container">
+    		<br />
+		<header>
+			<div id="mainsmall"  class="hero-unit">
+				<h2>wissel.net</h2>
+				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+			</div>
+		</header>
+
+     
+    <ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2023/">2023</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2023/01/">January</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/development.html">Development</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
+  </li>
+</ul>
+
+		<div class="row-fluid">
+			<div class="span12">
+				
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2023/01/wait-for-service-availability.html"><i class="icon-hand-left"></i>Please wait until that HTTP service is ready</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+				<article class="well well-raised">
+					<h1><small>Java style guide: Functions, Streams and Optionals</small></h1>
+					<hr />
+					<div><p>Over the years I developed a certain style developing in Java (and other languages) that made my code more readable. This isn't about the <a href="https://google.github.io/styleguide/javaguide.html">formatting style guide</a> (Just stick to Google) or making <a href="/blog/2021/12/spotless-code-with-a-git-hook.html">code spotless</a>, but about style.</p>
+<h3>Objectives</h3>
+<p>Code needs to be testable, easy to adopt and understandable when someone else, like your future self, tries to read it. Starting with <a href="https://en.wikipedia.org/wiki/SOLID">SOLID</a> principles, the guidelines help to get there. They work for any style of development, while I strongly recommend looking at <a href="https://en.wikipedia.org/wiki/Test-driven_development">TDD</a>, <a href="https://www.youtube.com/c/ContinuousDelivery">Dave agrees</a>, so does <a href="https://www.youtube.com/@AllenHolub">Allen</a>. In no particular order, let's dig in.</p><h3>Favour Optional returns over null</h3>
+<p>When you use <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html">Optional</a> as a return type, you can/need to be specific in your code what to do with the return value. It also makes it clearer during development that a <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/NullPointerException.html">NPE</a> is a flaw in code and not a failed lookup. Compare the two snippets:</p>
+<pre><code class="language-java">// CustomerService returns null when not found
+final Customer customer = CustomerService.lookup(id);
+if (customer != null) {
+  sendWelcomeMail(customer, mailBody);
+}
+</code></pre>
+<p>In Optional style:</p>
+<pre><code class="language-java">// CustomerService returns Optional.empty when not found
+CustomerService.lookup(id)
+    .ifPresent(customer -&gt; sendWelcomeMail(customer, mailBody));
+}
+</code></pre>
+<h3>Split infrastructure code from business logic</h3>
+<p>The part of the code that deals with connectivity, casting of objects, routing of data etc. should be kept apart from actual business logic. This depends on experience:</p>
+<pre><code class="language-java">   int runCampaign(List&lt;Customers&gt; customers) {
+      int result = 0;
+      String mailBody = CampaingService.highValueCampaign();
+      for (Customer customer: customers) {
+        if (customer.isPremium() || (customer.revenue() &gt; 10000 &amp;&amp; customer.years() &gt; 3)) {
+          if sendCampaignMail(customer, mailBody) {
+            result++;
+          }
+        }
+      }
+      return result;
+   }
+</code></pre>
+<p>Split style with Streams (more variations coming)</p>
+<pre><code class="language-java">   int runCampaign(List&lt;Customers&gt; customers, String mailBody) {
+    return Customers.stream()
+      .filter(this::eligibleCustomer)
+      .filter(customer -&gt; sendCampaignMail(customer, mailBody))
+      .count();
+   }
+
+   boolean eligibleCustomer(Customer customer) {}
+        return customer.isPremium()
+         || (customer.revenue() &gt; 10000 &amp;&amp; customer.years() &gt; 3));
+   }
+</code></pre>
+<p>You can further make this code more testable by moving the <code>sendCampaignMail</code> method to a <code>Campaign</code> object, that you mock when testing:</p>
+<pre><code class="language-java">   int runCampaign(List&lt;Customers&gt; customers, Campaign campaign) {
+    return Customers.stream()
+      .filter(this::eligibleCustomer)
+      .filter(campaign::sendCampaign)
+      .count();
+   }
+
+   interface Campaign() {
+      // sending could be any channel, not just mail
+      boolean sendCampaign(Customer customer);
+   }
+
+   class CampaignManager() { // Technically its a factory
+      static Campaign getMailCampaign(String mailBody, MailOptions options);
+   }
+</code></pre>
+<p>Having bussiness logic (<code>eligibleCustomer</code>) extracted, allows to test it individually in isolation. The example is a <a href="https://en.wikipedia.org/wiki/Pure_function">pure function</a> which I tend to keep as a static method. When criteria depend on e.g. campaign parameters, the method would move to the campaign instance.</p>
+<p>There's a little "sin" in my use of the stream for which I probably roast in the <a href="https://en.wikipedia.org/wiki/Inferno_(Dante)#Ninth_Circle_(Treachery)">ninth circle of hell</a> some time. The filter method <code>sendCampaign</code> has a "<a href="https://en.wikipedia.org/wiki/Side_effect_(computer_science)">side effect</a>" which happens to be its main purpose. I'm also guilty of using map methods for side effects. Practicallity over pure teachings:</p>
+<pre><code class="language-java">   List&lt;CampaignResults&gt; runCampaign(List&lt;Customers&gt; customers, Campaign campaign) {
+    return Customers.stream()
+      .filter(campaign::eligibleCustomer)
+      .map(campaign::executeCampaign)
+      .collect(Collectors::toList);
+   }
+
+   interface Campaign() {
+      CampaignResults executeCampaign(Customer customer);
+      boolean eligibleCustomer(Customer customer);
+   }
+</code></pre>
+<h3>Favour streams over classical loops</h3>
+<p>Classic loops are an example of <a href="https://www.javatpoint.com/what-is-imperative-programming">imperative programming</a>, while streams fall into the <a href="https://piyush5807.medium.com/declarative-programming-in-java-using-streams-and-lambdas-3f71edcd7a74">declarative programming</a> category, read about <a href="https://www.geeksforgeeks.org/difference-between-imperative-and-declarative-programming/">the differences</a>. You can add <a href="https://www.infoworld.com/article/3314640/functional-programming-for-java-developers-part-1.html">functional programming</a> to the mix, which can use elements of both.</p>
+<p>When squeezing out the last bit of speed and performance, imperative wins. Unless you work on a <a href="https://www.zdnet.com/article/google-at-scale-everything-breaks/">Google scale</a> project, your loop's speed gain most likely is a case of <a href="https://wiki.c2.com/?PrematureOptimization=">premature optimization</a>. My goal is readability. Instead of loop bodies riddled with if and case statements, I use streams with map and filter statements. I use filters with side effects in place of a case structure (another option: function maps, see below).</p>
+<pre><code class="language-java">final List&lt;CampaignResults&gt; results = new ArrayList&lt;&gt;(); // use syncronized Collection for parallel streams
+customers.stream()
+    .filter(customer -&gt; campaign.typeACustomers(results, customer))
+    .filter(customer -&gt; campaign.typeBCustomers(results, customer))
+    .filter(customer -&gt; campaign.typeCCustomers(results, customer))
+    .count(); // Provides unprocessed customers
+</code></pre>
+<p><a href="/blog/2021/01/collecting-java-streams.html">There's more</a> about using <code>map</code> and <code>Collectors</code>. One sticky problem, where loops seem to have the upper hand is the fact that a mapping operation returns one value and the input to a map is "lost". Lets say: you have a <code>Customer</code> instance and need to fetch <code>CampaignOptions</code> based on <code>CustomerStatus</code> and use that as input for the campaign execution. The code would look like this:</p>
+<pre><code class="language-java">   List&lt;CampaignResults&gt; runCampaign(List&lt;Customer&gt; customers, Campaign campaign) {
+    return customers.stream()
+      .filter(campaign::eligibleCustomer)
+      .map(customer -&gt; {
+        final CampaignOptions options = campaign.getOptions(customer.status());
+        return campaign.executeCampaign(customer, options);
+      })
+      .collect(Collectors::toList);
+   }
+</code></pre>
+<p>Readability suffered. With an introduction of an intermediate class we can gain it back.</p>
+<pre><code class="language-java">public Class Pair&lt;p, s&gt;() {
+  final Optional&lt;p&gt; primary;
+  final Optionan&lt;s&gt; secondary;
+
+  public Pair&lt;p, s&gt;(Object o1, Object o2) {
+    this.primary = Optional.ofNullable(o1);
+    this.secondary = Optional.ofNullable(o2);
+  }
+}
+
+   List&lt;CampaignResults&gt; runCampaign(List&lt;Customer&gt; customers, Campaign campaign) {
+    return customers.stream()
+      .filter(campaign::eligibleCustomer)
+      .map(campaign::getOptionsByCustomer)
+      .map(campaign::executeCampaignWithOptions)
+      .collect(Collectors::toList);
+   }
+
+   Interface campaign {
+    Pair&lt;Customer,CampaignOptions&gt; getOptionsByCustomer(Customer customer);
+    CampaignResults executeCampaignWithOptions(Pair&lt;Customer,CampaignOptions&gt; source);
+   }
+</code></pre>
+<p>The constructor with Objects isn't very elegant, so you might opt creating specialized classes (a.k.a <a href="https://en.wikipedia.org/wiki/Data_transfer_object">DTO</a>)</p>
+<h3>Function Maps</h3>
+<p>I'm not a big fan of case structures, they invite too easily stuffing code inbetween the case keywords and thus impacting readability badly. With the release of <a href="https://en.wikipedia.org/wiki/Java_version_history">Java 8</a> in 2014, Java gained <a href="https://www.baeldung.com/java-8-functional-interfaces">functional interfaces</a> making methods <a href="https://en.wikipedia.org/wiki/First-class_citizen">first class</a> citizens (kind of). This allows for alternatives to switch statements</p>
+<pre><code class="language-java">
+void onTrafficLightChange(TrafficLight light) {
+  switch (light) {
+    case TrafficLight.RED:
+       stopVehicle();
+       stopEnginIfYourCarIsSmart();
+       if (country == "Singapore") {
+          proceedOnLeftTurn();
+       } else {
+          proceedObRightTurn();
+       }
+       break;
+       ...
+  }
+}
+</code></pre>
+<p>instead define one function for the phase:</p>
+<pre><code class="language-java">Consumer&lt;TrafficLight&gt; onRed = (light) -&gt; {...};
+Consumer&lt;TrafficLight&gt; onYellow = (light) -&gt; {...};
+Consumer&lt;TrafficLight&gt; onGreen = (light) -&gt; {...};
+
+void onTrafficLightChange(TrafficLight light) {
+  switch (light) {
+    case TrafficLight.RED:
+       onRed(light);
+       break;
+       ...
+  }
+}
+</code></pre>
+<p>Using a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html"><code>Map</code></a> we can eliminate the switch statement thus making maintenance easier. Like introducting "YellowBlink" or "off"</p>
+<pre><code class="language-java">static Map&lt;TrafficLight, Consumer&lt;TrafficeLight&gt;&gt; lights = new HashMap&lt;&gt;();
+static brokenLight = (light) -&gt; {...};
+static {
+  lights.put(TrafficLight.RED, (light) -&gt; {...});
+  lights.put(TrafficLight.YELLOW, (light) -&gt; {...});
+  lights.put(TrafficLight.GREEN, (light) -&gt; {...});
+}
+
+void onTrafficLightChange(TrafficLight light) {
+  Consumer&lt;TrafficeLight&gt; c = lights.getOrDefault(light, () -&gt; brokenLight);
+  c.apply(light);
+}
+</code></pre>
+<p>Since in this example TrafficLight is an <a href="https://www.baeldung.com/a-guide-to-java-enums">Enum</a> we have another option: Move the method to the Enum. You will never miss an update to the options.</p>
+<pre><code class="language-java">public enum TrafficLight {
+  RED {
+    @Override
+    public void onColor() {
+      ...
+    }
+  },
+
+  YELLOW {
+    @Override
+    public void onColor() {
+      ...
+    }
+  },
+  ...;
+
+  public abstract void onColor(/* add params as needed*/);
+}
+
+void onTrafficLightChange(TrafficLight light) {
+    light.onColor();
+}
+</code></pre>
+<h3>It all depends</h3>
+<p>As <a href="https://en.wikipedia.org/wiki/List_of_style_guides">in writing</a>, a style guide isn't set <a href="https://www.jhupressblog.com/2014/07/15/how-to-write-an-epitaph/">in stone</a> but a collection of "This works for me".</p>
+<p>So: YMMV</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 08 January 2023
+<span class="divider">|</span>
+<a href="/blog/2023/01/java-streams-and-optionals.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/development.html">Development</a>  <a href="/blog/categories/java.html">Java</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2023/01/java-streams-and-optionals.html";
+						</script>
+					</p>
+				</article>
+				<a name="comments"></a>
+				<div class="well well-raised" style="text-align : center">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_059f25e0-8f13-11ed-b4e6-ebac2f945d06" type="button">
+		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
+	            </button>
+	            </div>
+				<div id="commentform_059f25e0-8f13-11ed-b4e6-ebac2f945d06"  class="collapse"></div>
+				<div class="well well-raised">
+					<h4>Comments</h4>
+					<ol id="commentList">
+						<li id="nocomments">
+							<h5>No comments yet, be the first to comment</h5>
+						</li>
+					</ol>
+				</div>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2023/01/wait-for-service-availability.html"><i class="icon-hand-left"></i>Please wait until that HTTP service is ready</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+			</div>
+		</div>
+		<ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2023/">2023</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2023/01/">January</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/development.html">Development</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
+  </li>
+</ul>
+
+	</div>
+	<footer>
+		<div class="container">
+			<div class="row">
+				<div class="span2">
+					<h4>About Me</h4>
+					<p>
+						I work as "Solution Director Innovation" for HCL Software. I'm based in Singapore.
+						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
+					</p>
+					<a href="//stackoverflow.com/users/131021/stwissel">
+					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
+				</a>
+				</div>
+				<div class="span2">
+					<h4>Contact</h4>
+					<ul>
+						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
+						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
+						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
+						<li><a href="https://about.me/stephan.wissel/#" title="Another identity site, nothing much here">About Me</a></li>
+						<li><a href="https://github.com/Stwissel">GitHub</a></li>
+						<li><a href="https://bitbucket.org/stwissel/">Bitbucket</a></li>
+						<li><a href="https://www.twitter.com/notessensei">Twitter</a></li>
+					</ul>
+				</div>
+				<div class="span8">
+					<h4>Disclaimer</h4>
+					<p>This site is in no way affiliated, endorsed, sanctioned,
+						supported, nor enlightened by my current or previous employers.
+						I may be an employee, but the opinions, theories, facts, etc.
+						presented here are my own and are in now way given in any official
+						capacity. In short, these are my words and this is my site, not
+						my current or former employers' - and don't even begin to think otherwise.</p>
+					<p>
+						<b>&copy; 2003 - 2023 Stephan H. Wissel - some rights reserved</b> as
+						listed here: <a rel="license"
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
+							alt="Creative Commons License" style="border-width: 0"
+							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
+						Unless otherwise labeled by its originating author, the content
+						found on this site is made available under the terms of an <a
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
+							target="_blank"
+							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
+							Creative Commons License</a>, with the exception that no rights are
+						granted -- since they are not mine to grant -- in any logo,
+						graphic design, trademarks or trade names of any type. Code
+						samples and code downloads on this site are, unless otherwise
+						labeled, made available under an <a
+							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
+							2.0</a> license. Other license models are available on written
+						request and written confirmation.
+					</p>
+				</div>
+			</div>
+		</div>
+	</footer>
+
+	<script type="text/javascript">
+		var permaLink = "https://wissel.net/blog/2023/01/java-streams-and-optionals.html";
+	</script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
+	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
+	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
+	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		_uacct = "UA-72033-1";
+		urchinTracker();
+	</script>
+	<script type="text/javascript" src="//feeds.feedburner.com/~s/Wisselnet?i=https://wissel.net/blog" charset="utf-8"></script>
+
+		<script src="/blog/js2/mustache.js"></script>
+	<script src="/blog/js2/blogcomments.js"></script>
+	<script type="text/javascript" src="/blog/js2/Markdown.Converter.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Sanitizer.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Editor.js"></script>
+	<script type="text/javascript" src="//www.google.com/recaptcha/api.js"></script>
+	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+	<script type="text/javascript">
+		var onloadCallback = function() {
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "059f25e0-8f13-11ed-b4e6-ebac2f945d06");
+ 		};
+	</script>
+
+</body>
+</html>
