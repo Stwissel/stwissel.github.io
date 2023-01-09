@@ -221,11 +221,11 @@ customers.stream()
 <p>Readability suffered. With an introduction of an intermediate class we can gain it back.</p>
 <pre><code class="language-java">public Class Pair&lt;p, s&gt;() {
   final Optional&lt;p&gt; primary;
-  final Optionan&lt;s&gt; secondary;
+  final Optional&lt;s&gt; secondary;
 
-  public Pair&lt;p, s&gt;(Object o1, Object o2) {
-    this.primary = Optional.ofNullable(o1);
-    this.secondary = Optional.ofNullable(o2);
+  public Pair&lt;p, s&gt;(p o1, s o2) {
+    this.primary = Optional.of(o1);
+    this.secondary = Optional.of(o2);
   }
 }
 
@@ -242,7 +242,7 @@ customers.stream()
     CampaignResults executeCampaignWithOptions(Pair&lt;Customer,CampaignOptions&gt; source);
    }
 </code></pre>
-<p>The constructor with Objects isn't very elegant, so you might opt creating specialized classes (a.k.a <a href="https://en.wikipedia.org/wiki/Data_transfer_object">DTO</a>)</p>
+<p>The constructor with Objects isn't very elegant, so you might opt creating specialized classes (a.k.a <a href="https://en.wikipedia.org/wiki/Data_transfer_object">DTO</a>) (also see update below).</p>
 <h3>Function Maps</h3>
 <p>I'm not a big fan of case structures, they invite too easily stuffing code inbetween the case keywords and thus impacting readability badly. With the release of <a href="https://en.wikipedia.org/wiki/Java_version_history">Java 8</a> in 2014, Java gained <a href="https://www.baeldung.com/java-8-functional-interfaces">functional interfaces</a> making methods <a href="https://en.wikipedia.org/wiki/First-class_citizen">first class</a> citizens (kind of). This allows for alternatives to switch statements</p>
 <pre><code class="language-java">
@@ -277,7 +277,7 @@ void onTrafficLightChange(TrafficLight light) {
 </code></pre>
 <p>Using a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html"><code>Map</code></a> we can eliminate the switch statement thus making maintenance easier. Like introducting "YellowBlink" or "off"</p>
 <pre><code class="language-java">static Map&lt;TrafficLight, Consumer&lt;TrafficeLight&gt;&gt; lights = new HashMap&lt;&gt;();
-static brokenLight = (light) -&gt; {...};
+static Consumer&lt;TrafficeLight&gt; brokenLight = (light) -&gt; {...};
 static {
   lights.put(TrafficLight.RED, (light) -&gt; {...});
   lights.put(TrafficLight.YELLOW, (light) -&gt; {...});
@@ -315,7 +315,15 @@ void onTrafficLightChange(TrafficLight light) {
 </code></pre>
 <h3>It all depends</h3>
 <p>As <a href="https://en.wikipedia.org/wiki/List_of_style_guides">in writing</a>, a style guide isn't set <a href="https://www.jhupressblog.com/2014/07/15/how-to-write-an-epitaph/">in stone</a> but a collection of "This works for me".</p>
-<p>So: YMMV</p></div>
+<p>So: YMMV</p>
+<h3>Update</h3>
+<p>Feedback on twitter by <a href="https://twitter.com/khmarbaise">K.H. Marbaise</a> pointed out a number of <a href="https://twitter.com/notessensei/status/1612041651660410883">clarifications</a>. While all examples will work with JDK 8, later versions allow better code:</p>
+<ul>
+ <li>In JDK16 or later replace <code>.collect(Collectors.toList()</code> with <code>.toList()</code> to return an immutable list</li>
+ <li>Update the <code>Pair</code> constructor from using <code>Object</code> to its generics (updated above) and don't allow null values (all JDKs)</li>
+ <li>In JDK17 replace the generic <code>Pair</code> class with a <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Record.html">Java record</a></li>
+ <li>various typos, fixed</li>
+</ul></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
