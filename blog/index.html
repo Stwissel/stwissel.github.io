@@ -100,6 +100,69 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2023/01/learning-how-nginx-proxy-works.html">learning how nginx proxy works</a></small></h1>
+					<hr />
+					<div><p>A common approach for web applications is to serve them behind a <a href="https://www.nginx.com/resources/glossary/reverse-proxy-server/">reverse proxy</a>. My favorite there is <a href="https://nginx.org/en/">nginx</a>. It has a fairly understandable configuration, supports http/2 and is fully supported by Letsencrypt's <a href="https://certbot.eff.org/instructions?ws=nginx&amp;os=centosrhel8">certbot</a>.</p>
+<h3>proxy_pass can be tricky</h3>
+<p>The configuration for reverse proxying is a combination of <code>location</code> and a <code>proxy_pass</code> statement, as well as some headers. In it simplest form the URL path and the proxy_path URL are the same, so you don't need a translation between direct access (e.g. local testing) and access through nginx. A configuration could look like this:</p>
+<pre><code class="language-nginx">location /someurl {
+        proxy_pass http://127.0.0.1:3000/someurl;
+        proxy_http_version 1.1;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+    }
+</code></pre>
+<p>The headers ensure your application knows the original request source and allow upgrade from http to websockets.</p>
+<p>It gets interesting when <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location"><code>location</code></a> and <a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_pass"><code>proxy_pass</code></a> don't match. Differences can range from different url path to <a href="https://regex101.com/">regex</a> and rewrites. Especially when inheriting (or <a href="https://www.google.com/search?q=nginx+sample+redirection">googling</a>) configurations, understanding can be a challenge.</p>
+<h3>Express to the rescue</h3>
+<p>A few lines of <a href="https://expressjs.com/">expressjs</a> will echo back what ends up at the backend. Together with <a href="https://curl.se/">curl</a> it provides you a practical learning and testing environment.</p>
+<pre><code class="language-js">const express = require('express');
+const app = express();
+const port = 3010;
+
+app.get('*', (req, res) =&gt; {
+  res.setHeader('Content-Type', 'text/json');
+  let result = JSON.stringify(
+    {
+      headers: req.headers,
+      url: req.url,
+      query: req.query,
+      hostname: req.hostname
+    },
+    null,
+    2
+  );
+  res.send(result);
+  console.log(result);
+});
+
+app.listen(port, () =&gt; {
+  console.log(`Echo app listening for GET on port ${port}`);
+});
+</code></pre>
+<p>Enjoy, as usual YMMV!</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 09 January 2023
+<span class="divider">|</span>
+<a href="/blog/2023/01/learning-how-nginx-proxy-works.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/nginx.html">nginx</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2023/01/learning-how-nginx-proxy-works.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2023/01/java-streams-and-optionals.html">Java style guide: Functions, Streams and Optionals</a></small></h1>
 					<hr />
 					<div><p>Over the years I developed a certain style developing in Java (and other languages) that made my code more readable. This isn't about the <a href="https://google.github.io/styleguide/javaguide.html">formatting style guide</a> (Just stick to Google) or making <a href="/blog/2021/12/spotless-code-with-a-git-hook.html">code spotless</a>, but about style.</p>
@@ -457,68 +520,6 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2022/08/calling-a-vertx-async-method-from-a-sync-method.html";
-						</script>
-					</p></p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2022/06/case-insensitive-deserialization.html">Case insensitive deserialization</a></small></h1>
-					<hr />
-					<div><p>Growing up in Windows with <a href="https://en.wikipedia.org/wiki/BASIC">BASIC</a> you learn case doesn't matter, so <code>Color</code> is the same as <code>COLOR</code> or <code>cOLOR</code> when it comes to variable names. Same applies to <code>@Formula</code> or item names in Notes documents.</p>
-<p>On the other side, <a href="https://en.wikipedia.org/wiki/Linux">Linux</a>, <a href="https://en.wikipedia.org/wiki/Java_(programming_language)">Java</a>, <a href="https://en.wikipedia.org/wiki/JavaScript">JavaScript</a> and <a href="https://www.json.org/json-en.html">JSON</a> are very much case sensitive.</p>
-<p>This poses a challenge when deserializing (handcrafted) JSON files.</p>
-<h2>The Task at hand</h2>
-<p>Deserialization of JSON into a Java class instance <a href="https://www.baeldung.com/jackson-deserialization">can be done</a> using <a href="https://github.com/FasterXML/jackson">jackson</a>. This is also what the <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html">JsonObject</a> in <a href="https://vertx.io">vert.x</a> uses when you call <a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html#mapTo-java.lang.Class-"><code>json.mapTo(SomeClass)</code></a>. Not using vert.x? You can use the <a href="https://www.baeldung.com/jackson-object-mapper-tutorial"><code>ObjectMapper</code></a>. Let's look at a sample Java class</p>
-<pre><code class="language-java">import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import io.vertx.core.json.JsonObject;
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class JsonTest {
-
-  public static fromJson(final JsonObject source) {
-    return source.mapTo(JsonTest.class);
-  }
-
-  private String color;
-  private String shape;
-  private int answer;
-  private boolean pretty;
-
-  /* GETTERS and SETTERS omitted for brevity
-     Let your IDE add them for you */
-}
-</code></pre>
-<p>Now you want to deserialize a good JSON, which works as expected:</p>
-<pre><code class="language-json">{
-  "color": "Red",
-  "shape": "round",
-  "answer": 11,
-  "pretty": true
-}
-</code></pre>
-<p>but the very moment your JSON isn't following proper capitalization, like human provided JSON,</p>
-<pre><code class="language-json">{
-  "Color": "Red",
-  "Shape": "square",
-  "Answer": 42,
-  "pretty": true,
-  "ignore": "this"
-}
-</code></pre>
-<p>deserialization will fail. We need to fix that.</p></div>
-					<hr />
- <a href="/blog/2022/06/case-insensitive-deserialization.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 08 June 2022
-<span class="divider">|</span>
-<a href="/blog/2022/06/case-insensitive-deserialization.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2022/06/case-insensitive-deserialization.html";
 						</script>
 					</p></p>
 				</article>

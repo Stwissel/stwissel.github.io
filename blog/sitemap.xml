@@ -6,7 +6,61 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Sun, 08 Jan 2023 08:16:07 +0000</pubdate>
+	<pubdate>Mon, 09 Jan 2023 06:17:10 +0000</pubdate>
+<item>
+	<title>learning how nginx proxy works</title>
+	<description>&lt;p&gt;A common approach for web applications is to serve them behind a &lt;a href="https://www.nginx.com/resources/glossary/reverse-proxy-server/"&gt;reverse proxy&lt;/a&gt;. My favorite there is &lt;a href="https://nginx.org/en/"&gt;nginx&lt;/a&gt;. It has a fairly understandable configuration, supports http/2 and is fully supported by Letsencrypt's &lt;a href="https://certbot.eff.org/instructions?ws=nginx&amp;amp;os=centosrhel8"&gt;certbot&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;proxy_pass can be tricky&lt;/h3&gt;
+&lt;p&gt;The configuration for reverse proxying is a combination of &lt;code&gt;location&lt;/code&gt; and a &lt;code&gt;proxy_pass&lt;/code&gt; statement, as well as some headers. In it simplest form the URL path and the proxy_path URL are the same, so you don't need a translation between direct access (e.g. local testing) and access through nginx. A configuration could look like this:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-nginx"&gt;location /someurl {
+        proxy_pass http://127.0.0.1:3000/someurl;
+        proxy_http_version 1.1;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The headers ensure your application knows the original request source and allow upgrade from http to websockets.&lt;/p&gt;
+&lt;p&gt;It gets interesting when &lt;a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location"&gt;&lt;code&gt;location&lt;/code&gt;&lt;/a&gt; and &lt;a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_pass"&gt;&lt;code&gt;proxy_pass&lt;/code&gt;&lt;/a&gt; don't match. Differences can range from different url path to &lt;a href="https://regex101.com/"&gt;regex&lt;/a&gt; and rewrites. Especially when inheriting (or &lt;a href="https://www.google.com/search?q=nginx+sample+redirection"&gt;googling&lt;/a&gt;) configurations, understanding can be a challenge.&lt;/p&gt;
+&lt;h3&gt;Express to the rescue&lt;/h3&gt;
+&lt;p&gt;A few lines of &lt;a href="https://expressjs.com/"&gt;expressjs&lt;/a&gt; will echo back what ends up at the backend. Together with &lt;a href="https://curl.se/"&gt;curl&lt;/a&gt; it provides you a practical learning and testing environment.&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-js"&gt;const express = require('express');
+const app = express();
+const port = 3010;
+
+app.get('*', (req, res) =&amp;gt; {
+  res.setHeader('Content-Type', 'text/json');
+  let result = JSON.stringify(
+    {
+      headers: req.headers,
+      url: req.url,
+      query: req.query,
+      hostname: req.hostname
+    },
+    null,
+    2
+  );
+  res.send(result);
+  console.log(result);
+});
+
+app.listen(port, () =&amp;gt; {
+  console.log(`Echo app listening for GET on port ${port}`);
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Enjoy, as usual YMMV!&lt;/p&gt;</description>
+	<link>2023/01/learning-how-nginx-proxy-works.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>82166c60-8fdf-11ed-8979-03757e79d1b5</guid>
+	<pubDate>09 January 2023</pubDate>
+
+</item>
 <item>
 	<title>Java style guide: Functions, Streams and Optionals</title>
 	<description>&lt;p&gt;Over the years I developed a certain style developing in Java (and other languages) that made my code more readable. This isn't about the &lt;a href="https://google.github.io/styleguide/javaguide.html"&gt;formatting style guide&lt;/a&gt; (Just stick to Google) or making &lt;a href="/blog/2021/12/spotless-code-with-a-git-hook.html"&gt;code spotless&lt;/a&gt;, but about style.&lt;/p&gt;
@@ -282,58 +336,6 @@ fi
 	<author>Stephan H. Wissel</author>
 	<guid>9871d820-12e2-11ed-a8ff-2955beb6d3bc</guid>
 	<pubDate>03 August 2022</pubDate>
-
-</item>
-<item>
-	<title>Case insensitive deserialization</title>
-	<description>&lt;p&gt;Growing up in Windows with &lt;a href="https://en.wikipedia.org/wiki/BASIC"&gt;BASIC&lt;/a&gt; you learn case doesn't matter, so &lt;code&gt;Color&lt;/code&gt; is the same as &lt;code&gt;COLOR&lt;/code&gt; or &lt;code&gt;cOLOR&lt;/code&gt; when it comes to variable names. Same applies to &lt;code&gt;@Formula&lt;/code&gt; or item names in Notes documents.&lt;/p&gt;
-&lt;p&gt;On the other side, &lt;a href="https://en.wikipedia.org/wiki/Linux"&gt;Linux&lt;/a&gt;, &lt;a href="https://en.wikipedia.org/wiki/Java_(programming_language)"&gt;Java&lt;/a&gt;, &lt;a href="https://en.wikipedia.org/wiki/JavaScript"&gt;JavaScript&lt;/a&gt; and &lt;a href="https://www.json.org/json-en.html"&gt;JSON&lt;/a&gt; are very much case sensitive.&lt;/p&gt;
-&lt;p&gt;This poses a challenge when deserializing (handcrafted) JSON files.&lt;/p&gt;
-&lt;h2&gt;The Task at hand&lt;/h2&gt;
-&lt;p&gt;Deserialization of JSON into a Java class instance &lt;a href="https://www.baeldung.com/jackson-deserialization"&gt;can be done&lt;/a&gt; using &lt;a href="https://github.com/FasterXML/jackson"&gt;jackson&lt;/a&gt;. This is also what the &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html"&gt;JsonObject&lt;/a&gt; in &lt;a href="https://vertx.io"&gt;vert.x&lt;/a&gt; uses when you call &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/json/JsonObject.html#mapTo-java.lang.Class-"&gt;&lt;code&gt;json.mapTo(SomeClass)&lt;/code&gt;&lt;/a&gt;. Not using vert.x? You can use the &lt;a href="https://www.baeldung.com/jackson-object-mapper-tutorial"&gt;&lt;code&gt;ObjectMapper&lt;/code&gt;&lt;/a&gt;. Let's look at a sample Java class&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-java"&gt;import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import io.vertx.core.json.JsonObject;
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class JsonTest {
-
-  public static fromJson(final JsonObject source) {
-    return source.mapTo(JsonTest.class);
-  }
-
-  private String color;
-  private String shape;
-  private int answer;
-  private boolean pretty;
-
-  /* GETTERS and SETTERS omitted for brevity
-     Let your IDE add them for you */
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Now you want to deserialize a good JSON, which works as expected:&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-json"&gt;{
-  "color": "Red",
-  "shape": "round",
-  "answer": 11,
-  "pretty": true
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;but the very moment your JSON isn't following proper capitalization, like human provided JSON,&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-json"&gt;{
-  "Color": "Red",
-  "Shape": "square",
-  "Answer": 42,
-  "pretty": true,
-  "ignore": "this"
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;deserialization will fail. We need to fix that.&lt;/p&gt;</description>
-	<link>2022/06/case-insensitive-deserialization.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>77851ba0-e6f9-11ec-8a41-85f9122bc611</guid>
-	<pubDate>08 June 2022</pubDate>
 
 </item>
 

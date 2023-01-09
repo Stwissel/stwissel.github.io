@@ -115,6 +115,71 @@ ga('send', 'pageview');
 				</div>
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2023/01/learning-how-nginx-proxy-works.html">learning how nginx proxy works</a></small>
+					</h1>
+					<hr />
+					<div><p>A common approach for web applications is to serve them behind a <a href="https://www.nginx.com/resources/glossary/reverse-proxy-server/">reverse proxy</a>. My favorite there is <a href="https://nginx.org/en/">nginx</a>. It has a fairly understandable configuration, supports http/2 and is fully supported by Letsencrypt's <a href="https://certbot.eff.org/instructions?ws=nginx&amp;os=centosrhel8">certbot</a>.</p>
+<h3>proxy_pass can be tricky</h3>
+<p>The configuration for reverse proxying is a combination of <code>location</code> and a <code>proxy_pass</code> statement, as well as some headers. In it simplest form the URL path and the proxy_path URL are the same, so you don't need a translation between direct access (e.g. local testing) and access through nginx. A configuration could look like this:</p>
+<pre><code class="language-nginx">location /someurl {
+        proxy_pass http://127.0.0.1:3000/someurl;
+        proxy_http_version 1.1;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+    }
+</code></pre>
+<p>The headers ensure your application knows the original request source and allow upgrade from http to websockets.</p>
+<p>It gets interesting when <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location"><code>location</code></a> and <a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_pass"><code>proxy_pass</code></a> don't match. Differences can range from different url path to <a href="https://regex101.com/">regex</a> and rewrites. Especially when inheriting (or <a href="https://www.google.com/search?q=nginx+sample+redirection">googling</a>) configurations, understanding can be a challenge.</p>
+<h3>Express to the rescue</h3>
+<p>A few lines of <a href="https://expressjs.com/">expressjs</a> will echo back what ends up at the backend. Together with <a href="https://curl.se/">curl</a> it provides you a practical learning and testing environment.</p>
+<pre><code class="language-js">const express = require('express');
+const app = express();
+const port = 3010;
+
+app.get('*', (req, res) =&gt; {
+  res.setHeader('Content-Type', 'text/json');
+  let result = JSON.stringify(
+    {
+      headers: req.headers,
+      url: req.url,
+      query: req.query,
+      hostname: req.hostname
+    },
+    null,
+    2
+  );
+  res.send(result);
+  console.log(result);
+});
+
+app.listen(port, () =&gt; {
+  console.log(`Echo app listening for GET on port ${port}`);
+});
+</code></pre>
+<p>Enjoy, as usual YMMV!</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 09 January 2023
+<span class="divider">|</span>
+<a href="/blog/2023/01/learning-how-nginx-proxy-works.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/nginx.html">nginx</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2023/01/learning-how-nginx-proxy-works.html";
+						</script>
+					</p>
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2023/01/java-streams-and-optionals.html">Java style guide: Functions, Streams and Optionals</a></small>
 					</h1>
 					<hr />
