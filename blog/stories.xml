@@ -6,7 +6,30 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Tue, 10 Jan 2023 10:17:39 +0000</pubdate>
+	<pubdate>Tue, 07 Feb 2023 05:36:59 +0000</pubdate>
+<item>
+	<title>TOTP and vert.x</title>
+	<description>&lt;p&gt;Time-based one-time passwords (&lt;a href="https://en.wikipedia.org/wiki/Time-based_one-time_password"&gt;TOTP&lt;/a&gt;) are a common security feature in Identity Providers (&lt;a href="https://en.wikipedia.org/wiki/Identity_provider"&gt;IdP&lt;/a&gt;). There are use cases beyond IdP, mine was "Understanding what &lt;a href="https://www.twilio.com/docs/glossary/totp"&gt;it takes&lt;/a&gt;").&lt;/p&gt;
+&lt;h3&gt;TOTP interaction&lt;/h3&gt;
+&lt;p&gt;You have two phases: enrollment and use. During enrollment a secret is generated and (typically) presented as &lt;a href="https://en.wikipedia.org/wiki/QR_code"&gt;QR Code&lt;/a&gt;. A user points &lt;a href="https://authy.com"&gt;one&lt;/a&gt; &lt;a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2"&gt;of&lt;/a&gt; &lt;a href="https://www.microsoft.com/en-us/security/mobile-authenticator-app"&gt;the&lt;/a&gt; many Authenticator &lt;a href="https://www.pcmag.com/picks/the-best-authenticator-apps"&gt;apps&lt;/a&gt; to it and gets a numeric code that changes once a minute.&lt;/p&gt;
+&lt;p&gt;When you use it, you pick the current number and paste it into the provided field. The backend validates the correctness with some time leeway.&lt;/p&gt;
+&lt;h3&gt;What it is not&lt;/h3&gt;
+&lt;p&gt;Typically when enrolling you also get recovery codes, sometimes called &lt;em&gt;scratch codes&lt;/em&gt;. They are &lt;strong&gt;NOT&lt;/strong&gt; part of TOTP and implementation is site specific and not standardized. An implementer might choose to check your recovery codes when your TOTP fails or provide a separate interaction using those.&lt;/p&gt;
+&lt;p&gt;The initial confirmation, is actually the first instance of "&lt;strong&gt;use&lt;/strong&gt;" and one could have a successful enrollment without it. This is depending on the implementation.&lt;/p&gt;
+&lt;p&gt;It isn't &lt;a href="https://www.brainyquote.com/quotes/douglas_adams_109728"&gt;foolproof&lt;/a&gt;. An attacker could trick you into typing your TOTP code into a spoofed form or just hijack your &lt;a href="https://en.wikipedia.org/wiki/Session_hijacking"&gt;session (cookie)&lt;/a&gt;. That's why responsible web apps run a tight security with &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP"&gt;CSP&lt;/a&gt; and &lt;a href="https://letsencrypt.org"&gt;TLS&lt;/a&gt; (and once browser support is better &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy"&gt;Permission Policy&lt;/a&gt;)&lt;/p&gt;
+&lt;h3&gt;Setting up a sample application&lt;/h3&gt;
+&lt;p&gt;We need a landing page and its supporting files (css, js, png) served statically and 3 routes:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;request&lt;/li&gt;
+ &lt;li&gt;save&lt;/li&gt;
+ &lt;li&gt;verify&lt;/li&gt;
+&lt;/ul&gt;</description>
+	<link>2023/02/totp-and-vertx.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>1d0ec360-a698-11ed-bf05-29eb7d3f90a2</guid>
+	<pubDate>07 February 2023</pubDate>
+
+</item>
 <item>
 	<title>learning how nginx proxy works</title>
 	<description>&lt;p&gt;A common approach for web applications is to serve them behind a &lt;a href="https://www.nginx.com/resources/glossary/reverse-proxy-server/"&gt;reverse proxy&lt;/a&gt;. My favorite there is &lt;a href="https://nginx.org/en/"&gt;nginx&lt;/a&gt;. It has a fairly understandable configuration, supports http/2 and is fully supported by Letsencrypt's &lt;a href="https://certbot.eff.org/instructions?ws=nginx&amp;amp;os=centosrhel8"&gt;certbot&lt;/a&gt;.&lt;/p&gt;
@@ -318,24 +341,6 @@ fi
 	<author>Stephan H. Wissel</author>
 	<guid>dfa72a30-4f17-11ed-a715-8718e51da0fa</guid>
 	<pubDate>18 October 2022</pubDate>
-
-</item>
-<item>
-	<title>Calling a vert.x async method from a sync method</title>
-	<description>&lt;p&gt;Made popular by &lt;a href="https://nodejs.org/en/"&gt;NodeJS&lt;/a&gt; and &lt;a href="http://es6-features.org/#PromiseUsage"&gt;ES6&lt;/a&gt; &lt;a href="https://www.bmc.com/blogs/asynchronous-programming/"&gt;asynchronous programming&lt;/a&gt; promises (pun intended) better throughput and resource usage by entertaining an &lt;a href="https://en.wikipedia.org/wiki/Event_loop"&gt;Event Loop&lt;/a&gt;. In Java land &lt;a href="https://vertx.io"&gt;vert.x&lt;/a&gt; implements exactly this approach and has proven its mettle, being the foundation of &lt;a href="https://quarkus.io"&gt;Quarkus&lt;/a&gt;&lt;/p&gt;
-&lt;h2&gt;Your legacy app doesn't magically convert&lt;/h2&gt;
-&lt;p&gt;When you start a new &lt;a href="https://vertx.io"&gt;vert.x&lt;/a&gt; project using the &lt;a href="https://start.vertx.io"&gt;App Generator&lt;/a&gt;, everything is asynchronous from the beginning. Snippets of synchronous code (a.k.a blocking code), you might need to maintain, can be wrapped into &lt;a href="https://vertx.io/docs/vertx-core/java/#blocking_code"&gt;executeBlocking&lt;/a&gt; and handled in their own thread.&lt;/p&gt;
-&lt;p&gt;However when you are about to convert a synchronous application, e.g. a &lt;a href="https://en.wikipedia.org/wiki/Jakarta_Servlet"&gt;servlet&lt;/a&gt; to asynchronous and you can't finish in a sprint/session, things become interesting. The &lt;a href="https://docs.oracle.com/javaee/6/api/javax/servlet/http/HttpServlet.html#doGet%28javax.servlet.http.HttpServletRequest,%20javax.servlet.http.HttpServletResponse%29"&gt;&lt;code&gt;doGet&lt;/code&gt; method&lt;/a&gt; is synchronous by nature. There are a few steps that need to be accomplished:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;Have vert.x running in its own thread. You can't start it on the main thread with its blocking operations&lt;/li&gt;
- &lt;li&gt;Have a method that returns a &lt;a href="https://vertx.io/docs/apidocs/io/vertx/core/Future.html"&gt;vert.x Future&lt;/a&gt;&lt;/li&gt;
- &lt;li&gt;Convert that into a Java &lt;a href="https://www.baeldung.com/java-completablefuture"&gt;CompletableFuture&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Let's have a look at the moving parts:&lt;/p&gt;</description>
-	<link>2022/08/calling-a-vertx-async-method-from-a-sync-method.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>9871d820-12e2-11ed-a8ff-2955beb6d3bc</guid>
-	<pubDate>03 August 2022</pubDate>
 
 </item>
 

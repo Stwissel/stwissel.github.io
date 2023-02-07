@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>TOTP and vert.x - NotesSensei's Blog</title>
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-72033-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible"  content="chrome=1" />
+<meta http-equiv="Content-Language" content="en" />
+<meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
+<meta property="og:title"     content="wissel.net - TOTP and vert.x" />
+<meta property="og:type"      content="blog" />
+<meta property="og:url"       content="https://wissel.net/blog/2023/02/totp-and-vertx.html" />
+<meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
+<meta property="og:site_name" content="wissel.net" />
+<meta name="viewport"         content="width=device-width, initial-scale=1.0" />
+<meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - TOTP and vert.x" />
+<meta name="Author"           content="Stephan H. Wissel" />
+<meta name="ICBM"             content="1.2994, 103.8425" />
+<meta name="Copyright"        content="2002,2022 Stephan H. Wissel - Creative commons licence" />
+<meta name="twitter:site"     content="@notessensei" />
+<meta name="twitter:card"     content="summary" />
+<meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
+<meta name="description"
+	content="TOTP and vert.x - Time-based one-time passwords (TOTP) are a common security feature in Identity Providers (IdP). There are use cases beyond IdP, mine was &#39;Understanding what it takes&#39;). TOTP interaction You have two phases: enrollment and use. During enrollment a secret is generated and (typically) presented as QR C" />
+<meta name="Keywords"
+	content="Java,vert.x," />
+<meta name="Abstract"
+	content="TOTP and vert.x - Time-based one-time passwords (TOTP) are a common security feature in Identity Providers (IdP). There are use cases beyond IdP, mine was &#39;Understanding what it takes&#39;). TOTP interaction You have two phases: enrollment and use. During enrollment a secret is generated and (typically) presented as QR C" />
+<!--[if lt IE 9]>
+		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Raleway&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
+
+
+<link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="https://feeds.feedburner.com/Wisselnetfeed" />
+
+<meta name="Revisit-After" content="90 Days" />
+</head>
+<body class="line-numbers">
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<a class="btn btn-navbar" data-toggle="collapse"
+				data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+				class="icon-bar"></span> <span class="icon-bar"></span>
+			</a> <a class="brand" href="/">wissel.net</a>
+			<div class="nav-collapse">
+				<ul class="nav">
+					<li><a href="/index.html">Home</a></li>
+					<li class="active"><a href="/blog/">Blog</a></li>
+					<li><a href="/blog/series.html">Series</a></li>
+					<li><a href="/blog/downloads/">Downloads</a></li>
+					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
+					<li><a href="/blog/imprint.html">About / Imprint</a></li>
+				</ul>
+				<form action="//www.google.com/cse" id="cse-search-box"
+					class="navbar-search pull-right">
+					<div>
+						<input type="hidden" name="cx"
+							value="partner-pub-4562257798204150:muo14ionenw" /> <input
+							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
+							name="q" class="search-query span2" placeholder="Search" />
+						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+<div class="navbar-spacer"></div>
+
+	<div class="container">
+    		<br />
+		<header>
+			<div id="mainsmall"  class="hero-unit">
+				<h2>wissel.net</h2>
+				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+			</div>
+		</header>
+
+     
+    <ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2023/">2023</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2023/02/">February</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/vertx.html">vert.x</a>
+  </li>
+</ul>
+
+		<div class="row-fluid">
+			<div class="span12">
+				
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2023/01/learning-how-nginx-proxy-works.html"><i class="icon-hand-left"></i>learning how nginx proxy works</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+				<article class="well well-raised">
+					<h1><small>TOTP and vert.x</small></h1>
+					<hr />
+					<div><p>Time-based one-time passwords (<a href="https://en.wikipedia.org/wiki/Time-based_one-time_password">TOTP</a>) are a common security feature in Identity Providers (<a href="https://en.wikipedia.org/wiki/Identity_provider">IdP</a>). There are use cases beyond IdP, mine was "Understanding what <a href="https://www.twilio.com/docs/glossary/totp">it takes</a>").</p>
+<h3>TOTP interaction</h3>
+<p>You have two phases: enrollment and use. During enrollment a secret is generated and (typically) presented as <a href="https://en.wikipedia.org/wiki/QR_code">QR Code</a>. A user points <a href="https://authy.com">one</a> <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2">of</a> <a href="https://www.microsoft.com/en-us/security/mobile-authenticator-app">the</a> many Authenticator <a href="https://www.pcmag.com/picks/the-best-authenticator-apps">apps</a> to it and gets a numeric code that changes once a minute.</p>
+<p>When you use it, you pick the current number and paste it into the provided field. The backend validates the correctness with some time leeway.</p>
+<h3>What it is not</h3>
+<p>Typically when enrolling you also get recovery codes, sometimes called <em>scratch codes</em>. They are <strong>NOT</strong> part of TOTP and implementation is site specific and not standardized. An implementer might choose to check your recovery codes when your TOTP fails or provide a separate interaction using those.</p>
+<p>The initial confirmation, is actually the first instance of "<strong>use</strong>" and one could have a successful enrollment without it. This is depending on the implementation.</p>
+<p>It isn't <a href="https://www.brainyquote.com/quotes/douglas_adams_109728">foolproof</a>. An attacker could trick you into typing your TOTP code into a spoofed form or just hijack your <a href="https://en.wikipedia.org/wiki/Session_hijacking">session (cookie)</a>. That's why responsible web apps run a tight security with <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP">CSP</a> and <a href="https://letsencrypt.org">TLS</a> (and once browser support is better <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy">Permission Policy</a>)</p>
+<h3>Setting up a sample application</h3>
+<p>We need a landing page and its supporting files (css, js, png) served statically and 3 routes:</p>
+<ul>
+ <li>request</li>
+ <li>save</li>
+ <li>verify</li>
+</ul><p>Using the <a href="https://vertx.io/docs/vertx-web/java/#_routing_by_exact_path">vert.x Router</a> that's a breeze:</p>
+<pre><code class="language-java">public Router router(final Vertx vertx) {
+
+  final Router router = Router.router(vertx);
+
+  router.route().handler(BodyHandler.create());
+  router.post("/request")
+    .consumes(JSON)
+    .produces(JSON)
+    .handler(this::requestEnrollment);
+  router.post("/save")
+    .consumes(JSON)
+    .produces(JSON)
+    .handler(this::saveEnrollment);
+  router.post("/verify")
+    .consumes(JSON)
+    .produces(JSON)
+    .handler(this::verifyCode);
+  router.route().handler(StaticHandler.create());
+
+  return router;
+}
+</code></pre>
+<p>The <code>consumes</code> and <code>produces</code> methods ensure that the framework would reject e.g a post that's not <a href="https://www.json.org/json-en.html">JSON</a> and will produce the correct <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type">Content-Type</a> header.</p>
+<h3>The static parts: HTML, CSS</h3>
+<p>The HTML and CSS is pretty simple and follows strict <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP">CSP</a> by not polluting it with JavaScript.</p>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;meta charset="UTF-8" /&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;
+    &lt;link rel="stylesheet" href="index.css" /&gt;
+    &lt;link rel="icon" type="image/ico" href="favicon.ico" /&gt;
+    &lt;title&gt;TOTP Demo&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;header&gt;
+      &lt;h1&gt;TOTP Demo&lt;/h1&gt;
+    &lt;/header&gt;
+    &lt;div class="container"&gt;
+      &lt;h2 class="hero"&gt;Enroll or Login&lt;/h2&gt;
+      &lt;section id="enroll"&gt;
+        &lt;article id="actionpoint"&gt;
+          &lt;form id="totp"&gt;
+            &lt;label for="email"&gt;eMail:&lt;/label&gt;
+            &lt;input type="email" id="email" /&gt;
+            &lt;button id="emailnext"&gt;Next&lt;/button&gt;
+          &lt;/form&gt;
+        &lt;/article&gt;
+      &lt;/section&gt;
+    &lt;/div&gt;
+    &lt;footer&gt;&amp;copy; 2023 Notessensei&lt;/footer&gt;
+    &lt;template id="pwaitem"&gt;
+      &lt;article&gt;
+        &lt;a href="#"&gt;
+          &lt;img width="96px" src="#" alt="" /&gt;
+          &lt;h2&gt;&lt;/h2&gt;
+          &lt;p&gt;&lt;/p&gt;
+        &lt;/a&gt;
+      &lt;/article&gt;
+    &lt;/template&gt;
+    &lt;script src="index.js" type="application/javascript"&gt;&lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>The CSS is simple and <a href="https://gist.github.com/Stwissel/5ccb2a0020655cbcb23f38b3c3d5462b">can be found in this GIST</a></p>
+<h3>Static JavaScript</h3>
+<p>Since the only JS referenced to in the HTML is <code>index.js</code> we need to ensure all the listening hooks are initialized there. I usually call that function <code>bootstrap</code> and check the document state. If not ready, add it as an eventlistener otherwise just call it</p>
+<pre><code class="language-js">const bootstrap = () =&gt; {
+  const emailNextButton = document.getElementById('emailnext');
+
+  emailNextButton.addEventListener('click', function (event) {
+    event.preventDefault();
+    checkUser();
+  });
+};
+
+if (document.readyState != 'loading') {
+  bootstrap();
+} else {
+  document.addEventListener('DOMContentLoaded', bootstrap);
+}
+</code></pre>
+<p>The <code>checkUser</code> function will request a new secret and display the QR Code.</p>
+<pre><code class="language-js">const checkUser = () =&gt; {
+  const email = document.getElementById('email');
+  showQR(email.value);
+};
+
+const showQR = (email) =&gt; {
+  document.body.style.cursor = 'wait';
+  fetch('/enroll/request', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ email })
+  })
+    .then((response) =&gt; {
+      if (response.ok) {
+        return response.json();
+      }
+      throw new Error(response.statusText);
+    })
+    .then((json) =&gt; {
+      const dataUri = json.dataUri;
+      const image = document.createElement('img');
+      image.setAttribute('src', dataUri);
+      image.setAttribute('id', 'totpimg');
+      updateForm(image, saveUser, 'Save secret');
+    })
+    .catch(console.error)
+    .finally(() =&gt; (document.body.style.cursor = 'default'));
+};
+</code></pre>
+<p>There are three more functions <code>updateForm</code>, <code>verifyUser</code> and <code>saveUser</code> which you can view in <a href="https://gist.github.com/Stwissel/5ccb2a0020655cbcb23f38b3c3d5462b">this GIST</a></p>
+<h3>Backend Java Code - requesting a QR Code</h3>
+<p>Luckily the <a href="https://github.com/samdjstevens/java-totp">heavy lifting</a> is provided by <a href="https://github.com/samdjstevens">Sam Stevens</a>, so generating a secret and the QR is simple</p>
+<pre><code class="language-java">static Map&lt;String, String&gt; secrets = new HashMap&lt;&gt;();
+
+static final String EMAIL = "email";
+static final String JSON = "application/json";
+static final String CONTENT_TYPE = "Content-Type";
+
+void requestEnrollment(RoutingContext ctx) {
+  final JsonObject body = ctx.body().asJsonObject();
+  final String eMail = body.getString(EMAIL);
+  getQRCode(eMail)
+    .onSuccess(dataUri -&gt; {
+      JsonObject j = new JsonObject().put("dataUri", dataUri);
+      ctx.response().putHeader(CONTENT_TYPE, JSON);
+      ctx.end(j.toBuffer());
+    })
+    .onFailure(err -&gt; endFailed(ctx, err));
+}
+
+void endFailed(RoutingContext ctx, Throwable e) {
+  JsonObject err = new JsonObject();
+  err.put("Status", "failed");
+  err.put("Error", e.getMessage());
+  ctx.response().putHeader(CONTENT_TYPE, JSON);
+  ctx.response().setStatusCode(400).end(err.encodePrettily(), "UTF-8");
+}
+
+static Future&lt;String&gt; getQRCode(final String key) {
+
+  Promise&lt;String&gt; promise = Promise.promise();
+
+  try {
+      SecretGenerator secretGenerator = new DefaultSecretGenerator(64);
+      String secret = secretGenerator.generate();
+      QrData data = new QrData.Builder()
+              .label(key)
+              .secret(secret)
+              .issuer("Guardian Service")
+              .algorithm(HashingAlgorithm.SHA256)
+              .digits(6)
+              .period(30)
+              .build();
+      QrGenerator generator = new ZxingPngQrGenerator();
+      byte[] imageData = generator.generate(data);
+      String mimeType = generator.getImageMimeType();
+      String dataUri = Utils.getDataUriForImage(imageData, mimeType);
+      secrets.put(key, secret);
+      promise.complete(dataUri);
+  } catch (Exception e) {
+      promise.fail(e);
+  }
+  return promise.future();
+}
+</code></pre>
+<h3>Backend Java Code - verifying</h3>
+<p>Verification is equally simple to implement.</p>
+<pre><code class="language-java">void verifyCode(RoutingContext ctx) {
+    final JsonObject body = ctx.body().asJsonObject();
+    final String eMail = body.getString(EMAIL);
+    final String code = body.getString("code");
+    verify(eMail, code)
+          .onSuccess(v -&gt; this.endOK(ctx))
+          .onFailure(err -&gt; endFailed(ctx, err));
+}
+
+private void endOK(RoutingContext ctx) {
+    ctx.response().putHeader(CONTENT_TYPE, JSON);
+    ctx.response().end("{ \"Status\" : \"OK\" }", "UTF-8");
+}
+
+public static Future&lt;Void&gt; verify(final String key, final String code) {
+    Promise&lt;Void&gt; promise = Promise.promise();
+
+    if (secrets.containsKey(key)) {
+        final String secret = secrets.get(key);
+        TimeProvider timeProvider = new SystemTimeProvider();
+        CodeGenerator codeGenerator = new DefaultCodeGenerator(HashingAlgorithm.SHA256);
+        CodeVerifier verifier = new DefaultCodeVerifier(codeGenerator, timeProvider);
+        boolean successful = verifier.isValidCode(secret, code);
+        if (successful) {
+            promise.complete();
+        } else {
+            promise.fail("Code didn't check out");
+        }
+    } else {
+        promise.fail("No secret configured");
+    }
+
+    return promise.future();
+}
+</code></pre>
+<h2>In conclusion</h2>
+<ul>
+ <li>Adding TOTP enrollement is easy to achive</li>
+ <li>the hard part (omitted here) is secure storage</li>
+ <li>this is demo code, no persistence, limited error handling</li>
+</ul>
+<h3>Final warnings</h3>
+<p>This is demo code, you need to take care of authentication and securing the secrets.<br> This is not covered here, subject to a story to be told another time</p>
+<p>As usual YMMV!</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 07 February 2023
+<span class="divider">|</span>
+<a href="/blog/2023/02/totp-and-vertx.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2023/02/totp-and-vertx.html";
+						</script>
+					</p>
+				</article>
+				<a name="comments"></a>
+				<div class="well well-raised" style="text-align : center">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_1d0ec360-a698-11ed-bf05-29eb7d3f90a2" type="button">
+		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
+	            </button>
+	            </div>
+				<div id="commentform_1d0ec360-a698-11ed-bf05-29eb7d3f90a2"  class="collapse"></div>
+				<div class="well well-raised">
+					<h4>Comments</h4>
+					<ol id="commentList">
+						<li id="nocomments">
+							<h5>No comments yet, be the first to comment</h5>
+						</li>
+					</ol>
+				</div>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2023/01/learning-how-nginx-proxy-works.html"><i class="icon-hand-left"></i>learning how nginx proxy works</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+			</div>
+		</div>
+		<ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2023/">2023</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2023/02/">February</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/vertx.html">vert.x</a>
+  </li>
+</ul>
+
+	</div>
+	<footer>
+		<div class="container">
+			<div class="row">
+				<div class="span2">
+					<h4>About Me</h4>
+					<p>
+						I work as "Solution Director Innovation" for HCL Software. I'm based in Singapore.
+						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
+					</p>
+					<a href="//stackoverflow.com/users/131021/stwissel">
+					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
+				</a>
+				</div>
+				<div class="span2">
+					<h4>Contact</h4>
+					<ul>
+						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
+						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
+						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
+						<li><a href="https://about.me/stephan.wissel/#" title="Another identity site, nothing much here">About Me</a></li>
+						<li><a href="https://github.com/Stwissel">GitHub</a></li>
+						<li><a href="https://bitbucket.org/stwissel/">Bitbucket</a></li>
+						<li><a href="https://www.twitter.com/notessensei">Twitter</a></li>
+					</ul>
+				</div>
+				<div class="span8">
+					<h4>Disclaimer</h4>
+					<p>This site is in no way affiliated, endorsed, sanctioned,
+						supported, nor enlightened by my current or previous employers.
+						I may be an employee, but the opinions, theories, facts, etc.
+						presented here are my own and are in now way given in any official
+						capacity. In short, these are my words and this is my site, not
+						my current or former employers' - and don't even begin to think otherwise.</p>
+					<p>
+						<b>&copy; 2003 - 2023 Stephan H. Wissel - some rights reserved</b> as
+						listed here: <a rel="license"
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
+							alt="Creative Commons License" style="border-width: 0"
+							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
+						Unless otherwise labeled by its originating author, the content
+						found on this site is made available under the terms of an <a
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
+							target="_blank"
+							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
+							Creative Commons License</a>, with the exception that no rights are
+						granted -- since they are not mine to grant -- in any logo,
+						graphic design, trademarks or trade names of any type. Code
+						samples and code downloads on this site are, unless otherwise
+						labeled, made available under an <a
+							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
+							2.0</a> license. Other license models are available on written
+						request and written confirmation.
+					</p>
+				</div>
+			</div>
+		</div>
+	</footer>
+
+	<script type="text/javascript">
+		var permaLink = "https://wissel.net/blog/2023/02/totp-and-vertx.html";
+	</script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
+	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
+	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
+	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		_uacct = "UA-72033-1";
+		urchinTracker();
+	</script>
+	<script type="text/javascript" src="//feeds.feedburner.com/~s/Wisselnet?i=https://wissel.net/blog" charset="utf-8"></script>
+
+		<script src="/blog/js2/mustache.js"></script>
+	<script src="/blog/js2/blogcomments.js"></script>
+	<script type="text/javascript" src="/blog/js2/Markdown.Converter.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Sanitizer.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Editor.js"></script>
+	<script type="text/javascript" src="//www.google.com/recaptcha/api.js"></script>
+	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+	<script type="text/javascript">
+		var onloadCallback = function() {
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "1d0ec360-a698-11ed-bf05-29eb7d3f90a2");
+ 		};
+	</script>
+
+</body>
+</html>

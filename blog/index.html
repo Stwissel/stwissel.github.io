@@ -100,6 +100,39 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2023/02/totp-and-vertx.html">TOTP and vert.x</a></small></h1>
+					<hr />
+					<div><p>Time-based one-time passwords (<a href="https://en.wikipedia.org/wiki/Time-based_one-time_password">TOTP</a>) are a common security feature in Identity Providers (<a href="https://en.wikipedia.org/wiki/Identity_provider">IdP</a>). There are use cases beyond IdP, mine was "Understanding what <a href="https://www.twilio.com/docs/glossary/totp">it takes</a>").</p>
+<h3>TOTP interaction</h3>
+<p>You have two phases: enrollment and use. During enrollment a secret is generated and (typically) presented as <a href="https://en.wikipedia.org/wiki/QR_code">QR Code</a>. A user points <a href="https://authy.com">one</a> <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2">of</a> <a href="https://www.microsoft.com/en-us/security/mobile-authenticator-app">the</a> many Authenticator <a href="https://www.pcmag.com/picks/the-best-authenticator-apps">apps</a> to it and gets a numeric code that changes once a minute.</p>
+<p>When you use it, you pick the current number and paste it into the provided field. The backend validates the correctness with some time leeway.</p>
+<h3>What it is not</h3>
+<p>Typically when enrolling you also get recovery codes, sometimes called <em>scratch codes</em>. They are <strong>NOT</strong> part of TOTP and implementation is site specific and not standardized. An implementer might choose to check your recovery codes when your TOTP fails or provide a separate interaction using those.</p>
+<p>The initial confirmation, is actually the first instance of "<strong>use</strong>" and one could have a successful enrollment without it. This is depending on the implementation.</p>
+<p>It isn't <a href="https://www.brainyquote.com/quotes/douglas_adams_109728">foolproof</a>. An attacker could trick you into typing your TOTP code into a spoofed form or just hijack your <a href="https://en.wikipedia.org/wiki/Session_hijacking">session (cookie)</a>. That's why responsible web apps run a tight security with <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP">CSP</a> and <a href="https://letsencrypt.org">TLS</a> (and once browser support is better <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy">Permission Policy</a>)</p>
+<h3>Setting up a sample application</h3>
+<p>We need a landing page and its supporting files (css, js, png) served statically and 3 routes:</p>
+<ul>
+ <li>request</li>
+ <li>save</li>
+ <li>verify</li>
+</ul></div>
+					<hr />
+ <a href="/blog/2023/02/totp-and-vertx.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 07 February 2023
+<span class="divider">|</span>
+<a href="/blog/2023/02/totp-and-vertx.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2023/02/totp-and-vertx.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2023/01/learning-how-nginx-proxy-works.html">learning how nginx proxy works</a></small></h1>
 					<hr />
 					<div><p>A common approach for web applications is to serve them behind a <a href="https://www.nginx.com/resources/glossary/reverse-proxy-server/">reverse proxy</a>. My favorite there is <a href="https://nginx.org/en/">nginx</a>. It has a fairly understandable configuration, supports http/2 and is fully supported by Letsencrypt's <a href="https://certbot.eff.org/instructions?ws=nginx&amp;os=centosrhel8">certbot</a>.</p>
@@ -492,34 +525,6 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2022/10/java-development-error-prone.html";
-						</script>
-					</p></p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2022/08/calling-a-vertx-async-method-from-a-sync-method.html">Calling a vert.x async method from a sync method</a></small></h1>
-					<hr />
-					<div><p>Made popular by <a href="https://nodejs.org/en/">NodeJS</a> and <a href="http://es6-features.org/#PromiseUsage">ES6</a> <a href="https://www.bmc.com/blogs/asynchronous-programming/">asynchronous programming</a> promises (pun intended) better throughput and resource usage by entertaining an <a href="https://en.wikipedia.org/wiki/Event_loop">Event Loop</a>. In Java land <a href="https://vertx.io">vert.x</a> implements exactly this approach and has proven its mettle, being the foundation of <a href="https://quarkus.io">Quarkus</a></p>
-<h2>Your legacy app doesn't magically convert</h2>
-<p>When you start a new <a href="https://vertx.io">vert.x</a> project using the <a href="https://start.vertx.io">App Generator</a>, everything is asynchronous from the beginning. Snippets of synchronous code (a.k.a blocking code), you might need to maintain, can be wrapped into <a href="https://vertx.io/docs/vertx-core/java/#blocking_code">executeBlocking</a> and handled in their own thread.</p>
-<p>However when you are about to convert a synchronous application, e.g. a <a href="https://en.wikipedia.org/wiki/Jakarta_Servlet">servlet</a> to asynchronous and you can't finish in a sprint/session, things become interesting. The <a href="https://docs.oracle.com/javaee/6/api/javax/servlet/http/HttpServlet.html#doGet%28javax.servlet.http.HttpServletRequest,%20javax.servlet.http.HttpServletResponse%29"><code>doGet</code> method</a> is synchronous by nature. There are a few steps that need to be accomplished:</p>
-<ul>
- <li>Have vert.x running in its own thread. You can't start it on the main thread with its blocking operations</li>
- <li>Have a method that returns a <a href="https://vertx.io/docs/apidocs/io/vertx/core/Future.html">vert.x Future</a></li>
- <li>Convert that into a Java <a href="https://www.baeldung.com/java-completablefuture">CompletableFuture</a></li>
-</ul>
-<p>Let's have a look at the moving parts:</p></div>
-					<hr />
- <a href="/blog/2022/08/calling-a-vertx-async-method-from-a-sync-method.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 03 August 2022
-<span class="divider">|</span>
-<a href="/blog/2022/08/calling-a-vertx-async-method-from-a-sync-method.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2022/08/calling-a-vertx-async-method-from-a-sync-method.html";
 						</script>
 					</p></p>
 				</article>
