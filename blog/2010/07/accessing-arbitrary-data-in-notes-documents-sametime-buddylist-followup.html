@@ -123,707 +123,742 @@ ga('send', 'pageview');
 					<h1><small>Accessing &quot;Arbitrary Data&quot; in Notes Documents (Sametime BuddyList) followup</small></h1>
 					<hr />
 					<div>Yesterday I stated " <i>Neither the LotusScript nor Java API allows us to process this item type</i>" about a Notes item type "Arbitrary Data". Today I stand corrected. It turns out, than <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/index.jsp?topic=/com.ibm.designer.domino.main.doc/H_REPLACEITEMVALUECUSTOMDATABYTES_METHOD_DOC.html">since R65 we have NoesDocument.GetItemValueCustomDataBytes</a> and <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/topic/com.ibm.designer.domino.main.doc/H_GETVALUECUSTOMDATABYTES_METHOD_ITEM.html">NotesItem.GetValueCustomDataBytes</a>. Carl Tyler from <a href="http://www.epilio.com">Epilio</a> (Remember: Sametime without Epilio is like Sushi without Wasabi) filled in the missing blanks. The method requires a data type and Carl shared that the data type for the BuddyList is <code>UbqOpaque</code>. The second important information: Buddy lists are stored in an item named "8193". If a buddy lists grows to big additional items are added "8193.1" "8193.2" etc. 
-<br> So I wrote a little agent that now extracts the whole buddylists into the <code>C:\export\</code> directory. One interesting observation. All budy lists (and I had some with double byte names) started with the bytes 110 7 0 0 before the &lt;?xml... First I though that to be Unicode <a href="http://unicode.org/faq/utf_bom.html">Byte Order Marker</a> (BOM), but it seems they are not related to that. So when you want to process these files you might need to edit them first. Inside my Java class I take care of that. The updated code <a href="/blog/downloads/2010/BuddyListTool.zip">can be downloaded</a> including the source code as before. When running the report I found that I had to open and save the exportbuddies.xml before the XSLT transformation would run properly. 
-<br> As usual: YMMV<div class="lotusscript">
+<br>
+ So I wrote a little agent that now extracts the whole buddylists into the <code>C:\export\</code> directory. One interesting observation. All budy lists (and I had some with double byte names) started with the bytes 110 7 0 0 before the &lt;?xml... First I though that to be Unicode <a href="http://unicode.org/faq/utf_bom.html">Byte Order Marker</a> (BOM), but it seems they are not related to that. So when you want to process these files you might need to edit them first. Inside my Java class I take care of that. The updated code <a href="/blog/downloads/2010/BuddyListTool.zip">can be downloaded</a> including the source code as before. When running the report I found that I had to open and save the exportbuddies.xml before the XSLT transformation would run properly. 
+<br>
+ As usual: YMMV<div class="lotusscript">
  <ol>
   <li class="li1">
-   <div class="de1"><span class="coMULTI">%REM</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="coMULTI">&nbsp; &nbsp; Agent ExportBuddyLists</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="coMULTI">&nbsp; &nbsp; Created Jul 1, 2010 by Stephan H Wissel/Singapore/IBM</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="coMULTI">&nbsp; &nbsp; Description: Exports Buddylists</span>
-   </div></li>
-  <li class="li2">
-   <div class="de2"><span class="coMULTI">%END REM</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="kw1">Option</span><span class="kw1">Public</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="kw1">Option</span><span class="kw1">Declare</span>
+   <div class="de1">
+    <span class="coMULTI">%REM</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; 
+    <span class="coMULTI">&nbsp; &nbsp; Agent ExportBuddyLists</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; 
-   </div></li>
-  <li class="li2">
-   <div class="de2"><span class="kw1">Dim</span> s <span class="kw1">As</span><span class="kw2">NotesSession</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="kw1">Dim</span> exportDir <span class="kw1">As</span><span class="kw1">String</span><span class="co1">'Defaults to C:\Export\, set in Initialize</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="kw1">Dim</span> defaultItemName <span class="kw1">As</span><span class="kw1">String</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="kw1">Sub</span> Initialize 
+    <span class="coMULTI">&nbsp; &nbsp; Created Jul 1, 2010 by Stephan H Wissel/Singapore/IBM</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> db <span class="kw1">As</span><span class="kw2">NotesDatabase</span>
+    <span class="coMULTI">&nbsp; &nbsp; Description: Exports Buddylists</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> v <span class="kw1">As</span><span class="kw2">NotesView</span>
+    <span class="coMULTI">%END REM</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> doc <span class="kw1">As</span><span class="kw2">NotesDocument</span>
+    <span class="kw1">Option</span> <span class="kw1">Public</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> users <span class="kw1">As</span><span class="kw2">NotesStream</span>
+    <span class="kw1">Option</span> <span class="kw1">Declare</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> outUserName <span class="kw1">As</span><span class="kw1">String</span>
+    &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> outCounter <span class="kw1">As</span><span class="kw1">Integer</span>
-   </div></li>
-  <li class="li2">
-   <div class="de2">
-     &nbsp; &nbsp; 
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">On</span><span class="kw1">Error</span><span class="kw1">GoTo</span> Err_Initialize 
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; 
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Set</span> s = <span class="kw1">New</span><span class="kw2">NotesSession</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Set</span> db = s. <span class="me1">Currentdatabase</span>
+    &nbsp;
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; <span class="kw1">Set</span> v = db. <span class="me1">Getview</span><span class="br0">(</span><span class="st0">"Storage"</span><span class="br0">)</span>
+    <span class="kw1">Dim</span> s <span class="kw1">As</span> <span class="kw2">NotesSession</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Set</span> users = s. <span class="me1">Createstream</span><span class="br0">(</span><span class="br0">)</span>
+    <span class="kw1">Dim</span> exportDir <span class="kw1">As</span> <span class="kw1">String</span> <span class="co1">'Defaults to C:\Export\, set in Initialize</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    <span class="kw1">Dim</span> defaultItemName <span class="kw1">As</span> <span class="kw1">String</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="co1">'TODO: you need to change these values</span>
+    <span class="kw1">Sub</span> Initialize
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; exportDir = <span class="st0">"C:\export\"</span>
-   </div></li>
-  <li class="li2">
-   <div class="de2">
-     &nbsp; &nbsp; defaultItemName = <span class="st0">"8193"</span><span class="co1">'The item with the BuddyList</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; outUserName = exportDir + <span class="st0">"exportbuddies.xml"</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; 
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">Dir$</span><span class="br0">(</span>outUserName <span class="br0">)</span> &lt;&gt; <span class="st0">""</span><span class="kw1">Then</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Kill</span> outUserName 
+    &nbsp; &nbsp; <span class="kw1">Dim</span> db <span class="kw1">As</span> <span class="kw2">NotesDatabase</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
+    &nbsp; &nbsp; <span class="kw1">Dim</span> v <span class="kw1">As</span> <span class="kw2">NotesView</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Call</span> users. <span class="kw1">Open</span><span class="br0">(</span>outUserName, <span class="st0">"UTF-8"</span><span class="br0">)</span>
+    &nbsp; &nbsp; <span class="kw1">Dim</span> doc <span class="kw1">As</span> <span class="kw2">NotesDocument</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp; <span class="kw1">Dim</span> users <span class="kw1">As</span> <span class="kw2">NotesStream</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Set</span> doc = v. <span class="me1">Getfirstdocument</span><span class="br0">(</span><span class="br0">)</span>
+    &nbsp; &nbsp; <span class="kw1">Dim</span> outUserName <span class="kw1">As</span> <span class="kw1">String</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Call</span> users. <span class="me1">Writetext</span><span class="br0">(</span><span class="st0">"&lt;users&gt;"</span>, EOL_CRLF <span class="br0">)</span>
-   </div></li>
-  <li class="li2">
-   <div class="de2">
-     &nbsp; &nbsp; outCounter = <span class="nu0">0</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; 
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Do</span><span class="kw1">Until</span> doc <span class="kw1">Is</span><span class="kw1">Nothing</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; outCounter = outCounter + ExportOneBuddyList <span class="br0">(</span>doc, outCounter, users <span class="br0">)</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> doc = v. <span class="me1">Getnextdocument</span><span class="br0">(</span>doc <span class="br0">)</span>
+    &nbsp; &nbsp; <span class="kw1">Dim</span> outCounter <span class="kw1">As</span> <span class="kw1">Integer</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; <span class="kw1">Loop</span>
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp; <span class="kw1">On</span> <span class="kw1">Error</span> <span class="kw1">GoTo</span> Err_Initialize
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Call</span> users. <span class="me1">Writetext</span><span class="br0">(</span><span class="st0">"&lt;/users&gt;"</span>, EOL_CRLF <span class="br0">)</span>
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Call</span> users. <span class="kw1">Close</span><span class="br0">(</span><span class="br0">)</span>
+    &nbsp; &nbsp; <span class="kw1">Set</span> s = <span class="kw1">New</span> <span class="kw2">NotesSession</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Print</span><span class="kw1">CStr</span><span class="br0">(</span>outCounter <span class="br0">)</span> + <span class="st0">" Users exported"</span>
-   </div></li>
-  <li class="li2">
-   <div class="de2">
-     &nbsp; &nbsp; 
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     Exit_Initialize: 
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Exit</span><span class="kw1">Sub</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; 
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     Err_Initialize: 
+    &nbsp; &nbsp; <span class="kw1">Set</span> db = s. <span class="me1">Currentdatabase</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; <span class="kw1">MsgBox</span><span class="kw1">Error$</span>,, <span class="st0">"Line "</span>+ <span class="kw1">CStr</span><span class="br0">(</span><span class="kw1">Erl</span><span class="br0">)</span>
+    &nbsp; &nbsp; <span class="kw1">Set</span> v = db. <span class="me1">Getview</span> <span class="br0">(</span> <span class="st0">"Storage"</span> <span class="br0">)</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Resume</span> Exit_Initialize 
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="kw1">End</span><span class="kw1">Sub</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="kw1">Sub</span> Terminate 
+    &nbsp; &nbsp; <span class="kw1">Set</span> users = s. <span class="me1">Createstream</span> <span class="br0">(</span> <span class="br0">)</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
-   </div></li>
-  <li class="li2">
-   <div class="de2"><span class="kw1">End</span><span class="kw1">Sub</span>
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; 
+    &nbsp; &nbsp; <span class="co1">'TODO: you need to change these values</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; 
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="coMULTI">%REM</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="coMULTI">&nbsp; &nbsp; Function ExportOneBuddyList</span>
-   </div></li>
-  <li class="li2">
-   <div class="de2"><span class="coMULTI">&nbsp; &nbsp; Description: Exports a buddylist if it has the 8193 item</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="coMULTI">%END REM</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="kw1">Function</span> ExportOneBuddyList <span class="br0">(</span>doc <span class="kw1">As</span><span class="kw2">NotesDocument</span>, outCounter <span class="kw1">As</span><span class="kw1">Integer</span>, users <span class="kw1">As</span><span class="kw2">NotesStream</span><span class="br0">)</span><span class="kw1">As</span><span class="kw1">Integer</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> curUser <span class="kw1">As</span><span class="kw1">String</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> userLine <span class="kw1">As</span><span class="kw1">String</span>
+    &nbsp; &nbsp; exportDir = <span class="st0">"C:\export\"</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> curName <span class="kw1">As</span><span class="kw2">NotesName</span>
+    &nbsp; &nbsp; defaultItemName = <span class="st0">"8193"</span> <span class="co1">'The item with the BuddyList</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> out <span class="kw1">As</span><span class="kw2">NotesStream</span>
+    &nbsp; &nbsp; outUserName = exportDir + <span class="st0">"exportbuddies.xml"</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> outFileName <span class="kw1">As</span><span class="kw1">String</span>
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Dir$</span> <span class="br0">(</span>outUserName <span class="br0">)</span> &lt;&gt; <span class="st0">""</span> <span class="kw1">Then</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">On</span><span class="kw1">Error</span><span class="kw1">GoTo</span> Err_ExportOneBuddyList 
-   </div></li>
-  <li class="li2">
-   <div class="de2">
-     &nbsp; &nbsp; 
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; ExportOneBuddyList = <span class="nu0">0</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; 
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">Not</span> doc. <span class="me1">HasItem</span><span class="br0">(</span>defaultItemName <span class="br0">)</span><span class="kw1">Then</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> doc. <span class="me1">Hasitem</span><span class="br0">(</span><span class="st0">"0"</span><span class="br0">)</span><span class="kw1">Then</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Kill</span> outUserName
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Print</span><span class="st0">"Document has old buddy list, very bad "</span> &amp; doc. <span class="me1">Universalid</span>
+    &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
+    &nbsp; &nbsp; <span class="kw1">Call</span> users. <span class="kw1">Open</span> <span class="br0">(</span>outUserName, <span class="st0">"UTF-8"</span> <span class="br0">)</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span><span class="kw1">Function</span><span class="co1">'We don't export if there is nothing</span>
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
+    &nbsp; &nbsp; <span class="kw1">Set</span> doc = v. <span class="me1">Getfirstdocument</span> <span class="br0">(</span> <span class="br0">)</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
-   </div></li>
-  <li class="li2">
-   <div class="de2">
-     &nbsp; &nbsp; <span class="co1">'Get the user name</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; curUser = doc. <span class="me1">Getitemvalue</span><span class="br0">(</span><span class="st0">"storageUserId"</span><span class="br0">)</span><span class="br0">(</span><span class="nu0">0</span><span class="br0">)</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Set</span> curName = s. <span class="me1">Createname</span><span class="br0">(</span>curUser <span class="br0">)</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; 
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; outFileName = exportDir + <span class="st0">|BuddyList|</span>+ <span class="kw1">CStr</span><span class="br0">(</span>outCounter <span class="br0">)</span>+ <span class="st0">|.xml|</span>
+    &nbsp; &nbsp; <span class="kw1">Call</span> users. <span class="me1">Writetext</span> <span class="br0">(</span> <span class="st0">"&lt;users&gt;"</span>, EOL_CRLF <span class="br0">)</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp; outCounter = <span class="nu0">0</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">Dir$</span><span class="br0">(</span>outFileName <span class="br0">)</span> &lt;&gt; <span class="st0">""</span><span class="kw1">Then</span>
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Kill</span> outFileName 
+    &nbsp; &nbsp; <span class="kw1">Do</span> <span class="kw1">Until</span> doc <span class="kw1">Is</span> <span class="kw1">Nothing</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; outCounter = outCounter + ExportOneBuddyList <span class="br0">(</span>doc, outCounter, users <span class="br0">)</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
-   </div></li>
-  <li class="li2">
-   <div class="de2">
-     &nbsp; &nbsp; <span class="kw1">Set</span> out = s. <span class="me1">createStream</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="kw1">open</span><span class="br0">(</span>outFileName, <span class="st0">"Unicode"</span><span class="br0">)</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; 
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Call</span> PopulateStreamWithBuddyList <span class="br0">(</span>doc, out <span class="br0">)</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; 
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> doc = v. <span class="me1">Getnextdocument</span> <span class="br0">(</span>doc <span class="br0">)</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; userLine = <span class="st0">|&lt;user id="|</span>+ <span class="kw1">CStr</span><span class="br0">(</span>outCounter <span class="br0">)</span>+ <span class="st0">|"&gt;|</span>+curName. <span class="me1">Abbreviated</span>+ <span class="st0">|&lt;/user&gt;|</span>
+    &nbsp; &nbsp; <span class="kw1">Loop</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Call</span> users. <span class="me1">Writetext</span><span class="br0">(</span>userLine, EOL_CRLF <span class="br0">)</span>
+    &nbsp; &nbsp; <span class="kw1">Call</span> users. <span class="me1">Writetext</span> <span class="br0">(</span> <span class="st0">"&lt;/users&gt;"</span>, EOL_CRLF <span class="br0">)</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp; <span class="kw1">Call</span> users. <span class="kw1">Close</span> <span class="br0">(</span> <span class="br0">)</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="co1">'Once we got here it worked</span>
+    &nbsp; &nbsp; <span class="kw1">Print</span> <span class="kw1">CStr</span> <span class="br0">(</span>outCounter <span class="br0">)</span> + <span class="st0">" Users exported"</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; ExportOneBuddyList = <span class="nu0">1</span>
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    Exit_Initialize:
    </div></li>
   <li class="li1">
    <div class="de1">
-     Exit_ExportOneBuddyList: 
+    &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">Sub</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">On</span><span class="kw1">Error</span><span class="kw1">Resume</span><span class="kw1">Next</span>
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">Not</span> out <span class="kw1">Is</span><span class="kw1">Nothing</span><span class="kw1">Then</span>
+    Err_Initialize:
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="kw1">Close</span><span class="br0">(</span><span class="br0">)</span>
+    &nbsp; &nbsp; <span class="kw1">MsgBox</span> <span class="kw1">Error$</span>,, <span class="st0">"Line "</span>+ <span class="kw1">CStr</span> <span class="br0">(</span> <span class="kw1">Erl</span> <span class="br0">)</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
+    &nbsp; &nbsp; <span class="kw1">Resume</span> Exit_Initialize
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Exit</span><span class="kw1">Function</span>
+    <span class="kw1">End</span> <span class="kw1">Sub</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    <span class="kw1">Sub</span> Terminate
    </div></li>
   <li class="li1">
    <div class="de1">
-     Err_ExportOneBuddyList: 
+    &nbsp; &nbsp;
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; <span class="kw1">Print</span><span class="kw1">Error$</span> &amp; <span class="st0">" in line "</span> &amp; <span class="kw1">CStr</span><span class="br0">(</span><span class="kw1">Erl</span><span class="br0">)</span> &amp; <span class="st0">", function ExportOneBuddyList for user: "</span> &amp; curUser 
+    <span class="kw1">End</span> <span class="kw1">Sub</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; ExportOneBuddyList = <span class="nu0">0</span>
+    &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Resume</span> Exit_ExportOneBuddyList 
+    &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    <span class="coMULTI">%REM</span>
    </div></li>
   <li class="li1">
-   <div class="de1"><span class="kw1">End</span><span class="kw1">Function</span>
+   <div class="de1">
+    <span class="coMULTI">&nbsp; &nbsp; Function ExportOneBuddyList</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; 
+    <span class="coMULTI">&nbsp; &nbsp; Description: Exports a buddylist if it has the 8193 item</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; 
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="coMULTI">%REM</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="coMULTI">&nbsp; &nbsp; Sub WriteItemBytesToStream</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="coMULTI">&nbsp; &nbsp; Description: Writes out all the data found in an item into the</span>
-   </div></li>
-  <li class="li2">
-   <div class="de2"><span class="coMULTI">&nbsp; &nbsp; Output stream for closure</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="coMULTI">%END REM</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="kw1">Sub</span> WriteItemBytesToStream <span class="br0">(</span>doc <span class="kw1">As</span><span class="kw2">NotesDocument</span>, itemName <span class="kw1">As</span><span class="kw1">String</span>, out <span class="kw1">As</span><span class="kw2">NotesStream</span><span class="br0">)</span>
+    <span class="coMULTI">%END REM</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> bytes <span class="kw1">As</span><span class="kw1">Variant</span>
+    <span class="kw1">Function</span> ExportOneBuddyList <span class="br0">(</span>doc <span class="kw1">As</span> <span class="kw2">NotesDocument</span>, outCounter <span class="kw1">As</span> <span class="kw1">Integer</span>, users <span class="kw1">As</span> <span class="kw2">NotesStream</span> <span class="br0">)</span> <span class="kw1">As</span> <span class="kw1">Integer</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> isXMLStart <span class="kw1">As</span><span class="kw1">Boolean</span>
+    &nbsp; &nbsp; <span class="kw1">Dim</span> curUser <span class="kw1">As</span> <span class="kw1">String</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="kw1">Dim</span> userLine <span class="kw1">As</span> <span class="kw1">String</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> DataTypeStorage <span class="kw1">As</span><span class="kw1">String</span>
+    &nbsp; &nbsp; <span class="kw1">Dim</span> curName <span class="kw1">As</span> <span class="kw2">NotesName</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> tempStream <span class="kw1">As</span><span class="kw2">NotesStream</span>
+    &nbsp; &nbsp; <span class="kw1">Dim</span> out <span class="kw1">As</span> <span class="kw2">NotesStream</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> startByte <span class="kw1">As</span><span class="kw1">Long</span>
+    &nbsp; &nbsp; <span class="kw1">Dim</span> outFileName <span class="kw1">As</span> <span class="kw1">String</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">On</span><span class="kw1">Error</span><span class="kw1">GoTo</span> Err_WriteItemBytesToStream 
+    &nbsp; &nbsp; <span class="kw1">On</span> <span class="kw1">Error</span> <span class="kw1">GoTo</span> Err_ExportOneBuddyList
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="co1">'The custom data type Lotus use to store Sametime Data</span>
+    &nbsp; &nbsp; ExportOneBuddyList = <span class="nu0">0</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; DataTypeStorage = <span class="st0">"UbqOpaque"</span>
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; bytes = doc. <span class="me1">GetItemValueCustomDataBytes</span><span class="br0">(</span>itemName, DataTypeStorage <span class="br0">)</span>
+    &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> doc. <span class="me1">HasItem</span> <span class="br0">(</span>defaultItemName <span class="br0">)</span> <span class="kw1">Then</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> doc. <span class="me1">Hasitem</span> <span class="br0">(</span> <span class="st0">"0"</span> <span class="br0">)</span> <span class="kw1">Then</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; <span class="co1">'we write out everything</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Print</span> <span class="st0">"Document has old buddy list, very bad "</span> &amp; doc. <span class="me1">Universalid</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="kw1">Write</span><span class="br0">(</span>bytes <span class="br0">)</span> &nbsp; 
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">Function</span> <span class="co1">'We don't export if there is nothing</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     Exit_WriteItemBytesToStream: 
+    &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Exit</span><span class="kw1">Sub</span>
+    &nbsp; &nbsp;
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp; <span class="co1">'Get the user name</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     Err_WriteItemBytesToStream: 
+    &nbsp; &nbsp; curUser = doc. <span class="me1">Getitemvalue</span> <span class="br0">(</span> <span class="st0">"storageUserId"</span> <span class="br0">)</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Print</span><span class="kw1">Error$</span> &amp; <span class="st0">" in WriteItemBytesToStream"</span>
+    &nbsp; &nbsp; <span class="kw1">Set</span> curName = s. <span class="me1">Createname</span> <span class="br0">(</span>curUser <span class="br0">)</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Resume</span> Exit_WriteItemBytesToStream 
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
-   </div></li>
-  <li class="li2">
-   <div class="de2"><span class="kw1">End</span><span class="kw1">Sub</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="coMULTI">%REM</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="coMULTI">&nbsp; &nbsp; Sub PopulateStreamWithBuddyList</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="coMULTI">&nbsp; &nbsp; Description: Writes the item from 8193 into the stream (and subsequential subitems)</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1"><span class="coMULTI">%END REM</span>
-   </div></li>
-  <li class="li2">
-   <div class="de2"><span class="kw1">Sub</span> PopulateStreamWithBuddyList <span class="br0">(</span>doc <span class="kw1">As</span><span class="kw2">NotesDocument</span>, out <span class="kw1">As</span><span class="kw2">NotesStream</span><span class="br0">)</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> itemCounter <span class="kw1">As</span><span class="kw1">Integer</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Dim</span> curItemName <span class="kw1">As</span><span class="kw1">String</span>
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; 
-   </div></li>
-  <li class="li1">
-   <div class="de1">
-     &nbsp; 
+    &nbsp; &nbsp; outFileName = exportDir + <span class="st0">|BuddyList|</span>+ <span class="kw1">CStr</span> <span class="br0">(</span>outCounter <span class="br0">)</span>+ <span class="st0">|.xml|</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="co1">'Initial check - should not be needed since we won't call a doc that doesn't have it</span>
+    &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Dir$</span> <span class="br0">(</span>outFileName <span class="br0">)</span> &lt;&gt; <span class="st0">""</span> <span class="kw1">Then</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">Not</span> doc. <span class="me1">Hasitem</span><span class="br0">(</span>defaultItemName <span class="br0">)</span><span class="kw1">Then</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Kill</span> outFileName
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Print</span><span class="st0">"No item "</span> &amp; defaultItemName &amp; <span class="st0">"found"</span>
+    &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span><span class="kw1">sub</span>
+    &nbsp; &nbsp;
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
+    &nbsp; &nbsp; <span class="kw1">Set</span> out = s. <span class="me1">createStream</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="kw1">open</span> <span class="br0">(</span>outFileName, <span class="st0">"Unicode"</span> <span class="br0">)</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="co1">'One call is needed then the others are optional</span>
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Call</span> WriteItemBytesToStream <span class="br0">(</span>doc, defaultItemName,out <span class="br0">)</span>
+    &nbsp; &nbsp; <span class="kw1">Call</span> PopulateStreamWithBuddyList <span class="br0">(</span>doc, out <span class="br0">)</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp; &nbsp; &nbsp;
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; <span class="co1">'If the Buddylist is REALLY large &gt; 40k there are more items left</span>
+    &nbsp; &nbsp; userLine = <span class="st0">|&lt;user id="|</span>+ <span class="kw1">CStr</span> <span class="br0">(</span>outCounter <span class="br0">)</span>+ <span class="st0">|"&gt;|</span>+curName. <span class="me1">Abbreviated</span>+ <span class="st0">|&lt;/user&gt;|</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; itemCounter = <span class="nu0">1</span>
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; curItemName = defaultItemName &amp; <span class="st0">"."</span> &amp; <span class="kw1">CStr</span><span class="br0">(</span>itemCounter <span class="br0">)</span>
+    &nbsp; &nbsp; <span class="kw1">Call</span> users. <span class="me1">Writetext</span> <span class="br0">(</span>userLine, EOL_CRLF <span class="br0">)</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">Do</span><span class="kw1">While</span> doc. <span class="me1">Hasitem</span><span class="br0">(</span>curItemName <span class="br0">)</span>
+    &nbsp; &nbsp; <span class="co1">'Once we got here it worked</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Write the additional items out</span>
+    &nbsp; &nbsp; ExportOneBuddyList = <span class="nu0">1</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> WriteItemBytesToStream <span class="br0">(</span>doc, curItemName,out <span class="br0">)</span>
+    &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Next set</span>
+    Exit_ExportOneBuddyList:
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; itemCounter = itemCounter + <span class="nu0">1</span>
+    &nbsp; &nbsp; <span class="kw1">On</span> <span class="kw1">Error</span> <span class="kw1">Resume</span> <span class="kw1">Next</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; curItemName = defaultItemName &amp; <span class="st0">"."</span> &amp; <span class="kw1">CStr</span><span class="br0">(</span>itemCounter <span class="br0">)</span>
+    &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> out <span class="kw1">Is</span> <span class="kw1">Nothing</span> <span class="kw1">Then</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; <span class="kw1">Loop</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="kw1">Close</span> <span class="br0">(</span> <span class="br0">)</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; 
+    &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">Function</span>
    </div></li>
   <li class="li1">
-   <div class="de1"><span class="kw1">End</span><span class="kw1">Sub</span>
+   <div class="de1">
+    &nbsp; &nbsp;
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    Err_ExportOneBuddyList:
+   </div></li>
+  <li class="li2">
+   <div class="de2">
+    &nbsp; &nbsp; <span class="kw1">Print</span> <span class="kw1">Error$</span> &amp; <span class="st0">" in line "</span> &amp; <span class="kw1">CStr</span> <span class="br0">(</span> <span class="kw1">Erl</span> <span class="br0">)</span> &amp; <span class="st0">", function ExportOneBuddyList for user: "</span> &amp; curUser
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; ExportOneBuddyList = <span class="nu0">0</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="kw1">Resume</span> Exit_ExportOneBuddyList
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp;
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    <span class="kw1">End</span> <span class="kw1">Function</span>
+   </div></li>
+  <li class="li2">
+   <div class="de2">
+    &nbsp;
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp;
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    <span class="coMULTI">%REM</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    <span class="coMULTI">&nbsp; &nbsp; Sub WriteItemBytesToStream</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    <span class="coMULTI">&nbsp; &nbsp; Description: Writes out all the data found in an item into the</span>
+   </div></li>
+  <li class="li2">
+   <div class="de2">
+    <span class="coMULTI">&nbsp; &nbsp; Output stream for closure</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    <span class="coMULTI">%END REM</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    <span class="kw1">Sub</span> WriteItemBytesToStream <span class="br0">(</span>doc <span class="kw1">As</span> <span class="kw2">NotesDocument</span>, itemName <span class="kw1">As</span> <span class="kw1">String</span>, out <span class="kw1">As</span> <span class="kw2">NotesStream</span> <span class="br0">)</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="kw1">Dim</span> bytes <span class="kw1">As</span> <span class="kw1">Variant</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="kw1">Dim</span> isXMLStart <span class="kw1">As</span> <span class="kw1">Boolean</span>
+   </div></li>
+  <li class="li2">
+   <div class="de2">
+    &nbsp; &nbsp; <span class="kw1">Dim</span> DataTypeStorage <span class="kw1">As</span> <span class="kw1">String</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="kw1">Dim</span> tempStream <span class="kw1">As</span> <span class="kw2">NotesStream</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="kw1">Dim</span> startByte <span class="kw1">As</span> <span class="kw1">Long</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp;
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="kw1">On</span> <span class="kw1">Error</span> <span class="kw1">GoTo</span> Err_WriteItemBytesToStream
+   </div></li>
+  <li class="li2">
+   <div class="de2">
+    &nbsp; &nbsp;
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="co1">'The custom data type Lotus use to store Sametime Data</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; DataTypeStorage = <span class="st0">"UbqOpaque"</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; bytes = doc. <span class="me1">GetItemValueCustomDataBytes</span> <span class="br0">(</span>itemName, DataTypeStorage <span class="br0">)</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp;
+   </div></li>
+  <li class="li2">
+   <div class="de2">
+    &nbsp; &nbsp; <span class="co1">'we write out everything</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="kw1">Write</span> <span class="br0">(</span>bytes <span class="br0">)</span> &nbsp;
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp;
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    Exit_WriteItemBytesToStream:
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">Sub</span>
+   </div></li>
+  <li class="li2">
+   <div class="de2">
+    &nbsp; &nbsp;
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    Err_WriteItemBytesToStream:
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="kw1">Print</span> <span class="kw1">Error$</span> &amp; <span class="st0">" in WriteItemBytesToStream"</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="kw1">Resume</span> Exit_WriteItemBytesToStream
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp;
+   </div></li>
+  <li class="li2">
+   <div class="de2">
+    <span class="kw1">End</span> <span class="kw1">Sub</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    <span class="coMULTI">%REM</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    <span class="coMULTI">&nbsp; &nbsp; Sub PopulateStreamWithBuddyList</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    <span class="coMULTI">&nbsp; &nbsp; Description: Writes the item from 8193 into the stream (and subsequential subitems)</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    <span class="coMULTI">%END REM</span>
+   </div></li>
+  <li class="li2">
+   <div class="de2">
+    <span class="kw1">Sub</span> PopulateStreamWithBuddyList <span class="br0">(</span>doc <span class="kw1">As</span> <span class="kw2">NotesDocument</span>, out <span class="kw1">As</span> <span class="kw2">NotesStream</span> <span class="br0">)</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="kw1">Dim</span> itemCounter <span class="kw1">As</span> <span class="kw1">Integer</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="kw1">Dim</span> curItemName <span class="kw1">As</span> <span class="kw1">String</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp;
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp;
+   </div></li>
+  <li class="li2">
+   <div class="de2">
+    &nbsp; &nbsp;
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="co1">'Initial check - should not be needed since we won't call a doc that doesn't have it</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> doc. <span class="me1">Hasitem</span> <span class="br0">(</span>defaultItemName <span class="br0">)</span> <span class="kw1">Then</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Print</span> <span class="st0">"No item "</span> &amp; defaultItemName &amp; <span class="st0">"found"</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">sub</span>
+   </div></li>
+  <li class="li2">
+   <div class="de2">
+    &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp;
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="co1">'One call is needed then the others are optional</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="kw1">Call</span> WriteItemBytesToStream <span class="br0">(</span>doc, defaultItemName,out <span class="br0">)</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp;
+   </div></li>
+  <li class="li2">
+   <div class="de2">
+    &nbsp; &nbsp; <span class="co1">'If the Buddylist is REALLY large &gt; 40k there are more items left</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; itemCounter = <span class="nu0">1</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; curItemName = defaultItemName &amp; <span class="st0">"."</span> &amp; <span class="kw1">CStr</span> <span class="br0">(</span>itemCounter <span class="br0">)</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp;
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; <span class="kw1">Do</span> <span class="kw1">While</span> doc. <span class="me1">Hasitem</span> <span class="br0">(</span>curItemName <span class="br0">)</span>
+   </div></li>
+  <li class="li2">
+   <div class="de2">
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Write the additional items out</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> WriteItemBytesToStream <span class="br0">(</span>doc, curItemName,out <span class="br0">)</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Next set</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; &nbsp; &nbsp; itemCounter = itemCounter + <span class="nu0">1</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp; &nbsp; &nbsp; curItemName = defaultItemName &amp; <span class="st0">"."</span> &amp; <span class="kw1">CStr</span> <span class="br0">(</span>itemCounter <span class="br0">)</span>
+   </div></li>
+  <li class="li2">
+   <div class="de2">
+    &nbsp; &nbsp; <span class="kw1">Loop</span>
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp;
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    &nbsp; &nbsp;
+   </div></li>
+  <li class="li1">
+   <div class="de1">
+    <span class="kw1">End</span> <span class="kw1">Sub</span>
    </div></li>
  </ol>
 </div></div>

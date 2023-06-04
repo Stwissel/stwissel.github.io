@@ -6,7 +6,177 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Sun, 04 Jun 2023 09:43:24 +0000</pubdate>
+	<pubdate>Sun, 04 Jun 2023 14:21:48 +0000</pubdate>
+<item>
+	<title>Deploy a TypeScript app using Docker</title>
+	<description>&lt;svg xmlns="http://www.w3.org/2000/svg" class="adm-hidden"&gt;
+ &lt;symbol id="adm-note"&gt;
+  &lt;svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"&gt;
+   &lt;g fill="currentColor"&gt;
+    &lt;path d="m15.4 5h4.5v2.7h-4.5z" transform="matrix(-.7071 -.7071 .7071 -.7071 25.7188 23.288)" /&gt;
+    &lt;path d="m13.9 7 3.1 3.1-9.5 9.6-3.5.3.3-3.5z" /&gt;
+   &lt;/g&gt;
+  &lt;/svg&gt;
+ &lt;/symbol&gt;
+&lt;/svg&gt;
+&lt;p&gt;An application developed in TypeScript actually runs as JavaScript application. When deploying into a Docker image, wwe want to keep it small, here's how.&lt;/p&gt;
+&lt;h3&gt;Docker with a side of Docker&lt;/h3&gt;
+&lt;p&gt;Deployment has a few steps:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;Compile to JavaScript&lt;/li&gt;
+ &lt;li&gt;Successfully run all test&lt;/li&gt;
+ &lt;li&gt;Run code quality (e.g. &lt;a href="https://www.sonarsource.com/"&gt;Sonar&lt;/a&gt;)&lt;/li&gt;
+ &lt;li&gt;Finally package all up into the smallest of containers&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Using &lt;a href="/blog/2023/05/tiptoe-in-typescript.html"&gt;last weeks example&lt;/a&gt; these are the moving parts.&lt;/p&gt;
+&lt;h3&gt;Dockerfile&lt;/h3&gt;
+&lt;pre&gt;&lt;code class="language-docker"&gt;# build container using an LTS Node version
+# does not get deployed to runtime
+FROM node:18-alpine
+
+# Create app directory
+WORKDIR /usr
+COPY package*.json ./
+COPY tsconfig.json ./
+COPY src ./src
+COPY test ./test
+RUN npm install
+RUN npm run build
+
+# Actual runtime container using an LTS Node version
+FROM node:18-alpine
+
+# Create app directory
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+#Only compiled JS source
+COPY  --from=0 /usr/dist .
+
+# Labels
+LABEL org.opencontainers.image.source="https://github.com/[yourorg]/[yourrepo]"
+
+# Run it
+EXPOSE 8080
+CMD ["node","index.js"]
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;A few pointers/explanations are warranted:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;This builds two containers, one to compile and run tests, one to be deployed to its runtime environment (&lt;a href="https://m.do.co/c/2ad45997ce93"&gt;DigialOcean&lt;/a&gt;, &lt;a href="https://www.linode.com/"&gt;Linode&lt;/a&gt; or one of the &lt;a href="https://www.google.com/search?q=cloud+service+providers"&gt;big boys&lt;/a&gt;)&lt;/li&gt;
+ &lt;li&gt;for deployments stick to LTS versions&lt;/li&gt;
+ &lt;li&gt;&lt;a href="https://docs.npmjs.com/cli/v9/commands/npm-ci"&gt;&lt;code&gt;npm ci&lt;/code&gt;&lt;/a&gt; is similar to &lt;code&gt;npm install&lt;/code&gt;, just less verbose for CI use&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;GitHub action&lt;/h3&gt;
+&lt;p&gt;A &lt;a href="https://github.com/features/actions"&gt;GitHub Action&lt;/a&gt; is a convenient way to automate build &amp;amp; deployment&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-yaml"&gt;name: Build and deploy docker
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+
+jobs:
+  dockerbackend:
+    name: Build and store backend docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Backend
+        uses: actions/checkout@v3
+      - run: npm install
+
+      # Setup hardware emulator using QEMU
+      # needed so we can also run on ARM/Mac
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Docker Hub login
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: GitHub container Registry login
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+      - name: Build and Push
+        id: docker_build
+        uses: docker/build-push-action@v4
+        with:
+          context: ./
+          file: ./Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          platforms: linux/amd64, linux/arm64
+          tags: |
+            ghcr.io/[yourorg]/[your repo]:${GITHUB_REF##*/}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+
+      - name: deploy to runtime host
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEPLOYMENT_HOST }}
+          username: ${{ secrets.DEPLOYMENT_USER }}
+          key: ${{ secrets.DEPLOYMENT_KEY }}
+          script: ~/bin/update-${GITHUB_REF##*/}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;
+ &lt;li&gt;This action runs on push/merge to &lt;code&gt;main&lt;/code&gt; or &lt;code&gt;develop&lt;/code&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;${GITHUB_REF##*/}&lt;/code&gt; returns that branch name&lt;/li&gt;
+ &lt;li&gt;container images are build for Intel and Arm architecture, so it runs nicely on your M1/M2 Mac too&lt;/li&gt;
+ &lt;li&gt;container images are saved to the &lt;a href="https://ghcr.io/"&gt;Github Container registry&lt;/a&gt;, you might want to change that to you registry of choice&lt;/li&gt;
+ &lt;li&gt;All sensitive values are kept in &lt;a href="https://docs.github.com/en/actions/security-guides/encrypted-secrets"&gt;GitHub secrets&lt;/a&gt;, you need to update your repository with them&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;local script&lt;/h3&gt;
+&lt;p&gt;The final step is to get the deployment host to reload. Mine uses a &lt;code&gt;docker-compose.yml&lt;/code&gt; file to define the container runtime parameters, but command line would work as well.&lt;/p&gt;
+&lt;div class="adm-block adm-note"&gt;
+ &lt;div class="adm-heading"&gt;
+  &lt;svg class="adm-icon"&gt;
+   &lt;use xlink:href="#adm-note" /&gt;
+  &lt;/svg&gt;&lt;span&gt;The script name matches the branch&lt;/span&gt;
+ &lt;/div&gt;
+ &lt;div class="adm-body"&gt;
+  &lt;p&gt;The last line of the GitHub action &lt;code&gt;script: ~/bin/update-${GITHUB_REF##*/}&lt;/code&gt; uses&lt;br&gt;
+    a variable to compute the script name. So it will either run &lt;code&gt;update-main&lt;/code&gt; or &lt;code&gt;update-develop&lt;/code&gt;. Both files should be in th &lt;code&gt;~/bin&lt;/code&gt; directory of the user&lt;/p&gt;
+ &lt;/div&gt;
+&lt;/div&gt;
+&lt;pre&gt;&lt;code class="language-bash"&gt;#!/bin/bash
+cd /opt/myapp
+docker-compose pull
+docker-compose up -d
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2023/06/deploy-a-typescript-app-using-docker.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>867f9fd0-02d3-11ee-b016-fb241bb51570</guid>
+	<pubDate>04 June 2023</pubDate>
+
+</item>
 <item>
 	<title>TipToe in TypeScript</title>
 	<description>&lt;p&gt;&lt;a href="https://www.typescriptlang.org/"&gt;TypeScript&lt;/a&gt; is all the rage in JavaScript land and I'm enjoying the ride so far. I shall refrain from debating &lt;a href="https://www.google.com/search?q=typescript+vs.+javascript"&gt;TypeScript vs. JavaScript&lt;/a&gt; or &lt;a href="https://www.typescriptlang.org/play"&gt;geeting started&lt;/a&gt; activities. This article's focus getting a TypeScript (server side) project going in &lt;a href="https://code.visualstudio.com/"&gt;VSCode&lt;/a&gt;. It reflects what worked for me with my limited knowledge.&lt;/p&gt;
@@ -117,7 +287,8 @@ export default defineConfig({
 	<title>POPIAH - an agile journey in 8 iterations</title>
 	<description>&lt;p&gt;In a recent chat a store manager shared how tedious the annual physical stock taking is, since the company doesn't provide handheld barcode scanners. Why not use your phone I replied. So after a short discussion it was agreed to build a &lt;a href="https://www.productplan.com/glossary/minimum-viable-product/"&gt;MVP&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;The geek corner of my brain went into overdrive: databases, authentication, protocols, libraries - the whole shebang. If you don't reign into that, you end up with the famous "swing design"&lt;/p&gt;
-&lt;p&gt;&lt;img src="/blog/images/2023/treeswing.jpg" alt="Swing design, the customer wanted a tire"&gt;&lt;br&gt;&lt;br&gt; (shamelessly borrowed &lt;a href="https://socialsci.libretexts.org/Courses/Southwest_Tennessee_Community_College/Competent_Communication/01%3A_Introduction_to_Competent_Communication/1.02%3A_The_Process_of_Communication?readerView"&gt;from here&lt;/a&gt;)&lt;/p&gt;
+&lt;p&gt;&lt;img src="/blog/images/2023/treeswing.jpg" alt="Swing design, the customer wanted a tire"&gt;&lt;br&gt;&lt;br&gt;
+  (shamelessly borrowed &lt;a href="https://socialsci.libretexts.org/Courses/Southwest_Tennessee_Community_College/Competent_Communication/01%3A_Introduction_to_Competent_Communication/1.02%3A_The_Process_of_Communication?readerView"&gt;from here&lt;/a&gt;)&lt;/p&gt;
 &lt;p&gt;Luckily there's the agile way: add value incrementally. Our increment frequency was one improvement per 15min, tiny step by step ;-).&lt;/p&gt;
 &lt;p&gt;The result is POPIAH: &lt;strong&gt;P&lt;/strong&gt;oor &lt;strong&gt;O&lt;/strong&gt;perator's &lt;strong&gt;P&lt;/strong&gt;ersonal &lt;strong&gt;I&lt;/strong&gt;nventory &lt;strong&gt;A&lt;/strong&gt;ssessment &lt;strong&gt;H&lt;/strong&gt;elper (not &lt;a href="https://en.wikipedia.org/wiki/Popiah"&gt;that one&lt;/a&gt;). The final (for now - pending making it pretty) result looks like this:&lt;/p&gt;
 &lt;div style="text-align : center"&gt;
@@ -226,11 +397,13 @@ app.listen(port, () =&amp;gt; {
 </item>
 <item>
 	<title>Please wait until that HTTP service is ready</title>
-	<description>&lt;p&gt;Our brave new world of &lt;a href="https://kubernetes.io/"&gt;containers&lt;/a&gt; and &lt;a href="https://microservices.io/"&gt;microservices&lt;/a&gt; runs on a combination of &lt;a href="https://yaml.org/"&gt;YAML&lt;/a&gt; and &lt;a href="https://linux.die.net/man/1/bash"&gt;shell scripts&lt;/a&gt;.&lt;br&gt; Getting them to run in the desired sequence can be a challenge.&lt;/p&gt;
+	<description>&lt;p&gt;Our brave new world of &lt;a href="https://kubernetes.io/"&gt;containers&lt;/a&gt; and &lt;a href="https://microservices.io/"&gt;microservices&lt;/a&gt; runs on a combination of &lt;a href="https://yaml.org/"&gt;YAML&lt;/a&gt; and &lt;a href="https://linux.die.net/man/1/bash"&gt;shell scripts&lt;/a&gt;.&lt;br&gt;
+  Getting them to run in the desired sequence can be a challenge.&lt;/p&gt;
 &lt;h3&gt;When ready isn't ready&lt;/h3&gt;
 &lt;p&gt;All container environments have a "depends" clause, so the container runtime can determine the correct startup sequence for the zoo of containers comprising the application to be launched. Each container will usually signal when it is ready.&lt;/p&gt;
 &lt;p&gt;However &lt;em&gt;ready&lt;/em&gt; can mean different things to different applications.&lt;/p&gt;
-&lt;p&gt;In the container world it &lt;i&gt;should&lt;/i&gt; be: the service is available.&lt;br&gt; However it &lt;i&gt;could&lt;/i&gt; be: service was successfully started, but might be busy with house keeping. In the later case the start scripts of the dependent services need to do their own waiting&lt;/p&gt;
+&lt;p&gt;In the container world it &lt;i&gt;should&lt;/i&gt; be: the service is available.&lt;br&gt;
+  However it &lt;i&gt;could&lt;/i&gt; be: service was successfully started, but might be busy with house keeping. In the later case the start scripts of the dependent services need to do their own waiting&lt;/p&gt;
 &lt;h3&gt;&lt;a href="https://curl.se/"&gt;curl&lt;/a&gt; to the rescue&lt;/h3&gt;
 &lt;p&gt;Curl is the &lt;a href="https://amzn.to/3jHi8RN"&gt;Swiss Army Knive&lt;/a&gt; of network tools. It probably takes a lifetime to understand all its possibilities. Make sure you have the current version, but at least &lt;a href="https://curl.se/changes.html#7_52_0"&gt;7.52.0&lt;/a&gt; from 2016.&lt;/p&gt;
 &lt;p&gt;Whipping up a little shell script provides what we need:&lt;/p&gt;
@@ -275,62 +448,6 @@ fi
 	<author>Stephan H. Wissel</author>
 	<guid>1f239d20-8a5e-11ed-8d75-0b9a30c900e1</guid>
 	<pubDate>02 January 2023</pubDate>
-
-</item>
-<item>
-	<title>On Technical Interviews</title>
-	<description>&lt;p&gt;When the HCL Labs is hiring engineers, we conduct technical interviews. I had and have the priviledge to interview, hire and work with incredible talented individuals in the process. Lets look behind the curtain of the process.&lt;/p&gt;
-&lt;h3&gt;What we are looking for&lt;/h3&gt;
-&lt;p&gt;The technical interview is conducted by the interviewie's potential future colleagues. We try to gauge skills, conduct and team fit. Fit includes: does it improve diversity. You got a tatoo, tell me how you picked the design? You like tailored suits, who's your tailor? Punk is your thing, what's your favorite band? - You get the drift.&lt;/p&gt;
-&lt;p&gt;Can the candidate explain technology to peer engineers and understands the fundamental concepts? We found a surprising number of developers who don't know how their platform actually works. Topics like "The Node event loop" or "What does Maven do".&lt;/p&gt;
-&lt;p&gt;Knowing your environment is essential. Have you kept uptodate with latest changes, even your current role holds you back on applying them.&lt;/p&gt;
-&lt;p&gt;Does the candidate know about our "Buzzwords" &lt;a href="https://martinfowler.com/bliki/Yagni.html"&gt;YAGNI&lt;/a&gt;, &lt;a href="https://www.digitalocean.com/community/tutorials/what-is-dry-development"&gt;DRY&lt;/a&gt;, &lt;a href="https://www.interaction-design.org/literature/article/kiss-keep-it-simple-stupid-a-design-principle"&gt;KISS&lt;/a&gt;, &lt;a href="https://en.wikipedia.org/wiki/SOLID"&gt;SOLID&lt;/a&gt; or &lt;a href="https://en.wikipedia.org/wiki/Software_design_pattern"&gt;pattern&lt;/a&gt;&lt;/p&gt;
-&lt;h3&gt;What we ask&lt;/h3&gt;
-&lt;p&gt;Questions come from all areas: general project conducts, APIs, Code (mostly JS, TS &amp;amp; Java), HTTP and databases. We are looking not only for "I have x years experience", but also &lt;strong&gt;general awareness&lt;/strong&gt;.&lt;/p&gt;
-&lt;p&gt;Example: you might not have a chance to work with a graph database, but you know they exist, what they are supposed to solve. etc.&lt;/p&gt;
-&lt;p&gt;A little taste:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;How much &lt;a href="https://www.scrum.org/"&gt;Scrum&lt;/a&gt; does one entertain to be &lt;a href="http://agilemanifesto.org"&gt;agile&lt;/a&gt; and what's &lt;a href="https://heartofagile.com"&gt;the essence of agile&lt;/a&gt;&lt;/li&gt;
- &lt;li&gt;How to interact and resolve ambiguity in tasks and asks&lt;/li&gt;
- &lt;li&gt;On object oriented vs functional programming styles&lt;/li&gt;
- &lt;li&gt;Types of NoSQL databases and their uses&lt;/li&gt;
- &lt;li&gt;How do the joins (left, right, inner, outer) in an RDBMS work&lt;/li&gt;
- &lt;li&gt;Use cases for SQL and NoSQL&lt;/li&gt;
- &lt;li&gt;HTTP Verbs: POST vs PUT vs PATCH&lt;/li&gt;
- &lt;li&gt;REST &lt;a href="https://www.openapis.org"&gt;experience&lt;/a&gt; including &lt;a href="https://www.postman.com"&gt;a tool&lt;/a&gt; or &lt;a href="https://www.charlesproxy.com"&gt;another&lt;/a&gt;&lt;/li&gt;
- &lt;li&gt;HTTP return codes. Everyone knows &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200"&gt;200&lt;/a&gt;, some &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/201"&gt;201&lt;/a&gt; and the difference to 200, and a few &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/418"&gt;418&lt;/a&gt;&lt;/li&gt;
- &lt;li&gt;&lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS"&gt;CORS&lt;/a&gt; and &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP"&gt;CSP&lt;/a&gt;&lt;/li&gt;
- &lt;li&gt;Callbacks vs. Promises&lt;/li&gt;
- &lt;li&gt;&lt;code&gt;let&lt;/code&gt; vs &lt;code&gt;var&lt;/code&gt; vs &lt;code&gt;const&lt;/code&gt;&lt;/li&gt;
- &lt;li&gt;&lt;code&gt;function&lt;/code&gt; vs &lt;code&gt;=&amp;gt;&lt;/code&gt;&lt;/li&gt;
- &lt;li&gt;Loops vs streams&lt;/li&gt;
- &lt;li&gt;Testing: TDD, UnitTests and Integration Tests&lt;/li&gt;
- &lt;li&gt;SQL Injection and prevention&lt;/li&gt;
- &lt;li&gt;Maven &amp;amp; NPM&lt;/li&gt;
- &lt;li&gt;Git &amp;amp; GitHub&lt;/li&gt;
- &lt;li&gt;What do you use NodeJS for&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;Coding challenges&lt;/h3&gt;
-&lt;p&gt;Coding challenges in interviews &lt;a href="https://www.google.com/search?q=Do+coding+challenges+in+interviews+make+sense"&gt;are controversial&lt;/a&gt; and they are &lt;a href="https://betterprogramming.pub/3-reasons-why-coding-interviews-are-not-as-flawed-as-some-claim-8f1b82083cc4"&gt;usefull&lt;/a&gt;.&lt;br&gt; We keep ours simple and explicitely allow questions, dialogue or googling for answers, with the warning label: you need to explain your solution, no matter what.&lt;/p&gt;
-&lt;p&gt;Being a little sneaky we keep the challenge requirements fuzzy to check if the candidate will ask for clarifications.&lt;/p&gt;
-&lt;p&gt;The exercises are light and not too far from practical use:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;talk to an API&lt;/li&gt;
- &lt;li&gt;refactor code&lt;/li&gt;
- &lt;li&gt;fix performance&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;Work with us&lt;/h3&gt;
-&lt;p&gt;HCL &lt;a href="https://www.hcltech.com/geo-presence/philippines"&gt;in Manila&lt;/a&gt; is looking for engineers of all levels and career stages. Come join us, some current openings from Linkedin (links are temporary, grab them while they are hot):&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;&lt;a href="https://www.linkedin.com/jobs/view/3339235691/"&gt;Senior Software Developer&lt;/a&gt;&lt;/li&gt;
- &lt;li&gt;&lt;a href="https://www.linkedin.com/jobs/view/3339238264/"&gt;Lead Software Engineer&lt;/a&gt;&lt;/li&gt;
- &lt;li&gt;&lt;a href="https://www.linkedin.com/jobs/view/3149624605/"&gt;UX Designer&lt;/a&gt;&lt;/li&gt;
- &lt;li&gt;&lt;a href="https://www.linkedin.com/jobs/view/3392538874/"&gt;Documentation Lead (Technical Writer)&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;</description>
-	<link>2022/12/on-technical-interviews.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>f03fa7b0-79d2-11ed-bd62-079a420fb032</guid>
-	<pubDate>12 December 2022</pubDate>
 
 </item>
 

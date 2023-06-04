@@ -125,8 +125,10 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Domino 7 and Websphere 6 on Windows</small></h1>
 					<hr />
-					<div><br>Encouraged by <a href="/blog/2005/11/domino-654-and-websphere-601-on-windows.html">the ease</a> you can make Domino 6.5 and Websphere 6 to work together in all areas (HTTP, LDAP, Single SignOn) I tried my luck with Websphere 6 and Domino 7. Unfortunatly the Websphere plug-in installer doesn't offer Domino 7 as an option (nota bene: in R7 the location of a lot of Java stuff has moved like where to find Notes.jar). So I gave the 6.5 selection a shot. The LDAP integration worked smooth like silk, however the HTTP integration did not happen. The DSAPI filter entry wasn't created. So I peeped on the R6 installation and added the DSAPI filter name: 
-<br>domino5_http.dll. When I restarted the HTTP task I was greeted with an error message: 
+					<div><br>
+Encouraged by <a href="/blog/2005/11/domino-654-and-websphere-601-on-windows.html">the ease</a> you can make Domino 6.5 and Websphere 6 to work together in all areas (HTTP, LDAP, Single SignOn) I tried my luck with Websphere 6 and Domino 7. Unfortunatly the Websphere plug-in installer doesn't offer Domino 7 as an option (nota bene: in R7 the location of a lot of Java stuff has moved like where to find Notes.jar). So I gave the 6.5 selection a shot. The LDAP integration worked smooth like silk, however the HTTP integration did not happen. The DSAPI filter entry wasn't created. So I peeped on the R6 installation and added the DSAPI filter name: 
+<br>
+domino5_http.dll. When I restarted the HTTP task I was greeted with an error message: 
 <br>
 <br><tt>ERROR: WebSpherePluginCfg variable not defined in notes.ini</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; Define variable WebSpherePluginCfg=Location_Of_plugin-cfg.xml</tt>
@@ -134,16 +136,19 @@ ga('send', 'pageview');
 <br>
 <br><tt>ERROR: WebSphere HTTP DSAPI filter initialization failed. &nbsp;Return code = 3</tt>
 <br>
-<br>Hhm. A quick check on plugin-cfg.xml files showed, that there is only on in the Plugins/config/templates directory. That for sure doesn't fit into an active configuration. Luckily there is a <tt>Plugins/bin/configurewebserver1.bat</tt>command file which should do the trick. Unfortunatly it terminates with an error too. Well I won't let them quit to easy on me, so I had a look into the batch file. Websphere uses an amazing mix of batch files calling each other The parameters in the file look like this: 
+<br>
+Hhm. A quick check on plugin-cfg.xml files showed, that there is only on in the Plugins/config/templates directory. That for sure doesn't fit into an active configuration. Luckily there is a <tt>Plugins/bin/configurewebserver1.bat</tt>command file which should do the trick. Unfortunatly it terminates with an error too. Well I won't let them quit to easy on me, so I had a look into the batch file. Websphere uses an amazing mix of batch files calling each other The parameters in the file look like this: 
 <br>
 <br><tt>"C:\Java\WebSphere60\AppServer\profiles\default/bin/wsadmin.bat" -conntype NONE -f "C:\Java\WebSphere60\AppServer\bin\configureWebserverDefinition.jacl" webserver1 DOMINO "N:\\" "N:\\Domino7\\names.nsf" 80 MAP_ALL "C:\\Java\\WebSphere60\\Plugins" unmanaged rohandaNode01 rohanda windows</tt>
 <br>
-<br>The error stated the input parameters like: 
-<br>Input parameters: 
+<br>
+The error stated the input parameters like: 
+<br>
+Input parameters: 
 <br>
 <br><tt>&nbsp; Web server name &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; - webserver1</tt>
 <br><tt>&nbsp; Web server type &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; - DOMINO</tt>
-<br><tt>&nbsp; Web server install location - </tt><tt><b>N: N:\</b></tt><tt>Domino7\names.nsf</tt>
+<br><tt>&nbsp; Web server install location - </tt> <tt><b>N: N:\</b></tt> <tt>Domino7\names.nsf</tt>
 <br><tt>&nbsp; Web server config location &nbsp;- 80</tt>
 <br><tt>&nbsp; Web server port &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; - MAP_ALL</tt>
 <br><tt>&nbsp; Map Applications &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;- C:\Java\WebSphere60\Plugins</tt>
@@ -151,10 +156,12 @@ ga('send', 'pageview');
 <br><tt>&nbsp; Web server node type &nbsp; &nbsp; &nbsp; &nbsp;- unmanaged</tt>
 <br><tt>&nbsp; Web server node name &nbsp; &nbsp; &nbsp; &nbsp;- webserver1_node</tt>
 <br><tt>&nbsp; Web server host name &nbsp; &nbsp; &nbsp; &nbsp;- windows</tt>
-<br><tt>&nbsp; Web server operating system - </tt><tt><b>...nothing here ...</b></tt>
+<br><tt>&nbsp; Web server operating system - </tt> <tt><b>...nothing here ...</b></tt>
 <br>
-<br>So it looked like the "N:\\" wasn't such a good parameter. I replaced it with a wild guess: &nbsp; <tt>"c:\\Program Files\\Lotus\\Domino"</tt> and the installation batch file stated the right parameters and got very busy configuring the server. At this point I'm not sure if that wrong parameter is caused because of Domino7 or because the Domino server binaries are located on a different drive that the Domino data. Restarting the Domino still complained about the missing Websphereplugincfg. So back to square one and some peeping how it runs on the Domino6. There should be a plugin-cfg.xml in the <tt>C:\Java\WebSphere60\AppServer\profiles\default\config\cells\rohandaNode01Cell\nodes\rohandaNode01\servers\webserver1</tt>which isn't there. 
-<br>So another try.... stay tuned</div>
+<br>
+So it looked like the "N:\\" wasn't such a good parameter. I replaced it with a wild guess: &nbsp; <tt>"c:\\Program Files\\Lotus\\Domino"</tt> and the installation batch file stated the right parameters and got very busy configuring the server. At this point I'm not sure if that wrong parameter is caused because of Domino7 or because the Domino server binaries are located on a different drive that the Domino data. Restarting the Domino still complained about the missing Websphereplugincfg. So back to square one and some peeping how it runs on the Domino6. There should be a plugin-cfg.xml in the <tt>C:\Java\WebSphere60\AppServer\profiles\default\config\cells\rohandaNode01Cell\nodes\rohandaNode01\servers\webserver1</tt>which isn't there. 
+<br>
+So another try.... stay tuned</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">

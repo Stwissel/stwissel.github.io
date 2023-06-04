@@ -123,9 +123,12 @@ ga('send', 'pageview');
 					<h1><small>SmartCloud Notes little agent helper</small></h1>
 					<hr />
 					<div>Now that we all drank the <a href="https://www.facebook.com/permalink.php?story_fbid=237646932964228&amp;id=213826988636002">Cloud Computing</a> CoolAid, we need to make it work. IBM's <a href="https://www.ibm.com/cloud-computing/social/us/en/planspricing/">SmartCloud Notes</a> looks enticing, since it offers 25G of eMail storage, way beyond what IT departments usually want to commit. 
-<br> SmartCloud Notes even allows you <a href="http://www-10.lotus.com/ldd/dominowiki.nsf/dx/Customization_of_SmartCloud_Notes_web">customisation</a> albeit within <a href="http://www-10.lotus.com/ldd/bhwiki.nsf/dx/LotusLive_Notes_Template_Validation_Requirements">clear limits</a>. So before you <a href="http://www-10.lotus.com/ldd/bhwiki.nsf/xpDocViewer.xsp?lookupName=Administering+SmartCloud+Notes%3A+Hybrid+Environment#action=openDocument&amp;res_title=Using_extension_forms_files_to_customize_the_look_of_the_web_client_HY&amp;content=pdcontent">upload your extension forms</a> you need to plan well. 
-<br> One of the most unpleasant restrictions is: " <i>No customer agents or scripts will be executed on server </i>", so no agent, no DOLS tasks. However you can run an agent (or other code) <a href="http://www-10.lotus.com/ldd/bhwiki.nsf/dx/Using_server-based_agents_in_a_SmartCloud_Notes_hybrid_environment">on an on-premises server</a>. The interesting question is: when and how to trigger such code. Looking at the <a href="http://www-10.lotus.com/ldd/dominowiki.nsf/dx/The_basics_of_iNotes_customization">basic iNotes customization</a> article you can find the <code>Custom_Scene_PreSubmit_Lite</code> JavaScript function. This could be the place to launch such a trigger. More on that in the next installment. 
-<br> This article outlines the receiving end - the stuff that runs on your on-premises server. Instead of running agents, I'll outline a plug-in that allows to process the document submitted. The interface between SCN and this service is a JSON submission in the form of: 
+<br>
+ SmartCloud Notes even allows you <a href="http://www-10.lotus.com/ldd/dominowiki.nsf/dx/Customization_of_SmartCloud_Notes_web">customisation</a> albeit within <a href="http://www-10.lotus.com/ldd/bhwiki.nsf/dx/LotusLive_Notes_Template_Validation_Requirements">clear limits</a>. So before you <a href="http://www-10.lotus.com/ldd/bhwiki.nsf/xpDocViewer.xsp?lookupName=Administering+SmartCloud+Notes%3A+Hybrid+Environment#action=openDocument&amp;res_title=Using_extension_forms_files_to_customize_the_look_of_the_web_client_HY&amp;content=pdcontent">upload your extension forms</a> you need to plan well. 
+<br>
+ One of the most unpleasant restrictions is: " <i>No customer agents or scripts will be executed on server </i>", so no agent, no DOLS tasks. However you can run an agent (or other code) <a href="http://www-10.lotus.com/ldd/bhwiki.nsf/dx/Using_server-based_agents_in_a_SmartCloud_Notes_hybrid_environment">on an on-premises server</a>. The interesting question is: when and how to trigger such code. Looking at the <a href="http://www-10.lotus.com/ldd/dominowiki.nsf/dx/The_basics_of_iNotes_customization">basic iNotes customization</a> article you can find the <code>Custom_Scene_PreSubmit_Lite</code> JavaScript function. This could be the place to launch such a trigger. More on that in the next installment. 
+<br>
+ This article outlines the receiving end - the stuff that runs on your on-premises server. Instead of running agents, I'll outline a plug-in that allows to process the document submitted. The interface between SCN and this service is a JSON submission in the form of: 
 <br>
 <pre><code class="language-js">
 {
@@ -134,8 +137,10 @@ ga('send', 'pageview');
   "unid": "32char-unid"
 }
 </code></pre>
-<br> Once the plug-in receives this data, processing can commence. Of course the server (that's the ID the plug-in runs with) needs to have access to the mail file at the task required level. Let's get started: 
-<br> In a plugin project we define a new servlet: 
+<br>
+ Once the plug-in receives this data, processing can commence. Of course the server (that's the ID the plug-in runs with) needs to have access to the mail file at the task required level. Let's get started: 
+<br>
+ In a plugin project we define a new servlet: 
 <br>
 <pre><code class="language-xml">
 &lt;?xml version="1.0" encoding="UTF-8"?&gt;
@@ -151,7 +156,8 @@ ga('send', 'pageview');
    &lt;/extension&gt;
 &lt;/plugin&gt;
 </code></pre>
-<br> Then our servlet looks like this: 
+<br>
+ Then our servlet looks like this: 
 <br>
 <pre><code class="language-java">
 package com.notessensei.cloudproxy;
@@ -231,7 +237,8 @@ public class TaskServlet extends HttpServlet {
  }
 }
 </code></pre> ## 
-<br> The two interesting pieces are the CloudNotesTask and the UserCache. In my sample I use some Apache licensed Google libraries <a href="https://code.google.com/p/google-gson/">gson</a> and <a href="https://code.google.com/p/guava-libraries/">guava</a>. They make Java live much easier. From the guava library the Cache object is used, that automatically retrieves data when requested. The calling class just queries the cache and data acquisition is completely transparent. Look for yourself: 
+<br>
+ The two interesting pieces are the CloudNotesTask and the UserCache. In my sample I use some Apache licensed Google libraries <a href="https://code.google.com/p/google-gson/">gson</a> and <a href="https://code.google.com/p/guava-libraries/">guava</a>. They make Java live much easier. From the guava library the Cache object is used, that automatically retrieves data when requested. The calling class just queries the cache and data acquisition is completely transparent. Look for yourself: 
 <br>
 <pre><code class="language-java">
 package com.notessensei.cloudproxy;
@@ -301,7 +308,8 @@ public class UserCache {
     // TODO: verify that this works!
      Vector&lt;String&gt;userVector = new Vector&lt;&gt;(); userVector.add(user); Directory dir = session.getDirectory(); DirectoryNavigator nav = dir.lookupNames(LOOKUP_VIEW_NAME, userVector, serverFields, false); if (!nav.isNameLocated()) { throw new ExecutionException(new Throwable("Can't find user " + user)); } // Now assemble the result StringBuilder result = new StringBuilder(); result.append("notes://"); String serverName = nav.getFirstItemValue().get(0).toString(); String dbName = nav.getNextItemValue().get(0).toString(); Name name = session.createName(serverName); result.append(name.getCommon()); result.append("/"); result.append(dbName.replace("\\", "/")); TaskServlet.shred(name, nav, dir); return result.toString(); } } }
 </code></pre>
-<br> The next piece is the task, which uses a callback to process an individual document: 
+<br>
+ The next piece is the task, which uses a callback to process an individual document: 
 <br>
 <pre><code class="language-java">
 package com.notessensei.cloudproxy;
@@ -449,7 +457,8 @@ public class CloudNotesTask implements Runnable {
 
 }
 </code></pre>
-<br> Finally the interface and factory that does the actual work on the document: 
+<br>
+ Finally the interface and factory that does the actual work on the document: 
 <br>
 <pre><code class="language-java">
 package com.notessensei.cloudproxy;
@@ -483,7 +492,8 @@ public interface IDocumentTask {
 
 }
 </code></pre>
-<br> As usual: YMMV</div>
+<br>
+ As usual: YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">

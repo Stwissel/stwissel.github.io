@@ -123,20 +123,25 @@ ga('send', 'pageview');
 					<h1><small>Domino Anti-Pattern: Delete and Recreate</small></h1>
 					<hr />
 					<div>When reviewing agents or trouble shooting mis-behaving databases I come across a popular anti-pattern for Domino: delete and recreate. <a href="http://en.wikipedia.org/wiki/Antipattern">Anti-pattern</a> are well known failures for common known problems. "Delete and Recreate" can be found in report generating applications or databases that pull values from other sources like RDBMS or flat files. Mostly you can find that pattern when developers came from a RDMBS background where deleting equals the total removal of information. In Domino things are a little different. When you delete a document something remains back: a deletion stub. A deletion stub is the DocumentUniqueId plus a flag that says "I'm a deletion stub". The stub is then replicated to other servers or clients to also remove this document in the replica. The default life span of a deletion stub is 30 days. 
-<br>In a recent analysis I was looking at a database with just 400 documents, that was big, slow and prone to crashes. On closer examination I found an agent performing this pattern on the 400 documents every 30 minutes. Do your math: 400 x 48 x 30 = 576000. Quite some baggage for just 400 entries. 
-<br>So what are the alternatives? 
-<br>Requirements like this are often solved with another anti-pattern: "Loop through a big loop and do a dbLookup (or getDocumentByKey) for each iteration". But there is an easier way: Typically there is a sorted key (customer number, part number, record id etc.) that would be available in source and target. Create a collection for source and target and use what I call "The Tango" or "The Wiggle". The pseudo code looks like this: 
+<br>
+In a recent analysis I was looking at a database with just 400 documents, that was big, slow and prone to crashes. On closer examination I found an agent performing this pattern on the 400 documents every 30 minutes. Do your math: 400 x 48 x 30 = 576000. Quite some baggage for just 400 entries. 
+<br>
+So what are the alternatives? 
+<br>
+Requirements like this are often solved with another anti-pattern: "Loop through a big loop and do a dbLookup (or getDocumentByKey) for each iteration". But there is an easier way: Typically there is a sorted key (customer number, part number, record id etc.) that would be available in source and target. Create a collection for source and target and use what I call "The Tango" or "The Wiggle". The pseudo code looks like this: 
 <br>
 <ol>
- <li value="1">Read first source key and first target key </li>
- <li value="2">Do until you run out of keys </li>
- <li value="3">&nbsp;if source key is equal target key: call sub routine comparing the two records how they have to be compared and update and save target if it has changed (but not otherwise) </li>
- <li value="4">if source key is bigger than target key: get next target key and delete current target </li>
- <li value="5">if target key is bigger than source key: insert source document into target view and read next source document </li>
+ <li value="1">Read first source key and first target key</li>
+ <li value="2">Do until you run out of keys</li>
+ <li value="3">&nbsp;if source key is equal target key: call sub routine comparing the two records how they have to be compared and update and save target if it has changed (but not otherwise)</li>
+ <li value="4">if source key is bigger than target key: get next target key and delete current target</li>
+ <li value="5">if target key is bigger than source key: insert source document into target view and read next source document</li>
  <li value="6">End of the do loop</li>
 </ol>
-<br>Of course your production code needs to handle the case that you run out of source keys (= delete all remaining target documents) or target keys (=insert all remaining source documents). 
-<br>This way you don't create unnecessary zombie deletion stubs.</div>
+<br>
+Of course your production code needs to handle the case that you run out of source keys (= delete all remaining target documents) or target keys (=insert all remaining source documents). 
+<br>
+This way you don't create unnecessary zombie deletion stubs.</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">

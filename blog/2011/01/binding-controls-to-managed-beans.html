@@ -124,125 +124,222 @@ ga('send', 'pageview');
 					<hr />
 					<div>Out of the box XPages connect to <i>Notes Views</i> and <i>Notes Documents</i> as data sources. Other data souces require some <a href="https://www-950.ibm.com/events/wwe/lotus/lsph2011.nsf/sessionabstract?openform&amp;sessionid=SHOW107">advanced skills</a> you might not be ready to invest. However controls can be bound to many things, data sources are just one of them. Under the hood the data binding uses the JSF <a href="http://en.wikipedia.org/wiki/Unified_Expression_Language ">Expression Language</a> (EL). Since XPages knows a JavaScript binding you can bind your control to any JavaScript function, but that's not what I want to show today. One very interesting option (that is 1:1 JSF) is to bind your controls to a <i>managed bean</i>. So what is a managed bean? It sounds more complicated than it is. The <i>bean</i> part is a standard Java class that has a constructor without parameter (which is the default for a Java class anyway) and get/set methods pairs (more about that in just a moment). The <i>managed</i> part is an entry in the faces-config.xml where you define a "friendly" name for a Java class as well as the scope. If you use that <i>friendly name</i> in code (in SSJS or EL) the class instance is automatically created for the defined scope if it doesn't exist yet in that scope. Once the scope expires the object is automatically discarded. Since this works automagically the Java class is called "managed". An entry in your faces-config.xml (to find that file, open the Navigator view and look for /WebContent/WEB-INF/ in your NSF) could look like this: 
 <div class="xml">
-  &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-name<span class="re2">&gt;</span></span></span>demo <span class="sc3"><span class="re1">&lt;/managed-bean-name<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-class<span class="re2">&gt;</span></span></span>com.demo.ELTest <span class="sc3"><span class="re1">&lt;/managed-bean-class<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-scope<span class="re2">&gt;</span></span></span>session <span class="sc3"><span class="re1">&lt;/managed-bean-scope<span class="re2">&gt;</span></span></span>
- <br> &nbsp; <span class="sc3"><span class="re1">&lt;/managed-bean<span class="re2">&gt;</span></span></span>
+ &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-name<span class="re2">&gt;</span></span></span>demo <span class="sc3"><span class="re1">&lt;/managed-bean-name<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-class<span class="re2">&gt;</span></span></span>com.demo.ELTest <span class="sc3"><span class="re1">&lt;/managed-bean-class<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-scope<span class="re2">&gt;</span></span></span>session <span class="sc3"><span class="re1">&lt;/managed-bean-scope<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; <span class="sc3"><span class="re1">&lt;/managed-bean<span class="re2">&gt;</span></span></span>
 </div> With this entry a new top level object <i>demo</i> is available for use in EL or SSJS in the same way as you can use database, session, context etc. Our class is valid for the session context, so multiple XPages will see the same content. You can name your methods inside the Java class as you like and call them in SSJS, e.g. <code>demo.playTune()</code>. The more interesting use however is the bean use. If your (real live) object has e.g. 3 properties: <i>Name, Color, Taste</i>, then you would have 6 methods in Java, 2 each for each property: <code>getName(), setName(newName), getColor(), setColor(newColor), getTaste(), setTaste(newTaste)</code>. 
-<br>Once you follow this pattern you can refer to that property in EL just by its name: <code>demo.name, demo.color, demo.taste</code> (Note: no brackets here!). You enter that in XPages data binding in "Advanced / Expression Language". It will however appear in the regular data binding setting with the bean's friendly name as name of a data source. 
-<br>A little stumbling block: the properties start always <b>lowercase</b>, while the first letter after get/set must be <b>uppercase</b>. Also the get function needs to return the same data type as the set function takes in as a parameter. 
-<br> XPages inspects the bean for the get/set functions. If the set function is missing a control is automatically rendered read only, while a missing set function leaves an entry field empty. Once data is posted back to the server the set functions of your bean are called and it is up to you what to do with the data. Having named get/set function is great when you exactly know your object at design time. A very typical use for a bean binding however is retrieving a data set where you don't know what is coming. EL also can cater for that. Your Java class needs to implement a property that returns a <a href="http://download.oracle.com/javase/1.4.2/docs/api/java/util/Map.html">Java MAP</a> in a pair. e.g. <code>Map&lt;String, String&gt; getStuffProperties(); void setStuffProperties(Map&lt;String, String&gt; newProps);</code> Once you have that you can write as data binding in EL: <code>demo.stuffProperties["Color"]</code>. Here you have the freedom to use upper- or lowercase property names as you like. Of course you are not limited to a static string and have any expression EL is capable of at your disposal. This makes a quite powerful construct. Try it yourself! Use this simple Java class: 
-<div class="java5"><span class="kw2">package</span><span class="co2">com.demo</span><span class="sy0">;</span>
+<br>
+Once you follow this pattern you can refer to that property in EL just by its name: <code>demo.name, demo.color, demo.taste</code> (Note: no brackets here!). You enter that in XPages data binding in "Advanced / Expression Language". It will however appear in the regular data binding setting with the bean's friendly name as name of a data source. 
+<br>
+A little stumbling block: the properties start always <b>lowercase</b>, while the first letter after get/set must be <b>uppercase</b>. Also the get function needs to return the same data type as the set function takes in as a parameter. 
+<br>
+ XPages inspects the bean for the get/set functions. If the set function is missing a control is automatically rendered read only, while a missing set function leaves an entry field empty. Once data is posted back to the server the set functions of your bean are called and it is up to you what to do with the data. Having named get/set function is great when you exactly know your object at design time. A very typical use for a bean binding however is retrieving a data set where you don't know what is coming. EL also can cater for that. Your Java class needs to implement a property that returns a <a href="http://download.oracle.com/javase/1.4.2/docs/api/java/util/Map.html">Java MAP</a> in a pair. e.g. <code>Map&lt;String, String&gt; getStuffProperties(); void setStuffProperties(Map&lt;String, String&gt; newProps);</code> Once you have that you can write as data binding in EL: <code>demo.stuffProperties["Color"]</code>. Here you have the freedom to use upper- or lowercase property names as you like. Of course you are not limited to a static string and have any expression EL is capable of at your disposal. This makes a quite powerful construct. Try it yourself! Use this simple Java class: 
+<div class="java5">
+ <span class="kw2">package</span> <span class="co2">com.demo</span> <span class="sy0">;</span>
  <br>
- <br><span class="kw2">import</span><span class="co2">java.util.HashMap</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">java.util.Map</span><span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">java.util.HashMap</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">java.util.Map</span> <span class="sy0">;</span>
  <br>
- <br><span class="kw2">public</span><span class="kw2">class</span> ELTest <span class="br0">{</span>
+ <br><span class="kw2">public</span> <span class="kw2">class</span> ELTest <span class="br0">{</span>
  <br>
- <br> &nbsp; &nbsp; <span class="kw2">private</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> color <span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="kw2">private</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> taste <span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="kw2">private</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> name <span class="sy0">;</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw2">private</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/Map.html"><span class="kw46">Map</span></a><span class="sy0">&lt;</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a>, <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a><span class="sy0">&gt;</span> fruitProperties = <span class="kw2">new</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/HashMap.html"><span class="kw46">HashMap</span></a><span class="sy0">&lt;</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a>, <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a><span class="sy0">&gt;</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
  <br>
- <br> &nbsp; &nbsp; <span class="kw2">public</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> getColor <span class="br0">(</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">return</span> color <span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
+  &nbsp; &nbsp; <span class="kw2">private</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> color <span class="sy0">;</span>
  <br>
- <br> &nbsp; &nbsp; <span class="kw2">public</span><span class="kw3">void</span> setColor <span class="br0">(</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> color <span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">color</span> = color <span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">fruitProperties</span>. <span class="me1">put</span><span class="br0">(</span><span class="st0">"Color"</span>, color <span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
+  &nbsp; &nbsp; <span class="kw2">private</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> taste <span class="sy0">;</span>
  <br>
- <br> &nbsp; &nbsp; <span class="kw2">public</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> getTaste <span class="br0">(</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">return</span> taste <span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
+  &nbsp; &nbsp; <span class="kw2">private</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> name <span class="sy0">;</span>
  <br>
- <br> &nbsp; &nbsp; <span class="kw2">public</span><span class="kw3">void</span> setTaste <span class="br0">(</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> taste <span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">taste</span> = taste <span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">fruitProperties</span>. <span class="me1">put</span><span class="br0">(</span><span class="st0">"Taste"</span>, taste <span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
+  &nbsp; &nbsp; 
  <br>
- <br> &nbsp; &nbsp; <span class="kw2">public</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> getName <span class="br0">(</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">return</span> name <span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
+  &nbsp; &nbsp; <span class="kw2">private</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/Map.html"><span class="kw46">Map</span></a> <span class="sy0">&lt;</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a>, <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> <span class="sy0">&gt;</span> fruitProperties = <span class="kw2">new</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/HashMap.html"><span class="kw46">HashMap</span></a> <span class="sy0">&lt;</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a>, <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> <span class="sy0">&gt;</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
  <br>
- <br> &nbsp; &nbsp; <span class="kw2">public</span><span class="kw3">void</span> setName <span class="br0">(</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> name <span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">name</span> = name <span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">fruitProperties</span>. <span class="me1">put</span><span class="br0">(</span><span class="st0">"Name"</span>, name <span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
  <br>
- <br> &nbsp; &nbsp; <span class="kw2">public</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/Map.html"><span class="kw46">Map</span></a><span class="sy0">&lt;</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a>, <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a><span class="sy0">&gt;</span> getFruitProperties <span class="br0">(</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">return</span><span class="kw2">this</span>. <span class="me1">fruitProperties</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
+  &nbsp; &nbsp; <span class="kw2">public</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> getColor <span class="br0">(</span> <span class="br0">)</span> <span class="br0">{</span>
  <br>
- <br> &nbsp; &nbsp; <span class="kw2">public</span><span class="kw3">void</span> setFruitProperties <span class="br0">(</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/Map.html"><span class="kw46">Map</span></a><span class="sy0">&lt;</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a>, <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a><span class="sy0">&gt;</span> fruitProperties <span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">fruitProperties</span> = fruitProperties <span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; 
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">return</span> color <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">public</span> <span class="kw3">void</span> setColor <span class="br0">(</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> color <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">color</span> = color <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">fruitProperties</span>. <span class="me1">put</span> <span class="br0">(</span> <span class="st0">"Color"</span>, color <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">public</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> getTaste <span class="br0">(</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">return</span> taste <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">public</span> <span class="kw3">void</span> setTaste <span class="br0">(</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> taste <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">taste</span> = taste <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">fruitProperties</span>. <span class="me1">put</span> <span class="br0">(</span> <span class="st0">"Taste"</span>, taste <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">public</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> getName <span class="br0">(</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">return</span> name <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">public</span> <span class="kw3">void</span> setName <span class="br0">(</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> name <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">name</span> = name <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">fruitProperties</span>. <span class="me1">put</span> <span class="br0">(</span> <span class="st0">"Name"</span>, name <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">public</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/Map.html"><span class="kw46">Map</span></a> <span class="sy0">&lt;</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a>, <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> <span class="sy0">&gt;</span> getFruitProperties <span class="br0">(</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">return</span> <span class="kw2">this</span>. <span class="me1">fruitProperties</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">public</span> <span class="kw3">void</span> setFruitProperties <span class="br0">(</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/Map.html"><span class="kw46">Map</span></a> <span class="sy0">&lt;</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a>, <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> <span class="sy0">&gt;</span> fruitProperties <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">fruitProperties</span> = fruitProperties <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; 
  <br><span class="br0">}</span>
- <br> &nbsp; 
-</div><br>together with these two pages: 
-<div class="xml"><span class="sc3"><span class="re1">&lt;?xml</span> <span class="re0">version</span>=<span class="st0">"1.0"</span> <span class="re0">encoding</span>=<span class="st0">"UTF-8"</span><span class="re2">?&gt;</span></span>
+ <br>
+  &nbsp;
+</div><br>
+together with these two pages: 
+<div class="xml">
+ <span class="sc3"><span class="re1">&lt;?xml</span> <span class="re0">version</span>=<span class="st0">"1.0"</span> <span class="re0">encoding</span>=<span class="st0">"UTF-8"</span><span class="re2">?&gt;</span></span>
  <br><span class="sc3"><span class="re1">&lt;xp:view</span> <span class="re0">xmlns:xp</span>=<span class="st0">"http://www.ibm.com/xsp/core"</span><span class="re2">&gt;</span></span>
  <br>
- <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:table<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:tr<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:label</span> <span class="re0">value</span>=<span class="st0">"Name"</span> <span class="re0">id</span>=<span class="st0">"lblname"</span> <span class="re0">for</span>=<span class="st0">"txtName"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:label<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:inputText</span> <span class="re0">id</span>=<span class="st0">"txtName"</span> <span class="re0">value</span>=<span class="st0">"#{demo.name}"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:inputText<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:tr<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:tr<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:label</span> <span class="re0">value</span>=<span class="st0">"Color"</span> <span class="re0">id</span>=<span class="st0">"lblColor"</span> <span class="re0">for</span>=<span class="st0">"txtColor"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:label<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:inputText</span> <span class="re0">id</span>=<span class="st0">"txtColor"</span> <span class="re0">value</span>=<span class="st0">"#{demo.color}"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:inputText<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:tr<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:tr<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:label</span> <span class="re0">value</span>=<span class="st0">"Taste"</span> <span class="re0">id</span>=<span class="st0">"lblTaste"</span> <span class="re0">for</span>=<span class="st0">"txtTaste"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:label<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:inputText</span> <span class="re0">id</span>=<span class="st0">"txtTaste"</span> <span class="re0">value</span>=<span class="st0">"#{demo.taste}"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:inputText<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:tr<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:tr<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:button</span> <span class="re0">value</span>=<span class="st0">"Update"</span> <span class="re0">id</span>=<span class="st0">"button1"</span><span class="re2">&gt;</span><span class="re1">&lt;xp:eventHandler</span> <span class="re0">event</span>=<span class="st0">"onclick"</span> <span class="re0">submit</span>=<span class="st0">"true"</span> <span class="re0">refreshMode</span>=<span class="st0">"complete"</span> <span class="re0">immediate</span>=<span class="st0">"false"</span> <span class="re0">save</span>=<span class="st0">"true"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:eventHandler<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:button<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:tr<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:table<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:view<span class="re2">&gt;</span></span></span>
- <br> &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:table<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:tr<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:label</span> <span class="re0">value</span>=<span class="st0">"Name"</span> <span class="re0">id</span>=<span class="st0">"lblname"</span> <span class="re0">for</span>=<span class="st0">"txtName"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:label<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:inputText</span> <span class="re0">id</span>=<span class="st0">"txtName"</span> <span class="re0">value</span>=<span class="st0">"#{demo.name}"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:inputText<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:tr<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:tr<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:label</span> <span class="re0">value</span>=<span class="st0">"Color"</span> <span class="re0">id</span>=<span class="st0">"lblColor"</span> <span class="re0">for</span>=<span class="st0">"txtColor"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:label<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:inputText</span> <span class="re0">id</span>=<span class="st0">"txtColor"</span> <span class="re0">value</span>=<span class="st0">"#{demo.color}"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:inputText<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:tr<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:tr<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:label</span> <span class="re0">value</span>=<span class="st0">"Taste"</span> <span class="re0">id</span>=<span class="st0">"lblTaste"</span> <span class="re0">for</span>=<span class="st0">"txtTaste"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:label<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:inputText</span> <span class="re0">id</span>=<span class="st0">"txtTaste"</span> <span class="re0">value</span>=<span class="st0">"#{demo.taste}"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:inputText<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:tr<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:tr<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:button</span> <span class="re0">value</span>=<span class="st0">"Update"</span> <span class="re0">id</span>=<span class="st0">"button1"</span><span class="re2">&gt;</span><span class="re1">&lt;xp:eventHandler</span> <span class="re0">event</span>=<span class="st0">"onclick"</span> <span class="re0">submit</span>=<span class="st0">"true"</span> <span class="re0">refreshMode</span>=<span class="st0">"complete"</span> <span class="re0">immediate</span>=<span class="st0">"false"</span> <span class="re0">save</span>=<span class="st0">"true"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:eventHandler<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:button<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:tr<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:table<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:view<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp;
 </div> and here the Map bound version: 
-<div class="xml"><span class="sc3"><span class="re1">&lt;?xml</span> <span class="re0">version</span>=<span class="st0">"1.0"</span> <span class="re0">encoding</span>=<span class="st0">"UTF-8"</span><span class="re2">?&gt;</span></span>
+<div class="xml">
+ <span class="sc3"><span class="re1">&lt;?xml</span> <span class="re0">version</span>=<span class="st0">"1.0"</span> <span class="re0">encoding</span>=<span class="st0">"UTF-8"</span><span class="re2">?&gt;</span></span>
  <br><span class="sc3"><span class="re1">&lt;xp:view</span> <span class="re0">xmlns:xp</span>=<span class="st0">"http://www.ibm.com/xsp/core"</span><span class="re2">&gt;</span></span>
  <br>
- <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:table<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:tr<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:label</span> <span class="re0">value</span>=<span class="st0">"Name"</span> <span class="re0">id</span>=<span class="st0">"lblname"</span> <span class="re0">for</span>=<span class="st0">"txtName"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:label<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:inputText</span> <span class="re0">id</span>=<span class="st0">"txtName"</span><span class="re2">&gt;</span><span class="re1">&lt;xp:this.value<span class="re2">&gt;</span></span></span><span class="sc2">&lt;![CDATA[#{demo.fruitProperties["Name"]}&gt;</span><span class="sc3"><span class="re1">&lt;/xp:this.value<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:inputText<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:tr<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:tr<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:label</span> <span class="re0">value</span>=<span class="st0">"Color"</span> <span class="re0">id</span>=<span class="st0">"lblColor"</span> <span class="re0">for</span>=<span class="st0">"txtColor"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:label<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:inputText</span> <span class="re0">id</span>=<span class="st0">"txtColor"</span><span class="re2">&gt;</span><span class="re1">&lt;xp:this.value<span class="re2">&gt;</span></span></span><span class="sc2">&lt;!DATA[#{demo.fruitProperties["Color"]]&gt;</span><span class="sc3"><span class="re1">&lt;/xp:this.value<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:inputText<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:tr<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:tr<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:label</span> <span class="re0">value</span>=<span class="st0">"Taste"</span> <span class="re0">id</span>=<span class="st0">"lblTaste"</span> <span class="re0">for</span>=<span class="st0">"txtTaste"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:label<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:inputText</span> <span class="re0">id</span>=<span class="st0">"txtTaste"</span><span class="re2">&gt;</span><span class="re1">&lt;xp:this.value<span class="re2">&gt;</span></span></span><span class="sc2">&lt;![CDATA[#{demo.fruitProperties["Taste"]}]]&gt;</span><span class="sc3"><span class="re1">&lt;/xp:this.value<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:inputText<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:tr<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:tr<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:button</span> <span class="re0">value</span>=<span class="st0">"Update"</span> <span class="re0">id</span>=<span class="st0">"button1"</span><span class="re2">&gt;</span><span class="re1">&lt;xp:eventHandler</span> <span class="re0">event</span>=<span class="st0">"onclick"</span> <span class="re0">submit</span>=<span class="st0">"true"</span> <span class="re0">refreshMode</span>=<span class="st0">"complete"</span> <span class="re0">immediate</span>=<span class="st0">"false"</span> <span class="re0">save</span>=<span class="st0">"true"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:eventHandler<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:button<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:tr<span class="re2">&gt;</span></span></span>
- <br> &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:table<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:view<span class="re2">&gt;</span></span></span>
- <br> &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:table<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:tr<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:label</span> <span class="re0">value</span>=<span class="st0">"Name"</span> <span class="re0">id</span>=<span class="st0">"lblname"</span> <span class="re0">for</span>=<span class="st0">"txtName"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:label<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:inputText</span> <span class="re0">id</span>=<span class="st0">"txtName"</span><span class="re2">&gt;</span><span class="re1">&lt;xp:this.value<span class="re2">&gt;</span></span></span> <span class="sc2">&lt;![CDATA[#{demo.fruitProperties["Name"]}&gt;</span> <span class="sc3"><span class="re1">&lt;/xp:this.value<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:inputText<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:tr<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:tr<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:label</span> <span class="re0">value</span>=<span class="st0">"Color"</span> <span class="re0">id</span>=<span class="st0">"lblColor"</span> <span class="re0">for</span>=<span class="st0">"txtColor"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:label<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:inputText</span> <span class="re0">id</span>=<span class="st0">"txtColor"</span><span class="re2">&gt;</span><span class="re1">&lt;xp:this.value<span class="re2">&gt;</span></span></span> <span class="sc2">&lt;!DATA[#{demo.fruitProperties["Color"]]&gt;</span> <span class="sc3"><span class="re1">&lt;/xp:this.value<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:inputText<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:tr<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:tr<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:label</span> <span class="re0">value</span>=<span class="st0">"Taste"</span> <span class="re0">id</span>=<span class="st0">"lblTaste"</span> <span class="re0">for</span>=<span class="st0">"txtTaste"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:label<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:inputText</span> <span class="re0">id</span>=<span class="st0">"txtTaste"</span><span class="re2">&gt;</span><span class="re1">&lt;xp:this.value<span class="re2">&gt;</span></span></span> <span class="sc2">&lt;![CDATA[#{demo.fruitProperties["Taste"]}]]&gt;</span> <span class="sc3"><span class="re1">&lt;/xp:this.value<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:inputText<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:tr<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:tr<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;xp:button</span> <span class="re0">value</span>=<span class="st0">"Update"</span> <span class="re0">id</span>=<span class="st0">"button1"</span><span class="re2">&gt;</span><span class="re1">&lt;xp:eventHandler</span> <span class="re0">event</span>=<span class="st0">"onclick"</span> <span class="re0">submit</span>=<span class="st0">"true"</span> <span class="re0">refreshMode</span>=<span class="st0">"complete"</span> <span class="re0">immediate</span>=<span class="st0">"false"</span> <span class="re0">save</span>=<span class="st0">"true"</span><span class="re2">&gt;</span><span class="re1">&lt;/xp:eventHandler<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:button<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:td<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:tr<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;/xp:table<span class="re2">&gt;</span></span><span class="re1">&lt;/xp:view<span class="re2">&gt;</span></span></span>
+ <br>
+  &nbsp;
 </div> As usual: YMMV</div>
 					<hr />
 					<p>

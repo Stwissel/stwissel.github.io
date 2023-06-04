@@ -124,18 +124,19 @@ ga('send', 'pageview');
 					<hr />
 					<div>One of the hallmarks and success factors of IBM Notes was the openness of the design of all Notes applications. Since lots of people put <a href="http://en.wikipedia.org/wiki/Blood,_Sweat_%26_Tears">blood, sweat and tears</a> into their applications, Lotus added the possibility to hide the design of an application to protect it from spying eyes. While I don't like hidden designs I can understand the rationale. 
 <br><a href="http://www.eproductivity.com">Others</a> keep their design open, but compile the LotusScript libraries with references to lss files outside, so the core business logic is protected. 
-<br> Hiding the design <a href="http://www.eknori.de/2013-07-13/hacking-notes-applications-with-hidden-design/">doesn't work for XPages</a>, you can <a href="http://www.ytria.com/">poke around</a> and get back to the source. So what are your options? 
+<br>
+ Hiding the design <a href="http://www.eknori.de/2013-07-13/hacking-notes-applications-with-hidden-design/">doesn't work for XPages</a>, you can <a href="http://www.ytria.com/">poke around</a> and get back to the source. So what are your options? 
 <ul>
  <li>Keep your business logic in Java classes (<a href="http://en.wikipedia.org/wiki/Plain_Old_Java_Object">Pojo</a>, Beans, Managed Beans) and develop them outside of the NSF and transfer them as <a href="http://en.wikipedia.org/wiki/JAR_%28file_format%29">jar</a> file only</li>
  <li>Deliver your custom controls as <a href="http://www-10.lotus.com/ldd/ddwiki.nsf/dx/Master_Table_of_Contents_for_XPages_Extensibility_APIs_Developer_Guide">Extension Library</a> (which can be deployed using an NSF) - which obviously requires advanced Skills</li>
  <li>Keep your XPages lean and handle the delicate parts in custom controls that you hide (see below)</li>
 </ul> Of course compiled Java can be <a href="http://java.decompiler.free.fr/">transformed back</a> to Java source code, so you might want to add another layer using <a href="http://java-source.net/open-source/obfuscators">Java obfuscation</a>, but then you might have crossed the line between precaution and <a href="http://en.wikipedia.org/wiki/Paranoia">paranoia</a> (to my best knowledge IBM doesn't use obfuscation in Java products). An additional level of protection is offered using <a href="http://www.waterfall2006.com/gorman.html">Refuctoring</a> (no, that's not a typo). 
-<br> So how would a typical workflow look like? There seem to be quite some moving parts involved: 
 <br>
-<img src="/blog/images/2013/ProtectXPages.jpg" border="0" alt="Protecting XPages Workflow">
+ So how would a typical workflow look like? There seem to be quite some moving parts involved: 
+<br><img src="/blog/images/2013/ProtectXPages.jpg" border="0" alt="Protecting XPages Workflow">
 <ol>
  <li>Develop and test your application as per normal. Keep items you want to protect in custom controls and Java classes</li>
- <li>Make sure you have your project build before doing the next steps </li>
+ <li>Make sure you have your project build before doing the next steps</li>
  <li>Link your database to an On Disk Project for version control (but you do that anyway don't you?). Let's call that project "<i>OnDisk Open</i>"</li>
  <li>Have your target database (the one that you will deliver to your customer) setup in a similar way. Let's call that project "<i>OnDisk Closed</i>"</li>
  <li>Copy all elements you want to keep open (Forms, Views, XPages, CSS etc.) from <i>OnDisk Open</i> to <i>OnDisk Closed</i></li>
@@ -149,11 +150,12 @@ ga('send', 'pageview');
 </ol> With a little skill those steps can be automated.Enter <a href="https://ant.apache.org/">Apache ANT</a>. Ant can copy, compile, stuff in Jar, update properties files etc. There are pointers to consider when using ANT in a Domino project: 
 <ul>
  <li>ANT is unaware of the <a href="http://help.eclipse.org/indigo/index.jsp?topic=%2Forg.eclipse.platform.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fcore%2Ffilesystem%2FEFS.html">EFS</a> (Eclipse Virtual File System), it acts on regular files only, so your operations need to run against the OnDisk projects rather the NSF directly</li>
- <li>The Java compile command is unaware of Eclipse and its classpath too. You need to specify that. Is is easier than it looks. Use the Navigator view to locate the <code>build.properties</code> file, right click on it, select PDETools - Create ANT build file. It will create a build.xml you can use for starters. The piece you are interested in is <code>&lt;path id="Plug-in Dependencies.libraryclasspath"&gt;</code>. You need to add that to your compile classpath together with your bin directory in a statement like this:<br> <code>&lt;path id="YourBeans.classpath"&gt;&lt;pathelement location="bin" /&gt;&lt;path refid="Plug-in Dependencies.libraryclasspath" /&gt;&lt;/path&gt;</code></li>
+ <li>The Java compile command is unaware of Eclipse and its classpath too. You need to specify that. Is is easier than it looks. Use the Navigator view to locate the <code>build.properties</code> file, right click on it, select PDETools - Create ANT build file. It will create a build.xml you can use for starters. The piece you are interested in is <code>&lt;path id="Plug-in Dependencies.libraryclasspath"&gt;</code>. You need to add that to your compile classpath together with your bin directory in a statement like this:<br><code>&lt;path id="YourBeans.classpath"&gt;&lt;pathelement location="bin" /&gt;&lt;path refid="Plug-in Dependencies.libraryclasspath" /&gt;&lt;/path&gt;</code></li>
  <li>Configure your Domino Designer to automatically pick up changes from the file system. File - Preferences - Workspace - Refresh automatically</li>
  <li>While you are on it, generate your JavaDocs too</li>
 </ul> A complete ANT build script could look like this (I took out the content of <i>Plug-in Dependencies.libraryclasspath</i>): 
-<div class="xml"><span class="sc3"><span class="re1">&lt;?xml</span> <span class="re0">version</span>=<span class="st0">"1.0"</span><span class="re2">?&gt;</span></span>
+<div class="xml">
+ <span class="sc3"><span class="re1">&lt;?xml</span> <span class="re0">version</span>=<span class="st0">"1.0"</span><span class="re2">?&gt;</span></span>
  <br><span class="sc3"><span class="re1">&lt;project</span> <span class="re0">name</span>=<span class="st0">"Protect XPages"</span> <span class="re0">default</span>=<span class="st0">"main"</span> <span class="re0">basedir</span>=<span class="st0">"."</span><span class="re2">&gt;</span></span>
  <br><span class="sc-1">&lt;!-- Sets variables which can later be used. --&gt;</span>
  <br><span class="sc-1">&lt;!-- The value of a property is accessed via ${} --&gt;</span>
@@ -163,7 +165,8 @@ ga('send', 'pageview');
  <br><span class="sc3"><span class="re1">&lt;property</span> <span class="re0">name</span>=<span class="st0">"closed.project.dir"</span> <span class="re0">location</span>=<span class="st0">"C:\ondisk\closed"</span> <span class="re2">/&gt;</span></span>
  <br>
  <br><span class="sc3"><span class="re1">&lt;path</span> <span class="re0">id</span>=<span class="st0">"Plug-in Dependencies.libraryclasspath"</span><span class="re2">&gt;</span></span>
- <br> ... 
+ <br>
+  ... 
  <br><span class="sc3"><span class="re1">&lt;/path<span class="re2">&gt;</span></span></span>
  <br>
  <br><span class="sc3"><span class="re1">&lt;path</span> <span class="re0">id</span>=<span class="st0">"YourBeans.classpath"</span><span class="re2">&gt;</span></span>
@@ -219,7 +222,8 @@ ga('send', 'pageview');
  <br><span class="sc3"><span class="re1">&lt;/fileset<span class="re2">&gt;</span></span></span>
  <br><span class="sc3"><span class="re1">&lt;/copy<span class="re2">&gt;</span></span></span>
  <br><span class="sc-1">&lt;!-- 1:1 copy of forms/views and other stuff omitted here --&gt;</span>
- <br> ... 
+ <br>
+  ... 
  <br><span class="sc3"><span class="re1">&lt;/target<span class="re2">&gt;</span></span></span>
  <br>
  <br><span class="sc3"><span class="re1">&lt;target</span> <span class="re0">name</span>=<span class="st0">"main"</span> <span class="re0">depends</span>=<span class="st0">"copy, compile, docs, jar"</span><span class="re2">&gt;</span></span>
@@ -227,7 +231,8 @@ ga('send', 'pageview');
  <br><span class="sc3"><span class="re1">&lt;/target<span class="re2">&gt;</span></span></span>
  <br><span class="sc3"><span class="re1">&lt;/project<span class="re2">&gt;</span></span></span>
 </div> You can run this ANT file, by right clicking on in in Domino Designer selecting "Run as ANT file". 
-<br> As usual YMMV</div>
+<br>
+ As usual YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">

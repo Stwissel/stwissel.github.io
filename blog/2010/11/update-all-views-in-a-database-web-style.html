@@ -124,125 +124,271 @@ ga('send', 'pageview');
 					<hr />
 					<div>It is a bad idea to check the property "hide from Notes client" on a view. If you do this you burden your HTTP task with refreshing that view rather than leaving that to the indexer task (which would run in its own thread on its own processor(s). The better way to hide views from Notes clients (for convenience) is to start their name with <code>(</code>. The <a href="http://techlab.ytria.com/485/lotus-notes-secrets/hiding-views-notes-client-bring-domino-server-knees/">Performance impact</a> can be quite positive once you fix them (and bad if you don't). Until you get the approval and find the time to fix the view visibility a method is needed to quickly update all database views from a web perspective. In my toolbox there is a little script that does exactly that. The nice aspect of it: it lives in a utility database and takes the database to work on as a parameter: 
 <br><code>http://mywebserver/senseitoolbox.nsf/webupdateviews?openAgent&amp;database=apps/hr/webleave.nsf</code> The agent renders a page with a link to each view in the database (I don't check for the "hide from web" property) and an Ajax call that opens ever view once through the URL and records completion. Completion doesn't imply success. I'm not monitoring for return codes or so. The agent is a good interim helper until the view visibility to the indexing task has been restored. 
-<br> As usual YMMV<div class="lotusscript"><span class="coMULTI">%REM<br> &nbsp; &nbsp; Agent (webUpdateViews)<br> &nbsp; &nbsp; Created Nov 23, 2010 by Stephan H Wissel/Singapore/IBM<br> &nbsp; &nbsp; Description: Agent to refesh all views in the database using URL open<br> %END REM</span>
- <br><span class="kw1">Option</span><span class="kw1">Public</span>
- <br><span class="kw1">Option</span><span class="kw1">Declare</span>
+<br>
+ As usual YMMV<div class="lotusscript">
+ <span class="coMULTI">%REM<br>
+   &nbsp; &nbsp; Agent (webUpdateViews)<br>
+   &nbsp; &nbsp; Created Nov 23, 2010 by Stephan H Wissel/Singapore/IBM<br>
+   &nbsp; &nbsp; Description: Agent to refesh all views in the database using URL open<br>
+   %END REM</span>
+ <br><span class="kw1">Option</span> <span class="kw1">Public</span>
+ <br><span class="kw1">Option</span> <span class="kw1">Declare</span>
  <br>
- <br><span class="kw1">Public</span><span class="kw1">Const</span> queryStringName = <span class="st0">"QUERY_STRING_DECODED"</span>
+ <br><span class="kw1">Public</span> <span class="kw1">Const</span> queryStringName = <span class="st0">"QUERY_STRING_DECODED"</span>
  <br>
  <br><span class="kw1">Sub</span> Initialize 
- <br> &nbsp; &nbsp; <span class="kw1">Dim</span> s <span class="kw1">As</span><span class="kw1">New</span><span class="kw2">NotesSession</span>
- <br> &nbsp; &nbsp; <span class="kw1">Dim</span> db <span class="kw1">As</span><span class="kw2">NotesDatabase</span>
- <br> &nbsp; &nbsp; <span class="kw1">Dim</span> workDB <span class="kw1">As</span><span class="kw2">NotesDatabase</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">Dim</span> doc <span class="kw1">As</span><span class="kw2">NotesDocument</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">Set</span> db = s. <span class="me1">Currentdatabase</span>
- <br> &nbsp; &nbsp; <span class="kw1">Set</span> doc = s. <span class="me1">Documentcontext</span>
  <br>
- <br> &nbsp; &nbsp; <span class="kw1">Dim</span> dbNameItem <span class="kw1">As</span><span class="kw2">NotesItem</span>
- <br> &nbsp; &nbsp; <span class="kw1">Dim</span> work <span class="kw1">As</span><span class="kw1">Variant</span><span class="co1">'For the evaluation of the database</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">Not</span> doc. <span class="me1">Hasitem</span><span class="br0">(</span>queryStringName <span class="br0">)</span><span class="kw1">Then</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Print</span><span class="st0">"You need a querystring for this agent to work"</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span><span class="kw1">sub</span>
- <br> &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">Set</span> dbNameItem = doc. <span class="me1">Getfirstitem</span><span class="br0">(</span>queryStringName <span class="br0">)</span>
- <br> &nbsp; &nbsp; <span class="co1">'Get the database name on the server</span>
- <br> &nbsp; &nbsp; work = <span class="kw1">Evaluate</span><span class="br0">(</span><span class="st0">|@trim(@Left(@Right("|</span>+dbNameItem. <span class="kw1">Text</span>+ <span class="st0">|&amp;";"&amp;database=");"&amp;"))|</span><span class="br0">)</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">If</span> work <span class="br0">(</span><span class="nu0">0</span><span class="br0">)</span> = <span class="st0">""</span><span class="kw1">Then</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Print</span><span class="st0">"You need to specify the database on the server with &amp;amp;database="</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span><span class="kw1">sub</span>
- <br> &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">Set</span> workDB = <span class="kw1">New</span><span class="kw2">NotesDatabase</span><span class="br0">(</span><span class="st0">""</span>,work <span class="br0">(</span><span class="nu0">0</span><span class="br0">)</span><span class="br0">)</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">Not</span> workDB. <span class="me1">Isopen</span><span class="kw1">Then</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> workDB. <span class="kw1">Open</span><span class="br0">(</span><span class="st0">""</span>, <span class="st0">""</span><span class="br0">)</span>
- <br> &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">Not</span> workDB. <span class="me1">Isopen</span><span class="kw1">Then</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Print</span><span class="st0">"Could not open the database "</span>+work <span class="br0">(</span><span class="nu0">0</span><span class="br0">)</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span><span class="kw1">sub</span>
- <br> &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">Call</span> RenderAjax <span class="br0">(</span>s, workDB <span class="br0">)</span>
- <br> &nbsp; &nbsp; 
- <br><span class="kw1">End</span><span class="kw1">Sub</span>
+  &nbsp; &nbsp; <span class="kw1">Dim</span> s <span class="kw1">As</span> <span class="kw1">New</span> <span class="kw2">NotesSession</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Dim</span> db <span class="kw1">As</span> <span class="kw2">NotesDatabase</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Dim</span> workDB <span class="kw1">As</span> <span class="kw2">NotesDatabase</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Dim</span> doc <span class="kw1">As</span> <span class="kw2">NotesDocument</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Set</span> db = s. <span class="me1">Currentdatabase</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Set</span> doc = s. <span class="me1">Documentcontext</span>
  <br>
  <br>
- <br><span class="coMULTI">%REM<br> &nbsp; &nbsp; Sub RenderAjax<br> &nbsp; &nbsp; Description: Renders a HTML Page that goes nicely with Ajax<br> %END REM</span>
- <br><span class="kw1">Sub</span> RenderAjax <span class="br0">(</span>s <span class="kw1">As</span><span class="kw2">NotesSession</span>, db <span class="kw1">As</span><span class="kw2">NotesDatabase</span><span class="br0">)</span>
- <br> &nbsp; &nbsp; <span class="kw1">Dim</span> out <span class="kw1">As</span><span class="kw2">NotesStream</span>
- <br> &nbsp; &nbsp; <span class="kw1">Dim</span> script <span class="kw1">As</span><span class="kw2">NotesStream</span>
- <br> &nbsp; &nbsp; <span class="kw1">Dim</span> url <span class="kw1">As</span><span class="kw1">String</span>
- <br> &nbsp; &nbsp; <span class="kw1">Dim</span> curVurl <span class="kw1">As</span><span class="kw1">String</span>
- <br> &nbsp; &nbsp; <span class="kw1">Dim</span> i <span class="kw1">As</span><span class="kw1">Integer</span>
- <br> &nbsp; &nbsp; <span class="kw1">Dim</span> v <span class="kw1">As</span><span class="kw2">NotesView</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">If</span> db. <span class="me1">Httpurl</span> = <span class="st0">""</span><span class="kw1">Then</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; url = <span class="st0">"http://localhost/__"</span>+db. <span class="me1">Replicaid</span>+ <span class="st0">".nsf/"</span>
- <br> &nbsp; &nbsp; <span class="kw1">Else</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; url = db. <span class="me1">Httpurl</span>+ <span class="st0">"/"</span>
- <br> &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
- <br> &nbsp; &nbsp; <span class="kw1">Set</span> out = s. <span class="me1">Createstream</span><span class="br0">(</span><span class="br0">)</span>
- <br> &nbsp; &nbsp; <span class="kw1">Set</span> script = s. <span class="me1">Createstream</span><span class="br0">(</span><span class="br0">)</span>
- <br> &nbsp; &nbsp; <span class="kw1">Call</span> script. <span class="me1">Writetext</span><span class="br0">(</span><span class="st0">|&lt;script language="JavaScript" type="text/javascript"&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
- <br> &nbsp; &nbsp; <span class="kw1">Call</span> addJSFunctions <span class="br0">(</span>script <span class="br0">)</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span><span class="br0">(</span><span class="st0">"&lt;h1&gt;Auto Refresh for "</span>+db. <span class="me1">Filepath</span> + <span class="st0">"&lt;/h1&gt;"</span>,EOL_PLATFORM <span class="br0">)</span>
- <br> &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span><span class="br0">(</span><span class="st0">|&lt;h2&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
- <br> &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span><span class="br0">(</span>url,EOL_PLATFORM <span class="br0">)</span>
- <br> &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span><span class="br0">(</span><span class="st0">|&lt;/h2&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
- <br> &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span><span class="br0">(</span><span class="st0">|&lt;div id="result"&gt;Result&lt;/div&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
- <br> &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span><span class="br0">(</span><span class="st0">|&lt;ol&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; i = <span class="nu0">0</span>
- <br> &nbsp; &nbsp; <span class="kw1">ForAll</span> curV <span class="kw1">In</span> db. <span class="me1">Views</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> v = curV 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">Not</span> v. <span class="me1">Isfolder</span><span class="kw1">Then</span><span class="co1">'No point updating folders</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'This is just for the Show</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span><span class="br0">(</span><span class="st0">|&lt;li&gt;&lt;a href="|</span><span class="br0">)</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span><span class="kw1">IsArray</span><span class="br0">(</span>v. <span class="me1">Aliases</span><span class="br0">)</span><span class="kw1">then</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> v. <span class="me1">Aliases</span><span class="br0">(</span><span class="nu0">0</span><span class="br0">)</span> &lt;&gt; <span class="st0">""</span><span class="kw1">Then</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; curVurl = url + v. <span class="me1">Aliases</span><span class="br0">(</span><span class="nu0">0</span><span class="br0">)</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Else</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; curVurl = url + v. <span class="kw1">Name</span>&nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Else</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; curVurl = url + v. <span class="kw1">Name</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span><span class="br0">(</span>curVurl <span class="br0">)</span> &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span><span class="br0">(</span><span class="st0">|?Open"&gt;|</span>+v. <span class="kw1">Name</span>+ <span class="st0">|&lt;/a&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span><span class="br0">(</span><span class="st0">|&lt;/li&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'This is the real work</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> script. <span class="me1">Writetext</span><span class="br0">(</span><span class="st0">|views[|</span>+ <span class="kw1">CStr</span><span class="br0">(</span>i <span class="br0">)</span>+ <span class="st0">|] = "|</span>+curVurl+ <span class="st0">|";|</span>,EOL_PLATFORM <span class="br0">)</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Increment</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; i = i + <span class="nu0">1</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">If</span>
- <br> &nbsp; &nbsp; <span class="kw1">End</span><span class="kw1">ForAll</span>
+  &nbsp; &nbsp; <span class="kw1">Dim</span> dbNameItem <span class="kw1">As</span> <span class="kw2">NotesItem</span>
  <br>
- <br> &nbsp; &nbsp; <span class="kw1">Call</span> script. <span class="me1">Writetext</span><span class="br0">(</span><span class="st0">|callAllViews(0)|</span>,EOL_PLATFORM <span class="br0">)</span>
- <br> &nbsp; &nbsp; <span class="kw1">Call</span> script. <span class="me1">Writetext</span><span class="br0">(</span><span class="st0">|&lt;/script&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
- <br> &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span><span class="br0">(</span><span class="st0">|&lt;/ol&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="co1">'Now write out</span>
- <br> &nbsp; &nbsp; out. <span class="me1">Position</span> = <span class="nu0">0</span>
- <br> &nbsp; &nbsp; <span class="kw1">Print</span> out. <span class="me1">Readtext</span><span class="br0">(</span><span class="br0">)</span>
- <br> &nbsp; &nbsp; script. <span class="me1">Position</span> = <span class="nu0">0</span>
- <br> &nbsp; &nbsp; <span class="kw1">Print</span> script. <span class="me1">Readtext</span><span class="br0">(</span><span class="br0">)</span>
- <br> &nbsp; &nbsp; 
- <br><span class="kw1">End</span><span class="kw1">Sub</span>
+  &nbsp; &nbsp; <span class="kw1">Dim</span> work <span class="kw1">As</span> <span class="kw1">Variant</span> <span class="co1">'For the evaluation of the database</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> doc. <span class="me1">Hasitem</span> <span class="br0">(</span>queryStringName <span class="br0">)</span> <span class="kw1">Then</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Print</span> <span class="st0">"You need a querystring for this agent to work"</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">sub</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Set</span> dbNameItem = doc. <span class="me1">Getfirstitem</span> <span class="br0">(</span>queryStringName <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; <span class="co1">'Get the database name on the server</span>
+ <br>
+  &nbsp; &nbsp; work = <span class="kw1">Evaluate</span> <span class="br0">(</span> <span class="st0">|@trim(@Left(@Right("|</span>+dbNameItem. <span class="kw1">Text</span>+ <span class="st0">|&amp;";"&amp;database=");"&amp;"))|</span> <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="kw1">If</span> work <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> = <span class="st0">""</span> <span class="kw1">Then</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Print</span> <span class="st0">"You need to specify the database on the server with &amp;amp;database="</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">sub</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Set</span> workDB = <span class="kw1">New</span> <span class="kw2">NotesDatabase</span> <span class="br0">(</span> <span class="st0">""</span>,work <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> workDB. <span class="me1">Isopen</span> <span class="kw1">Then</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> workDB. <span class="kw1">Open</span> <span class="br0">(</span> <span class="st0">""</span>, <span class="st0">""</span> <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> workDB. <span class="me1">Isopen</span> <span class="kw1">Then</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Print</span> <span class="st0">"Could not open the database "</span>+work <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Exit</span> <span class="kw1">sub</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Call</span> RenderAjax <span class="br0">(</span>s, workDB <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br><span class="kw1">End</span> <span class="kw1">Sub</span>
  <br>
  <br>
- <br><span class="coMULTI">%REM<br> &nbsp; &nbsp; Sub addJSFunctions<br> &nbsp; &nbsp; Description: Adds all the JavaScript needed<br> %END REM</span>
- <br><span class="kw1">Sub</span> addJSFunctions <span class="br0">(</span>out <span class="kw1">As</span><span class="kw2">NotesStream</span><span class="br0">)</span>
- <br> &nbsp; &nbsp; 
- <br><span class="kw1">Call</span> out. <span class="me1">Writetext</span><span class="br0">(</span><span class="st0">|<br> &nbsp; &nbsp; var views = [];<br> &nbsp; &nbsp; function callAllViews(curIndex) {<br> &nbsp; &nbsp; &nbsp; &nbsp; var r = createRequest();<br> &nbsp; &nbsp; &nbsp; &nbsp; r.open("GET",views[curIndex],false);<br> &nbsp; &nbsp; &nbsp; &nbsp; r.send(null);<br> &nbsp; &nbsp; &nbsp; &nbsp; var resultEle = document.getElementsByTagName("LI"); <br> &nbsp; &nbsp; &nbsp; &nbsp; resultEle[curIndex].innerHTML += " - done";<br> &nbsp; &nbsp; &nbsp; &nbsp; curIndex++;<br> &nbsp; &nbsp; &nbsp; &nbsp; if (curIndex &lt; views.length) {<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; window.setTimeout(callAllViews(curIndex),10000);<br> &nbsp; &nbsp; &nbsp; &nbsp; } else {<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // Here would be a check if that thing needs to run again<br> &nbsp; &nbsp; &nbsp; &nbsp; }<br> &nbsp; &nbsp; }<br> <br> &nbsp; &nbsp; function createRequest() {<br> &nbsp; &nbsp; &nbsp; &nbsp; var request;<br> &nbsp; &nbsp; &nbsp; &nbsp; try {<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; request = new XMLHttpRequest();<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } catch (trymicrosoft) {<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; try {<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; request = new ActiveXObject("Msxml2.XMLHTTP");<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } catch (othermicrosoft) {<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; try {<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; request = new ActiveXObject("Microsoft.XMLHTTP");<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } catch (failed) {<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; request = false;<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }<br> <br> &nbsp; &nbsp; &nbsp; &nbsp; if (!request) {<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; alert("Error initializing XMLHttpRequest!");<br> &nbsp; &nbsp; &nbsp; &nbsp; }<br> <br> &nbsp; &nbsp; &nbsp; &nbsp; return request;<br> &nbsp; &nbsp; <br> &nbsp; &nbsp; }<br> <br> |</span>,EOL_PLATFORM <span class="br0">)</span>
- <br><span class="kw1">End</span><span class="kw1">Sub</span>
+ <br><span class="coMULTI">%REM<br>
+   &nbsp; &nbsp; Sub RenderAjax<br>
+   &nbsp; &nbsp; Description: Renders a HTML Page that goes nicely with Ajax<br>
+   %END REM</span>
+ <br><span class="kw1">Sub</span> RenderAjax <span class="br0">(</span>s <span class="kw1">As</span> <span class="kw2">NotesSession</span>, db <span class="kw1">As</span> <span class="kw2">NotesDatabase</span> <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Dim</span> out <span class="kw1">As</span> <span class="kw2">NotesStream</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Dim</span> script <span class="kw1">As</span> <span class="kw2">NotesStream</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Dim</span> url <span class="kw1">As</span> <span class="kw1">String</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Dim</span> curVurl <span class="kw1">As</span> <span class="kw1">String</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Dim</span> i <span class="kw1">As</span> <span class="kw1">Integer</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Dim</span> v <span class="kw1">As</span> <span class="kw2">NotesView</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="kw1">If</span> db. <span class="me1">Httpurl</span> = <span class="st0">""</span> <span class="kw1">Then</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; url = <span class="st0">"http://localhost/__"</span>+db. <span class="me1">Replicaid</span>+ <span class="st0">".nsf/"</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Else</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; url = db. <span class="me1">Httpurl</span>+ <span class="st0">"/"</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Set</span> out = s. <span class="me1">Createstream</span> <span class="br0">(</span> <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Set</span> script = s. <span class="me1">Createstream</span> <span class="br0">(</span> <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Call</span> script. <span class="me1">Writetext</span> <span class="br0">(</span> <span class="st0">|&lt;script language="JavaScript" type="text/javascript"&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Call</span> addJSFunctions <span class="br0">(</span>script <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span> <span class="br0">(</span> <span class="st0">"&lt;h1&gt;Auto Refresh for "</span>+db. <span class="me1">Filepath</span> + <span class="st0">"&lt;/h1&gt;"</span>,EOL_PLATFORM <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span> <span class="br0">(</span> <span class="st0">|&lt;h2&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span> <span class="br0">(</span>url,EOL_PLATFORM <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span> <span class="br0">(</span> <span class="st0">|&lt;/h2&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span> <span class="br0">(</span> <span class="st0">|&lt;div id="result"&gt;Result&lt;/div&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span> <span class="br0">(</span> <span class="st0">|&lt;ol&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; i = <span class="nu0">0</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">ForAll</span> curV <span class="kw1">In</span> db. <span class="me1">Views</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Set</span> v = curV 
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">Not</span> v. <span class="me1">Isfolder</span> <span class="kw1">Then</span> <span class="co1">'No point updating folders</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'This is just for the Show</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span> <span class="br0">(</span> <span class="st0">|&lt;li&gt;&lt;a href="|</span> <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> <span class="kw1">IsArray</span> <span class="br0">(</span>v. <span class="me1">Aliases</span> <span class="br0">)</span> <span class="kw1">then</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">If</span> v. <span class="me1">Aliases</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span> &lt;&gt; <span class="st0">""</span> <span class="kw1">Then</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; curVurl = url + v. <span class="me1">Aliases</span> <span class="br0">(</span> <span class="nu0">0</span> <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Else</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; curVurl = url + v. <span class="kw1">Name</span>&nbsp; 
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Else</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; curVurl = url + v. <span class="kw1">Name</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span> <span class="br0">(</span>curVurl <span class="br0">)</span> &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span> <span class="br0">(</span> <span class="st0">|?Open"&gt;|</span>+v. <span class="kw1">Name</span>+ <span class="st0">|&lt;/a&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span> <span class="br0">(</span> <span class="st0">|&lt;/li&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'This is the real work</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Call</span> script. <span class="me1">Writetext</span> <span class="br0">(</span> <span class="st0">|views[|</span>+ <span class="kw1">CStr</span> <span class="br0">(</span>i <span class="br0">)</span>+ <span class="st0">|] = "|</span>+curVurl+ <span class="st0">|";|</span>,EOL_PLATFORM <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">'Increment</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; i = i + <span class="nu0">1</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">If</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">End</span> <span class="kw1">ForAll</span>
+ <br>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Call</span> script. <span class="me1">Writetext</span> <span class="br0">(</span> <span class="st0">|callAllViews(0)|</span>,EOL_PLATFORM <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Call</span> script. <span class="me1">Writetext</span> <span class="br0">(</span> <span class="st0">|&lt;/script&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Call</span> out. <span class="me1">Writetext</span> <span class="br0">(</span> <span class="st0">|&lt;/ol&gt;|</span>,EOL_PLATFORM <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="co1">'Now write out</span>
+ <br>
+  &nbsp; &nbsp; out. <span class="me1">Position</span> = <span class="nu0">0</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Print</span> out. <span class="me1">Readtext</span> <span class="br0">(</span> <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; script. <span class="me1">Position</span> = <span class="nu0">0</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">Print</span> script. <span class="me1">Readtext</span> <span class="br0">(</span> <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br><span class="kw1">End</span> <span class="kw1">Sub</span>
+ <br>
+ <br>
+ <br><span class="coMULTI">%REM<br>
+   &nbsp; &nbsp; Sub addJSFunctions<br>
+   &nbsp; &nbsp; Description: Adds all the JavaScript needed<br>
+   %END REM</span>
+ <br><span class="kw1">Sub</span> addJSFunctions <span class="br0">(</span>out <span class="kw1">As</span> <span class="kw2">NotesStream</span> <span class="br0">)</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br><span class="kw1">Call</span> out. <span class="me1">Writetext</span> <span class="br0">(</span> <span class="st0">|<br>
+   &nbsp; &nbsp; var views = [];<br>
+   &nbsp; &nbsp; function callAllViews(curIndex) {<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; var r = createRequest();<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; r.open("GET",views[curIndex],false);<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; r.send(null);<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; var resultEle = document.getElementsByTagName("LI"); <br>
+   &nbsp; &nbsp; &nbsp; &nbsp; resultEle[curIndex].innerHTML += " - done";<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; curIndex++;<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; if (curIndex &lt; views.length) {<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; window.setTimeout(callAllViews(curIndex),10000);<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; } else {<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // Here would be a check if that thing needs to run again<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; }<br>
+   &nbsp; &nbsp; }<br><br>
+   &nbsp; &nbsp; function createRequest() {<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; var request;<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; try {<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; request = new XMLHttpRequest();<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } catch (trymicrosoft) {<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; try {<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; request = new ActiveXObject("Msxml2.XMLHTTP");<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } catch (othermicrosoft) {<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; try {<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; request = new ActiveXObject("Microsoft.XMLHTTP");<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } catch (failed) {<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; request = false;<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }<br><br>
+   &nbsp; &nbsp; &nbsp; &nbsp; if (!request) {<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; alert("Error initializing XMLHttpRequest!");<br>
+   &nbsp; &nbsp; &nbsp; &nbsp; }<br><br>
+   &nbsp; &nbsp; &nbsp; &nbsp; return request;<br>
+   &nbsp; &nbsp; <br>
+   &nbsp; &nbsp; }<br><br>
+   |</span>,EOL_PLATFORM <span class="br0">)</span>
+ <br><span class="kw1">End</span> <span class="kw1">Sub</span>
 </div></div>
 					<hr />
 					<p>

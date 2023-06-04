@@ -123,32 +123,31 @@ ga('send', 'pageview');
 					<h1><small>Before they are gone: How IPv4 addresses work</small></h1>
 					<hr />
 					<div>In a discussion around IP addresses and routing I had to draw pictures how IPv4 addresses work. When dealing with client, typically DHCP is used, that automagically puts the right numbers into the right place. However server addresses tend to be static (this is a beginner level entry, so static DHCP addresses and dynamic DNS are out of scope) and need to bet setup properly. When looking at an IP address is consists of 4 numbers from 0 to 255 each. In reality that are actually not numbers, but bit pattern of 8 bits each. With 8 bits you can get to decimal 255: 
+<br><img src="/blog/images/2011/Binary197.gif" border="0" alt="The bit pattern of 197">
+<br><img src="/blog/images/2011/Binary127.gif" border="0" alt="The bit pattern of 127">
 <br>
-<img src="/blog/images/2011/Binary197.gif" border="0" alt="The bit pattern of 197">
-<br>
-<img src="/blog/images/2011/Binary127.gif" border="0" alt="The bit pattern of 127">
-<br> The IP address <b>127.0.0.1</b><a href="http://en.wikipedia.org/wiki/Reserved_IP_addresses">is reserved</a> for your local computer (your home), hence the old joke " <a href="http://www.thinkgeek.com/tshirts-apparel/unisex/generic/5d6a/">There is no place like 127.0.0.1</a>" (Red shoes <a href="http://www.altfg.com/blog/classics/judy-garland-the-wizard-of-oz/">not required</a>). Now you will find 3 of these numbers: 
+ The IP address <b>127.0.0.1</b> <a href="http://en.wikipedia.org/wiki/Reserved_IP_addresses">is reserved</a> for your local computer (your home), hence the old joke " <a href="http://www.thinkgeek.com/tshirts-apparel/unisex/generic/5d6a/">There is no place like 127.0.0.1</a>" (Red shoes <a href="http://www.altfg.com/blog/classics/judy-garland-the-wizard-of-oz/">not required</a>). Now you will find 3 of these numbers: 
 <ol>
  <li>The IP address: that is the number for your computer. Typically you have (if connected) 2 of them: 127.0.0.1 and the one you got from the DHCP server.</li>
  <li>The netmask: it helps the IP stack to distinguish between "local" calls and "long distance calls" (more below)</li>
  <li>The default gateway: The <a href="http://en.wikipedia.org/wiki/Operator_(The_Matrix)">operator</a> for long distance calls</li>
 </ol> So one could "understand" and IP address as a 4x8 punch card where the 1 stands for a punched hole while the 0 stands for a closed one. Some samples: 
-<br>
-<img src="/blog/images/2011/IP24916022618-plain.gif" border="0" alt="IP 249.160.226.18">
+<br><img src="/blog/images/2011/IP24916022618-plain.gif" border="0" alt="IP 249.160.226.18">
 <br><img src="/blog/images/2011/IP24916022418-plain.gif" border="0" alt="IP 249.160.224.18">
+<br><img src="/blog/images/2011/IP21716022818-plain.gif" border="0" alt="IP 217.160.228.18">
 <br>
-<img src="/blog/images/2011/IP21716022818-plain.gif" border="0" alt="IP 217.160.228.18">
-<br> The same applies for the netmask, where in small networks (like your home) the mask very often is <b>255.255.255.0</b>. Without a netmask (that would be 0.0.0.0) every computer would try to reach another computer directly. In a local network that is the rule, however when connecting to a remote server that might not work. When checking the destination address every active bit of the netmask requires a check. Netmasks can be anything from 0.0.0.0 to 255.255.255.255 (the typical home mask allows for 254 participants in your network). You want to plan them carefully since they are an excellent tool to shield subnets from each other. 
+ The same applies for the netmask, where in small networks (like your home) the mask very often is <b>255.255.255.0</b>. Without a netmask (that would be 0.0.0.0) every computer would try to reach another computer directly. In a local network that is the rule, however when connecting to a remote server that might not work. When checking the destination address every active bit of the netmask requires a check. Netmasks can be anything from 0.0.0.0 to 255.255.255.255 (the typical home mask allows for 254 participants in your network). You want to plan them carefully since they are an excellent tool to shield subnets from each other. 
+<br><img src="/blog/images/2011/IP220255100-netmask.gif" border="0" alt="A more complex netmask">
 <br>
-<img src="/blog/images/2011/IP220255100-netmask.gif" border="0" alt="A more complex netmask">
-<br> If the netmask bit is set to 1, then the IP stack looks at the same bit in the source and destination address. If the bit is the same (0 for the sender, 0 for the destination or 1 for the sender and 1 for the destination), then that bit is considered "local reachable" 
+ If the netmask bit is set to 1, then the IP stack looks at the same bit in the source and destination address. If the bit is the same (0 for the sender, 0 for the destination or 1 for the sender and 1 for the destination), then that bit is considered "local reachable" 
+<br><img src="/blog/images/2011/NetmaskMatching.gif" border="0" alt="How the netmask is used for matching">
 <br>
-<img src="/blog/images/2011/NetmaskMatching.gif" border="0" alt="How the netmask is used for matching">
-<br> If the netmask bit is set to 0 it doesn't matter what values the sender or destination bits have. If <b>all</b> bits of sender and destination are marked "local reachable" the IP stack will contact the destination directly. If just one of the bits doesn't match, the connection request is made via the default gateway (or an other gateway if configured - but that's out of scope here). The netmask is like that 4x8 punch card with holes punched out. When put on top of the source and target IP addresses the same pattern must emerge for a direct contact. Lets have a look if <b>217.160.228.18</b> can reach <b>249.160.224.18</b> or <b>249.160.226.18</b> directly: 
+ If the netmask bit is set to 0 it doesn't matter what values the sender or destination bits have. If <b>all</b> bits of sender and destination are marked "local reachable" the IP stack will contact the destination directly. If just one of the bits doesn't match, the connection request is made via the default gateway (or an other gateway if configured - but that's out of scope here). The netmask is like that 4x8 punch card with holes punched out. When put on top of the source and target IP addresses the same pattern must emerge for a direct contact. Lets have a look if <b>217.160.228.18</b> can reach <b>249.160.224.18</b> or <b>249.160.226.18</b> directly: 
+<br><img src="/blog/images/2011/IP21716022818-matched.gif" border="0" alt="What routes and what not">
 <br>
-<img src="/blog/images/2011/IP21716022818-matched.gif" border="0" alt="What routes and what not">
-<br> As you can see, the pattern for the 2 first IP addresses match when seen through our sample netmask, while the first and third have one difference, that means routing is required (it is left to the reader to determine if 2 and 3 see each other directly). 
-<br> Now in IPv6 .... but that's a story for another time.</div>
+ As you can see, the pattern for the 2 first IP addresses match when seen through our sample netmask, while the first and third have one difference, that means routing is required (it is left to the reader to determine if 2 and 3 see each other directly). 
+<br>
+ Now in IPv6 .... but that's a story for another time.</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">

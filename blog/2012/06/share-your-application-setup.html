@@ -123,33 +123,49 @@ ga('send', 'pageview');
 					<h1><small>Share your application setup</small></h1>
 					<hr />
 					<div>There are situations where you want to document or share (eventually with yourself) the list of all <strike> applications </strike> packages you have installed on your Ubuntu Linux system. To do that you have a 2 step process: document the packages and document the repositories. A sensible approach is to do that in a "ready to install" way. With a little help from <a href="http://askubuntu.com/">AskUbuntu</a>, here is the solution: 
-<div class="bash"><span class="co0">#! /bin/sh</span>
+<div class="bash">
+ <span class="co0">#! /bin/sh</span>
  <br><span class="co0"># Run this on the source system</span>
- <br><span class="kw2">sudo</span><span class="kw2">dpkg</span><span class="re5">--get-selections</span><span class="sy0">&gt;</span> ~ <span class="sy0">/</span>Desktop <span class="sy0">/</span>packages 
+ <br><span class="kw2">sudo</span> <span class="kw2">dpkg</span> <span class="re5">--get-selections</span> <span class="sy0">&gt;</span> ~ <span class="sy0">/</span>Desktop <span class="sy0">/</span>packages 
  <br>
  <br><span class="co0"># Run this on the target system (after copying the packages list and activating the repository</span>
- <br><span class="kw2">sudo</span><span class="kw2">dpkg</span><span class="re5">--set-selections</span><span class="sy0">&lt;</span> ~ <span class="sy0">/</span>Desktop <span class="sy0">/</span>packages <span class="sy0">&amp;&amp;</span><span class="kw2">sudo</span><span class="kw2">apt-get</span><span class="re5">-u</span> dselect-upgrade 
+ <br><span class="kw2">sudo</span> <span class="kw2">dpkg</span> <span class="re5">--set-selections</span> <span class="sy0">&lt;</span> ~ <span class="sy0">/</span>Desktop <span class="sy0">/</span>packages <span class="sy0">&amp;&amp;</span> <span class="kw2">sudo</span> <span class="kw2">apt-get</span> <span class="re5">-u</span> dselect-upgrade
 </div> And for the list of repositories: 
-<div class="bash"><span class="co0">#! /bin/sh</span>
+<div class="bash">
+ <span class="co0">#! /bin/sh</span>
  <br><span class="co0"># listrepositories - script to get all the repositories incl ppa installed on a system</span>
  <br><span class="co0"># ready to be reloaded using apt-add-repository</span>
- <br><span class="kw1">for</span> APT <span class="kw1">in</span><span class="sy0">`</span><span class="kw2">find</span><span class="sy0">/</span>etc <span class="sy0">/</span>apt <span class="sy0">/</span><span class="re5">-name</span><span class="sy0">*</span>.list <span class="sy0">`</span>; <span class="kw1">do</span>
- <br> &nbsp; &nbsp; <span class="kw2">grep</span><span class="re5">-Po</span><span class="st0">"(?&lt;=^deb\s).*?(?=#|$)"</span><span class="re1">$APT</span><span class="sy0">|</span><span class="kw1">while</span><span class="kw2">read</span> ENTRY ; <span class="kw1">do</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="re2">HOST</span>= <span class="sy0">`</span><span class="kw3">echo</span><span class="re1">$ENTRY</span><span class="sy0">|</span><span class="kw2">cut</span> -d <span class="sy0">/</span> -f3 <span class="sy0">`</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="re2">USER</span>= <span class="sy0">`</span><span class="kw3">echo</span><span class="re1">$ENTRY</span><span class="sy0">|</span><span class="kw2">cut</span> -d <span class="sy0">/</span> -f4 <span class="sy0">`</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="re2">PPA</span>= <span class="sy0">`</span><span class="kw3">echo</span><span class="re1">$ENTRY</span><span class="sy0">|</span><span class="kw2">cut</span> -d <span class="sy0">/</span> -f5 <span class="sy0">`</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co0">#echo sudo apt-add-repository ppa:$USER/$PPA</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">[</span><span class="st0">"ppa.launchpad.net"</span> = <span class="st0">"<span class="es2">$HOST</span>"</span><span class="br0">]</span>; <span class="kw1">then</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw3">echo</span><span class="kw2">sudo</span> apt-add-repository ppa: <span class="re1">$USER</span><span class="sy0">/</span><span class="re1">$PPA</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">else</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw3">echo</span><span class="kw2">sudo</span> apt-add-repository <span class="co3">\'</span><span class="co1">${ENTRY}</span><span class="co3">\'</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">fi</span>
- <br> &nbsp; &nbsp; <span class="kw1">done</span>
+ <br><span class="kw1">for</span> APT <span class="kw1">in</span> <span class="sy0">`</span> <span class="kw2">find</span> <span class="sy0">/</span>etc <span class="sy0">/</span>apt <span class="sy0">/</span> <span class="re5">-name</span> <span class="sy0">*</span>.list <span class="sy0">`</span>; <span class="kw1">do</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">grep</span> <span class="re5">-Po</span> <span class="st0">"(?&lt;=^deb\s).*?(?=#|$)"</span> <span class="re1">$APT</span> <span class="sy0">|</span> <span class="kw1">while</span> <span class="kw2">read</span> ENTRY ; <span class="kw1">do</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="re2">HOST</span>= <span class="sy0">`</span> <span class="kw3">echo</span> <span class="re1">$ENTRY</span> <span class="sy0">|</span> <span class="kw2">cut</span> -d <span class="sy0">/</span> -f3 <span class="sy0">`</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="re2">USER</span>= <span class="sy0">`</span> <span class="kw3">echo</span> <span class="re1">$ENTRY</span> <span class="sy0">|</span> <span class="kw2">cut</span> -d <span class="sy0">/</span> -f4 <span class="sy0">`</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="re2">PPA</span>= <span class="sy0">`</span> <span class="kw3">echo</span> <span class="re1">$ENTRY</span> <span class="sy0">|</span> <span class="kw2">cut</span> -d <span class="sy0">/</span> -f5 <span class="sy0">`</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="co0">#echo sudo apt-add-repository ppa:$USER/$PPA</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">[</span> <span class="st0">"ppa.launchpad.net"</span> = <span class="st0">"<span class="es2">$HOST</span>"</span> <span class="br0">]</span>; <span class="kw1">then</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw3">echo</span> <span class="kw2">sudo</span> apt-add-repository ppa: <span class="re1">$USER</span> <span class="sy0">/</span> <span class="re1">$PPA</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">else</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw3">echo</span> <span class="kw2">sudo</span> apt-add-repository <span class="co3">\'</span> <span class="co1">${ENTRY}</span> <span class="co3">\'</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">fi</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">done</span>
  <br><span class="kw1">done</span>
- <br> &nbsp; 
+ <br>
+  &nbsp;
 </div> You need to <code>listrepositories &gt; addrep.sh</code> to get the script to copy to the target system 
-<br>As usual YMMV 
-<br>References: <a href="http://askubuntu.com/questions/17823/how-to-list-all-installed-packages">Packages</a>, <a href="http://askubuntu.com/questions/148932/list-all-repositories-and-ppa-from-command-line">Repositories</a></div>
+<br>
+As usual YMMV 
+<br>
+References: <a href="http://askubuntu.com/questions/17823/how-to-list-all-installed-packages">Packages</a>, <a href="http://askubuntu.com/questions/148932/list-all-repositories-and-ppa-from-command-line">Repositories</a></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">

@@ -146,16 +146,22 @@ ga('send', 'pageview');
 					<h1><small>Adventures with vert.x, 64Bit and the IBM Notes client</small></h1>
 					<hr />
 					<div>The rising star of web servers currently is <a href="http://nodejs.org/">node.js</a>, not at least due to the <a href="http://en.wikipedia.org/wiki/Cambrian_explosion">cambrian explosion</a> in available packages with a <a href="https://www.npmjs.org/">clever package management system</a> and the fact that " <i>Any application that can be written in JavaScript, will eventually <a href="http://blog.codinghorror.com/the-principle-of-least-power/">be written in JavaScript</a></i>" (according to <a href="http://en.wikipedia.org/wiki/Jeff_Atwood">Jeff Atwood</a>). 
-<br> When talking to IBM Domino or IBM Connections node.js allows for very elegant solutions using the REST APIs. However when talking to a IBM Notes client, it can't do much since an external program needs to be Java or COM, the later on Windows only. 
-<br> I really like node.js event driven programming model, so I looked around. In result I found <a href="http://vertx.io/">vert.x</a>, which <b>does to the JVM, what node.js does to Google's v8</b> JS runtime. Wikipedia <a href="http://en.wikipedia.org/wiki/Vert.x">decribes vert.x</a> as " <i>a polyglot event-driven application framework that runs on the Java Virtual Machine </i>". Vert.x is now an <a href="http://eclipse.org/proposals/rt.vertx/">Eclipse project</a>. 
-<br> While node.js is tied to JavaScript, vert.x is polyglot and supports Java, JavaScript, CoffeeScript, Ruby, Python and Groovy with Scala and others under consideration. 
-<br> Task one I tried to complete: run a <a href="https://vertx.io/docs/vertx-core/java/#_writing_verticles">verticle</a> that simply displays the current local Notes user name. Of course exploring new stuff comes with its own set of surprises. As time of writing the stable version of vert.x is 2.1.1 with version 3.0 under heavy development. 
-<br> Following the <a href="https://groups.google.com/forum/#!forum/vertx">discussion</a>, version 3.0 would introduce quite some changes in the API, so I decided to <a href="http://www.youtube.com/watch?v=TEHWDA_6e3M">be brave</a> and use the 3.0 development branch to explore. 
-<br> The <b>fun part</b>: there is not much documentation for 3.x yet, while version 2.x is <a href="http://www.amazon.com/gp/product/B00FEFRG2Q/ref=as_li_tl?ie=UTF8&amp;camp=1789&amp;creative=390957&amp;creativeASIN=B00FEFRG2Q&amp;linkCode=as2&amp;tag=wissenetblog-20&amp;linkId=OCASRRU5PCEA73TJ">well covered</a>
-<img src="https://ir-na.amazon-adsystem.com/e/ir?t=wissenetblog-20&amp;l=as2&amp;o=1&amp;a=B00FEFRG2Q" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;"> in <a href="http://www.amazon.com/gp/product/B00ESX17RA/ref=as_li_tl?ie=UTF8&amp;camp=1789&amp;creative=390957&amp;creativeASIN=B00ESX17RA&amp;linkCode=as2&amp;tag=wissenetblog-20&amp;linkId=3ETMUSCPWCSP5XV3">various books</a>
-<img src="https://ir-na.amazon-adsystem.com/e/ir?t=wissenetblog-20&amp;l=as2&amp;o=1&amp;a=B00ESX17RA" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;"> and the <a href="http://vertx.io/docs.html">online documentation</a>. 
-<br> vert.x 3.x is at the edge of new and uses <a href="http://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html">Lamda expressions</a>, so just using Notes' Java 6 runtime was not an option. The Java 8 JRE was due to be installed. Luckily that is <a href="http://www.webupd8.org/2012/09/install-oracle-java-8-in-ubuntu-via-ppa.html">rather easy</a>. 
-<br>The class is rather simple, even after including <code>Notes.jar</code>, getting it to run (more below) not so much: 
+<br>
+ When talking to IBM Domino or IBM Connections node.js allows for very elegant solutions using the REST APIs. However when talking to a IBM Notes client, it can't do much since an external program needs to be Java or COM, the later on Windows only. 
+<br>
+ I really like node.js event driven programming model, so I looked around. In result I found <a href="http://vertx.io/">vert.x</a>, which <b>does to the JVM, what node.js does to Google's v8</b> JS runtime. Wikipedia <a href="http://en.wikipedia.org/wiki/Vert.x">decribes vert.x</a> as " <i>a polyglot event-driven application framework that runs on the Java Virtual Machine </i>". Vert.x is now an <a href="http://eclipse.org/proposals/rt.vertx/">Eclipse project</a>. 
+<br>
+ While node.js is tied to JavaScript, vert.x is polyglot and supports Java, JavaScript, CoffeeScript, Ruby, Python and Groovy with Scala and others under consideration. 
+<br>
+ Task one I tried to complete: run a <a href="https://vertx.io/docs/vertx-core/java/#_writing_verticles">verticle</a> that simply displays the current local Notes user name. Of course exploring new stuff comes with its own set of surprises. As time of writing the stable version of vert.x is 2.1.1 with version 3.0 under heavy development. 
+<br>
+ Following the <a href="https://groups.google.com/forum/#!forum/vertx">discussion</a>, version 3.0 would introduce quite some changes in the API, so I decided to <a href="http://www.youtube.com/watch?v=TEHWDA_6e3M">be brave</a> and use the 3.0 development branch to explore. 
+<br>
+ The <b>fun part</b>: there is not much documentation for 3.x yet, while version 2.x is <a href="http://www.amazon.com/gp/product/B00FEFRG2Q/ref=as_li_tl?ie=UTF8&amp;camp=1789&amp;creative=390957&amp;creativeASIN=B00FEFRG2Q&amp;linkCode=as2&amp;tag=wissenetblog-20&amp;linkId=OCASRRU5PCEA73TJ">well covered</a> <img src="https://ir-na.amazon-adsystem.com/e/ir?t=wissenetblog-20&amp;l=as2&amp;o=1&amp;a=B00FEFRG2Q" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;"> in <a href="http://www.amazon.com/gp/product/B00ESX17RA/ref=as_li_tl?ie=UTF8&amp;camp=1789&amp;creative=390957&amp;creativeASIN=B00ESX17RA&amp;linkCode=as2&amp;tag=wissenetblog-20&amp;linkId=3ETMUSCPWCSP5XV3">various books</a> <img src="https://ir-na.amazon-adsystem.com/e/ir?t=wissenetblog-20&amp;l=as2&amp;o=1&amp;a=B00ESX17RA" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;"> and the <a href="http://vertx.io/docs.html">online documentation</a>. 
+<br>
+ vert.x 3.x is at the edge of new and uses <a href="http://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html">Lamda expressions</a>, so just using Notes' Java 6 runtime was not an option. The Java 8 JRE was due to be installed. Luckily that is <a href="http://www.webupd8.org/2012/09/install-oracle-java-8-in-ubuntu-via-ppa.html">rather easy</a>. 
+<br>
+The class is rather simple, even after including <code>Notes.jar</code>, getting it to run (more below) not so much: 
 <br>
 <pre><code class="language-java">
 package com.notessensei.vertx.notes;
@@ -212,12 +218,14 @@ public class Demo {
  }
 }
 </code></pre>
-<br> Starting the verticle looked promising, but once I pointed my browser to <code>
- <http: localhost:8111 /></code> the fun began. 
+<br>
+ Starting the verticle looked promising, but once I pointed my browser to <code><http: localhost:8111 /></code> the fun began. 
 <br>The first error I had to deal with was: <span style="color : red; font-family : courier, monospace; display : block">SEVERE: java.lang.UnsatisfiedLinkError: no lsxbe in java.library.path</span> That was actually <a href="http://www.lbenitez.com/2009/02/atlas-for-mac-is-here.html">nothing new</a>, to fix these 2 environment parameters needed to be set: 
 <br><code>DYLD_LIBRARY_PATH=/opt/ibm/notes</code> and <code>LD_LIBRARY_PATH=/opt/ibm/notes</code>. 
-<br> This can be done in the run configuration in Eclipse or in the script that later will run the ready program. After adding them I get the next error: <span style="color : red; font-family : courier, monospace; display : block">SEVERE: java.lang.UnsatisfiedLinkError: /opt/ibm/notes/liblsxbe.so: /opt/ibm/notes/liblsxbe.so: wrong ELF class: ELFCLASS32 (Possible cause: architecture word width mismatch)</span> Now I do like <a href="http://fc02.deviantart.net/fs71/f/2011/217/3/f/high_elf_female_avatar_by_graysun_d-d45lit4.jpg">elfs</a>, just not the <a href="http://hd.wallpaperswide.com/thumbs/world_of_warcraft_blood_elf-t2.jpg">wrong type</a>. The error actually says: the native library is 32 Bit, the JVM is 64, this ain't working. The Notes client on all platforms Checking with <a href="https://github.com/jesse-gallagher">Jesse</a> I learned, that there is a switch to tell Java to do 32 Bit: <code>-d32</code>, while <a href="http://nathantfreeman.wordpress.com/">NTF</a> asserted using server code you could run pure 64Bit. Trying the <code>-d32</code>, I was greeted with yet another error: <span style="color : red; font-family : courier, monospace; display : block">Error: This Java instance does not support a 32-bit JVM. Please install the desired version.</span> That only seems to work on Windows. So, downloaded the 32Bit version, expanded into a directory in /opt and created a new JVM configuration in Eclipse pointing to it. And horray! It works. So now I have a local web server that can talk to my local Notes client and I can read data from all the NSF I have access to. 
-<br> There are a few moving parts. For Java projects I highly recommend using <a href="http://maven.apache.org/">Apache Maven</a> since it can take care of getting all the needed libraries for you. My maven <code>pom.xml</code> file for this project looks like this: 
+<br>
+ This can be done in the run configuration in Eclipse or in the script that later will run the ready program. After adding them I get the next error: <span style="color : red; font-family : courier, monospace; display : block">SEVERE: java.lang.UnsatisfiedLinkError: /opt/ibm/notes/liblsxbe.so: /opt/ibm/notes/liblsxbe.so: wrong ELF class: ELFCLASS32 (Possible cause: architecture word width mismatch)</span> Now I do like <a href="http://fc02.deviantart.net/fs71/f/2011/217/3/f/high_elf_female_avatar_by_graysun_d-d45lit4.jpg">elfs</a>, just not the <a href="http://hd.wallpaperswide.com/thumbs/world_of_warcraft_blood_elf-t2.jpg">wrong type</a>. The error actually says: the native library is 32 Bit, the JVM is 64, this ain't working. The Notes client on all platforms Checking with <a href="https://github.com/jesse-gallagher">Jesse</a> I learned, that there is a switch to tell Java to do 32 Bit: <code>-d32</code>, while <a href="http://nathantfreeman.wordpress.com/">NTF</a> asserted using server code you could run pure 64Bit. Trying the <code>-d32</code>, I was greeted with yet another error: <span style="color : red; font-family : courier, monospace; display : block">Error: This Java instance does not support a 32-bit JVM. Please install the desired version.</span> That only seems to work on Windows. So, downloaded the 32Bit version, expanded into a directory in /opt and created a new JVM configuration in Eclipse pointing to it. And horray! It works. So now I have a local web server that can talk to my local Notes client and I can read data from all the NSF I have access to. 
+<br>
+ There are a few moving parts. For Java projects I highly recommend using <a href="http://maven.apache.org/">Apache Maven</a> since it can take care of getting all the needed libraries for you. My maven <code>pom.xml</code> file for this project looks like this: 
 <br>
 <pre><code class="language-xml">
 &lt;project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -238,7 +246,8 @@ public class Demo {
   &lt;/dependencies&gt;
 &lt;/project&gt;
 </code></pre>
-<br> The classpath for the project: 
+<br>
+ The classpath for the project: 
 <br>
 <pre><code class="language-xml">
 &lt;?xml version="1.0" encoding="UTF-8"?&gt;
@@ -275,11 +284,12 @@ public class Demo {
  &lt;classpathentry kind="output" path="target/classes"/&gt;
 &lt;/classpath&gt;
 </code></pre>
-<br> Next stop: add the <a href="http://www.openntf.org/p/OpenNTF%20Domino%20API">OpenNTF Domino API</a> and then have a look what havoc I can wreck with that environment\* 
+<br>
+ Next stop: add the <a href="http://www.openntf.org/p/OpenNTF%20Domino%20API">OpenNTF Domino API</a> and then have a look what havoc I can wreck with that environment\* 
 <br>
 <br>
 <br><b>Update</b>: Attributed Jesse for the <code>-d32</code> switch and Nathan for the 64Bit tests 
-<br> <b> No Domino servers have been harmed when running this code.</b></div>
+<br><b> No Domino servers have been harmed when running this code.</b></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">

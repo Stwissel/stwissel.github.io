@@ -123,13 +123,18 @@ ga('send', 'pageview');
 					<h1><small>Running a CouchDB with the authenticated Apache HTTP user</small></h1>
 					<hr />
 					<div>Apache <a href="http://couchdb.apache.org/">CouchDB</a> shares the same <a href="http://www.dict.cc/?s=Stallgeruch">Stallgeruch</a> with Domino thanks to sharing a <a href="http://damienkatz.net/">warden</a> at some time. So during the festive season I gave it a spin. 
-<br> There is <a href="http://www.amazon.com/s/ref=sr_nr_i_0?rh=k%3Acouchdb%2Ci%3Astripbooks&amp;keywords=couchdb&amp;ie=UTF8&amp;qid=1358953832">ample literature</a> around to get you <a href="http://www.amazon.com/gp/product/B00769UKVW/ref=as_li_ss_tl?ie=UTF8&amp;camp=1789&amp;creative=390957&amp;creativeASIN=B00769UKVW&amp;linkCode=as2&amp;tag=wissenetblog-20">started with CouchDB</a>
-<img src="https://www.assoc-amazon.com/e/ir?t=wissenetblog-20&amp;l=as2&amp;o=1&amp;a=B00769UKVW" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;"> including Apache's <a href="http://wiki.apache.org/couchdb/Introduction">own wiki</a>. 
-<br> So I was looking for something more sporty. 
-<br> Since Domino 9.0 ships with IBM's version of the <a href="http://httpd.apache.org/">Apache HTTP server</a> I was wondering if I could setup <a href="http://wiki.apache.org/couchdb/Apache_As_a_Reverse_Proxy">couchDB behind an Apache reverse Proxy</a><b>and</b> make couchDB recognize the authenticated user accessing the couchDB as kind of a poor man's single sign on. 
-<br> I used Apache's basic authentication (only via HTTPs please), but it, in theory, would work with any authentication scheme that provides a username as outcome. 
-<br> The whole solution required a bit of <strike> chicken string and duct tape </strike> combination of Apache modules, but works surprisingly well. 
-<br> The participants: 
+<br>
+ There is <a href="http://www.amazon.com/s/ref=sr_nr_i_0?rh=k%3Acouchdb%2Ci%3Astripbooks&amp;keywords=couchdb&amp;ie=UTF8&amp;qid=1358953832">ample literature</a> around to get you <a href="http://www.amazon.com/gp/product/B00769UKVW/ref=as_li_ss_tl?ie=UTF8&amp;camp=1789&amp;creative=390957&amp;creativeASIN=B00769UKVW&amp;linkCode=as2&amp;tag=wissenetblog-20">started with CouchDB</a> <img src="https://www.assoc-amazon.com/e/ir?t=wissenetblog-20&amp;l=as2&amp;o=1&amp;a=B00769UKVW" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;"> including Apache's <a href="http://wiki.apache.org/couchdb/Introduction">own wiki</a>. 
+<br>
+ So I was looking for something more sporty. 
+<br>
+ Since Domino 9.0 ships with IBM's version of the <a href="http://httpd.apache.org/">Apache HTTP server</a> I was wondering if I could setup <a href="http://wiki.apache.org/couchdb/Apache_As_a_Reverse_Proxy">couchDB behind an Apache reverse Proxy</a> <b>and</b> make couchDB recognize the authenticated user accessing the couchDB as kind of a poor man's single sign on. 
+<br>
+ I used Apache's basic authentication (only via HTTPs please), but it, in theory, would work with any authentication scheme that provides a username as outcome. 
+<br>
+ The whole solution required a bit of <strike> chicken string and duct tape </strike> combination of Apache modules, but works surprisingly well. 
+<br>
+ The participants: 
 <ul>
  <li><a href="https://issues.apache.org/jira/browse/COUCHDB-636">proxy_authentification_handler</a> (note the unconventional spelling): a couchDB module that accepts authentication information in the request header. You have to add that to the httpd section for the key <b>authentication handlers</b>. My entry looks like this: <code>{couch_httpd_oauth, oauth_authentication_handler}, {couch_httpd_auth, proxy_authentification_handler}, {couch_httpd_auth, cookie_authentication_handler}, {couch_httpd_auth, default_authentication_handler}</code></li>
  <li><a href="http://httpd.apache.org/docs/trunk/mod/mod_headers.html">mod_headers</a>: Create, remove, alter headers. Anything coming in gets stripped of eventually fake headers and then the couchDB headers reapplied.</li>
@@ -155,203 +160,203 @@ ga('send', 'pageview');
  <ol>
   <li class="li1">
    <div class="de1">
-     &lt; <span class="kw3">VirtualHost</span> *: <span class="nu0">80</span>&gt; 
+    &lt; <span class="kw3">VirtualHost</span> *: <span class="nu0">80</span>&gt;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">ServerAdmin</span> webmaster@localhost 
+    &nbsp; &nbsp; <span class="kw1">ServerAdmin</span> webmaster@localhost
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; 
+    &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="co1"># Removal of eventually spoofed request headers</span>
+    &nbsp; &nbsp; <span class="co1"># Removal of eventually spoofed request headers</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; <span class="kw1">RequestHeader</span> unset X <span class="sy0">-</span>Auth <span class="sy0">-</span>CouchDB <span class="sy0">-</span>UserName 
+    &nbsp; &nbsp; <span class="kw1">RequestHeader</span> unset X <span class="sy0">-</span>Auth <span class="sy0">-</span>CouchDB <span class="sy0">-</span>UserName
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">RequestHeader</span> unset X <span class="sy0">-</span>Auth <span class="sy0">-</span>CouchDB <span class="sy0">-</span>Roles 
+    &nbsp; &nbsp; <span class="kw1">RequestHeader</span> unset X <span class="sy0">-</span>Auth <span class="sy0">-</span>CouchDB <span class="sy0">-</span>Roles
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">RequestHeader</span> unset X <span class="sy0">-</span>Auth <span class="sy0">-</span>CouchDB <span class="sy0">-</span>Token 
+    &nbsp; &nbsp; <span class="kw1">RequestHeader</span> unset X <span class="sy0">-</span>Auth <span class="sy0">-</span>CouchDB <span class="sy0">-</span>Token
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; 
+    &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="co1"># Needed for CouchDB</span>
+    &nbsp; &nbsp; <span class="co1"># Needed for CouchDB</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; <span class="kw1">AllowEncodedSlashes</span><span class="kw2">On</span>
+    &nbsp; &nbsp; <span class="kw1">AllowEncodedSlashes</span> <span class="kw2">On</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; 
+    &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="co1"># Location of static HTML files</span>
+    &nbsp; &nbsp; <span class="co1"># Location of static HTML files</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">DocumentRoot</span> /var/www/default 
+    &nbsp; &nbsp; <span class="kw1">DocumentRoot</span> /var/www/default
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &lt; <span class="kw3">Directory</span> /&gt; 
+    &nbsp; &nbsp; &lt; <span class="kw3">Directory</span> /&gt;
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Options</span><span class="kw2">Indexes</span><span class="kw2">FollowSymLinks</span> MultiViews 
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Options</span> <span class="kw2">Indexes</span> <span class="kw2">FollowSymLinks</span> MultiViews
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">AllowOverride</span><span class="kw2">None</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">AllowOverride</span> <span class="kw2">None</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Order</span><span class="kw1">allow</span>, <span class="kw1">deny</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Order</span> <span class="kw1">allow</span>, <span class="kw1">deny</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">allow</span> from <span class="kw2">all</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">allow</span> from <span class="kw2">all</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &lt;/ <span class="kw3">Directory</span>&gt; 
+    &nbsp; &nbsp; &lt;/ <span class="kw3">Directory</span>&gt;
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; 
+    &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="co1"># We don't want to be an open relay</span>
+    &nbsp; &nbsp; <span class="co1"># We don't want to be an open relay</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">ProxyRequests</span><span class="kw2">Off</span>
+    &nbsp; &nbsp; <span class="kw1">ProxyRequests</span> <span class="kw2">Off</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">ProxyPreserveHost</span><span class="kw2">On</span> &nbsp; &nbsp; 
+    &nbsp; &nbsp; <span class="kw1">ProxyPreserveHost</span> <span class="kw2">On</span> &nbsp; &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">ProxyPass</span> /couchdb http://localhost: <span class="nu0">5984</span> nocanon 
+    &nbsp; &nbsp; <span class="kw1">ProxyPass</span> /couchdb http://localhost: <span class="nu0">5984</span> nocanon
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; <span class="kw1">ProxyPassReverse</span> /couchdb http://localhost: <span class="nu0">5984</span>
+    &nbsp; &nbsp; <span class="kw1">ProxyPassReverse</span> /couchdb http://localhost: <span class="nu0">5984</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; 
+    &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="co1"># Role mapping for couch</span>
+    &nbsp; &nbsp; <span class="co1"># Role mapping for couch</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; <span class="kw1">RewriteMap</span> role <span class="sy0">-</span>map dbm:/var/secrets/passwd/rolemapping.map 
+    &nbsp; &nbsp; <span class="kw1">RewriteMap</span> role <span class="sy0">-</span>map dbm:/var/secrets/passwd/rolemapping.map
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; 
+    &nbsp;
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; &lt; <span class="kw3">Location</span> /couchdb&gt; 
+    &nbsp; &nbsp; &lt; <span class="kw3">Location</span> /couchdb&gt;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">AuthType</span> Basic 
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">AuthType</span> Basic
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">AuthName</span> couchdb 
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">AuthName</span> couchdb
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">AuthUserFile</span> /var/secrets/passwd/users 
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">AuthUserFile</span> /var/secrets/passwd/users
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">AuthGroupFile</span> /var/secrets/passwd/groups 
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">AuthGroupFile</span> /var/secrets/passwd/groups
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Order</span><span class="kw1">allow</span>, <span class="kw1">deny</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Order</span> <span class="kw1">allow</span>, <span class="kw1">deny</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Allow</span> from <span class="kw2">all</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Allow</span> from <span class="kw2">all</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; 
+    &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1"># THIS WILL PROMPT AUTHENTICATION</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1"># THIS WILL PROMPT AUTHENTICATION</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Require</span> valid <span class="sy0">-</span><span class="kw1">user</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">Require</span> valid <span class="sy0">-</span> <span class="kw1">user</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; 
+    &nbsp;
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1"># Request headers for CouchDB from authenticated user</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1"># Request headers for CouchDB from authenticated user</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">RewriteEngine</span><span class="kw2">On</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">RewriteEngine</span> <span class="kw2">On</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">RewriteCond</span> % <span class="br0">{</span>LA <span class="sy0">-</span>U:REMOTE_USER <span class="br0">}</span><span class="br0">(</span>. <span class="sy0">+</span><span class="br0">)</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">RewriteCond</span> % <span class="br0">{</span>LA <span class="sy0">-</span>U:REMOTE_USER <span class="br0">}</span> <span class="br0">(</span>. <span class="sy0">+</span> <span class="br0">)</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">RewriteRule</span> . <span class="sy0">-</span><span class="br0">[</span>E=CUSER:%1 <span class="br0">]</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">RewriteRule</span> . <span class="sy0">-</span> <span class="br0">[</span>E=CUSER:%1 <span class="br0">]</span>
    </div></li>
   <li class="li2">
    <div class="de2">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">RewriteCond</span> % <span class="br0">{</span>LA <span class="sy0">-</span>U:REMOTE_USER <span class="br0">}</span><span class="br0">(</span>. <span class="sy0">+</span><span class="br0">)</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">RewriteCond</span> % <span class="br0">{</span>LA <span class="sy0">-</span>U:REMOTE_USER <span class="br0">}</span> <span class="br0">(</span>. <span class="sy0">+</span> <span class="br0">)</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">RewriteRule</span> . <span class="sy0">-</span><span class="br0">[</span>E=CROLE:$ <span class="br0">{</span>role <span class="sy0">-</span>map:%1|guest <span class="br0">}</span><span class="br0">]</span>
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">RewriteRule</span> . <span class="sy0">-</span> <span class="br0">[</span>E=CROLE:$ <span class="br0">{</span>role <span class="sy0">-</span>map:%1|guest <span class="br0">}</span> <span class="br0">]</span>
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">RequestHeader</span> set X <span class="sy0">-</span>Auth <span class="sy0">-</span>CouchDB <span class="sy0">-</span>UserName <span class="st0">"%{CUSER}e"</span> env=CUSER 
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">RequestHeader</span> set X <span class="sy0">-</span>Auth <span class="sy0">-</span>CouchDB <span class="sy0">-</span>UserName <span class="st0">"%{CUSER}e"</span> env=CUSER
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">RequestHeader</span> set X <span class="sy0">-</span>Auth <span class="sy0">-</span>CouchDB <span class="sy0">-</span>Roles <span class="st0">"%{CROLE}e"</span> env=CROLE 
+    &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">RequestHeader</span> set X <span class="sy0">-</span>Auth <span class="sy0">-</span>CouchDB <span class="sy0">-</span>Roles <span class="st0">"%{CROLE}e"</span> env=CROLE
    </div></li>
   <li class="li1">
    <div class="de1">
-     &nbsp; &nbsp; &lt;/ <span class="kw3">Location</span>&gt; 
+    &nbsp; &nbsp; &lt;/ <span class="kw3">Location</span>&gt;
    </div></li>
   <li class="li2">
    <div class="de2">
-     &lt;/ <span class="kw3">VirtualHost</span>&gt; 
+    &lt;/ <span class="kw3">VirtualHost</span>&gt;
    </div></li>
  </ol>
 </div></div>

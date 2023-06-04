@@ -124,8 +124,9 @@ ga('send', 'pageview');
 					<hr />
 					<div>The <a href="https://connections.connect2014.com">show</a> is over and the <a href="/blog/2008/01/lotussphere-presentation-batch-download.html">annual question</a> arises: how do I download all the presentations? To do that, you will need a valid username and password for the Connect 2014 site, no anonymous access here. The 2014 site is build on IBM Portal and IBM Connections. IBM Connections has a <a href="http://www-10.lotus.com/ldd/appdevwiki.nsf/xpDocViewer.xsp?lookupName=IBM+Connections+4.5+API+Documentation#action=openDocument&amp;content=catcontent&amp;ct=prodDoc">ATOM REST API</a>, that opens interesting possibilities. With a few steps you can get hands on all files. I will use <a href="http://curl.haxx.se/">CURL</a> to do this. 
 <ol>
- <li>Create or edit your <b>.netrc</b> file to add your Connect 2014 credentials (in one line)<br> <code>machine connections.connect2014.com login [YourNumericID] password [YourNumericPassword]</code> (Note [ and ] are NOT part of the line in the .netrc file)</li>
- <li>Download the feed. Checking this morning, I found a little more than 500 files. The Connections API allows for max 500 entries per "page", so 2 calls will be sufficient for now. You can check the number of files in the <code>&lt;snx:rank&gt;</code> element in the resulting XML:<br> <code>curl --netrc -G --basic -L 'https://connections.connect2014.com/files/basic/anonymous/api/documents/feed?sK=created&amp;sO=dsc&amp;visibility=public&amp;page=1&amp;ps=500' &gt; page1.xml</code><br> <code>curl --netrc -G --basic -L 'https://connections.connect2014.com/files/basic/anonymous/api/documents/feed?sK=created&amp;sO=dsc&amp;visibility=public&amp;page=2&amp;ps=500' &gt; page2.xml</code><br> (explanation of parameters below)</li>
+ <li>Create or edit your <b>.netrc</b> file to add your Connect 2014 credentials (in one line)<br><code>machine connections.connect2014.com login [YourNumericID] password [YourNumericPassword]</code> (Note [ and ] are NOT part of the line in the .netrc file)</li>
+ <li>Download the feed. Checking this morning, I found a little more than 500 files. The Connections API allows for max 500 entries per "page", so 2 calls will be sufficient for now. You can check the number of files in the <code>&lt;snx:rank&gt;</code> element in the resulting XML:<br><code>curl --netrc -G --basic -L 'https://connections.connect2014.com/files/basic/anonymous/api/documents/feed?sK=created&amp;sO=dsc&amp;visibility=public&amp;page=1&amp;ps=500' &gt; page1.xml</code><br><code>curl --netrc -G --basic -L 'https://connections.connect2014.com/files/basic/anonymous/api/documents/feed?sK=created&amp;sO=dsc&amp;visibility=public&amp;page=2&amp;ps=500' &gt; page2.xml</code><br>
+   (explanation of parameters below)</li>
  <li>Transformt the resulting files to a shell script using XSLT (see below) <code>java -cp saxon9he.jar net.sf.saxon.Transform -t -s:page1.xml -xsl:connect2014.xslt -o:page1.sh</code></li>
  <li>Make the scripts executable (unless your OS would execute arbitrary files) <code>chmod +x page1.sh</code></li>
  <li>Run the download <code>./page1.sh</code></li>
@@ -138,7 +139,7 @@ ga('send', 'pageview');
    <li><b>--basic</b>: use basic authentication</li>
    <li><b>-L</b>: follow redirects (probably not needed here)</li>
    <li>(optional) <b>-v</b>: verbose output</li>
-  </ul> </li>
+  </ul></li>
  <li>the Connections <a href="http://www-10.lotus.com/ldd/appdevwiki.nsf/xpDocViewer.xsp?lookupName=IBM+Connections+4.5+API+Documentation#action=openDocument&amp;res_title=Getting_a_feed_of_public_files_ic45&amp;content=pdcontent">Files API</a> parameters 
   <ul>
    <li><b>sK=created</b>: sort by creation date</li>
@@ -146,8 +147,9 @@ ga('send', 'pageview');
    <li><b>visibility=public</b>: show all public files</li>
    <li><b>page=1|2</b>: what page to show. Start depends on page size</li>
    <li><b>ps=500</b>: Show 500 files per page (that's the maximum Connections supports</li>
-  </ul> </li>
-</ul> As usual: YMMV<br>The XSLT used: 
+  </ul></li>
+</ul> As usual: YMMV<br>
+The XSLT used: 
 <br>
 <pre><code class="language-xml">
 &lt;?xml version="1.0" encoding="UTF-8"?&gt;

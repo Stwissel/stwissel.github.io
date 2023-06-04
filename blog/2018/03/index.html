@@ -118,9 +118,14 @@ ga('send', 'pageview');
 						<small><a href="/blog/2018/03/salesforce-heroku-jwt.html">Authenticate from Salesforce to Heroku with JWT</a></small>
 					</h1>
 					<hr />
-					<div><p><a href="https://heroku.com">Heroku</a> PAAS is an easy and flexible way to extend Salesforce functionality.<br> Its easy to call out to a Heroku REST service build with a method of your choice: Java, JavaScript, Ruby etc.<br> The usual sticky point between two platforms is the <strong>identity of the caller</strong>.</p>
-<p>In a lot of cases the only requirement is "a valid Salesforce user", eventually with some additional claims added.<br> For this scenario a <a href="https://jwt.io/">JWT</a> Bearer authentication (<a href="https://tools.ietf.org/html/rfc7519">RFC 7519</a>) is a good pick.</p>
-<p>When you look around, most examples revolve around a JWT token being issued after some means of authentication from the same system that was authenticated against.<br> This scenario is different: The Salesforce server issues the JWT token and code on Heroku validates the token as authorization.<br> The beauty of the approach: <strong>no extra calls</strong> need to be made to get this working.</p>
+					<div><p><a href="https://heroku.com">Heroku</a> PAAS is an easy and flexible way to extend Salesforce functionality.<br>
+  Its easy to call out to a Heroku REST service build with a method of your choice: Java, JavaScript, Ruby etc.<br>
+  The usual sticky point between two platforms is the <strong>identity of the caller</strong>.</p>
+<p>In a lot of cases the only requirement is "a valid Salesforce user", eventually with some additional claims added.<br>
+  For this scenario a <a href="https://jwt.io/">JWT</a> Bearer authentication (<a href="https://tools.ietf.org/html/rfc7519">RFC 7519</a>) is a good pick.</p>
+<p>When you look around, most examples revolve around a JWT token being issued after some means of authentication from the same system that was authenticated against.<br>
+  This scenario is different: The Salesforce server issues the JWT token and code on Heroku validates the token as authorization.<br>
+  The beauty of the approach: <strong>no extra calls</strong> need to be made to get this working.</p>
 <p>What you will need:</p>
 <ul>
  <li>A valid certificate, in this case self signed is good enough (it won't be used by a browser)</li>
@@ -128,10 +133,13 @@ ga('send', 'pageview');
  <li>A Heroku account</li>
 </ul>
 <h3>Preparing the certificate</h3>
-<p>In Salesforce setup open <a href="https://help.salesforce.com/articleView?id=security_keys_about.htm&amp;type=5">Certificate and Key management</a>.<br> Create or pick a key. Note down the name. For this article I will use <em>YourCertNameHere</em>. Open the key and click on <em>Download Certificate</em>.<br> The cert will be downloaded in crt format. We use this file to extract the <strong>public</strong> key that Heroku will use to verify the signature. To get the key use:</p>
+<p>In Salesforce setup open <a href="https://help.salesforce.com/articleView?id=security_keys_about.htm&amp;type=5">Certificate and Key management</a>.<br>
+  Create or pick a key. Note down the name. For this article I will use <em>YourCertNameHere</em>. Open the key and click on <em>Download Certificate</em>.<br>
+  The cert will be downloaded in crt format. We use this file to extract the <strong>public</strong> key that Heroku will use to verify the signature. To get the key use:</p>
 <pre><code class="language-bash">openssl x509 -pubkey -noout -in YourCertNameHere.crt
 </code></pre>
-<p>The String we need is between the BEGIN and END lines, excluding the lines. You can store it into a file or create a Heroku environment variable.<br> Since it is a public key, you don't need to guard it as fiercly as your private keys.</p>
+<p>The String we need is between the BEGIN and END lines, excluding the lines. You can store it into a file or create a Heroku environment variable.<br>
+  Since it is a public key, you don't need to guard it as fiercly as your private keys.</p>
 <h3>The APEX code</h3>
 <p>Before making a call-out to Heroku, you need to componse the signed JWT token. That's done in just a few lines:</p>
 <pre><code class="language-java">public static String getJWTBearer(String subject, String keyName) {
@@ -141,9 +149,11 @@ ga('send', 'pageview');
     return myJws.getCompactSerialization();
 }
 </code></pre>
-<p>You might opt to add additional claims beside the subject, when your use case does require that.<br> The header value gets added to the <code>Authorization</code> header as <code>Bearer</code> authorization.</p>
+<p>You might opt to add additional claims beside the subject, when your use case does require that.<br>
+  The header value gets added to the <code>Authorization</code> header as <code>Bearer</code> authorization.</p>
 <h3>Java code</h3>
-<p>I'm using the <a href="https://github.com/jwtk/jjwt">jjwt</a> library which is available on <a href="https://search.maven.org/#artifactdetails%7Cio.jsonwebtoken%7Cjjwt%7C0.9.0%7Cjar">Maven Central</a>.<br> It makes it simple to retrieve a claim. An expired claim or an invalid signature will throw an error, so wrap it into a try/catch.</p>
+<p>I'm using the <a href="https://github.com/jwtk/jjwt">jjwt</a> library which is available on <a href="https://search.maven.org/#artifactdetails%7Cio.jsonwebtoken%7Cjjwt%7C0.9.0%7Cjar">Maven Central</a>.<br>
+  It makes it simple to retrieve a claim. An expired claim or an invalid signature will throw an error, so wrap it into a try/catch.</p>
 <pre><code class="language-java">import java.security.Key;
 import java.security.KeyFactory;
 import java.security.spec.X509EncodedKeySpec;
@@ -163,7 +173,8 @@ public class JwtVerifier {
  }
 }
 </code></pre>
-<p>The only catch in the code was the need for <code>MimeDecoder</code> instead of a standard <code>Decoder</code> for Base64 decoding.<br> The subject, typically the user, can be retrieved using <code>claims.getSubject()</code></p>
+<p>The only catch in the code was the need for <code>MimeDecoder</code> instead of a standard <code>Decoder</code> for Base64 decoding.<br>
+  The subject, typically the user, can be retrieved using <code>claims.getSubject()</code></p>
 <p>Next stop, for another blog entry: the NodeJS equivalent.</p>
 <p>As usual YMMV!</p></div>
 					<hr />
@@ -197,7 +208,8 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 </ul>
 <p>For this sample I will use the Domain “demo.example.com”</p>
 <h3>Obtaining a PEM certficate from LetsEncrypt</h3>
-<p>Easiest is to use the certbot utility on a Linux machine (e.g. spin up an instance on Heroku). DigitalOcean has <a href="https://www.digitalocean.com/community/tutorials/how-to-use-certbot-standalone-mode-to-retrieve-let-s-encrypt-ssl-certificates">detailed instructions</a>.<br> There used to be a tls-sni challenge which was marked insecure, so you want to the DNS challenge.</p>
+<p>Easiest is to use the certbot utility on a Linux machine (e.g. spin up an instance on Heroku). DigitalOcean has <a href="https://www.digitalocean.com/community/tutorials/how-to-use-certbot-standalone-mode-to-retrieve-let-s-encrypt-ssl-certificates">detailed instructions</a>.<br>
+  There used to be a tls-sni challenge which was marked insecure, so you want to the DNS challenge.</p>
 <p><code>sudo certbot certonly --manual --preferred-challenges dns -d demo.example.com</code></p>
 <h3>Convert PEM to PKCS12 format</h3>
 <p>First concatenate all PEM files into one. Presuming you used the Letsencrypt mechanism:</p>
@@ -314,7 +326,7 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 				<aside id="sidebar_categoriesArchive" class="well">
 					<ul class="nav nav-list">
 						<li class="nav-header">Categories</li>
-						<li ><a href="/blog/categories/afterhours.html">After Hours</a></li>
+						<li ><a href="/blog/categories/afterhours.html">After hours</a></li>
 						<li ><a href="/blog/categories/agile.html">Agile</a></li>
 						<li ><a href="/blog/categories/apex.html">Apex</a></li>
 						<li ><a href="/blog/categories/blog.html">Blog</a></li>
@@ -378,6 +390,7 @@ categories:  <a href="/blog/categories/heroku.html">Heroku</a>  <a href="/blog/c
 						<li ><a href="/blog/categories/technology.html">Technology</a></li>
 						<li ><a href="/blog/categories/travel.html">Travel</a></li>
 						<li ><a href="/blog/categories/twins.html">Twins</a></li>
+						<li ><a href="/blog/categories/typescript.html">TypeScript</a></li>
 						<li ><a href="/blog/categories/umsys.html">UMsys</a></li>
 						<li ><a href="/blog/categories/unittesting.html">UnitTesting</a></li>
 						<li ><a href="/blog/categories/vertx.html">vert.x</a></li>

@@ -123,7 +123,9 @@ ga('send', 'pageview');
 					<h1><small>Apache Axis and Sharepoint Webservices</small></h1>
 					<hr />
 					<div>In preparation for <a href="https://www-950.ibm.com/events/wwe/lotus/lsph2011.nsf/sessionabstract?openform&amp;sessionid=AD107">Lotusphere 2011</a> I had to deal with SharePoint web services. While SharePoint 2010 is transitioning to <a href="http://www.odata.org/">oData</a> the bulk of APIs is still web services only as in SharePoint 2003 and 2007. Inspired by <a href="http://www.openntf.org/projects/pmt.nsf/ProjectLookup/Stubby">Stubby</a> and Julian's excellent <a href="http://www.nsftools.com/stubby/ApacheAxisClientTips.htm">explanations</a> I decided to use <a href="http://ws.apache.org/axis/">Apache Axis</a> (It's a bit outdated and one probably would use <a href="http://cxf.apache.org/">Apache CXF</a> for flexibility today, but for my use case Axis was sufficient and lean. Now SharePoint has a lot of web service end points (I always thought you have a few and distinguish by port and service, but who am I to challenge a Microsoft architecture) you might want to use in code. Axis comes with a <a href="http://www.ibm.com/developerworks/webservices/library/ws-noide2/">nice little tool</a> called <a href="http://ws.apache.org/axis/java/user-guide.html#WSDL2JavaBuildingStubsSkeletonsAndDataTypesFromWSDL"><code>WDSL2Java</code></a> to generate all the Java classes you need. Unfortunately the ServiceLocator classes have the URL where the WSDL file was retrieved from hard coded as local variable in case you call the service locator without URL. 
-<br> Now I don't like the idea to have an arbitrary URL in a Java file. So I considered 2 options: edit all generated classes and replace the static string with a call to a variable or an not-implemented error -or- find a way how all these classes can be generated for every instance where one wants to use them. Then the actual/current SharePoint server name would be in the variable. I decided for the later and wrote a little script. It's a Linux script and requires that you have <a href="http://www.apache.org/dyn/closer.cgi/ws/axis/1_4/">downloaded AXIS</a> and made it available on the Java classpath (easiest: copy the jars to the lib/ext directory of your jvm). I also used some Linux eye candy, so you might need to adjust that for Mac or Windows. The result is a JAR file you can use in your XPages, Agent or Java project(s). Here you go:<div class="bash"><span class="co0">#!/bin/bash</span>
+<br>
+ Now I don't like the idea to have an arbitrary URL in a Java file. So I considered 2 options: edit all generated classes and replace the static string with a call to a variable or an not-implemented error -or- find a way how all these classes can be generated for every instance where one wants to use them. Then the actual/current SharePoint server name would be in the variable. I decided for the later and wrote a little script. It's a Linux script and requires that you have <a href="http://www.apache.org/dyn/closer.cgi/ws/axis/1_4/">downloaded AXIS</a> and made it available on the Java classpath (easiest: copy the jars to the lib/ext directory of your jvm). I also used some Linux eye candy, so you might need to adjust that for Mac or Windows. The result is a JAR file you can use in your XPages, Agent or Java project(s). Here you go:<div class="bash">
+ <span class="co0">#!/bin/bash</span>
  <br><span class="co0">#/** ========================================================================= *</span>
  <br><span class="co0"># * Copyright (C) 2010, 2011 IBM Singapore Pte Ltd &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;*</span>
  <br><span class="co0"># * &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;All rights reserved. &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;*</span>
@@ -145,28 +147,39 @@ ga('send', 'pageview');
  <br><span class="co0"># The script uses zenity, tree and notify-send which might not be part of</span>
  <br><span class="co0"># your standard Linux installation (but are highly recommended)</span>
  <br><span class="co0">#</span>
- <br><span class="re2">loc</span>=$ <span class="br0">(</span> zenity <span class="re5">--entry</span><span class="re5">--text</span>= <span class="st0">"What is your Sharepoint servers URL (without / at end!)"</span><span class="re5">--entry-text</span>= <span class="st0">"http://sharepoint"</span><span class="br0">)</span>; 
+ <br><span class="re2">loc</span>=$ <span class="br0">(</span> zenity <span class="re5">--entry</span> <span class="re5">--text</span>= <span class="st0">"What is your Sharepoint servers URL (without / at end!)"</span> <span class="re5">--entry-text</span>= <span class="st0">"http://sharepoint"</span> <span class="br0">)</span>; 
  <br><span class="co0">#if $? != 0, user click on cancel button, so exit</span>
- <br><span class="kw1">if</span><span class="br0">[</span><span class="st0">"<span class="es3">${loc}</span>?"</span> == <span class="st0">"?"</span><span class="br0">]</span> ; <span class="kw1">then</span>
- <br> &nbsp; &nbsp; notify-send <span class="re5">-t</span><span class="nu0">1000</span><span class="re5">-u</span> low <span class="re5">-i</span> gtk-dialog-info <span class="st0">"Operation has been canceled"</span>
- <br> &nbsp; &nbsp; <span class="kw3">exit</span><span class="nu0">1</span>
+ <br><span class="kw1">if</span> <span class="br0">[</span> <span class="st0">"<span class="es3">${loc}</span>?"</span> == <span class="st0">"?"</span> <span class="br0">]</span> ; <span class="kw1">then</span>
+ <br>
+  &nbsp; &nbsp; notify-send <span class="re5">-t</span> <span class="nu0">1000</span> <span class="re5">-u</span> low <span class="re5">-i</span> gtk-dialog-info <span class="st0">"Operation has been canceled"</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw3">exit</span> <span class="nu0">1</span>
  <br><span class="kw1">fi</span>
- <br> notify-send <span class="re5">-t</span><span class="nu0">1000</span><span class="re5">-u</span> low <span class="re5">-i</span> gtk-dialog-info <span class="st0">"Generating classes for <span class="es3">${loc}</span>"</span>
+ <br>
+  notify-send <span class="re5">-t</span> <span class="nu0">1000</span> <span class="re5">-u</span> low <span class="re5">-i</span> gtk-dialog-info <span class="st0">"Generating classes for <span class="es3">${loc}</span>"</span>
  <br>
  <br><span class="re2">retrieve</span>= <span class="st0">"alerts|Authentication|Copy|DspSts|DWS|ExcelService|Forms|Imaging|Lists|Meetings|People|Permissions|sharepointemailws|sites|spsearch|UserGroup|versions|Views|webpartpages|Webs"</span>
  <br>
- <br><span class="kw1">for</span> item <span class="kw1">in</span><span class="co1">${retrieve//|/ }</span>; 
- <br> &nbsp; <span class="kw1">do</span>
- <br> &nbsp; notify-send <span class="re5">-t</span><span class="nu0">100</span><span class="re5">-u</span> low <span class="re5">-i</span> gtk-dialog-info <span class="st0">"Retrieving <span class="es3">${loc}</span>/_vit_bin/<span class="es3">${item}</span>.asmx?WSDL"</span>
- <br> &nbsp; <span class="kw2">wget</span><span class="re1">$loc</span><span class="sy0">/</span>_vti_bin <span class="sy0">/</span><span class="co1">${item}</span>.asmx?WSDL <span class="re5">-O</span><span class="co1">${item}</span>.wsdl 
- <br> &nbsp; java org.apache.axis.wsdl.WSDL2Java <span class="re1">$item</span>.wsdl <span class="re5">-o</span> src 
+ <br><span class="kw1">for</span> item <span class="kw1">in</span> <span class="co1">${retrieve//|/ }</span>; 
+ <br>
+  &nbsp; <span class="kw1">do</span>
+ <br>
+  &nbsp; notify-send <span class="re5">-t</span> <span class="nu0">100</span> <span class="re5">-u</span> low <span class="re5">-i</span> gtk-dialog-info <span class="st0">"Retrieving <span class="es3">${loc}</span>/_vit_bin/<span class="es3">${item}</span>.asmx?WSDL"</span>
+ <br>
+  &nbsp; <span class="kw2">wget</span> <span class="re1">$loc</span> <span class="sy0">/</span>_vti_bin <span class="sy0">/</span> <span class="co1">${item}</span>.asmx?WSDL <span class="re5">-O</span> <span class="co1">${item}</span>.wsdl 
+ <br>
+  &nbsp; java org.apache.axis.wsdl.WSDL2Java <span class="re1">$item</span>.wsdl <span class="re5">-o</span> src 
  <br><span class="kw1">done</span>
- <br> notify-send <span class="re5">-t</span><span class="nu0">2000</span><span class="re5">-u</span> low <span class="re5">-i</span> gtk-dialog-info <span class="st0">"Compiling Java"</span>
- <br><span class="kw2">tree</span><span class="re5">-if</span> src <span class="sy0">|</span><span class="kw2">grep</span> .java <span class="sy0">&gt;</span> compilelist 
+ <br>
+  notify-send <span class="re5">-t</span> <span class="nu0">2000</span> <span class="re5">-u</span> low <span class="re5">-i</span> gtk-dialog-info <span class="st0">"Compiling Java"</span>
+ <br><span class="kw2">tree</span> <span class="re5">-if</span> src <span class="sy0">|</span> <span class="kw2">grep</span> .java <span class="sy0">&gt;</span> compilelist 
  <br><span class="kw2">mkdir</span> bin <span class="re5">-p</span>
- <br> javac <span class="sy0">@</span>compilelist <span class="re5">-d</span> bin 
- <br> jar cf sp2010ws.jar <span class="re5">-C</span> src . <span class="re5">-C</span> bin . 
- <br> notify-send <span class="re5">-t</span><span class="nu0">2000</span><span class="re5">-u</span> low <span class="re5">-i</span> gtk-dialog-info <span class="st0">"Retrieval completed for: <span class="es3">${loc}</span>"</span>
+ <br>
+  javac <span class="sy0">@</span>compilelist <span class="re5">-d</span> bin 
+ <br>
+  jar cf sp2010ws.jar <span class="re5">-C</span> src . <span class="re5">-C</span> bin . 
+ <br>
+  notify-send <span class="re5">-t</span> <span class="nu0">2000</span> <span class="re5">-u</span> low <span class="re5">-i</span> gtk-dialog-info <span class="st0">"Retrieval completed for: <span class="es3">${loc}</span>"</span>
 </div> As usual YMMV</div>
 					<hr />
 					<p>

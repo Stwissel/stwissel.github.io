@@ -119,13 +119,19 @@ ga('send', 'pageview');
 					</h1>
 					<hr />
 					<div>Verse on premises (VoP) is nearing its second beta release and fellow Notes experts are wondering if they need to install <a href="http://lucene.apache.org/solr/">Apache Solr</a> as part of the VoP deployment. There was a lengthy, high quality discussion and quite some effort evaluating alternatives. In conclusion it was decided to deliver the subset of Solr capabilities needed for VoP as series of OSGi plugins to the Domino server. The project was formed out of the experience with ProjectCastle, which continues as Project OrangeBox to deliver these plugins. In VoP you might encounter one or the other reference to PoB, so now you know where it comes from. 
-<br> One of the design challenges to solve was to emulate the facet results of the Solr search engine. I build some prototypes and finally settled on the use of <a href="https://github.com/ReactiveX/RxJava">RxJava</a>. 
-<br> RxJava is a member of the <a href="http://reactivex.io/">ReactiveX</a> programming family, which is designed around the Observer pattern, iterators and functional programming. Check out the <a href="http://reactivex.io/">main site</a> to get into the groove. 
-<br> The task at hand is to convert something Domino (a ViewNavigator, a DocumentCollection or a Document) into something that emits subscribable events. I started with turning a document into an NotesItem emitter. Purpose of this was the creation of lighweight Java objects that contain the items I'm interested in. Since Domino's Java has <a href="http://www-01.ibm.com/support/docview.wss?uid=swg21097861">special needs</a> and I couldn't use the <a href="https://github.com/OpenNTF/org.openntf.domino">ODA</a>, special precaution was needed. 
-<br> There are <a href="https://github.com/ReactiveX/RxJava/wiki/Creating-Observables">plenty of methods</a> to create an Observable and on first look <a href="http://reactivex.io/documentation/operators/create.html">Create</a> looks most promising, but it left the question of recycling open. Luckily there is the <a href="http://reactivex.io/documentation/operators/using.html">Using</a> method that creates a companion object that lives along the Observable and gets explicitly called when the Observable is done. To create the NotesItem emitting Observable I settled on the <a href="http://reactivex.io/documentation/operators/from.html">From</a> method with an <a href="https://docs.oracle.com/javase/7/docs/api/java/lang/Iterable.html">Iterable</a> as source. The moving parts I had to create were <code>class DocumentSource implements Iterable&lt;Item&gt;</code> and <code>class ItemIterator implements Iterator&lt;Item&gt;</code>
-<br> Why Reactive? In a nutshell: a source emits data and any number of subscribers can subscribe to. Between the emission and subscription any number of filters, modifiers and aggregators can manipulate the data emitted. Since each of them lives in its own little class, testing and composition become very easy. Let's look at an example: 
+<br>
+ One of the design challenges to solve was to emulate the facet results of the Solr search engine. I build some prototypes and finally settled on the use of <a href="https://github.com/ReactiveX/RxJava">RxJava</a>. 
+<br>
+ RxJava is a member of the <a href="http://reactivex.io/">ReactiveX</a> programming family, which is designed around the Observer pattern, iterators and functional programming. Check out the <a href="http://reactivex.io/">main site</a> to get into the groove. 
+<br>
+ The task at hand is to convert something Domino (a ViewNavigator, a DocumentCollection or a Document) into something that emits subscribable events. I started with turning a document into an NotesItem emitter. Purpose of this was the creation of lighweight Java objects that contain the items I'm interested in. Since Domino's Java has <a href="http://www-01.ibm.com/support/docview.wss?uid=swg21097861">special needs</a> and I couldn't use the <a href="https://github.com/OpenNTF/org.openntf.domino">ODA</a>, special precaution was needed. 
+<br>
+ There are <a href="https://github.com/ReactiveX/RxJava/wiki/Creating-Observables">plenty of methods</a> to create an Observable and on first look <a href="http://reactivex.io/documentation/operators/create.html">Create</a> looks most promising, but it left the question of recycling open. Luckily there is the <a href="http://reactivex.io/documentation/operators/using.html">Using</a> method that creates a companion object that lives along the Observable and gets explicitly called when the Observable is done. To create the NotesItem emitting Observable I settled on the <a href="http://reactivex.io/documentation/operators/from.html">From</a> method with an <a href="https://docs.oracle.com/javase/7/docs/api/java/lang/Iterable.html">Iterable</a> as source. The moving parts I had to create were <code>class DocumentSource implements Iterable&lt;Item&gt;</code> and <code>class ItemIterator implements Iterator&lt;Item&gt;</code>
+<br>
+ Why Reactive? In a nutshell: a source emits data and any number of subscribers can subscribe to. Between the emission and subscription any number of filters, modifiers and aggregators can manipulate the data emitted. Since each of them lives in its own little class, testing and composition become very easy. Let's look at an example: 
 <br><code>docSource.getItemStream(session).filter(nameFilter).map(toPobItem).map(nameMapper).subscribe(new ItemAdder());</code>
-<br> You almost can read this aloud: " <i>The source emits a stream of items, they get filtered by Name, then converted into another Java object (PobItem) and renamed before added to the subscriber.</i>". In a different case you might want to collect all entities (users, groups, roles) that have access to a document, you migh create a "readerAuthorFilter". The individual classes are very easy to test. E.g. the Name filter looks like this: 
+<br>
+ You almost can read this aloud: " <i>The source emits a stream of items, they get filtered by Name, then converted into another Java object (PobItem) and renamed before added to the subscriber.</i>". In a different case you might want to collect all entities (users, groups, roles) that have access to a document, you migh create a "readerAuthorFilter". The individual classes are very easy to test. E.g. the Name filter looks like this: 
 <br>
 <pre><code class="language-java">
 // requiredFields is is a Collection&lt;String&gt; of NotesItem names to include or exclude
@@ -179,7 +185,8 @@ public class ItemNameFilter implements Func1&lt;Item, Boolean&gt; {
     }
 }
 </code></pre> ## 
-<br> The two classes are not very long and, once you are comfortable with Reactive, easy to read: 
+<br>
+ The two classes are not very long and, once you are comfortable with Reactive, easy to read: 
 <h3>ItemIterator</h3>
 <pre><code class="language-java">
 public class ItemIterator implements Iterator&lt;Item&gt; {
@@ -292,7 +299,8 @@ public class DocumentSource implements Iterable&lt;Item&gt; {
 
 }
 </code></pre>
-<br> I will report more on my RXJava meets Domino experience. As usual YMMV</div>
+<br>
+ I will report more on my RXJava meets Domino experience. As usual YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -337,7 +345,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
 				<aside id="sidebar_categoriesArchive" class="well">
 					<ul class="nav nav-list">
 						<li class="nav-header">Categories</li>
-						<li ><a href="/blog/categories/afterhours.html">After Hours</a></li>
+						<li ><a href="/blog/categories/afterhours.html">After hours</a></li>
 						<li ><a href="/blog/categories/agile.html">Agile</a></li>
 						<li ><a href="/blog/categories/apex.html">Apex</a></li>
 						<li ><a href="/blog/categories/blog.html">Blog</a></li>
@@ -401,6 +409,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
 						<li ><a href="/blog/categories/technology.html">Technology</a></li>
 						<li ><a href="/blog/categories/travel.html">Travel</a></li>
 						<li ><a href="/blog/categories/twins.html">Twins</a></li>
+						<li ><a href="/blog/categories/typescript.html">TypeScript</a></li>
 						<li ><a href="/blog/categories/umsys.html">UMsys</a></li>
 						<li ><a href="/blog/categories/unittesting.html">UnitTesting</a></li>
 						<li ><a href="/blog/categories/vertx.html">vert.x</a></li>

@@ -149,13 +149,17 @@ ga('send', 'pageview');
 					<h1><small>Put an angular face on your inbox</small></h1>
 					<hr />
 					<div>In the <a href="/blog/2014/09/rendering-a-notes-view-as-json-rest-service-on-your-client.html">last installment</a> I got vert.x to emit a Notes view, read from your local mail file, to be emitted as JSON stream. While that might be perfectly fine for the inner geek, normal mortals want to look (and interact) with something more pretty. 
-<br> The cool kids on the block for web interfaces and applications are <a href="http://getbootstrap.com/">Twitter BootStrap</a> and <a href="https://angularjs.org/">AngularJS</a>, so these will be the tools in this installment. 
-<br> Not familiar with them? Go and <a href="https://www.youtube.com/results?search_query=angularjs">watch some videos</a>. Back? Let's get going. 
-<br> Since I'm not much of a designer, I choose the ready made <a href="http://www.almsaeedstudio.com/">Admin LTE</a> template based on bootstrap. The main reason for choosing this one, was a <a href="http://almsaeedstudio.com/AdminLTE/pages/UI/timeline.html">timeline layout</a> that I wanted for the inbox. 
-<br> My inbox is already sorted by date, so it should fit nicely (so I thought). However the view optically is categorized by date and under the hood just a flat list of <code>&lt;li&gt;</code> elements. A little tweaking was necessary. The result looks quite OK for an after hour exercise: 
 <br>
-<img src="/blog/images/2014/mailbox-ng.png" border="0" alt="Alternate layout for the Inbox">
-<br> The steps to get there: 
+ The cool kids on the block for web interfaces and applications are <a href="http://getbootstrap.com/">Twitter BootStrap</a> and <a href="https://angularjs.org/">AngularJS</a>, so these will be the tools in this installment. 
+<br>
+ Not familiar with them? Go and <a href="https://www.youtube.com/results?search_query=angularjs">watch some videos</a>. Back? Let's get going. 
+<br>
+ Since I'm not much of a designer, I choose the ready made <a href="http://www.almsaeedstudio.com/">Admin LTE</a> template based on bootstrap. The main reason for choosing this one, was a <a href="http://almsaeedstudio.com/AdminLTE/pages/UI/timeline.html">timeline layout</a> that I wanted for the inbox. 
+<br>
+ My inbox is already sorted by date, so it should fit nicely (so I thought). However the view optically is categorized by date and under the hood just a flat list of <code>&lt;li&gt;</code> elements. A little tweaking was necessary. The result looks quite OK for an after hour exercise: 
+<br><img src="/blog/images/2014/mailbox-ng.png" border="0" alt="Alternate layout for the Inbox">
+<br>
+ The steps to get there: 
 <ol>
  <li>Tweak the vert.x service to render a categorized by date version of the inbox. You can do that without touching the underlying view. I'll provide details on that modules in a later article (and some sample data below). The main difference for now: the inbox data will be available at the URL <code>/notes/categorized/($Inbox)</code></li>
  <li>Create templates and <a href="https://docs.angularjs.org/guide/directive">directives</a> for Angular</li>
@@ -173,12 +177,15 @@ ga('send', 'pageview');
        {"time": "10:00","sender": "F. Zappa","message":"message 4"}
     ]
 }]}</code></pre>
-<br> In my page template I defined the Angular app and controller on the body level: 
+<br>
+ In my page template I defined the Angular app and controller on the body level: 
 <br>
 <pre><code class="language-html">&lt;body class="skin-blue" ng-app="inbox" ng-controller="dayController as dc"&gt;&gt;</code></pre>
-<br> This was necessary to be able to have the message count displayed in the upper right hand corner: 
+<br>
+ This was necessary to be able to have the message count displayed in the upper right hand corner: 
 <br><code>&lt;span class="label label-success"&gt;{{dc.messagecount}}&lt;/span&gt;</code>. 
-<br> The template pieces are short, this is the main page (excerpt, download link below): 
+<br>
+ The template pieces are short, this is the main page (excerpt, download link below): 
 <br>
 <pre><code class="language-html">
 &lt;section class="content"&gt;
@@ -193,7 +200,8 @@ ga('send', 'pageview');
  &lt;/div&gt;
 &lt;/section&gt;
 </code></pre>
-<br> The interesting part in the above template are the <code>ng-repeat-start</code> and <code>ng-repeat-end</code> statements. What they do: for every date in the JSON, they will create two <code>&lt;li&gt;</code> entries: one for the date and one for the first message. Angular then needs to be convinced to expand that into all messages. More on that below. The individual message entries use this template: 
+<br>
+ The interesting part in the above template are the <code>ng-repeat-start</code> and <code>ng-repeat-end</code> statements. What they do: for every date in the JSON, they will create two <code>&lt;li&gt;</code> entries: one for the date and one for the first message. Angular then needs to be convinced to expand that into all messages. More on that below. The individual message entries use this template: 
 <br>
 <pre><code class="language-html">
 &lt;i class="fa fa-envelope bg-blue"&gt;&lt;/i&gt;
@@ -210,7 +218,8 @@ ga('send', 'pageview');
     &lt;/div&gt;
 &lt;/div&gt;
 </code></pre>
-<br> So far so good, now the final moving piece is the Angular app code. A little word of warning: the following code is a <b>ugly hack</b>. For production quality you would separate out the data fetching into a <a href="https://docs.angularjs.org/guide/concepts#service">service</a> and you add tests and error handling. Anyway, learning and poking around doesn't need this, so here you go: 
+<br>
+ So far so good, now the final moving piece is the Angular app code. A little word of warning: the following code is a <b>ugly hack</b>. For production quality you would separate out the data fetching into a <a href="https://docs.angularjs.org/guide/concepts#service">service</a> and you add tests and error handling. Anyway, learning and poking around doesn't need this, so here you go: 
 <pre><code class="language-js">
   angular.module('inbox', ['ngSanitize'])
    .controller('dayController', ['$http',dayMessages])
@@ -262,7 +271,8 @@ ga('send', 'pageview');
    };
   }
 </code></pre>
-<br> The interestin part is the <code>link</code> function in the timeEndAccess function. Since we have an outer loop over the date creating one li element per date, instead of one per message for that date, the function replaces that with a loop over the messages for that day. Seems to work quite nicely. The template contains Angular code, so it needs to compile, that's what <code>$compile</code> does for us. You can try for yourself, to run the Demo: 
+<br>
+ The interestin part is the <code>link</code> function in the timeEndAccess function. Since we have an outer loop over the date creating one li element per date, instead of one per message for that date, the function replaces that with a loop over the messages for that day. Seems to work quite nicely. The template contains Angular code, so it needs to compile, that's what <code>$compile</code> does for us. You can try for yourself, to run the Demo: 
 <ol>
  <li>Download the <a href="http://almsaeedstudio.com/">Admin LTE template</a> and expand it</li>
  <li>Download my <a href="/blog/downloads/2014/demo.zip">sample files</a> and copy them into the directory where you have expanded the template. Put it into the template root</li>

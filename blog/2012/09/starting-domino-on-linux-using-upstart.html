@@ -126,59 +126,91 @@ ga('send', 'pageview');
 					<h1><small>Starting Domino on Linux using UPSTART</small></h1>
 					<hr />
 					<div>When running Domino on a proper platform (AIX, Solaris, Linux) starting and stopping the Domino server was left to customizing <a href="http://www-01.ibm.com/support/docview.wss?uid=swg21173499">a script from a technote</a> or a Redbook's <a href="ftp://www.redbooks.ibm.com/redbooks/SG246835/">FTP site</a>, as far as official IBM resouces go. Of course the professional source is Daniel Nashed's <a href="http://www.nashcom.de/nshweb/pages/startscript.htm">ultimate Domino startup script</a>. One script to rule them all. 
-<br> On Linux however the way services are started has changed a while ago. The prefered method (definitely in Ubuntu, but also Fedora, RedHat and OpenSuse as option) is <a href="http://en.wikipedia.org/wiki/Upstart">Upstart</a> (there seems to be a push towards <a href="http://en.wikipedia.org/wiki/Systemd">systemd</a>, but that's a story for another time). 
+<br>
+ On Linux however the way services are started has changed a while ago. The prefered method (definitely in Ubuntu, but also Fedora, RedHat and OpenSuse as option) is <a href="http://en.wikipedia.org/wiki/Upstart">Upstart</a> (there seems to be a push towards <a href="http://en.wikipedia.org/wiki/Systemd">systemd</a>, but that's a story for another time). 
 <br><a href="http://upstart.ubuntu.com/">Upstart</a> allows for a more flexible control and faster boot times of your environment. To configure your Domino on Linux we will use 2 scripts and one configuration file for each instance (inspired by the <a href="http://clock.co.uk/tech-blogs/upstart-and-nodejs">same approach</a> for node.js). 
-<br> The first file is <code>/etc/init/domino.conf</code> with the following content: 
-<div class="bash"><span class="co0"># Sample job script for domino, experimental - use at your own risk, don't use in production</span>
- <br> description <span class="st_h">'lotus domino upstart script'</span>
- <br> author <span class="st_h">'@notessensei'</span>
+<br>
+ The first file is <code>/etc/init/domino.conf</code> with the following content: 
+<div class="bash">
+ <span class="co0"># Sample job script for domino, experimental - use at your own risk, don't use in production</span>
+ <br>
+  description <span class="st_h">'lotus domino upstart script'</span>
+ <br>
+  author <span class="st_h">'@notessensei'</span>
  <br>
  <br><span class="co0">#Stop on shutdown - but no start directive - since it gets started by another script</span>
- <br> stop on shutdown 
+ <br>
+  stop on shutdown 
  <br>
  <br><span class="co0">#Instance allows for multiple scripts running</span>
- <br> instance <span class="st0">"Domino - <span class="es2">$NAME</span>"</span>
+ <br>
+  instance <span class="st0">"Domino - <span class="es2">$NAME</span>"</span>
  <br>
  <br><span class="co0"># Restart if it was crashing, with a limit</span>
- <br> respawn 
- <br> respawn limit <span class="nu0">5</span><span class="nu0">60</span>
+ <br>
+  respawn 
+ <br>
+  respawn limit <span class="nu0">5</span> <span class="nu0">60</span>
  <br>
  <br><span class="co0"># Will go into the background</span>
- <br> expect fork 
+ <br>
+  expect fork 
  <br>
  <br><span class="co0"># Kill timeout 20 sec - to give Domino a shutdown chance</span>
  <br><span class="kw2">kill</span> timeout <span class="nu0">20</span>
  <br>
  <br><span class="co0"># Check for the password file</span>
- <br> pre-start script 
- <br> &nbsp; &nbsp; . <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/</span><span class="re1">$NAME</span>.conf 
- <br> &nbsp; &nbsp; <span class="co0"># Ensure the pwd file is there and has the right owner/access</span>
- <br> &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">[</span><span class="sy0">!</span><span class="re5">-f</span><span class="re1">$PWD_LOCATION</span><span class="br0">]</span>; <span class="kw1">then</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">touch</span> PWD_LOCATION 
- <br> &nbsp; &nbsp; <span class="kw1">fi</span>
- <br> &nbsp; &nbsp; <span class="kw2">chmod</span> 0400 <span class="re1">$PWD_LOCATION</span>
- <br> &nbsp; &nbsp; <span class="kw2">chown</span><span class="re1">$SERVER_USER</span>: <span class="re1">$SERVER_GROUP</span><span class="re1">$PWD_LOCATION</span>
- <br> end script 
+ <br>
+  pre-start script 
+ <br>
+  &nbsp; &nbsp; . <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/</span> <span class="re1">$NAME</span>.conf 
+ <br>
+  &nbsp; &nbsp; <span class="co0"># Ensure the pwd file is there and has the right owner/access</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">[</span> <span class="sy0">!</span> <span class="re5">-f</span> <span class="re1">$PWD_LOCATION</span> <span class="br0">]</span>; <span class="kw1">then</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">touch</span> PWD_LOCATION 
+ <br>
+  &nbsp; &nbsp; <span class="kw1">fi</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">chmod</span> 0400 <span class="re1">$PWD_LOCATION</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">chown</span> <span class="re1">$SERVER_USER</span>: <span class="re1">$SERVER_GROUP</span> <span class="re1">$PWD_LOCATION</span>
+ <br>
+  end script 
  <br>
  <br><span class="co0"># The script to start the server</span>
- <br> script 
- <br> &nbsp; &nbsp; . <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/</span><span class="re1">$NAME</span>.conf 
- <br> &nbsp; &nbsp; <span class="kw3">exec</span><span class="kw2">sudo</span><span class="re5">-u</span><span class="re1">$SERVER_USER</span><span class="re5">-c</span><span class="st0">"cd <span class="es3">${DATA_LOCATION}</span>; cat <span class="es3">${PWD_LOCATION}</span>|PWD_LOCATION/server"</span><span class="sy0">&gt;&gt;</span><span class="re1">$LOG_TO</span><span class="nu0">2</span><span class="sy0">&gt;&amp;</span><span class="nu0">1 &amp;</span>
- <br> end script 
+ <br>
+  script 
+ <br>
+  &nbsp; &nbsp; . <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/</span> <span class="re1">$NAME</span>.conf 
+ <br>
+  &nbsp; &nbsp; <span class="kw3">exec</span> <span class="kw2">sudo</span> <span class="re5">-u</span> <span class="re1">$SERVER_USER</span> <span class="re5">-c</span> <span class="st0">"cd <span class="es3">${DATA_LOCATION}</span>; cat <span class="es3">${PWD_LOCATION}</span>|PWD_LOCATION/server"</span> <span class="sy0">&gt;&gt;</span> <span class="re1">$LOG_TO</span> <span class="nu0">2</span> <span class="sy0">&gt;&amp;</span> <span class="nu0">1 &amp;</span>
+ <br>
+  end script 
  <br>
  <br><span class="co0"># Run before shutdown - tell Domino to go down peacefully</span>
- <br> pre-stop script 
- <br> &nbsp; &nbsp; &nbsp;. <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/</span><span class="re1">$NAME</span>.conf 
- <br> &nbsp; &nbsp; <span class="kw3">exec</span><span class="kw2">sudo</span><span class="re5">-u</span><span class="re1">$SERVER_USER</span><span class="re5">-c</span><span class="st0">"cd <span class="es3">${DATA_LOCATION}</span>; /opt/ibm/lotus/bin/server -q"</span>
- <br> end script 
+ <br>
+  pre-stop script 
+ <br>
+  &nbsp; &nbsp; &nbsp;. <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/</span> <span class="re1">$NAME</span>.conf 
+ <br>
+  &nbsp; &nbsp; <span class="kw3">exec</span> <span class="kw2">sudo</span> <span class="re5">-u</span> <span class="re1">$SERVER_USER</span> <span class="re5">-c</span> <span class="st0">"cd <span class="es3">${DATA_LOCATION}</span>; /opt/ibm/lotus/bin/server -q"</span>
+ <br>
+  end script 
  <br>
  <br><span class="co0"># Make sure it is really dead</span>
- <br> post-stop script 
- <br> &nbsp; &nbsp; . <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/</span><span class="re1">$NAME</span>.conf 
- <br> &nbsp; &nbsp; <span class="kw3">exec</span><span class="kw2">sudo</span><span class="re5">-u</span><span class="re1">$SERVER_USER</span><span class="re5">-c</span><span class="st0">"cd <span class="es3">${DATA_LOCATION}</span>; /opt/ibm/lotus/bin/nsd -kill"</span>
- <br> end script 
+ <br>
+  post-stop script 
+ <br>
+  &nbsp; &nbsp; . <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/</span> <span class="re1">$NAME</span>.conf 
+ <br>
+  &nbsp; &nbsp; <span class="kw3">exec</span> <span class="kw2">sudo</span> <span class="re5">-u</span> <span class="re1">$SERVER_USER</span> <span class="re5">-c</span> <span class="st0">"cd <span class="es3">${DATA_LOCATION}</span>; /opt/ibm/lotus/bin/nsd -kill"</span>
+ <br>
+  end script
 </div> Secondly you create the configuration file in <code>/etc/domino/server1.conf</code> (you need to create the directory if needed, it isn't there by default): 
-<div class="bash"><span class="co0">#Configuration variables for Domino instance startup</span>
+<div class="bash">
+ <span class="co0">#Configuration variables for Domino instance startup</span>
  <br><span class="co0">#User and group for Domino</span>
  <br><span class="re2">SERVER_USER</span>= <span class="st0">"domino"</span>
  <br><span class="re2">SERVER_GROUP</span>= <span class="st0">"domino"</span>
@@ -189,21 +221,31 @@ ga('send', 'pageview');
  <br><span class="co0">#Log file</span>
  <br><span class="re2">LOG_TO</span>= <span class="st0">"<span class="es3">${DATA LOCATION}</span>/domino.log"</span>
 </div> The script will be able to start the domino instance using <code>start domino NAME=server1</code>. For additional instances ( <a href="http://publib.boulder.ibm.com/infocenter/domhelp/v8r0/index.jsp?topic=%2Fcom.ibm.help.domino.admin85.doc%2FH_PARTITIONED_SERVERS_OVER.html">partitioned servers</a>) you only need to create an additional conf file in /etc/domino. 
-<br> The final missing piece is the script that starts all the configured instances. Here we can more or less copy <a href="http://clock.co.uk/tech-blogs/upstart-and-nodejs">Ian's node script</a> as <code>/etc/init/alldomino.conf</code>: 
+<br>
+ The final missing piece is the script that starts all the configured instances. Here we can more or less copy <a href="http://clock.co.uk/tech-blogs/upstart-and-nodejs">Ian's node script</a> as <code>/etc/init/alldomino.conf</code>: 
 <div class="bash">
-  description <span class="st_h">'Start all domino instances at boot'</span>
- <br> author <span class="st_h">'@notessensei'</span>
+ description <span class="st_h">'Start all domino instances at boot'</span>
  <br>
- <br> start on <span class="br0">(</span>local-filesystems and net-device-up <span class="br0">)</span>
+  author <span class="st_h">'@notessensei'</span>
  <br>
- <br> task 
  <br>
- <br> script 
- <br> &nbsp; <span class="kw1">for</span><span class="kw2">file</span><span class="kw1">in</span><span class="sy0">`</span><span class="kw2">ls</span><span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/*</span>.conf <span class="sy0">`</span> ; <span class="kw1">do</span>
- <br> &nbsp; &nbsp; <span class="re2">filename</span>= <span class="sy0">`</span><span class="kw2">basename</span><span class="co1">${file%.*}</span><span class="sy0">`</span>
- <br> &nbsp; &nbsp; start domino <span class="re2">NAME</span>= <span class="re1">$filename</span>
- <br> &nbsp; <span class="kw1">done</span>
- <br> end script 
+  start on <span class="br0">(</span>local-filesystems and net-device-up <span class="br0">)</span>
+ <br>
+ <br>
+  task 
+ <br>
+ <br>
+  script 
+ <br>
+  &nbsp; <span class="kw1">for</span> <span class="kw2">file</span> <span class="kw1">in</span> <span class="sy0">`</span> <span class="kw2">ls</span> <span class="sy0">/</span>etc <span class="sy0">/</span>domino <span class="sy0">/*</span>.conf <span class="sy0">`</span> ; <span class="kw1">do</span>
+ <br>
+  &nbsp; &nbsp; <span class="re2">filename</span>= <span class="sy0">`</span> <span class="kw2">basename</span> <span class="co1">${file%.*}</span> <span class="sy0">`</span>
+ <br>
+  &nbsp; &nbsp; start domino <span class="re2">NAME</span>= <span class="re1">$filename</span>
+ <br>
+  &nbsp; <span class="kw1">done</span>
+ <br>
+  end script
 </div> That's all you need. As usual YMMV.</div>
 					<hr />
 					<p>

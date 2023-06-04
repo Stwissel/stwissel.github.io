@@ -126,33 +126,59 @@ ga('send', 'pageview');
 					<h1><small>eMail archival in PDF and electronic record keeping</small></h1>
 					<hr />
 					<div>The question pops up quite regularly: " <i>Our compliance department has decided to use <a href="http://www.pdfa.org/">PDF/A</a> for long term record storage, how can I save my eMail to it?</i>" (The question applies to ALL eMail systems). The short answer: Not as easy as you think. The biggest obstacle is legal need vs. user expectation. To make that clear: I'm not a lawyer, this is not legal advise, just my opinion, talk to your legal counsel before taking action. User expectation (and thus problem awareness): "Storing as PDF is like storing on paper, so what's the big deal?" In reality electronic record keeping has a few different requirement (and NO printing an eMail as seen on screen is NOT record keeping - more on this in a second). Every jurisdiction has their own regulations, but they are strikingly similar (for the usual devil in the details ask your lawyer), so I just take Singapore's <a href="http://statutes.agc.gov.sg/non_version/cgi-bin/cgi_legdisp.pl?actno=2010-ACT-16-N&amp;doctitle=ELECTRONIC%20TRANSACTIONS%20ACT%202010%0A&amp;date=latest&amp;method=part&amp;sl=1">electronic transactions act</a> as a sample: 
-<br><i> <b>Retention of electronic records</b><br> 9.&nbsp;—(1) &nbsp;&nbsp;Where a rule of law requires any document, record or information to be retained, or provides for certain consequences if it is not, that requirement is satisfied by retaining the document, record or information in the form of an electronic record if the following conditions are satisfied:<br> (a) the information contained therein remains accessible so as to be usable for subsequent reference;<br> (b) the electronic record is retained in the format in which it was originally generated, sent or received, or in a format which can be demonstrated to represent accurately the information originally generated, sent or received;<br> (c) such information, if any, as enables <span style="color : red">the identification of the origin and destination of an electronic record and the date and time when it was sent or received</span>, is retained; and<br> (d) any additional requirements relating to the retention of such electronic records specified by the public agency which has supervision over the requirement for the retention of such records are complied with.<br> </i> (colour emphasis mine) 
-<br> So as there is "more than meets the eyes". A eMail record is only completely kept if you keep the header information. Now you have 2 possibilities: change the way you "print" to PDF to include all header / hidden fields (probably at the end of the message) or you use PDF capabilities to retain them accessible as PDF properties. The later case is more interesting since it resembles the user experience in your mail client: users don't see the "techie stuff" but it is a click away to have a peek. There are a number of ways how to create the PDF:<ul>
+<br><i> <b>Retention of electronic records</b><br>
+  9.&nbsp;—(1) &nbsp;&nbsp;Where a rule of law requires any document, record or information to be retained, or provides for certain consequences if it is not, that requirement is satisfied by retaining the document, record or information in the form of an electronic record if the following conditions are satisfied:<br>
+  (a) the information contained therein remains accessible so as to be usable for subsequent reference;<br>
+  (b) the electronic record is retained in the format in which it was originally generated, sent or received, or in a format which can be demonstrated to represent accurately the information originally generated, sent or received;<br>
+  (c) such information, if any, as enables <span style="color : red">the identification of the origin and destination of an electronic record and the date and time when it was sent or received</span>, is retained; and<br>
+  (d) any additional requirements relating to the retention of such electronic records specified by the public agency which has supervision over the requirement for the retention of such records are complied with.<br></i> (colour emphasis mine) 
+<br>
+ So as there is "more than meets the eyes". A eMail record is only completely kept if you keep the header information. Now you have 2 possibilities: change the way you "print" to PDF to include all header / hidden fields (probably at the end of the message) or you use PDF capabilities to retain them accessible as PDF properties. The later case is more interesting since it resembles the user experience in your mail client: users don't see the "techie stuff" but it is a click away to have a peek. There are a number of ways how to create the PDF:<ul>
  <li>Use a commercial package like <a href="http://www.primeapple.co.uk/">DominoPDF</a>, <a href="http://www.agecom.com.au/export">AGE Exporter</a> or <a href="http://www.synaptris.com/">IntelliPrint</a> that are capable of generating PDF directly. They have their limitations of what they can output around signature and encryption. Big advantage: vendor support</li>
  <li>Use a PDF printer driver that can be programmed to automatically assign a known file name. Advantage: works like printing. Disadvantage: depends on the OS printing system</li>
  <li>Export your eMail as MIME or DXL and use a <a href="http://www.w3schools.com/xslt/">XSLT</a> transformation to generate <a href="http://www.w3schools.com/xslfo/">XSL:FO</a> that can be saved as PDF. There is <a href="http://xmlgraphics.apache.org/fop/">Apache FOP</a> and a series of <a href="http://www.w3schools.com/xslfo/xslfo_software.asp">commercial tools</a>. Advantage of this approach: you could have more than one pipeline (e.g. email, Notes apps, client apps, web apps) that end at the XSL:FO processor. Disadvantage: XSL:FO is simply a beast</li>
  <li>Generate the PDF in a discrete way using a Java library. Two Opensource libraries are quite popular: <a href="http://itextpdf.com/">iText</a> and <a href="http://pdfbox.apache.org/">PDFBox</a>. iText is Affero GPL licensed, so it might not be suitable for your project. PDFBox is licenced under the Apache license</li>
 </ul> So now you have a PDF showing the visible part of your message (or document). Now it is time to add the (hidden) fields. In the sample below I used PDFBox and I exported all fields short of RichText. The first possibility is to use custom PDF properties. You also could think of: use XML Meta data, storing the entire document as roundtrip save DXL or store it as converted mime (if it isn't MIME already) as a meta data property. Adobe's Meta data specification is called <a href="http://www.adobe.com/devnet/xmp.html">XMP</a> (Extensible Metadata Platform) which is based on XML and makes heavy use of the <a href="http://dublincore.org/">Dublin Core</a> specification of <a href="http://www.w3.org/RDF/">RDF</a> (also known as <i>semantic web</i>). I like that since it is a good example of implementation of an open standard. 
 <h3>Sample 1: Store all regular Notes fields as custom properties in PDF</h3>
-<div class="java"><span class="co3">/**<br> &nbsp;* @param pDoc The PDF Document that will receive the meta data<br> &nbsp;* @param nDoc The Notes Document where the data will reside<br> &nbsp;* @throws NotesException <br> &nbsp;*/</span>
- <br> @SuppressWarnings <span class="br0">(</span><span class="st0">"unchecked"</span><span class="br0">)</span>
- <br><span class="kw1">public</span><span class="kw4">void</span> saveNoteToMeta <span class="br0">(</span>PDDocument pDoc, <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Adocument+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Document</span></a> nDoc <span class="br0">)</span><span class="kw1">throws</span> NotesException <span class="br0">{</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Avector+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Vector</span></a> allItems <span class="sy0">=</span> nDoc. <span class="me1">getItems</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; PDDocumentInformation info <span class="sy0">=</span> pDoc. <span class="me1">getDocumentInformation</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw1">for</span><span class="br0">(</span><span class="kw4">int</span> i <span class="sy0">=</span><span class="nu0">0</span><span class="sy0">;</span> i <span class="sy0">&lt;</span> allItems. <span class="me1">size</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span> i <span class="sy0">++</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; Item curItem <span class="sy0">=</span><span class="br0">(</span>Item <span class="br0">)</span> allItems. <span class="me1">get</span><span class="br0">(</span>i <span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// TODO: exclude more items</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span>curItem. <span class="me1">getType</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">!=</span> Item. <span class="me1">RICHTEXT</span><span class="sy0">&amp;&amp;</span> curItem. <span class="me1">getType</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">!=</span> Item. <span class="me1">ATTACHMENT</span><span class="sy0">&amp;&amp;</span> curItem. <span class="me1">getType</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">!=</span> Item. <span class="me1">EMBEDDEDOBJECT</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> itemName <span class="sy0">=</span> curItem. <span class="me1">getName</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> itemValue <span class="sy0">=</span> curItem. <span class="me1">getValueString</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; info. <span class="me1">setCustomMetadataValue</span><span class="br0">(</span>itemName, itemValue <span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
+<div class="java">
+ <span class="co3">/**<br>
+   &nbsp;* @param pDoc The PDF Document that will receive the meta data<br>
+   &nbsp;* @param nDoc The Notes Document where the data will reside<br>
+   &nbsp;* @throws NotesException <br>
+   &nbsp;*/</span>
+ <br>
+  @SuppressWarnings <span class="br0">(</span> <span class="st0">"unchecked"</span> <span class="br0">)</span>
+ <br><span class="kw1">public</span> <span class="kw4">void</span> saveNoteToMeta <span class="br0">(</span>PDDocument pDoc, <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Adocument+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Document</span></a> nDoc <span class="br0">)</span> <span class="kw1">throws</span> NotesException <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Avector+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Vector</span></a> allItems <span class="sy0">=</span> nDoc. <span class="me1">getItems</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; PDDocumentInformation info <span class="sy0">=</span> pDoc. <span class="me1">getDocumentInformation</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="kw1">for</span> <span class="br0">(</span> <span class="kw4">int</span> i <span class="sy0">=</span> <span class="nu0">0</span> <span class="sy0">;</span> i <span class="sy0">&lt;</span> allItems. <span class="me1">size</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span> i <span class="sy0">++</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; Item curItem <span class="sy0">=</span> <span class="br0">(</span>Item <span class="br0">)</span> allItems. <span class="me1">get</span> <span class="br0">(</span>i <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// TODO: exclude more items</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span>curItem. <span class="me1">getType</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">!=</span> Item. <span class="me1">RICHTEXT</span> <span class="sy0">&amp;&amp;</span> curItem. <span class="me1">getType</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">!=</span> Item. <span class="me1">ATTACHMENT</span> <span class="sy0">&amp;&amp;</span> curItem. <span class="me1">getType</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">!=</span> Item. <span class="me1">EMBEDDEDOBJECT</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> itemName <span class="sy0">=</span> curItem. <span class="me1">getName</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> itemValue <span class="sy0">=</span> curItem. <span class="me1">getValueString</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; info. <span class="me1">setCustomMetadataValue</span> <span class="br0">(</span>itemName, itemValue <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
  <br><span class="br0">}</span>
 </div> I will, so time permits, publish more samples for meta data storage: <i>Sample 2: Store all regular Notes fields as XML in PDF</i> , <i>Sample 3: Store the entire Note as XML in PDF</i> and <i>Sample 4: store the Note as MIME entries</i>. 
-<br> As usual YMMV</div>
+<br>
+ As usual YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">

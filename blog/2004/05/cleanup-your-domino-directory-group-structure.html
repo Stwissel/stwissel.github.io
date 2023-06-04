@@ -127,12 +127,27 @@ ga('send', 'pageview');
 					<hr />
 					<div>When you run a large Domino Installation with a high fluctuation of people coming in and out, you might end up with a lot of Zombies in your groups. This might happen especially with part time administrators, who are to busy with their main jobs (and don't use AdminP to delete users). I had to do a clean-up exercise recently and I used the simplicity of @Formulas to remove user names that are no longer in the Domino Directory from all group entries where they might still be in: 
 <br><b> Step 1:</b> Create a new view named (GroupCleanup)|GroupCleanup with one column. Sort that column. 
-<br> View selection formula: <span class="attribute">SELECT ( Type= "Person":"Group":"Server" )</span>
-<br> Column formula: <span class="attribute">@If(Type = "Person"; @Subset(Fullname; 1);Type = "Server"; @Subset(Servername; 1); @Subset(ListName; 1)) </span>
+<br>
+ View selection formula: <span class="attribute">SELECT ( Type= "Person":"Group":"Server" )</span>
+<br>
+ Column formula: <span class="attribute">@If(Type = "Person"; @Subset(Fullname; 1);Type = "Server"; @Subset(Servername; 1); @Subset(ListName; 1)) </span>
 <br><b>Step 2:</b>Create an agent, type formula to run against selected documents: 
-<br><span class="attribute">SELECT @All; <br> v := "GroupCleanup"; <br> c := @Elements(Members);<br>good := "";<br>found := ""; <br> @For(i:=1;i&lt;c+1;i:=i+1; <br> current := Members[i]; <br> found := @Trim(@DbLookup("Notes":"NoCache";"";v;current;1;[FailSilent])); <br> @If(@Contains(current;"*");good :=good:current;good :=good:found)); <br> finalgood := @Trim(@Unique(good)); <br> finalbad :=@Trim(@Replace(Members;finalgood;"")); <br> FIELD removedMembers := @Trim(@Unique(removedMembers:finalbad)); <br> FIELD Members := finalgood;</span>
+<br><span class="attribute">SELECT @All; <br>
+  v := "GroupCleanup"; <br>
+  c := @Elements(Members);<br>
+ good := "";<br>
+ found := ""; <br>
+  @For(i:=1;i&lt;c+1;i:=i+1; <br>
+  current := Members[i]; <br>
+  found := @Trim(@DbLookup("Notes":"NoCache";"";v;current;1;[FailSilent])); <br>
+  @If(@Contains(current;"*");good :=good:current;good :=good:found)); <br>
+  finalgood := @Trim(@Unique(good)); <br>
+  finalbad :=@Trim(@Replace(Members;finalgood;"")); <br>
+  FIELD removedMembers := @Trim(@Unique(removedMembers:finalbad)); <br>
+  FIELD Members := finalgood;</span>
 <br><b>Step 3:</b> Use an agent to remove groups that don't have members anymore. Run the agents multiple times to get rid of nested redundant groups: 
-<br><span class="attribute">SELECT type="Group" &amp; @Trim(members)=""; <br> @DeleteDocument;</span>
+<br><span class="attribute">SELECT type="Group" &amp; @Trim(members)=""; <br>
+  @DeleteDocument;</span>
 <br><b>Caveat: </b> This will remove all user names that are not in the main addressbook. That means all users of external organizations might get lost too. You could extend the formula by adding more @dblookups to additional addressbooks.</div>
 					<hr />
 					<p>

@@ -123,124 +123,210 @@ ga('send', 'pageview');
 					<h1><small>NotesSessions, XPages and Threads</small></h1>
 					<hr />
 					<div>When you build an XPages application, long running operations will time out. After all there is a timing limit how long a browser (or XPiNC) client (and the user) will wait for a response. You could resort to launching an agent via a console command, but besides the security consideration it is quite a hack and headache. Mixing XPages and agents doesn't have a happy ending (and should be confined to the upgrading phase of your classic application). 
-<br> Enter <a href="http://www.vogella.com/articles/JavaConcurrency/article.html">Java multi-threading</a>. I call it " <i>Teenage-mode</i>": your code does multiple things at the same time and doesn't seem to get distracted. 
-<br> When you read <a href="http://www.mindview.net/Books/TIJ/">the classics</a> you will find threading hard and rather threatening (pun intended), but thanks to progress in Java6 and above it isn't too hard. 
-<br> There is the <a href="http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/Executor.html">Executor</a> framework that handles all your <code>Runnables</code>. There are 2 challenges to overcome: one specific to Notes and one general to all concurrency programming. The former: The Notes <code>Session</code> class is not threadsave and can't be shared between threads, the later: you have to get your queueing right: 
+<br>
+ Enter <a href="http://www.vogella.com/articles/JavaConcurrency/article.html">Java multi-threading</a>. I call it " <i>Teenage-mode</i>": your code does multiple things at the same time and doesn't seem to get distracted. 
+<br>
+ When you read <a href="http://www.mindview.net/Books/TIJ/">the classics</a> you will find threading hard and rather threatening (pun intended), but thanks to progress in Java6 and above it isn't too hard. 
+<br>
+ There is the <a href="http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/Executor.html">Executor</a> framework that handles all your <code>Runnables</code>. There are 2 challenges to overcome: one specific to Notes and one general to all concurrency programming. The former: The Notes <code>Session</code> class is not threadsave and can't be shared between threads, the later: you have to get your queueing right: 
 <br><a href="http://chewonitcomics.blogspot.sg/2009/02/you-foreigner.html" title="Queuing is a challenge in Singapore"><img src="https://i485.photobucket.com/albums/rr219/chewonitcomics/myopic_mrt.jpg" border="0"></a>
-<br> (Image courtesy of <a href="http://chewonitcomics.blogspot.sg/">Lee Chee Chew</a>) 
-<br> To get a new <code>Session</code> object, we have the session cloner, thanks to the extension library. All your threads implement the <code>Runnable</code> interface that is later called by the executor framework. There are 2 approaches for background task: one where you expect the thread to return some value at some time and the other where a thread runs its course and terminates silently when done. For a <a href="/blog/2013/07/xpinc-development-insights.html">current project</a> I opted for the later. The threads contain a callback class where they report back what they have to say. To make it all work we need: 
+<br>
+ (Image courtesy of <a href="http://chewonitcomics.blogspot.sg/">Lee Chee Chew</a>) 
+<br>
+ To get a new <code>Session</code> object, we have the session cloner, thanks to the extension library. All your threads implement the <code>Runnable</code> interface that is later called by the executor framework. There are 2 approaches for background task: one where you expect the thread to return some value at some time and the other where a thread runs its course and terminates silently when done. For a <a href="/blog/2013/07/xpinc-development-insights.html">current project</a> I opted for the later. The threads contain a callback class where they report back what they have to say. To make it all work we need: 
 <ol>
  <li>A management class that executes the threads for us. Preferably long living (like session or application beans)</li>
  <li>A cloned Notes Session</li>
  <li>One or more classes implementing the runnable interface</li>
 </ol> Let's look at some code, first the class that runs in the background: 
-<div class="java5"><span class="kw2">package</span><span class="co2">com.notessensei.demo</span><span class="sy0">;</span>
+<div class="java5">
+ <span class="kw2">package</span> <span class="co2">com.notessensei.demo</span> <span class="sy0">;</span>
  <br>
- <br><span class="kw2">import</span><span class="co2">java.util.Collection</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">java.util.Map</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">lotus.domino.Database</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">lotus.domino.NotesException</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">lotus.domino.Session</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">com.ibm.domino.xsp.module.nsf.NSFComponentModule</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">com.ibm.domino.xsp.module.nsf.NotesContext</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">com.ibm.domino.xsp.module.nsf.SessionCloner</span><span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">java.util.Collection</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">java.util.Map</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">lotus.domino.Database</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">lotus.domino.NotesException</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">lotus.domino.Session</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">com.ibm.domino.xsp.module.nsf.NSFComponentModule</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">com.ibm.domino.xsp.module.nsf.NotesContext</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">com.ibm.domino.xsp.module.nsf.SessionCloner</span> <span class="sy0">;</span>
  <br>
- <br><span class="kw2">public abstract class</span> AbstractNotesBackgroundTask <span class="kw2">implements</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Runnable.html"><span class="kw21">Runnable</span></a><span class="br0">{</span>
- <br> &nbsp; &nbsp; <span class="kw2">protected</span><span class="kw2">final</span> Session &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; notesSession <span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="kw2">protected</span><span class="kw2">final</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/Collection.html"><span class="kw46">Collection</span></a><span class="sy0">&lt;</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a><span class="sy0">&gt;</span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; callBackMessages <span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="kw2">private</span> SessionCloner &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; sessionCloner <span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="kw2">private</span> NSFComponentModule&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; module <span class="sy0">;</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw2">public</span> AbstractNotesBackgroundTask <span class="br0">(</span><span class="kw2">final</span> Session optionalSession, <span class="kw2">final</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/Collection.html"><span class="kw46">Collection</span></a><span class="sy0">&lt;</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a><span class="sy0">&gt;</span> messageHandler <span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">callBackMessages</span> = messageHandler <span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// optionalSession MUST be NULL when this should run in a thread, contain a session when</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// the class is running in the same thread as it was constructed</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">notesSession</span> = optionalSession <span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">setDominoContextCloner</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
+ <br><span class="kw2">public abstract class</span> AbstractNotesBackgroundTask <span class="kw2">implements</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Runnable.html"><span class="kw21">Runnable</span></a> <span class="br0">{</span>
  <br>
- <br> &nbsp; &nbsp; <span class="kw2">public</span><span class="kw3">void</span> run <span class="br0">(</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">callBackMessages</span>. <span class="me1">add</span><span class="br0">(</span><span class="st0">"Background task run starting: "</span> + <span class="kw2">this</span>. <span class="me1">getClass</span><span class="br0">(</span><span class="br0">)</span>. <span class="me1">toString</span><span class="br0">(</span><span class="br0">)</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">try</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Session session <span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span><span class="kw2">this</span>. <span class="me1">notesSession</span> == <span class="kw4">null</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; NotesContext context = <span class="kw2">new</span> NotesContext <span class="br0">(</span><span class="kw2">this</span>. <span class="me1">module</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; NotesContext. <span class="me1">initThread</span><span class="br0">(</span>context <span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; session = <span class="kw2">this</span>. <span class="me1">sessionCloner</span>. <span class="me1">getSession</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw1">else</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// We run in an established session</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; session = <span class="kw2">this</span>. <span class="me1">notesSession</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="coMULTI">/* Do the work here */</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">runNotes</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw2">catch</span><span class="br0">(</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Throwable.html"><span class="kw21">Throwable</span></a> e <span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e. <span class="me1">printStacktrace</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw2">finally</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span><span class="kw2">this</span>. <span class="me1">notesSession</span> == <span class="kw4">null</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; NotesContext. <span class="me1">termThread</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">try</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">sessionCloner</span>. <span class="me1">recycle</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw2">catch</span><span class="br0">(</span>NotesException e1 <span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e1. <span class="me1">printStacktrace</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">callBackMessages</span>. <span class="me1">add</span><span class="br0">(</span><span class="st0">"Background task run completed: "</span> + <span class="kw2">this</span>. <span class="me1">getClass</span><span class="br0">(</span><span class="br0">)</span>. <span class="me1">toString</span><span class="br0">(</span><span class="br0">)</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
+  &nbsp; &nbsp; <span class="kw2">protected</span> <span class="kw2">final</span> Session &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; notesSession <span class="sy0">;</span>
  <br>
- <br> &nbsp; &nbsp; <span class="kw2">private</span><span class="kw3">void</span> setDominoContextCloner <span class="br0">(</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// Domino stuff to be able to get a cloned session</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span><span class="kw2">this</span>. <span class="me1">notesSession</span> == <span class="kw4">null</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">try</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">module</span> = NotesContext. <span class="me1">getCurrent</span><span class="br0">(</span><span class="br0">)</span>. <span class="me1">getModule</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">sessionCloner</span> = SessionCloner. <span class="me1">getSessionCloner</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw2">catch</span><span class="br0">(</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Exception.html"><span class="kw21">Exception</span></a> e <span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e. <span class="me1">printStacktrace</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw2">protected</span><span class="kw2">abstract</span><span class="kw3">void</span> runNotes <span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+  &nbsp; &nbsp; <span class="kw2">protected</span> <span class="kw2">final</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/Collection.html"><span class="kw46">Collection</span></a> <span class="sy0">&lt;</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> <span class="sy0">&gt;</span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; callBackMessages <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">private</span> SessionCloner &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; sessionCloner <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">private</span> NSFComponentModule&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; module <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="kw2">public</span> AbstractNotesBackgroundTask <span class="br0">(</span> <span class="kw2">final</span> Session optionalSession, <span class="kw2">final</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/Collection.html"><span class="kw46">Collection</span></a> <span class="sy0">&lt;</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> <span class="sy0">&gt;</span> messageHandler <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">callBackMessages</span> = messageHandler <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// optionalSession MUST be NULL when this should run in a thread, contain a session when</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// the class is running in the same thread as it was constructed</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">notesSession</span> = optionalSession <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">setDominoContextCloner</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">public</span> <span class="kw3">void</span> run <span class="br0">(</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">callBackMessages</span>. <span class="me1">add</span> <span class="br0">(</span> <span class="st0">"Background task run starting: "</span> + <span class="kw2">this</span>. <span class="me1">getClass</span> <span class="br0">(</span> <span class="br0">)</span>. <span class="me1">toString</span> <span class="br0">(</span> <span class="br0">)</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">try</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Session session <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span> <span class="kw2">this</span>. <span class="me1">notesSession</span> == <span class="kw4">null</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; NotesContext context = <span class="kw2">new</span> NotesContext <span class="br0">(</span> <span class="kw2">this</span>. <span class="me1">module</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; NotesContext. <span class="me1">initThread</span> <span class="br0">(</span>context <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; session = <span class="kw2">this</span>. <span class="me1">sessionCloner</span>. <span class="me1">getSession</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw1">else</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// We run in an established session</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; session = <span class="kw2">this</span>. <span class="me1">notesSession</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="coMULTI">/* Do the work here */</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">runNotes</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw2">catch</span> <span class="br0">(</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Throwable.html"><span class="kw21">Throwable</span></a> e <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e. <span class="me1">printStacktrace</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw2">finally</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span> <span class="kw2">this</span>. <span class="me1">notesSession</span> == <span class="kw4">null</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; NotesContext. <span class="me1">termThread</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">try</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">sessionCloner</span>. <span class="me1">recycle</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw2">catch</span> <span class="br0">(</span>NotesException e1 <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e1. <span class="me1">printStacktrace</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">callBackMessages</span>. <span class="me1">add</span> <span class="br0">(</span> <span class="st0">"Background task run completed: "</span> + <span class="kw2">this</span>. <span class="me1">getClass</span> <span class="br0">(</span> <span class="br0">)</span>. <span class="me1">toString</span> <span class="br0">(</span> <span class="br0">)</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">private</span> <span class="kw3">void</span> setDominoContextCloner <span class="br0">(</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// Domino stuff to be able to get a cloned session</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span> <span class="kw2">this</span>. <span class="me1">notesSession</span> == <span class="kw4">null</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">try</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">module</span> = NotesContext. <span class="me1">getCurrent</span> <span class="br0">(</span> <span class="br0">)</span>. <span class="me1">getModule</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">sessionCloner</span> = SessionCloner. <span class="me1">getSessionCloner</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw2">catch</span> <span class="br0">(</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Exception.html"><span class="kw21">Exception</span></a> e <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e. <span class="me1">printStacktrace</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="kw2">protected</span> <span class="kw2">abstract</span> <span class="kw3">void</span> runNotes <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
  <br><span class="br0">}</span>
 </div> You only need to subclass it and implement <code>runNotes()</code> to get started. However you probably want to hand over more parameters, so you need to modify the constructor accordingly. Please note: you can't bring Notes objects across thread boundaries. Next the class that controls all the threads. It should live in the session or application.The class is actually quite simple: 
-<div class="java5"><span class="kw2">package</span><span class="co2">com.notessensei.demo</span><span class="sy0">;</span>
+<div class="java5">
+ <span class="kw2">package</span> <span class="co2">com.notessensei.demo</span> <span class="sy0">;</span>
  <br>
- <br><span class="kw2">import</span><span class="co2">java.io.Serializable</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">java.util.concurrent.ExecutorService</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">java.util.concurrent.Executors</span><span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">java.io.Serializable</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">java.util.concurrent.ExecutorService</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">java.util.concurrent.Executors</span> <span class="sy0">;</span>
  <br>
- <br><span class="kw2">public</span><span class="kw2">class</span> NotesBackgroundManager <span class="kw2">implements</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/io/Serializable.html"><span class="kw20">Serializable</span></a><span class="br0">{</span>
- <br> &nbsp; &nbsp; <span class="kw2">private</span><span class="kw2">static</span><span class="kw2">final</span><span class="kw3">long</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; serialVersionUID&nbsp; &nbsp; &nbsp; &nbsp; = 1L <span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="co1">// # of threads running concurrently</span>
- <br> &nbsp; &nbsp; <span class="kw2">private</span><span class="kw2">static</span><span class="kw2">final</span><span class="kw3">int</span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; THREADPOOLSIZE&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; = <span class="nu0">10</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="kw2">private</span><span class="kw2">final</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/concurrent/ExecutorService.html"><span class="kw47">ExecutorService</span></a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; service &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; = <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/concurrent/Executors.html"><span class="kw47">Executors</span></a>. <span class="me1">newFixedThreadPool</span><span class="br0">(</span>THREADPOOLSIZE <span class="br0">)</span><span class="sy0">;</span>
+ <br><span class="kw2">public</span> <span class="kw2">class</span> NotesBackgroundManager <span class="kw2">implements</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/io/Serializable.html"><span class="kw20">Serializable</span></a> <span class="br0">{</span>
  <br>
- <br> &nbsp; &nbsp; <span class="kw2">public</span> CSIApplication <span class="br0">(</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// For use in managed beans</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
+  &nbsp; &nbsp; <span class="kw2">private</span> <span class="kw2">static</span> <span class="kw2">final</span> <span class="kw3">long</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; serialVersionUID&nbsp; &nbsp; &nbsp; &nbsp; = 1L <span class="sy0">;</span>
  <br>
- <br> &nbsp; &nbsp; <span class="kw2">public</span><span class="kw3">void</span> submitService <span class="br0">(</span><span class="kw2">final</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Runnable.html"><span class="kw21">Runnable</span></a> taskDef <span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span>taskDef == <span class="kw4">null</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/System.html"><span class="kw21">System</span></a>. <span class="me1">err</span>. <span class="me1">println</span><span class="br0">(</span><span class="st0">"submitService: NULL callable submitted to submitService"</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">return</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// Execute runs without return</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">service</span>. <span class="me1">execute</span><span class="br0">(</span>taskDef <span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
+  &nbsp; &nbsp; <span class="co1">// # of threads running concurrently</span>
  <br>
- <br> &nbsp; &nbsp; @ <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Override.html"><span class="kw21">Override</span></a>
- <br> &nbsp; &nbsp; <span class="kw2">protected</span><span class="kw3">void</span> finalize <span class="br0">(</span><span class="br0">)</span><span class="kw2">throws</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Throwable.html"><span class="kw21">Throwable</span></a><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span><span class="br0">(</span><span class="kw2">this</span>. <span class="me1">service</span><span class="sy0">!</span>= <span class="kw4">null</span><span class="br0">)</span><span class="sy0">&amp;&amp;</span><span class="sy0">!</span><span class="kw2">this</span>. <span class="me1">service</span>. <span class="me1">isTerminated</span><span class="br0">(</span><span class="br0">)</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">service</span>. <span class="me1">shutdown</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">super</span>. <span class="me1">finalize</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
+  &nbsp; &nbsp; <span class="kw2">private</span> <span class="kw2">static</span> <span class="kw2">final</span> <span class="kw3">int</span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; THREADPOOLSIZE&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; = <span class="nu0">10</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">private</span> <span class="kw2">final</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/concurrent/ExecutorService.html"><span class="kw47">ExecutorService</span></a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; service &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; = <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/concurrent/Executors.html"><span class="kw47">Executors</span></a>. <span class="me1">newFixedThreadPool</span> <span class="br0">(</span>THREADPOOLSIZE <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">public</span> CSIApplication <span class="br0">(</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// For use in managed beans</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">public</span> <span class="kw3">void</span> submitService <span class="br0">(</span> <span class="kw2">final</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Runnable.html"><span class="kw21">Runnable</span></a> taskDef <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span>taskDef == <span class="kw4">null</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/System.html"><span class="kw21">System</span></a>. <span class="me1">err</span>. <span class="me1">println</span> <span class="br0">(</span> <span class="st0">"submitService: NULL callable submitted to submitService"</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">return</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// Execute runs without return</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">service</span>. <span class="me1">execute</span> <span class="br0">(</span>taskDef <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+ <br>
+  &nbsp; &nbsp; @ <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Override.html"><span class="kw21">Override</span></a>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">protected</span> <span class="kw3">void</span> finalize <span class="br0">(</span> <span class="br0">)</span> <span class="kw2">throws</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Throwable.html"><span class="kw21">Throwable</span></a> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span> <span class="br0">(</span> <span class="kw2">this</span>. <span class="me1">service</span> <span class="sy0">!</span>= <span class="kw4">null</span> <span class="br0">)</span> <span class="sy0">&amp;&amp;</span> <span class="sy0">!</span> <span class="kw2">this</span>. <span class="me1">service</span>. <span class="me1">isTerminated</span> <span class="br0">(</span> <span class="br0">)</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">service</span>. <span class="me1">shutdown</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">super</span>. <span class="me1">finalize</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
  <br><span class="br0">}</span>
 </div> If you rather want the thread returning something at the end of the run (which you must poll from the <a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/ExecutorService.html">ExecutorService</a>, you would call <a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/ExecutorService.html#submit(java.lang.Runnable)">ExecutorService.submit</a> and get back a <a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/Future.html ">Future</a> holding the future result, but that's another story for another time. 
-<br> The final missing piece is to define <code>NotesBackgroundManager</code> as <a href="https://www.google.com/search?q=XPages+managed+beans">managed bean</a> e.g. <code>background</code> and you can launch a background task in SSJS: <code>background.submitService(new com.notessensei.demo.SampleNotesBackgroundTask());</code>
-<br> As usual YMMV.</div>
+<br>
+ The final missing piece is to define <code>NotesBackgroundManager</code> as <a href="https://www.google.com/search?q=XPages+managed+beans">managed bean</a> e.g. <code>background</code> and you can launch a background task in SSJS: <code>background.submitService(new com.notessensei.demo.SampleNotesBackgroundTask());</code>
+<br>
+ As usual YMMV.</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">

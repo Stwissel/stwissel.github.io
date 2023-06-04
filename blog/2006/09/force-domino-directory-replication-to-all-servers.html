@@ -122,9 +122,9 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Force Domino directory replication to all servers</small></h1>
 					<hr />
-					<div>When cleaning up a domain and reconfiguring servers, domains and routes one critical success factor is the distribution of changes to all servers. In a well maintained domain the replicator task will take care of that. However that might take hours and if the domain you are working on is well maintained, there is little need for a clean-up in the first place 
-<img src="/blog/images/emoticons/wink.gif">. 
-<br> To be independent from replication schedules and other quirks I got an agent at hand that helps me there. You can copy that agent to your Domino Directory and take a few easy steps: 
+					<div>When cleaning up a domain and reconfiguring servers, domains and routes one critical success factor is the distribution of changes to all servers. In a well maintained domain the replicator task will take care of that. However that might take hours and if the domain you are working on is well maintained, there is little need for a clean-up in the first place <img src="/blog/images/emoticons/wink.gif">. 
+<br>
+ To be independent from replication schedules and other quirks I got an agent at hand that helps me there. You can copy that agent to your Domino Directory and take a few easy steps: 
 <ol>
  <li>Create a local replica of the Domino directory</li>
  <li>Copy the agent into it</li>
@@ -145,41 +145,101 @@ ga('send', 'pageview');
 .ls-constant { color: purple; }
 </style>
 <pre>
- <div class="lotusscript"><font class="ls-comment">'Replicate with all Servers: </font><font class="ls-keyword">Option</font><font class="ls-keyword">Public</font><font class="ls-keyword">Option</font><font class="ls-keyword">Declare</font><font class="ls-statement">Sub</font><font class="ls-keyword">Initialize</font><font class="ls-statement">Dim</font> db
+ <div class="lotusscript">
 
-<font class="ls-keyword">As</font><font class="ls-class">NotesDatabase</font><font class="ls-statement">Dim</font> nab
+<font class="ls-comment">'Replicate with all Servers: </font>
 
-<font class="ls-keyword">As</font><font class="ls-class">NotesDatabase</font><font class="ls-statement">Dim</font> nLog
+<font class="ls-keyword">Option</font>
 
-<font class="ls-keyword">As</font><font class="ls-class">NotesLog</font><font class="ls-statement">Dim</font> s
+<font class="ls-keyword">Public</font>
 
-<font class="ls-keyword">As</font><font class="ls-keyword">New</font><font class="ls-class">NotesSession</font><font class="ls-statement">Set</font> nab
+<font class="ls-keyword">Option</font>
+
+<font class="ls-keyword">Declare</font>
+
+<font class="ls-statement">Sub</font>
+
+<font class="ls-keyword">Initialize</font>
+
+<font class="ls-statement">Dim</font> db
+
+<font class="ls-keyword">As</font>
+
+<font class="ls-class">NotesDatabase</font>
+
+<font class="ls-statement">Dim</font> nab
+
+<font class="ls-keyword">As</font>
+
+<font class="ls-class">NotesDatabase</font>
+
+<font class="ls-statement">Dim</font> nLog
+
+<font class="ls-keyword">As</font>
+
+<font class="ls-class">NotesLog</font>
+
+<font class="ls-statement">Dim</font> s
+
+<font class="ls-keyword">As</font>
+
+<font class="ls-keyword">New</font>
+
+<font class="ls-class">NotesSession</font>
+
+<font class="ls-statement">Set</font> nab
 
 <font class="ls-operator">=</font> s
 
 <font class="ls-operator">.</font>CurrentDatabase
 
-<font class="ls-comment">'The error log, not essential but handy --- use your own mechanism to get one</font><font class="ls-comment">'Suggestion: The managers of the DB get a mail log</font><font class="ls-statement">Set</font> nlog
+<font class="ls-comment">'The error log, not essential but handy --- use your own mechanism to get one</font>
 
-<font class="ls-operator">=</font><font class="ls-keyword">New</font><font class="ls-class">NotesLog</font><font class="ls-operator">(</font><font class="ls-quote">"Replicate with all servers"</font><font class="ls-operator">)</font><font class="ls-function">Call</font> nlog
+<font class="ls-comment">'Suggestion: The managers of the DB get a mail log</font>
+
+<font class="ls-statement">Set</font> nlog
+
+<font class="ls-operator">=</font>
+
+<font class="ls-keyword">New</font>
+
+<font class="ls-class">NotesLog</font>
+
+<font class="ls-operator">(</font>
+
+<font class="ls-quote">"Replicate with all servers"</font>
+
+<font class="ls-operator">)</font>
+
+<font class="ls-function">Call</font> nlog
 
 <font class="ls-operator">.</font>OpenAgentLog
 nlog
 
 <font class="ls-operator">.</font>LogErrors
 
-<font class="ls-operator">=</font><font class="ls-constant">True</font>
+<font class="ls-operator">=</font>
+
+<font class="ls-constant">True</font>
 nlog
 
 <font class="ls-operator">.</font>LogActions
 
-<font class="ls-operator">=</font><font class="ls-constant">True</font><font class="ls-comment">'Here we set the database to be replicated -- for now it is the NAB, but it is just one statement.</font><font class="ls-statement">Set</font> db
+<font class="ls-operator">=</font>
+
+<font class="ls-constant">True</font>
+
+<font class="ls-comment">'Here we set the database to be replicated -- for now it is the NAB, but it is just one statement.</font>
+
+<font class="ls-statement">Set</font> db
 
 <font class="ls-operator">=</font> s
 
 <font class="ls-operator">.</font>CurrentDatabase
 
-<font class="ls-comment">'Call the main function</font><font class="ls-function">Call</font> ReplicateLocalDB
+<font class="ls-comment">'Call the main function</font>
+
+<font class="ls-function">Call</font> ReplicateLocalDB
 
 <font class="ls-operator">(</font>nab
 
@@ -187,17 +247,51 @@ nlog
 
 <font class="ls-operator">,</font> nlog
 
-<font class="ls-operator">)</font><font class="ls-comment">'Close our log</font><font class="ls-function">Call</font> nlog
+<font class="ls-operator">)</font>
 
-<font class="ls-operator">.</font><font class="ls-function">Close</font><font class="ls-statement">End</font><font class="ls-statement">Sub</font><font class="ls-statement">Function</font> getAdminServer
+<font class="ls-comment">'Close our log</font>
+
+<font class="ls-function">Call</font> nlog
+
+<font class="ls-operator">.</font>
+
+<font class="ls-function">Close</font>
+
+<font class="ls-statement">End</font>
+
+<font class="ls-statement">Sub</font>
+
+<font class="ls-statement">Function</font> getAdminServer
 
 <font class="ls-operator">(</font>db
 
-<font class="ls-keyword">As</font><font class="ls-class">NotesDatabase</font><font class="ls-operator">,</font> nlog
+<font class="ls-keyword">As</font>
 
-<font class="ls-keyword">As</font><font class="ls-class">NotesLog</font><font class="ls-operator">)</font><font class="ls-keyword">As</font><font class="ls-keyword">String</font><font class="ls-statement">Dim</font> acl
+<font class="ls-class">NotesDatabase</font>
 
-<font class="ls-keyword">As</font><font class="ls-class">NotesACL</font><font class="ls-statement">On</font><font class="ls-function">Error</font><font class="ls-keyword">Goto</font> Err_getAdminServer
+<font class="ls-operator">,</font> nlog
+
+<font class="ls-keyword">As</font>
+
+<font class="ls-class">NotesLog</font>
+
+<font class="ls-operator">)</font>
+
+<font class="ls-keyword">As</font>
+
+<font class="ls-keyword">String</font>
+
+<font class="ls-statement">Dim</font> acl
+
+<font class="ls-keyword">As</font>
+
+<font class="ls-class">NotesACL</font>
+
+<font class="ls-statement">On</font>
+
+<font class="ls-function">Error</font>
+
+<font class="ls-keyword">Goto</font> Err_getAdminServer
 
 <font class="ls-statement">Set</font> acl
 
@@ -211,27 +305,81 @@ getAdminServer
 <font class="ls-operator">.</font>AdministrationServer
 Exit_getAdminServer
 
-<font class="ls-operator">:</font><font class="ls-statement">Exit</font><font class="ls-statement">Function</font>
+<font class="ls-operator">:</font>
+
+<font class="ls-statement">Exit</font>
+
+<font class="ls-statement">Function</font>
 Err_getAdminServer
 
-<font class="ls-operator">:</font><font class="ls-function">Call</font> nlog
+<font class="ls-operator">:</font>
+
+<font class="ls-function">Call</font> nlog
 
 <font class="ls-operator">.</font>LogError
 
-<font class="ls-operator">(</font><font class="ls-function">Err</font><font class="ls-operator">,</font><font class="ls-function">Error$</font><font class="ls-operator">&amp;</font><font class="ls-quote">" in getAdminServer in line "</font><font class="ls-operator">&amp;</font><font class="ls-function">Cstr</font><font class="ls-operator">(</font><font class="ls-function">Erl</font><font class="ls-operator">)</font><font class="ls-operator">)</font>
+<font class="ls-operator">(</font>
+
+<font class="ls-function">Err</font>
+
+<font class="ls-operator">,</font>
+
+<font class="ls-function">Error$</font>
+
+<font class="ls-operator">&amp;</font>
+
+<font class="ls-quote">" in getAdminServer in line "</font>
+
+<font class="ls-operator">&amp;</font>
+
+<font class="ls-function">Cstr</font>
+
+<font class="ls-operator">(</font>
+
+<font class="ls-function">Erl</font>
+
+<font class="ls-operator">)</font>
+
+<font class="ls-operator">)</font>
 getAdminServer
 
-<font class="ls-operator">=</font><font class="ls-quote">""</font><font class="ls-statement">Resume</font> Exit_getAdminServer
+<font class="ls-operator">=</font>
 
-<font class="ls-statement">End</font><font class="ls-statement">Function</font><font class="ls-statement">Sub</font> ReplicateWithOneServer
+<font class="ls-quote">""</font>
+
+<font class="ls-statement">Resume</font> Exit_getAdminServer
+
+<font class="ls-statement">End</font>
+
+<font class="ls-statement">Function</font>
+
+<font class="ls-statement">Sub</font> ReplicateWithOneServer
 
 <font class="ls-operator">(</font>db
 
-<font class="ls-keyword">As</font><font class="ls-class">NotesDatabase</font><font class="ls-operator">,</font> serverName
+<font class="ls-keyword">As</font>
 
-<font class="ls-keyword">As</font><font class="ls-keyword">String</font><font class="ls-operator">,</font>nlog
+<font class="ls-class">NotesDatabase</font>
 
-<font class="ls-keyword">As</font><font class="ls-class">Noteslog</font><font class="ls-operator">)</font><font class="ls-statement">On</font><font class="ls-function">Error</font><font class="ls-keyword">Goto</font> Err_ReplicateWithOneServer
+<font class="ls-operator">,</font> serverName
+
+<font class="ls-keyword">As</font>
+
+<font class="ls-keyword">String</font>
+
+<font class="ls-operator">,</font>nlog
+
+<font class="ls-keyword">As</font>
+
+<font class="ls-class">Noteslog</font>
+
+<font class="ls-operator">)</font>
+
+<font class="ls-statement">On</font>
+
+<font class="ls-function">Error</font>
+
+<font class="ls-keyword">Goto</font> Err_ReplicateWithOneServer
 
 <font class="ls-function">Call</font> db
 
@@ -242,40 +390,138 @@ getAdminServer
 <font class="ls-operator">)</font>
 Exit_ReplicateWithOneServer
 
-<font class="ls-operator">:</font><font class="ls-statement">Exit</font><font class="ls-statement">Sub</font>
+<font class="ls-operator">:</font>
+
+<font class="ls-statement">Exit</font>
+
+<font class="ls-statement">Sub</font>
 Err_ReplicateWithOneServer
 
-<font class="ls-operator">:</font><font class="ls-function">Call</font> nlog
+<font class="ls-operator">:</font>
+
+<font class="ls-function">Call</font> nlog
 
 <font class="ls-operator">.</font>LogError
 
-<font class="ls-operator">(</font><font class="ls-function">Err</font><font class="ls-operator">,</font><font class="ls-function">Error$</font><font class="ls-operator">&amp;</font><font class="ls-quote">" in ReplicateWithOneServer line "</font><font class="ls-operator">&amp;</font><font class="ls-function">Cstr</font><font class="ls-operator">(</font><font class="ls-function">Erl</font><font class="ls-operator">)</font><font class="ls-operator">&amp;</font><font class="ls-quote">", Server: "</font><font class="ls-operator">&amp;</font> serverName
+<font class="ls-operator">(</font>
 
-<font class="ls-operator">)</font><font class="ls-function">Print</font><font class="ls-function">Error$</font><font class="ls-comment">'Mostly: Timeout or no replica found</font><font class="ls-statement">Resume</font> Exit_ReplicateWithOneServer
+<font class="ls-function">Err</font>
 
-<font class="ls-statement">End</font><font class="ls-statement">Sub</font><font class="ls-statement">Sub</font> ReplicateLocalDB
+<font class="ls-operator">,</font>
+
+<font class="ls-function">Error$</font>
+
+<font class="ls-operator">&amp;</font>
+
+<font class="ls-quote">" in ReplicateWithOneServer line "</font>
+
+<font class="ls-operator">&amp;</font>
+
+<font class="ls-function">Cstr</font>
+
+<font class="ls-operator">(</font>
+
+<font class="ls-function">Erl</font>
+
+<font class="ls-operator">)</font>
+
+<font class="ls-operator">&amp;</font>
+
+<font class="ls-quote">", Server: "</font>
+
+<font class="ls-operator">&amp;</font> serverName
+
+<font class="ls-operator">)</font>
+
+<font class="ls-function">Print</font>
+
+<font class="ls-function">Error$</font>
+
+<font class="ls-comment">'Mostly: Timeout or no replica found</font>
+
+<font class="ls-statement">Resume</font> Exit_ReplicateWithOneServer
+
+<font class="ls-statement">End</font>
+
+<font class="ls-statement">Sub</font>
+
+<font class="ls-statement">Sub</font> ReplicateLocalDB
 
 <font class="ls-operator">(</font>nab
 
-<font class="ls-keyword">As</font><font class="ls-class">NotesDatabase</font><font class="ls-operator">,</font> db
+<font class="ls-keyword">As</font>
 
-<font class="ls-keyword">As</font><font class="ls-class">NotesDatabase</font><font class="ls-operator">,</font> nlog
+<font class="ls-class">NotesDatabase</font>
 
-<font class="ls-keyword">As</font><font class="ls-class">NotesLog</font><font class="ls-operator">)</font><font class="ls-statement">Dim</font> v
+<font class="ls-operator">,</font> db
 
-<font class="ls-keyword">As</font><font class="ls-class">NotesView</font><font class="ls-statement">Dim</font> adminServer
+<font class="ls-keyword">As</font>
 
-<font class="ls-keyword">As</font><font class="ls-keyword">String</font><font class="ls-statement">Dim</font> curServer
+<font class="ls-class">NotesDatabase</font>
 
-<font class="ls-keyword">As</font><font class="ls-keyword">String</font><font class="ls-statement">Dim</font> doc
+<font class="ls-operator">,</font> nlog
 
-<font class="ls-keyword">As</font><font class="ls-class">NotesDocument</font><font class="ls-statement">On</font><font class="ls-function">Error</font><font class="ls-keyword">Goto</font> Err_ReplicateLocalDB
+<font class="ls-keyword">As</font>
+
+<font class="ls-class">NotesLog</font>
+
+<font class="ls-operator">)</font>
+
+<font class="ls-statement">Dim</font> v
+
+<font class="ls-keyword">As</font>
+
+<font class="ls-class">NotesView</font>
+
+<font class="ls-statement">Dim</font> adminServer
+
+<font class="ls-keyword">As</font>
+
+<font class="ls-keyword">String</font>
+
+<font class="ls-statement">Dim</font> curServer
+
+<font class="ls-keyword">As</font>
+
+<font class="ls-keyword">String</font>
+
+<font class="ls-statement">Dim</font> doc
+
+<font class="ls-keyword">As</font>
+
+<font class="ls-class">NotesDocument</font>
+
+<font class="ls-statement">On</font>
+
+<font class="ls-function">Error</font>
+
+<font class="ls-keyword">Goto</font> Err_ReplicateLocalDB
 
 <font class="ls-statement">If</font> db
 
 <font class="ls-operator">.</font>Server
 
-<font class="ls-operator">&lt;</font><font class="ls-operator">&gt;</font><font class="ls-quote">""</font><font class="ls-statement">Then</font><font class="ls-function">Msgbox</font><font class="ls-quote">"Please run this from a local replica!"</font><font class="ls-statement">Exit</font><font class="ls-statement">Sub</font><font class="ls-statement">End</font><font class="ls-statement">If</font><font class="ls-comment">'Find the admin server to give the first shot to it</font>
+<font class="ls-operator">&lt;</font>
+
+<font class="ls-operator">&gt;</font>
+
+<font class="ls-quote">""</font>
+
+<font class="ls-statement">Then</font>
+
+<font class="ls-function">Msgbox</font>
+
+<font class="ls-quote">"Please run this from a local replica!"</font>
+
+<font class="ls-statement">Exit</font>
+
+<font class="ls-statement">Sub</font>
+
+<font class="ls-statement">End</font>
+
+<font class="ls-statement">If</font>
+
+<font class="ls-comment">'Find the admin server to give the first shot to it</font>
 adminServer
 
 <font class="ls-operator">=</font> getAdminServer
@@ -284,7 +530,11 @@ adminServer
 
 <font class="ls-operator">,</font> nlog
 
-<font class="ls-operator">)</font><font class="ls-comment">'Now Replicate the admin server</font><font class="ls-function">Call</font> ReplicateWithOneServer
+<font class="ls-operator">)</font>
+
+<font class="ls-comment">'Now Replicate the admin server</font>
+
+<font class="ls-function">Call</font> ReplicateWithOneServer
 
 <font class="ls-operator">(</font>db
 
@@ -292,13 +542,23 @@ adminServer
 
 <font class="ls-operator">,</font>nlog
 
-<font class="ls-operator">)</font><font class="ls-comment">'Get the view with all servers,</font><font class="ls-statement">Set</font> v
+<font class="ls-operator">)</font>
+
+<font class="ls-comment">'Get the view with all servers,</font>
+
+<font class="ls-statement">Set</font> v
 
 <font class="ls-operator">=</font> nab
 
 <font class="ls-operator">.</font>GetView
 
-<font class="ls-operator">(</font><font class="ls-quote">"($Servers)"</font><font class="ls-operator">)</font><font class="ls-statement">Set</font> doc
+<font class="ls-operator">(</font>
+
+<font class="ls-quote">"($Servers)"</font>
+
+<font class="ls-operator">)</font>
+
+<font class="ls-statement">Set</font> doc
 
 <font class="ls-operator">=</font> v
 
@@ -306,20 +566,38 @@ adminServer
 
 <font class="ls-statement">Do</font> Until doc
 
-<font class="ls-operator">Is</font><font class="ls-constant">Nothing</font><font class="ls-statement">If</font> doc
+<font class="ls-operator">Is</font>
+
+<font class="ls-constant">Nothing</font>
+
+<font class="ls-statement">If</font> doc
 
 <font class="ls-operator">.</font>HasItem
 
-<font class="ls-operator">(</font><font class="ls-quote">"ServerName"</font><font class="ls-operator">)</font><font class="ls-statement">Then</font>
+<font class="ls-operator">(</font>
+
+<font class="ls-quote">"ServerName"</font>
+
+<font class="ls-operator">)</font>
+
+<font class="ls-statement">Then</font>
 curServer
 
 <font class="ls-operator">=</font> doc
 
 <font class="ls-operator">.</font>GetItemValue
 
-<font class="ls-operator">(</font><font class="ls-quote">"ServerName"</font><font class="ls-operator">)</font><font class="ls-operator">(</font>0
+<font class="ls-operator">(</font>
 
-<font class="ls-operator">)</font><font class="ls-function">Call</font> ReplicateWithOneServer
+<font class="ls-quote">"ServerName"</font>
+
+<font class="ls-operator">)</font>
+
+<font class="ls-operator">(</font>0
+
+<font class="ls-operator">)</font>
+
+<font class="ls-function">Call</font> ReplicateWithOneServer
 
 <font class="ls-operator">(</font>db
 
@@ -327,7 +605,13 @@ curServer
 
 <font class="ls-operator">,</font>nlog
 
-<font class="ls-operator">)</font><font class="ls-statement">End</font><font class="ls-statement">If</font><font class="ls-statement">Set</font> doc
+<font class="ls-operator">)</font>
+
+<font class="ls-statement">End</font>
+
+<font class="ls-statement">If</font>
+
+<font class="ls-statement">Set</font> doc
 
 <font class="ls-operator">=</font> v
 
@@ -335,24 +619,60 @@ curServer
 
 <font class="ls-operator">(</font>doc
 
-<font class="ls-operator">)</font><font class="ls-statement">Loop</font>
+<font class="ls-operator">)</font>
+
+<font class="ls-statement">Loop</font>
 Exit_ReplicateLocalDB
 
-<font class="ls-operator">:</font><font class="ls-statement">Exit</font><font class="ls-statement">Sub</font>
+<font class="ls-operator">:</font>
+
+<font class="ls-statement">Exit</font>
+
+<font class="ls-statement">Sub</font>
 Err_ReplicateLocalDB
 
-<font class="ls-operator">:</font><font class="ls-function">Call</font> nlog
+<font class="ls-operator">:</font>
+
+<font class="ls-function">Call</font> nlog
 
 <font class="ls-operator">.</font>LogError
 
-<font class="ls-operator">(</font><font class="ls-function">Err</font><font class="ls-operator">,</font><font class="ls-function">Error$</font><font class="ls-operator">&amp;</font><font class="ls-quote">" in ReplicateLocalDB line "</font><font class="ls-operator">&amp;</font><font class="ls-function">Cstr</font><font class="ls-operator">(</font><font class="ls-function">Erl</font><font class="ls-operator">)</font><font class="ls-operator">)</font><font class="ls-statement">Resume</font> Exit_ReplicateLocalDB
+<font class="ls-operator">(</font>
 
-<font class="ls-statement">End</font><font class="ls-statement">Sub</font>
+<font class="ls-function">Err</font>
+
+<font class="ls-operator">,</font>
+
+<font class="ls-function">Error$</font>
+
+<font class="ls-operator">&amp;</font>
+
+<font class="ls-quote">" in ReplicateLocalDB line "</font>
+
+<font class="ls-operator">&amp;</font>
+
+<font class="ls-function">Cstr</font>
+
+<font class="ls-operator">(</font>
+
+<font class="ls-function">Erl</font>
+
+<font class="ls-operator">)</font>
+
+<font class="ls-operator">)</font>
+
+<font class="ls-statement">Resume</font> Exit_ReplicateLocalDB
+
+<font class="ls-statement">End</font>
+
+<font class="ls-statement">Sub</font>
+
  </div></pre>
 <div style="FONT-SIZE: 8pt; COLOR: gray; FONT-FAMILY: sans-serif; BORDER: 1 solid Grey; margin : 5px 50px 5px 50px;">
  <center>
-   This LotusScript was converted to HTML using the <b><i>ls2html</i></b> routine, 
-  <br>provided by Julian Robichaux at <a href="http://www.nsftools.com" target="_blank">nsftools.com</a>. 
+  This LotusScript was converted to HTML using the <b><i>ls2html</i></b> routine, 
+  <br>
+  provided by Julian Robichaux at <a href="http://www.nsftools.com" target="_blank">nsftools.com</a>.
  </center>
 </div></div>
 					<hr />

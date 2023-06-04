@@ -144,15 +144,17 @@ ga('send', 'pageview');
 					<hr />
 					<div>In the <a href="/blog/2014/07/adventures-with-vertx-64bit-and-the-ibm-notes-client.html"> first part</a> I got vert.x 3.0 running with my local Notes client. The mastered challenges there were 32 Bit Java for the Notes client and the usual adjustment for the path variables. The adoption of the <a href="http://www.openntf.org/p/OpenNTF Domino API">OpenNTF Domino API</a> required a few steps more: 
 <ol>
- <li>Set 2 evironment variables:<br> <code>DYLD_LIBRARY_PATH=/opt/ibm/notes</code><br><code>LD_LIBRARY_PATH=/opt/ibm/notes</code></li>
- <li>Add the following parameter to your Java command line:<br> <code>-Dnotes.binary=/opt/ibm/notes -Duser.dir=/home/stw/lotus/notes/data -Djava.library.path=/opt/ibm/notes</code><br> Make sure that it is <b>one</b> line only. (Of course you will adjust the path to your environment, will you?)</li>
+ <li>Set 2 evironment variables:<br><code>DYLD_LIBRARY_PATH=/opt/ibm/notes</code><br><code>LD_LIBRARY_PATH=/opt/ibm/notes</code></li>
+ <li>Add the following parameter to your Java command line:<br><code>-Dnotes.binary=/opt/ibm/notes -Duser.dir=/home/stw/lotus/notes/data -Djava.library.path=/opt/ibm/notes</code><br>
+   Make sure that it is <b>one</b> line only. (Of course you will adjust the path to your environment, will you?)</li>
  <li>Add 4 JAR files to the classpath of your project runtime: 
   <ul>
    <li><code>/opt/ibm/notes/jvm/lib/ext/Notes.jar</code></li>
-   <li><code>/opt/ibm/notes/framework/rcp/eclipse/plugins/<br>com.ibm.icu.base_3.8.1.v20080530.jar</code></li>
+   <li><code>/opt/ibm/notes/framework/rcp/eclipse/plugins/<br>
+     com.ibm.icu.base_3.8.1.v20080530.jar</code></li>
    <li><code>org.openntf.domino.jar</code></li>
    <li><code>org.openntf.formula.jar</code></li>
-  </ul> I used the latest build of the later two jars from <a href="https://github.com/OpenNTF/org.openntf.domino/tree/nathan">Nathan's branch</a>, so make sure you have the latest. The ICU plug-in is based on the <a href="http://site.icu-project.org/">International Components for Unicode</a> project and might get compiled into a future version of the Domino API. </li>
+  </ul> I used the latest build of the later two jars from <a href="https://github.com/OpenNTF/org.openntf.domino/tree/nathan">Nathan's branch</a>, so make sure you have the latest. The ICU plug-in is based on the <a href="http://site.icu-project.org/">International Components for Unicode</a> project and might get compiled into a future version of the Domino API.</li>
 </ol> Now the real fun begins. The classic Java API is conceptually single threaded with all Domino actions wrapped into <code>NotesThread.sinitThread();</code> and <code>NotesThread.stermThread();</code> to gain access to the Notes C API. For external applications (the ones running neither as XPage/OSGi nor as agent, the OpenNTF API provides the <a href="http://domino1.qtzar.com/org.openntf.domino/index.html?org/openntf/domino/thread/DominoExecutor.html">Domino Executor</a>.To make things easier, besides the standard Java <a href="">Runnable</a> interface, the class <a href="http://domino1.qtzar.com/org.openntf.domino/index.html?org/openntf/domino/thread/AbstractDominoRunnable.html">AbstractDominoRunnable</a> is provided, that allow an easy extension and access to the Domino session without the need to create/tear down the native C threads manually. The sample application that does send out the same result as in the previous chapter looks like this: 
 <br>
 <pre><code class="language-java">
@@ -221,7 +223,8 @@ private static final long serialVersionUID = 1L;
 }
 }
 </code></pre>
-<br> The sample uses 2 inner anonymous classes: <code>Handler</code> and <code>AbstractDominoRunnable</code>. With this working we have the foundation to run a local web application that makes use of data accessible through our Notes client. The next step in this article series: API considerations and functionality planning. Thereafter code, code, code.</div>
+<br>
+ The sample uses 2 inner anonymous classes: <code>Handler</code> and <code>AbstractDominoRunnable</code>. With this working we have the foundation to run a local web application that makes use of data accessible through our Notes client. The next step in this article series: API considerations and functionality planning. Thereafter code, code, code.</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">

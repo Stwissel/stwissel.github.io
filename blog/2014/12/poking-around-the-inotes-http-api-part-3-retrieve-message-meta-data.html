@@ -149,7 +149,8 @@ ga('send', 'pageview');
  <li>The content of the message is accessible via <code>s_MailMemoReadBodyContent</code> or <code>UNID/Body?OpenField</code> or <code>l_MailMessageHeader&amp;PresetFields=FullMessage;1</code> (as raw Mime)</li>
  <li>The MIME parts retrieved come infested with &lt;br /&gt; tags, since iNotes renders them in a display window (I would have used &lt;pre&gt;, but that's a different story. So they need cleanup</li>
 </ul> To begin I'll use the result of <code>l_JSVars</code> to learn about the document. Since, again, it is JavaScript, not JSON, I'll take the Rhino approach to extract a Java object. 
-<br> The parts I'm interested in is in the variable named <code>DXX</code> which contains <code>item</code> that is a representation of NotesItems. True to the nature of an item, the JSON is quite elaborate, which you can see on the example of the form item: 
+<br>
+ The parts I'm interested in is in the variable named <code>DXX</code> which contains <code>item</code> that is a representation of NotesItems. True to the nature of an item, the JSON is quite elaborate, which you can see on the example of the form item: 
 <br>
 <pre><code class="language-js">
 { "@name": "Form",
@@ -160,7 +161,8 @@ ga('send', 'pageview');
    }
 }
 </code></pre>
-<br> For our purposes this will be flattened into a Map that has the item name as key. The Java code is quite similar to the retrieval of the Outline, the magic is in the JavaScript: 
+<br>
+ For our purposes this will be flattened into a Map that has the item name as key. The Java code is quite similar to the retrieval of the Outline, the magic is in the JavaScript: 
 <br>
 <pre><code class="language-java">
 public MessageObject(String code, String rawMsg) {
@@ -176,7 +178,8 @@ public MessageObject(String code, String rawMsg) {
     return msg;
 }
 </code></pre>
-<br> A little detail to stumble over is the item structure. It can be <code>textlist/text</code> or only <code>text</code> (feels like MIME Headers) and <code>datetimelist/datetimepair/datetime</code> or <code>datetimelist/datetime</code>.I haven't seen any item other than the name <code>"0"</code>, so JSON arrays and multi-values got a little in each other's way. <code>text</code> as an array could have multiple values eliminating the need for an enclosing <code>textlist</code>, but probably I'm overlooking something, smarter people that me, who designed this, did envision. 
+<br>
+ A little detail to stumble over is the item structure. It can be <code>textlist/text</code> or only <code>text</code> (feels like MIME Headers) and <code>datetimelist/datetimepair/datetime</code> or <code>datetimelist/datetime</code>.I haven't seen any item other than the name <code>"0"</code>, so JSON arrays and multi-values got a little in each other's way. <code>text</code> as an array could have multiple values eliminating the need for an enclosing <code>textlist</code>, but probably I'm overlooking something, smarter people that me, who designed this, did envision. 
 <br>
 <pre><code class="language-js">
 function getMessageObject(raw) {
@@ -262,9 +265,12 @@ function getMessageObject(raw) {
 
 }
 </code></pre>
-<br> When you use a Map instead of a specialized object, you need to change <code>var result = new MessageObject(msg.sUnid);</code> to <code>var result = new java.util.HashMap;</code> and <code>result.addItem(curName, curValue);</code> to <code>result.put(curName, curValue);</code>. To avoid empty fields (caveat: there's a difference between "empty field" and "field not there"), change <code>if (curName != "") {</code> to <code>if (curName != "" &amp;&amp; curValue != "") {</code>
-<br> An interesting question to contemplate: while all values in the JSON come across as String, the structure clearly specifies the data type. Should therefore the object you create contain these data types instead of String? 
-<br> As usual YMMV</div>
+<br>
+ When you use a Map instead of a specialized object, you need to change <code>var result = new MessageObject(msg.sUnid);</code> to <code>var result = new java.util.HashMap;</code> and <code>result.addItem(curName, curValue);</code> to <code>result.put(curName, curValue);</code>. To avoid empty fields (caveat: there's a difference between "empty field" and "field not there"), change <code>if (curName != "") {</code> to <code>if (curName != "" &amp;&amp; curValue != "") {</code>
+<br>
+ An interesting question to contemplate: while all values in the JSON come across as String, the structure clearly specifies the data type. Should therefore the object you create contain these data types instead of String? 
+<br>
+ As usual YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">

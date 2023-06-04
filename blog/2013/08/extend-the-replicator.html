@@ -125,31 +125,38 @@ ga('send', 'pageview');
 				<article class="well well-raised">
 					<h1><small>Extend the Replicator</small></h1>
 					<hr />
-					<div>One elegant way to improve perceived performance is to run computing task outside of user time. In Notes that is done using (scheduled) agents and scheduled replication (On mobile devices it is called PushMail 
-<img src="/blog/images/emoticons/smile.gif">). When you have longer running tasks that only make sense when new data might have arrived, a scheduled agent doesn't make much sense. 
-<br> Triggering a process "On Replication" is much preferable. Classic Notes agents don't have this ability, but the Notes full client can do that. Already today the replicator hosts not only classic Notes NSF replication, but also address sync and Activities sync. This type of extensions can easily be created using an Eclipse extension point: 
+					<div>One elegant way to improve perceived performance is to run computing task outside of user time. In Notes that is done using (scheduled) agents and scheduled replication (On mobile devices it is called PushMail <img src="/blog/images/emoticons/smile.gif">). When you have longer running tasks that only make sense when new data might have arrived, a scheduled agent doesn't make much sense. 
+<br>
+ Triggering a process "On Replication" is much preferable. Classic Notes agents don't have this ability, but the Notes full client can do that. Already today the replicator hosts not only classic Notes NSF replication, but also address sync and Activities sync. This type of extensions can easily be created using an Eclipse extension point: 
 <div class="xml">
  <ol>
   <li class="li1">
-   <div class="de1"><span class="sc3"><span class="re1">&lt;extension</span> <span class="re0">point</span>=<span class="st0">"com.ibm.notes.client.notesSync"</span><span class="re2">&gt;</span></span>
+   <div class="de1">
+    <span class="sc3"><span class="re1">&lt;extension</span> <span class="re0">point</span>=<span class="st0">"com.ibm.notes.client.notesSync"</span><span class="re2">&gt;</span></span>
    </div></li>
   <li class="li1">
-   <div class="de1"><span class="sc3"><span class="re1">&lt;unit</span> <span class="re0">class</span>=<span class="st0">"com.notessensei.demo.RunOnReplication"</span></span>
+   <div class="de1">
+    <span class="sc3"><span class="re1">&lt;unit</span> <span class="re0">class</span>=<span class="st0">"com.notessensei.demo.RunOnReplication"</span></span>
    </div></li>
   <li class="li1">
-   <div class="de1"><span class="sc3"> <span class="re0">id</span>=<span class="st0">"com.notessensei.demo.runonreplication"</span></span>
+   <div class="de1">
+    <span class="sc3"> <span class="re0">id</span>=<span class="st0">"com.notessensei.demo.runonreplication"</span></span>
    </div></li>
   <li class="li1">
-   <div class="de1"><span class="sc3"> <span class="re0">image</span>=<span class="st0">"icons/replicate.gif"</span></span>
+   <div class="de1">
+    <span class="sc3"> <span class="re0">image</span>=<span class="st0">"icons/replicate.gif"</span></span>
    </div></li>
   <li class="li2">
-   <div class="de2"><span class="sc3"> <span class="re0">label</span>=<span class="st0">"NotesSensei's Demo Replication"</span><span class="re2">&gt;</span></span>
+   <div class="de2">
+    <span class="sc3"> <span class="re0">label</span>=<span class="st0">"NotesSensei's Demo Replication"</span><span class="re2">&gt;</span></span>
    </div></li>
   <li class="li1">
-   <div class="de1"><span class="sc3"><span class="re1">&lt;/unit<span class="re2">&gt;</span></span></span>
+   <div class="de1">
+    <span class="sc3"><span class="re1">&lt;/unit<span class="re2">&gt;</span></span></span>
    </div></li>
   <li class="li1">
-   <div class="de1"><span class="sc3"><span class="re1">&lt;/extension<span class="re2">&gt;</span></span></span>
+   <div class="de1">
+    <span class="sc3"><span class="re1">&lt;/extension<span class="re2">&gt;</span></span></span>
    </div></li>
  </ol>
 </div> There are a few caveats (besides designing an 32x32 icon) when building the class, but once you know them it is straight forward: 
@@ -160,53 +167,62 @@ ga('send', 'pageview');
  <li>While both methods provide an <a href="http://help.eclipse.org/indigo/index.jsp?topic=%2Forg.eclipse.platform.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fcore%2Fruntime%2FIProgressMonitor.html">IProgressMonitor</a> as parameter, your code needs to try to obtain the Notes specific one (see sample)</li>
  <li>Keeping track of units of work is a pain, expecially when your tasks calls various modules with unknown number of steps. Luckily there is <a href="http://help.eclipse.org/indigo/topic/org.eclipse.platform.doc.isv/reference/api/org/eclipse/core/runtime/SubMonitor.html">SubMonitor</a> that allows to specify a set amount of "ticks" for a subtask that can then adjust them as needed (see example)</li>
  <li>You should check <code>IProgressMonitor.isCanceled()</code> inside your code and terminate processing at the first possible point (without sacrificing data integrity) when encountered</li>
-</ul> Your class could look like this:<div class="java"><span class="kw1">package</span><span class="co2">com.notessensei.demo</span><span class="sy0">;</span>
+</ul> Your class could look like this:<div class="java">
+ <span class="kw1">package</span> <span class="co2">com.notessensei.demo</span> <span class="sy0">;</span>
  <br>
- <br><span class="kw1">import</span><span class="co2">org.eclipse.core.runtime.IProgressMonitor</span><span class="sy0">;</span>
- <br><span class="kw1">import</span><span class="co2">org.eclipse.core.runtime.IStatus</span><span class="sy0">;</span>
- <br><span class="kw1">import</span><span class="co2">org.eclipse.core.runtime.QualifiedName</span><span class="sy0">;</span>
- <br><span class="kw1">import</span><span class="co2">org.eclipse.core.runtime.Status</span><span class="sy0">;</span>
- <br><span class="kw1">import</span><span class="co2">org.eclipse.core.runtime.SubMonitor</span><span class="sy0">;</span>
- <br><span class="kw1">import</span><span class="co2">org.eclipse.core.runtime.jobs.Job</span><span class="sy0">;</span>
+ <br><span class="kw1">import</span> <span class="co2">org.eclipse.core.runtime.IProgressMonitor</span> <span class="sy0">;</span>
+ <br><span class="kw1">import</span> <span class="co2">org.eclipse.core.runtime.IStatus</span> <span class="sy0">;</span>
+ <br><span class="kw1">import</span> <span class="co2">org.eclipse.core.runtime.QualifiedName</span> <span class="sy0">;</span>
+ <br><span class="kw1">import</span> <span class="co2">org.eclipse.core.runtime.Status</span> <span class="sy0">;</span>
+ <br><span class="kw1">import</span> <span class="co2">org.eclipse.core.runtime.SubMonitor</span> <span class="sy0">;</span>
+ <br><span class="kw1">import</span> <span class="co2">org.eclipse.core.runtime.jobs.Job</span> <span class="sy0">;</span>
  <br>
- <br><span class="kw1">public</span><span class="kw1">class</span> RunOnReplication <span class="kw1">extends</span> Job <span class="br0">{</span>
+ <br><span class="kw1">public</span> <span class="kw1">class</span> RunOnReplication <span class="kw1">extends</span> Job <span class="br0">{</span>
  <br>
- <br><span class="kw1">public</span><span class="kw1">static</span> QualifiedName notesMonitor <span class="sy0">=</span><span class="kw1">new</span> QualifiedName <span class="br0">(</span><span class="st0">"com.ibm.notes.client"</span>, <span class="st0">"notesMonitor"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br><span class="kw1">public</span> <span class="kw1">static</span> QualifiedName notesMonitor <span class="sy0">=</span> <span class="kw1">new</span> QualifiedName <span class="br0">(</span> <span class="st0">"com.ibm.notes.client"</span>, <span class="st0">"notesMonitor"</span> <span class="br0">)</span> <span class="sy0">;</span>
  <br>
- <br><span class="kw1">public</span> RunOnReplication <span class="br0">(</span><span class="br0">)</span><span class="br0">{</span>
- <br><span class="kw1">super</span><span class="br0">(</span><span class="st0">"NotesSensei's Demo"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br><span class="kw1">public</span> RunOnReplication <span class="br0">(</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br><span class="kw1">super</span> <span class="br0">(</span> <span class="st0">"NotesSensei's Demo"</span> <span class="br0">)</span> <span class="sy0">;</span>
  <br><span class="br0">}</span>
  <br>
- <br> @Override 
- <br><span class="kw1">protected</span> IStatus run <span class="br0">(</span><span class="kw1">final</span> IProgressMonitor paramIProgressMonitor <span class="br0">)</span><span class="br0">{</span>
+ <br>
+  @Override 
+ <br><span class="kw1">protected</span> IStatus run <span class="br0">(</span> <span class="kw1">final</span> IProgressMonitor paramIProgressMonitor <span class="br0">)</span> <span class="br0">{</span>
  <br><span class="co1">// Get the NotesProgress monitor</span>
- <br> IProgressMonitor monitor <span class="sy0">=</span><span class="br0">(</span><span class="br0">(</span>IProgressMonitor <span class="br0">)</span><span class="kw1">this</span>. <span class="me1">getProperty</span><span class="br0">(</span>notesMonitor <span class="br0">)</span><span class="br0">)</span><span class="sy0">;</span>
- <br><span class="kw1">if</span><span class="br0">(</span>monitor <span class="sy0">==</span><span class="kw2">null</span><span class="br0">)</span><span class="br0">{</span>
- <br> monitor <span class="sy0">=</span> paramIProgressMonitor <span class="sy0">;</span>
+ <br>
+  IProgressMonitor monitor <span class="sy0">=</span> <span class="br0">(</span> <span class="br0">(</span>IProgressMonitor <span class="br0">)</span> <span class="kw1">this</span>. <span class="me1">getProperty</span> <span class="br0">(</span>notesMonitor <span class="br0">)</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br><span class="kw1">if</span> <span class="br0">(</span>monitor <span class="sy0">==</span> <span class="kw2">null</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  monitor <span class="sy0">=</span> paramIProgressMonitor <span class="sy0">;</span>
  <br><span class="br0">}</span>
  <br><span class="co1">// Total number of ticks - shown as # of Docs in the Replicator</span>
- <br> SubMonitor sMon <span class="sy0">=</span> SubMonitor. <span class="me1">convert</span><span class="br0">(</span>monitor <span class="br0">)</span><span class="sy0">;</span>
- <br> sMon. <span class="me1">beginTask</span><span class="br0">(</span><span class="st0">"We get started"</span>, <span class="nu0">100</span><span class="br0">)</span><span class="sy0">;</span>
- <br><span class="kw1">for</span><span class="br0">(</span><span class="kw4">int</span> i <span class="sy0">=</span><span class="nu0">0</span><span class="sy0">;</span> i <span class="sy0">&lt;</span><span class="nu0">10</span><span class="sy0">;</span> i <span class="sy0">++</span><span class="br0">)</span><span class="br0">{</span>
- <br><span class="kw1">this</span>. <span class="me1">doSomething</span><span class="br0">(</span>sMon. <span class="me1">newChild</span><span class="br0">(</span><span class="nu0">10</span><span class="br0">)</span><span class="br0">)</span><span class="sy0">;</span>
- <br><span class="kw1">if</span><span class="br0">(</span>sMon. <span class="me1">isCanceled</span><span class="br0">(</span><span class="br0">)</span><span class="br0">)</span><span class="br0">{</span>
- <br><span class="kw1">return</span> Status. <span class="me1">CANCEL_STATUS</span><span class="sy0">;</span>
+ <br>
+  SubMonitor sMon <span class="sy0">=</span> SubMonitor. <span class="me1">convert</span> <span class="br0">(</span>monitor <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  sMon. <span class="me1">beginTask</span> <span class="br0">(</span> <span class="st0">"We get started"</span>, <span class="nu0">100</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br><span class="kw1">for</span> <span class="br0">(</span> <span class="kw4">int</span> i <span class="sy0">=</span> <span class="nu0">0</span> <span class="sy0">;</span> i <span class="sy0">&lt;</span> <span class="nu0">10</span> <span class="sy0">;</span> i <span class="sy0">++</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br><span class="kw1">this</span>. <span class="me1">doSomething</span> <span class="br0">(</span>sMon. <span class="me1">newChild</span> <span class="br0">(</span> <span class="nu0">10</span> <span class="br0">)</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br><span class="kw1">if</span> <span class="br0">(</span>sMon. <span class="me1">isCanceled</span> <span class="br0">(</span> <span class="br0">)</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br><span class="kw1">return</span> Status. <span class="me1">CANCEL_STATUS</span> <span class="sy0">;</span>
  <br><span class="br0">}</span>
  <br><span class="br0">}</span>
- <br><span class="kw1">return</span><span class="kw1">new</span> Status <span class="br0">(</span>Status. <span class="me1">OK</span>, <span class="st0">"com.notessensei.demo.runonreplication"</span>, <span class="st0">"All went fine"</span><span class="br0">)</span><span class="sy0">;</span>
+ <br><span class="kw1">return</span> <span class="kw1">new</span> Status <span class="br0">(</span>Status. <span class="me1">OK</span>, <span class="st0">"com.notessensei.demo.runonreplication"</span>, <span class="st0">"All went fine"</span> <span class="br0">)</span> <span class="sy0">;</span>
  <br>
  <br><span class="br0">}</span>
  <br>
- <br><span class="kw1">private</span><span class="kw4">void</span> doSomething <span class="br0">(</span>SubMonitor sm <span class="br0">)</span><span class="br0">{</span>
- <br> sm. <span class="me1">beginTask</span><span class="br0">(</span><span class="st0">"SubTask"</span>, <span class="nu0">345</span><span class="br0">)</span><span class="sy0">;</span>
+ <br><span class="kw1">private</span> <span class="kw4">void</span> doSomething <span class="br0">(</span>SubMonitor sm <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  sm. <span class="me1">beginTask</span> <span class="br0">(</span> <span class="st0">"SubTask"</span>, <span class="nu0">345</span> <span class="br0">)</span> <span class="sy0">;</span>
  <br><span class="co1">// Here would be real work!</span>
- <br><span class="kw1">for</span><span class="br0">(</span><span class="kw4">int</span> i <span class="sy0">=</span><span class="nu0">0</span><span class="sy0">;</span> i <span class="sy0">&lt;</span><span class="nu0">345</span><span class="sy0">;</span> i <span class="sy0">++</span><span class="br0">)</span><span class="br0">{</span>
- <br> sm. <span class="me1">worked</span><span class="br0">(</span><span class="nu0">1</span><span class="br0">)</span><span class="sy0">;</span>
- <br><span class="kw1">if</span><span class="br0">(</span>sm. <span class="me1">isCanceled</span><span class="br0">(</span><span class="br0">)</span><span class="br0">)</span><span class="br0">{</span>
- <br><span class="kw1">return</span><span class="sy0">;</span>
+ <br><span class="kw1">for</span> <span class="br0">(</span> <span class="kw4">int</span> i <span class="sy0">=</span> <span class="nu0">0</span> <span class="sy0">;</span> i <span class="sy0">&lt;</span> <span class="nu0">345</span> <span class="sy0">;</span> i <span class="sy0">++</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  sm. <span class="me1">worked</span> <span class="br0">(</span> <span class="nu0">1</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br><span class="kw1">if</span> <span class="br0">(</span>sm. <span class="me1">isCanceled</span> <span class="br0">(</span> <span class="br0">)</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br><span class="kw1">return</span> <span class="sy0">;</span>
  <br><span class="br0">}</span>
  <br><span class="br0">}</span>
- <br> sm. <span class="me1">done</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+ <br>
+  sm. <span class="me1">done</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
  <br><span class="br0">}</span>
  <br><span class="br0">}</span>
 </div> As usual: YMMV</div>

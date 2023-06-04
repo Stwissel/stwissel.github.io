@@ -127,20 +127,32 @@ ga('send', 'pageview');
 <p>To successfully deploy Verse, make sure to carefully read and implement <a href="https://www.ibm.com/support/knowledgecenter/SS4RQV_1.0.0/admin/topics/vop_configuring_server.html"><b>the installation instructions</b></a>. The availability of Verse makes Domino the most versatile eMail platform around, offering you the choice of: Notes Client, Outlook, POP2, IMAP4, iNotes, Verse, iOS, Android. Anywhay, here we go:</p>
 <h2>The back story</h2>
 <p>Verse on premises was a long (out)standing promise to the IBM customer base. Not everybody is ready to embrace the cloud, but interested in <a href="https://twitter.com/search?f=tweets&amp;vertical=default&amp;q=%23newwaytowork&amp;src=typd">the new way to work</a>. In SmartCloud Notes, the backend for Verse in the Cloud, all search is powered by <a href="http://lucene.apache.org/solr/">Apache SOLR</a>. If Verse got delivered as is, that would have required substantial hardware and skill investments for the on-premises customers.</p>
-<p> So I made a bet with <a href="https://www.linkedin.com/in/michaelguyalexander">Michael Alexander</a>, whom I worked with on TPTSNBN, that we could use standard Domino capabilities, not requiring Solr. Based on prototypes with <a href="http://vertx.io/">vert.x</a> and Java8 we gained confidence and got the go ahead to build the search component as OSGi plug-in (in Java6). So the search part (not the UI or other functionality) is on me.</p>
+<p>So I made a bet with <a href="https://www.linkedin.com/in/michaelguyalexander">Michael Alexander</a>, whom I worked with on TPTSNBN, that we could use standard Domino capabilities, not requiring Solr. Based on prototypes with <a href="http://vertx.io/">vert.x</a> and Java8 we gained confidence and got the go ahead to build the search component as OSGi plug-in (in Java6). So the search part (not the UI or other functionality) is on me.</p>
 <h2>The team(s)</h2>
-<p>There were two distinct teams working on the delivery of Verse on Premises (VoP): The core Verse team, that owns UI, functionality and features for both cloud and on premises and the search plugin team responsible to replace the Solr capabilities with native Domino calls. <br>The former is rather large, distributed between the US, Ireland and China. The later was led by the distinguished engineer <a href="https://www.linkedin.com/in/david-byrd-401668a">David Byrd</a> and just a few core coding members: David, Michael, <a href="https://www.linkedin.com/in/cheltzel">Christopher</a>, <a href="https://sg.linkedin.com/in/raj-j-rajendran-226a9456">Raj</a> and myself.<br> We were supported by a team of testers in Belarus and the Philippines. The test teams wrote hundreds of <a href="http://junit.org/">JUnit</a> and <a href="https://www.getpostman.com/">Postman</a> tests, just for the search API.</p>
+<p>There were two distinct teams working on the delivery of Verse on Premises (VoP): The core Verse team, that owns UI, functionality and features for both cloud and on premises and the search plugin team responsible to replace the Solr capabilities with native Domino calls. <br>
+ The former is rather large, distributed between the US, Ireland and China. The later was led by the distinguished engineer <a href="https://www.linkedin.com/in/david-byrd-401668a">David Byrd</a> and just a few core coding members: David, Michael, <a href="https://www.linkedin.com/in/cheltzel">Christopher</a>, <a href="https://sg.linkedin.com/in/raj-j-rajendran-226a9456">Raj</a> and myself.<br>
+  We were supported by a team of testers in Belarus and the Philippines. The test teams wrote hundreds of <a href="http://junit.org/">JUnit</a> and <a href="https://www.getpostman.com/">Postman</a> tests, just for the search API.</p>
 <h2>The Orangebox</h2>
 <p>Each project needs a good <a href="#" title="A nice one: TPTSNBN = The Project That Shall Not Be Named">code name</a>. The original Verse code name was <a href="https://en.wikipedia.org/wiki/Sequoia_National_Park ">Sequoia</a>, which is reflected in the name of the plugins for core and UI functionality.</p>
-<p>The search component, not being part of RealVerse™, needed a different name. In an initial high level diagram, outlining the architecture for management, the search component was drawn as an orange box. Since we "just" had to code "the orange box". The name stuck and led to our code name "Project OrangeBox" (PoB). <br><img src="/blog/images/2016/OrangeBox.png" border="0 " alt="The inofficial Project Orange Box Logo"> <br> You <a href="http://jd.benow.ca/ " title="Don 't do this, it is most likely illegal" rel="nofollow">can find</a> Orangebox and POB in multiple places (including notes.ini variables and https calls the browser makes). So now you know where it is coming from.</p><h2>The challenges</h2>
+<p>The search component, not being part of RealVerse™, needed a different name. In an initial high level diagram, outlining the architecture for management, the search component was drawn as an orange box. Since we "just" had to code "the orange box". The name stuck and led to our code name "Project OrangeBox" (PoB). <br><img src="/blog/images/2016/OrangeBox.png" border="0 " alt="The inofficial Project Orange Box Logo"> <br>
+  You <a href="http://jd.benow.ca/ " title="Don 't do this, it is most likely illegal" rel="nofollow">can find</a> Orangebox and POB in multiple places (including notes.ini variables and https calls the browser makes). So now you know where it is coming from.</p><h2>The challenges</h2>
 <p>We set out to build POB with the following constraints:</p>
 <ul>
- <li><b>No changes to the Verse UI code</b> <br> The UI makes heavy use of <a href="https://github.com/OpenNTF/JavascriptAggregator" title="Some when they will move to webpack, once Dojo is history">JAGR</a> for aggregation and sends SOLR syntax queries over HTTPS. Short of the message bodies almost everything the Verse client requests is a SOLR search query, including opening the inbox.<br>For your enlightenment: Open the developer tools in Chrome and watch what is transmitted over the wire. <br> The UI code is completely identical to the code running in the cloud, no splitting of code streams was a design mandate - and no changes from the running production code</li>
- <li><b>Java8 would not be ready in time</b> <br> So no Vert.x library, no RxJava (it uses threads heavily and that kills the Domino Java6 JVM performance), no lambda functions. Initially I used <a href="https://github.com/ReactiveX/RxJava">RxJava</a> to process resultsets into the required JSON. However that didn't survive our load tests, mainly attributed to the JVM struggling with rapid thread transitions</li>
- <li><b>Only public APIs</b> <br> Any of the calls made from the search plugin to Domino use only publicly documented Java APIs. Since we frequently load tested the application, I learned a big deal on behaviour under heavy load. One example: My initial approach was to use a list of item names I needed and then use <code>document.getFirstItem</code> in a loop to retrieve them. Turns out, under heavy load it is faster to use <code>document.getItems</code> and loop through those, picking the values I needed</li>
- <li><b>Light on template changes</b> <br> In VoP 1.0 the only changes to the mail template are a few additional views. So you can keep your modified R9 template (eventually) for now - unless you messed with the search order in views and folders.<br> However the Verse Client requires data for its list column, that is not in any current view (column). As a result we have to read each and every document that's displayed in the list. <a href="https://www.ibm.com/Search/?q=Nirmala+Venkatraman">Nirmala</a> our Chief of Performance made us work hard to get this fast. <br> One of the nice side effects of this effort: <a href="https://www.linkedin.com/in/james-cooper-9082474">Jim Cooper</a>, C expert in the core Domino team, provided code updates (also included in the upcoming FP8), that dramatically improve read performance for any document - a big bonus for all Domino based applications </li>
+ <li><b>No changes to the Verse UI code</b> <br>
+   The UI makes heavy use of <a href="https://github.com/OpenNTF/JavascriptAggregator" title="Some when they will move to webpack, once Dojo is history">JAGR</a> for aggregation and sends SOLR syntax queries over HTTPS. Short of the message bodies almost everything the Verse client requests is a SOLR search query, including opening the inbox.<br>
+  For your enlightenment: Open the developer tools in Chrome and watch what is transmitted over the wire. <br>
+   The UI code is completely identical to the code running in the cloud, no splitting of code streams was a design mandate - and no changes from the running production code</li>
+ <li><b>Java8 would not be ready in time</b> <br>
+   So no Vert.x library, no RxJava (it uses threads heavily and that kills the Domino Java6 JVM performance), no lambda functions. Initially I used <a href="https://github.com/ReactiveX/RxJava">RxJava</a> to process resultsets into the required JSON. However that didn't survive our load tests, mainly attributed to the JVM struggling with rapid thread transitions</li>
+ <li><b>Only public APIs</b> <br>
+   Any of the calls made from the search plugin to Domino use only publicly documented Java APIs. Since we frequently load tested the application, I learned a big deal on behaviour under heavy load. One example: My initial approach was to use a list of item names I needed and then use <code>document.getFirstItem</code> in a loop to retrieve them. Turns out, under heavy load it is faster to use <code>document.getItems</code> and loop through those, picking the values I needed</li>
+ <li><b>Light on template changes</b> <br>
+   In VoP 1.0 the only changes to the mail template are a few additional views. So you can keep your modified R9 template (eventually) for now - unless you messed with the search order in views and folders.<br>
+   However the Verse Client requires data for its list column, that is not in any current view (column). As a result we have to read each and every document that's displayed in the list. <a href="https://www.ibm.com/Search/?q=Nirmala+Venkatraman">Nirmala</a> our Chief of Performance made us work hard to get this fast. <br>
+   One of the nice side effects of this effort: <a href="https://www.linkedin.com/in/james-cooper-9082474">Jim Cooper</a>, C expert in the core Domino team, provided code updates (also included in the upcoming FP8), that dramatically improve read performance for any document - a big bonus for all Domino based applications</li>
 </ul>
-<p>To solve the challenges I devised an architecture where any incoming query would run through code determining the execution strategy. If determined feasible, VoP would just read a view or folder (eventually with a category and a date limit).<br> When that wouldn't fit we hand it off to a fulltext query. Raj designed and coded the Query parser that, for the use cases of VoP, translates the SOLR query syntax into Notes FTSearch syntax. Quite a feast in code, <b>kudos to Raj!</b></p>
+<p>To solve the challenges I devised an architecture where any incoming query would run through code determining the execution strategy. If determined feasible, VoP would just read a view or folder (eventually with a category and a date limit).<br>
+  When that wouldn't fit we hand it off to a fulltext query. Raj designed and coded the Query parser that, for the use cases of VoP, translates the SOLR query syntax into Notes FTSearch syntax. Quite a feast in code, <b>kudos to Raj!</b></p>
 <h2>Operating it</h2>
 <p>Make sure, you <a href="https://www.ibm.com/support/knowledgecenter/SS4RQV_1.0.0/admin/topics/vop_configuring_server.html">read the instructions carefully</a>. There are a number of preconditions to be met. Missing any of these and VoP will not work for that users. My suggestion to auto-fix some of them didn't make it into VoP 1.0</p>
 <ul>
@@ -158,16 +170,24 @@ ga('send', 'pageview');
 <p>To be super clear: <b>Nothing</b> of the data going forth (HTTPS Form submissions) and back (JSON) is documented or guaranteed to stay and can change in any future version (Very much like iNotes, see <a href="/blog/2014/11/poking-around-the-inotes-http-api-part-1.html">my articles</a> about that). So don't count on it.</p>
 <p>For adventurous souls: the search plugin is using <a href="https://wink.apache.org/">Apache WINK</a> which gives some information away at its base URL <code>/pob/api/search</code>. Go and check it out. Some of the URLs you will find there:</p>
 <ul>
- <li><code>/pob/api/search/inbox</code> <br>Returns an extended inbox in JSON format</li>
- <li><code>/pob/api/search/suggestimportant</code> <br>Lists the people Verse believe belong into</li>
- <li><code>/pob/api/search/needsaction</code> <br>Incoming mail that has been flagged as "Needs Action"</li>
- <li><code>/pob/api/search/waitingform</code> <br>outgoing mail that has been flagged as "Waiting for"</li>
+ <li><code>/pob/api/search/inbox</code> <br>
+  Returns an extended inbox in JSON format</li>
+ <li><code>/pob/api/search/suggestimportant</code> <br>
+  Lists the people Verse believe belong into</li>
+ <li><code>/pob/api/search/needsaction</code> <br>
+  Incoming mail that has been flagged as "Needs Action"</li>
+ <li><code>/pob/api/search/waitingform</code> <br>
+  outgoing mail that has been flagged as "Waiting for"</li>
  <li>If you happen to be a member of the <code>LocalDomainAdmins</code> or <code>OrangeBoxAdmins</code> group, there are a few more, which are secret and undocumented - and can't be subject to a PMR: 
   <ul>
-   <li><code>/pob/api/search/info</code> <br>Shows the version number and some cache information</li>
-   <li><code>/pob/api/search/monitor</code> <br>Real time statistics on search performance (also to be seen in the server stats!)</li>
-   <li><code>/pob/api/search/parser?query=something</code> <br>Takes a SOLR syntax query and shows its Domino FTIndex equivalent. Keep in mind: it isn't an universal translator, but tailored to Verse use cases (you don't want to learn SOLR syntax anyway)</li>
-   <li><code>/pob/api/search/design</code> <br>Various options like show/update design information or extract the current "Verse additional design elements" Template: 
+   <li><code>/pob/api/search/info</code> <br>
+    Shows the version number and some cache information</li>
+   <li><code>/pob/api/search/monitor</code> <br>
+    Real time statistics on search performance (also to be seen in the server stats!)</li>
+   <li><code>/pob/api/search/parser?query=something</code> <br>
+    Takes a SOLR syntax query and shows its Domino FTIndex equivalent. Keep in mind: it isn't an universal translator, but tailored to Verse use cases (you don't want to learn SOLR syntax anyway)</li>
+   <li><code>/pob/api/search/design</code> <br>
+    Various options like show/update design information or extract the current "Verse additional design elements" Template: 
     <ul>
      <li><code>?createtemplate=1</code> extracts the template with the additional Verse design elements. Fresh and crispy</li>
      <li><code>?showviews=1</code> renders the view design of the additional Verse views for inspection (to check if they are right)</li>
@@ -175,7 +195,7 @@ ga('send', 'pageview');
      <li><code>?replicaids=id,id,id</code> same as above, but for the databases with the given replica id</li>
      <li><code>?serverwide=1</code> samee as above, but for all mail files (pulled from names.nsf) on that server. Do this only after a backup. You have been warned! Actually don't do this. It's not supported</li>
     </ul> Use on your own risk</li>
-  </ul> As mentioned: <b>Use at your own peril!</b> (and not on a production system!) </li>
+  </ul> As mentioned: <b>Use at your own peril!</b> (and not on a production system!)</li>
 </ul> As usual YMMV</div>
 					<hr />
 					<p>

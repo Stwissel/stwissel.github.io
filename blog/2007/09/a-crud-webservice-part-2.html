@@ -124,67 +124,76 @@ ga('send', 'pageview');
 					<hr />
 					<div>In Part 1 of this Show-N-Tell Thursday I showed how to generate a <a href="/blog/2006/12/designing-a-crud-webservice-for-a-domino-form.html">WSDL definition out of a Notes form</a>. While this is nice, it leaves quite a bit of work to actually implement the service. In this installment we take the opposite route. Instead of generating a WSDL definition, LotusScript code will be generated out of a Form definition. Unfortunately DXL doesn't support Web services very well (at least up to R8.0), so I will generate a text file that contains pure LotusScript code. This text file needs to be manually imported into an empty Web service (Copy and paste will do). 
 <br>
-<br>I generate a few classes including a custom class which you can overwrite to implement your specific additions to the code. You might want to put that into a different library, so you keep your customization. Nota bene: the generated code is not real production quality. I haven't implemented good logging or error handling ( <a href="http://www.openntf.org/Projects/pmt.nsf/ProjectLookup/OpenLog">OpenLog</a> anybody). Once you see the code you get the idea and can complete that easily (feedback would be nice). 
 <br>
-<br>A web service requires a LotusScript class with public members, properties and/or functions. Domino Designer will then generate a WSDL file for us. One path to travel would be implementing generic code, that takes fields as name/value pairs. While tempting this has the clear disadvantage, that the web service becomes rather unspecific and we can't take advantage of a strong validation using XML schema. So my approach is to analyze the form and generate 2 XML structures: one for all input fields, used to create and update a document and one for all fields used to read a document. I don't take hide-when formulas into account. 
+I generate a few classes including a custom class which you can overwrite to implement your specific additions to the code. You might want to put that into a different library, so you keep your customization. Nota bene: the generated code is not real production quality. I haven't implemented good logging or error handling ( <a href="http://www.openntf.org/Projects/pmt.nsf/ProjectLookup/OpenLog">OpenLog</a> anybody). Once you see the code you get the idea and can complete that easily (feedback would be nice). 
 <br>
-<br>There are a few challenges to overcome. First we need to deal with multi-value fields. In WSDL these are expressed as Arrays. Secondly we need to map the Domino data types to WSDL data types. Luckily half of the work is done since <a href="http://www-12.lotus.com/ldd/doc/domino_notes/7.0/help7_designer.nsf/855dc7fcfd5fec9a85256b870069c0ab/bc4627f58ea92d998525704a003fba96?OpenDocument">Domino includes "lsxds.lss"</a> It translates WSDL data types into LotusScript. From LotusScript to NotesItems is a path well travelled. 
 <br>
-<br>Let's have a look at the XSLT stylesheet (if you don't know how to translate DXL using XSLT <a href="https://addons.mozilla.org/en-US/firefox/addon/2897">use this plug-in</a> -- you are using FireFox are you?) 
+A web service requires a LotusScript class with public members, properties and/or functions. Domino Designer will then generate a WSDL file for us. One path to travel would be implementing generic code, that takes fields as name/value pairs. While tempting this has the clear disadvantage, that the web service becomes rather unspecific and we can't take advantage of a strong validation using XML schema. So my approach is to analyze the form and generate 2 XML structures: one for all input fields, used to create and update a document and one for all fields used to read a document. I don't take hide-when formulas into account. 
 <br>
-<br>To instruct the XSLT processor to output plain text rather than XML or HTML we use this statement: 
-<br><tt>&lt;xsl:output</tt><tt> indent=</tt><tt>"yes"</tt><tt> method=</tt><tt>"text"</tt><tt> omit-xml-declaration=</tt><tt>"yes"</tt><tt> media-type=</tt><tt>"text/lotuscript"</tt><tt> xml:space=</tt><tt>"preserve"</tt><tt> </tt><tt>/&gt;</tt>
 <br>
-<br>Then inside the root tag the LotusScript Code is written as you would write in Domino Designer. 
-<br><tt>&nbsp; </tt><tt>&lt;xsl:template</tt><tt> match=</tt><tt>"/"</tt><tt>&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;!-- We use the build-in data type mapping for LotusScript agents --&gt;</tt>
+There are a few challenges to overcome. First we need to deal with multi-value fields. In WSDL these are expressed as Arrays. Secondly we need to map the Domino data types to WSDL data types. Luckily half of the work is done since <a href="http://www-12.lotus.com/ldd/doc/domino_notes/7.0/help7_designer.nsf/855dc7fcfd5fec9a85256b870069c0ab/bc4627f58ea92d998525704a003fba96?OpenDocument">Domino includes "lsxds.lss"</a> It translates WSDL data types into LotusScript. From LotusScript to NotesItems is a path well travelled. 
+<br>
+<br>
+Let's have a look at the XSLT stylesheet (if you don't know how to translate DXL using XSLT <a href="https://addons.mozilla.org/en-US/firefox/addon/2897">use this plug-in</a> -- you are using FireFox are you?) 
+<br>
+<br>
+To instruct the XSLT processor to output plain text rather than XML or HTML we use this statement: 
+<br><tt>&lt;xsl:output</tt> <tt> indent=</tt> <tt>"yes"</tt> <tt> method=</tt> <tt>"text"</tt> <tt> omit-xml-declaration=</tt> <tt>"yes"</tt> <tt> media-type=</tt> <tt>"text/lotuscript"</tt> <tt> xml:space=</tt> <tt>"preserve"</tt> <tt> </tt> <tt>/&gt;</tt>
+<br>
+<br>
+Then inside the root tag the LotusScript Code is written as you would write in Domino Designer. 
+<br><tt>&nbsp; </tt> <tt>&lt;xsl:template</tt> <tt> match=</tt> <tt>"/"</tt> <tt>&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;!-- We use the build-in data type mapping for LotusScript agents --&gt;</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; %INCLUDE "lsxsd.lss"</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; ' &nbsp;Autogenerated code to be embedded into a Domino Web Service</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; Public Class form</tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"$formName"</tt><tt>/&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; Public Class form</tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"$formName"</tt> <tt>/&gt;</tt>
 <br>
-<br>We have 2 levels of comments here. XSLT Comments looking like this: &lt;!-- ... --&gt; and regular LotusScript comments starting with '. 
-<br>Whenever we need to get specific we can use <tt>&lt;xsl:value-of</tt> to pick a value from the DXL form. 
 <br>
-<br>The class we will expose into the webservice is, other than its name and the content of the parameters pretty standard and (IMHO) self explaining: 
+We have 2 levels of comments here. XSLT Comments looking like this: &lt;!-- ... --&gt; and regular LotusScript comments starting with '. 
 <br>
-<br><tt>Public Class form</tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"$formName"</tt><tt>/&gt;</tt>
+Whenever we need to get specific we can use <tt>&lt;xsl:value-of</tt> to pick a value from the DXL form. 
+<br>
+<br>
+The class we will expose into the webservice is, other than its name and the content of the parameters pretty standard and (IMHO) self explaining: 
+<br>
+<br><tt>Public Class form</tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"$formName"</tt> <tt>/&gt;</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; '/**</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; '* createData takes in the custom form data and creates a new document.</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; '* the data given as parameter matches all input fields of the form</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; '*</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; '**/</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Public Function createData(formData as </tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"$formName"</tt><tt>/&gt;</tt><tt>InputData) as ResultCode</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Dim curData as new </tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"$formName"</tt><tt>/&gt;</tt><tt>CustomData</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Public Function createData(formData as </tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"$formName"</tt> <tt>/&gt;</tt> <tt>InputData) as ResultCode</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Dim curData as new </tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"$formName"</tt> <tt>/&gt;</tt> <tt>CustomData</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Set createData = curData.createData(formData)</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; End Function</tt>
 <br>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; Public Function createAndReadData(formData as </tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"$formName"</tt><tt>/&gt;</tt><tt>InputData) as ExtendedResult</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; Public Function createAndReadData(formData as </tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"$formName"</tt> <tt>/&gt;</tt> <tt>InputData) as ExtendedResult</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Set createAndReadData = new ExtendedResult</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Set createAndReadData.Data = new </tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"$formName"</tt><tt>/&gt;</tt><tt>CustomData</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Set createAndReadData.Data = new </tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"$formName"</tt> <tt>/&gt;</tt> <tt>CustomData</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Set createAndReadData.Result = createAndReadData.Data.createData(formData) </tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; End Function</tt>
 <br>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; Public Function readData(key as String) as </tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"$formName"</tt><tt>/&gt;</tt><tt>CustomData</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Dim tmpResult as new </tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"$formName"</tt><tt>/&gt;</tt><tt>CustomData</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; Public Function readData(key as String) as </tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"$formName"</tt> <tt>/&gt;</tt> <tt>CustomData</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Dim tmpResult as new </tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"$formName"</tt> <tt>/&gt;</tt> <tt>CustomData</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Call tmpResult.readData(key)</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Set readData = tmpResult</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; End Function</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Public Function updateData(key as String, formData as </tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"$formName"</tt><tt>/&gt;</tt><tt>InputData) as ResultCode</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Dim curData as new </tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"$formName"</tt><tt>/&gt;</tt><tt>CustomData</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Public Function updateData(key as String, formData as </tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"$formName"</tt> <tt>/&gt;</tt> <tt>InputData) as ResultCode</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Dim curData as new </tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"$formName"</tt> <tt>/&gt;</tt> <tt>CustomData</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Set updateData = curData.updateData(key, formData) &nbsp; &nbsp; &nbsp; &nbsp;</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; End Function</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Public Function updateAndReadData(key as String, formData as </tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"$formName"</tt><tt>/&gt;</tt><tt>InputData) as ExtendedResult</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Public Function updateAndReadData(key as String, formData as </tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"$formName"</tt> <tt>/&gt;</tt> <tt>InputData) as ExtendedResult</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Set updateAndReadData = new ExtendedResult</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Set updateAndReadData.Data = new </tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"$formName"</tt><tt>/&gt;</tt><tt>CustomData</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Set updateAndReadData.Data = new </tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"$formName"</tt> <tt>/&gt;</tt> <tt>CustomData</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Set updateAndReadData.Result = updateAndReadData.Data.updateData(key,formData) </tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; End Function</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Public Function deleteData(key as String) as ResultCode</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Dim curData as new </tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"$formName"</tt><tt>/&gt;</tt><tt>CustomData</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Dim curData as new </tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"$formName"</tt> <tt>/&gt;</tt> <tt>CustomData</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Set deleteData = curData.deleteData(key)</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; End Function</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt>
@@ -198,58 +207,63 @@ ga('send', 'pageview');
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; Public Class ExtendedResult</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Public Result as ResultCode</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Public Data as </tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"$formName"</tt><tt>/&gt;</tt><tt>CustomData</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Public Data as </tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"$formName"</tt> <tt>/&gt;</tt> <tt>CustomData</tt>
 <br><tt>&nbsp; &nbsp; &nbsp; &nbsp; End Class</tt>
 <br>
 <br>The more interesting part is in the generation of code per field. Code needs to be generated for fields in various parts of the code, so we take advantage of XSLT's mode attribute to specify what generation should take place: 
 <br>
-<br><tt>&nbsp; &nbsp;</tt><tt>&lt;!-- Fields need to be specified per mode/edit/compute and data type --&gt;</tt><tt> </tt>
-<br><tt>&nbsp; &nbsp; </tt><tt>&lt;xsl:template</tt><tt> match=</tt><tt>"d:field"</tt><tt>&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:variable</tt><tt> name=</tt><tt>"datatype"</tt><tt>&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:call-template</tt><tt> name=</tt><tt>"getdatatype"</tt><tt>&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:with-param</tt><tt> name=</tt><tt>"curField"</tt><tt> select=</tt><tt>"."</tt><tt> </tt><tt>/&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;/xsl:call-template&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;/xsl:variable&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Public </tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"@name"</tt><tt>/&gt;</tt><tt> as </tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"$datatype"</tt><tt>/&gt;</tt>
-<br><tt>&nbsp; &nbsp; </tt><tt>&lt;/xsl:template&gt;</tt>
+<br><tt>&nbsp; &nbsp;</tt> <tt>&lt;!-- Fields need to be specified per mode/edit/compute and data type --&gt;</tt> <tt> </tt>
+<br><tt>&nbsp; &nbsp; </tt> <tt>&lt;xsl:template</tt> <tt> match=</tt> <tt>"d:field"</tt> <tt>&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:variable</tt> <tt> name=</tt> <tt>"datatype"</tt> <tt>&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:call-template</tt> <tt> name=</tt> <tt>"getdatatype"</tt> <tt>&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:with-param</tt> <tt> name=</tt> <tt>"curField"</tt> <tt> select=</tt> <tt>"."</tt> <tt> </tt> <tt>/&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;/xsl:call-template&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;/xsl:variable&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Public </tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"@name"</tt> <tt>/&gt;</tt> <tt> as </tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"$datatype"</tt> <tt>/&gt;</tt>
+<br><tt>&nbsp; &nbsp; </tt> <tt>&lt;/xsl:template&gt;</tt>
 <br>
-<br>We actually treat multi-value fields slightly different, so we just add a qualifier to our match condition and we can be more specific what to do. I prefer match clauses to if conditions most of the time. &nbsp; &nbsp; 
 <br>
-<br><tt>&nbsp; &nbsp; </tt><tt>&lt;!-- We need to treat multivalue fields a little different since they are arrays --&gt;</tt>
-<br><tt>&nbsp; &nbsp; </tt><tt>&lt;xsl:template</tt><tt> match=</tt><tt>"d:field[@allowmultivalues='true']"</tt><tt>&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:variable</tt><tt> name=</tt><tt>"datatype"</tt><tt>&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:call-template</tt><tt> name=</tt><tt>"getdatatype"</tt><tt>&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:with-param</tt><tt> name=</tt><tt>"curField"</tt><tt> select=</tt><tt>"."</tt><tt> </tt><tt>/&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;/xsl:call-template&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;/xsl:variable&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; Public </tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"@name"</tt><tt>/&gt;</tt><tt>() as </tt><tt>&lt;xsl:value-of</tt><tt> select=</tt><tt>"$datatype"</tt><tt>/&gt;</tt>
-<br><tt>&nbsp; &nbsp; </tt><tt>&lt;/xsl:template&gt;</tt>
+We actually treat multi-value fields slightly different, so we just add a qualifier to our match condition and we can be more specific what to do. I prefer match clauses to if conditions most of the time. &nbsp; &nbsp; 
 <br>
-<br>The variable datatype contains the mapping from a notes datatype into the XSD data type and is implemented as XSLT's version of sub routine. Once you make piece with XSLT's strictly set oriented way of thinking you will appreciate the power of the language. The mapping as of now looks like this: 
-<br><tt>&nbsp; &nbsp; </tt><tt>&lt;!-- Determin the datatype. This maps Notes field types to XML Datatypes. Change as needed --&gt;</tt>
-<br><tt>&nbsp; &nbsp; </tt><tt>&lt;xsl:template</tt><tt> name=</tt><tt>"getdatatype"</tt><tt>&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:param</tt><tt> name=</tt><tt>"curField"</tt><tt> </tt><tt>/&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:choose&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:when</tt><tt> test=</tt><tt>"$curField/@type='text'"</tt><tt>&gt;</tt><tt>XSD_STRING</tt><tt>&lt;/xsl:when&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:when</tt><tt> test=</tt><tt>"$curField/@type='keyword'"</tt><tt>&gt;</tt><tt>XSD_STRING</tt><tt>&lt;/xsl:when&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:when</tt><tt> test=</tt><tt>"$curField/@type='password'"</tt><tt>&gt;</tt><tt>XSD_STRING</tt><tt>&lt;/xsl:when&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:when</tt><tt> test=</tt><tt>"$curField/@type='keyword'"</tt><tt>&gt;</tt><tt>XSD_STRING</tt><tt>&lt;/xsl:when&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:when</tt><tt> test=</tt><tt>"$curField/@type='names'"</tt><tt>&gt;</tt><tt>XSD_STRING</tt><tt>&lt;/xsl:when&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:when</tt><tt> test=</tt><tt>"$curField/@type='authors'"</tt><tt>&gt;</tt><tt>XSD_STRING</tt><tt>&lt;/xsl:when&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:when</tt><tt> test=</tt><tt>"$curField/@type='readers'"</tt><tt>&gt;</tt><tt>XSD_STRING</tt><tt>&lt;/xsl:when&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:when</tt><tt> test=</tt><tt>"$curField/@type='formula'"</tt><tt>&gt;</tt><tt>XSD_STRING</tt><tt>&lt;/xsl:when&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:when</tt><tt> test=</tt><tt>"$curField/@type='number'"</tt><tt>&gt;</tt><tt>XSD_DOUBLE</tt><tt>&lt;/xsl:when&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:when</tt><tt> test=</tt><tt>"$curField/@type='datetime'"</tt><tt>&gt;</tt><tt>XSD_DATETIME</tt><tt>&lt;/xsl:when&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;!-- TODO: complete the datatype mapping! --&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;xsl:otherwise&gt;</tt><tt>XSD_ANYTYPE</tt><tt>&lt;/xsl:otherwise&gt;</tt>
-<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>&lt;/xsl:choose&gt;</tt>
-<br><tt>&nbsp; &nbsp; </tt><tt>&lt;/xsl:template&gt;</tt>
+<br><tt>&nbsp; &nbsp; </tt> <tt>&lt;!-- We need to treat multivalue fields a little different since they are arrays --&gt;</tt>
+<br><tt>&nbsp; &nbsp; </tt> <tt>&lt;xsl:template</tt> <tt> match=</tt> <tt>"d:field[@allowmultivalues='true']"</tt> <tt>&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:variable</tt> <tt> name=</tt> <tt>"datatype"</tt> <tt>&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:call-template</tt> <tt> name=</tt> <tt>"getdatatype"</tt> <tt>&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:with-param</tt> <tt> name=</tt> <tt>"curField"</tt> <tt> select=</tt> <tt>"."</tt> <tt> </tt> <tt>/&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;/xsl:call-template&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;/xsl:variable&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; Public </tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"@name"</tt> <tt>/&gt;</tt> <tt>() as </tt> <tt>&lt;xsl:value-of</tt> <tt> select=</tt> <tt>"$datatype"</tt> <tt>/&gt;</tt>
+<br><tt>&nbsp; &nbsp; </tt> <tt>&lt;/xsl:template&gt;</tt>
 <br>
-<br>In this case I did choose the <tt>&lt;xsl:choose&gt;</tt><tt> </tt>command since it allows for a compact display and the when conditions are not too complicated. One question to ask: if I only use the type of the field, why would I use the field in the parameter instead of just the type. The answer here is extensibility. You will want to be more specific on datetime and number fields. For a datetime field you could check what parts are visible date and/or time and create XSD_DATE, XSD_TIME instead of XSD_DATETIME. Similar for numbers: based on the display selection you could choose other data types then XSD_DOUBLE. 
 <br>
-<br>The sample XSLT stylesheet is <a href="/blog/downloads">available for download</a>. 
+The variable datatype contains the mapping from a notes datatype into the XSD data type and is implemented as XSLT's version of sub routine. Once you make piece with XSLT's strictly set oriented way of thinking you will appreciate the power of the language. The mapping as of now looks like this: 
+<br><tt>&nbsp; &nbsp; </tt> <tt>&lt;!-- Determin the datatype. This maps Notes field types to XML Datatypes. Change as needed --&gt;</tt>
+<br><tt>&nbsp; &nbsp; </tt> <tt>&lt;xsl:template</tt> <tt> name=</tt> <tt>"getdatatype"</tt> <tt>&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:param</tt> <tt> name=</tt> <tt>"curField"</tt> <tt> </tt> <tt>/&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:choose&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:when</tt> <tt> test=</tt> <tt>"$curField/@type='text'"</tt> <tt>&gt;</tt> <tt>XSD_STRING</tt> <tt>&lt;/xsl:when&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:when</tt> <tt> test=</tt> <tt>"$curField/@type='keyword'"</tt> <tt>&gt;</tt> <tt>XSD_STRING</tt> <tt>&lt;/xsl:when&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:when</tt> <tt> test=</tt> <tt>"$curField/@type='password'"</tt> <tt>&gt;</tt> <tt>XSD_STRING</tt> <tt>&lt;/xsl:when&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:when</tt> <tt> test=</tt> <tt>"$curField/@type='keyword'"</tt> <tt>&gt;</tt> <tt>XSD_STRING</tt> <tt>&lt;/xsl:when&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:when</tt> <tt> test=</tt> <tt>"$curField/@type='names'"</tt> <tt>&gt;</tt> <tt>XSD_STRING</tt> <tt>&lt;/xsl:when&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:when</tt> <tt> test=</tt> <tt>"$curField/@type='authors'"</tt> <tt>&gt;</tt> <tt>XSD_STRING</tt> <tt>&lt;/xsl:when&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:when</tt> <tt> test=</tt> <tt>"$curField/@type='readers'"</tt> <tt>&gt;</tt> <tt>XSD_STRING</tt> <tt>&lt;/xsl:when&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:when</tt> <tt> test=</tt> <tt>"$curField/@type='formula'"</tt> <tt>&gt;</tt> <tt>XSD_STRING</tt> <tt>&lt;/xsl:when&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:when</tt> <tt> test=</tt> <tt>"$curField/@type='number'"</tt> <tt>&gt;</tt> <tt>XSD_DOUBLE</tt> <tt>&lt;/xsl:when&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:when</tt> <tt> test=</tt> <tt>"$curField/@type='datetime'"</tt> <tt>&gt;</tt> <tt>XSD_DATETIME</tt> <tt>&lt;/xsl:when&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;!-- TODO: complete the datatype mapping! --&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;xsl:otherwise&gt;</tt> <tt>XSD_ANYTYPE</tt> <tt>&lt;/xsl:otherwise&gt;</tt>
+<br><tt>&nbsp; &nbsp; &nbsp; &nbsp; </tt> <tt>&lt;/xsl:choose&gt;</tt>
+<br><tt>&nbsp; &nbsp; </tt> <tt>&lt;/xsl:template&gt;</tt>
 <br>
-<br>Next stop: Reverse the game - generate a form from a web service.</div>
+<br>
+In this case I did choose the <tt>&lt;xsl:choose&gt;</tt> <tt> </tt>command since it allows for a compact display and the when conditions are not too complicated. One question to ask: if I only use the type of the field, why would I use the field in the parameter instead of just the type. The answer here is extensibility. You will want to be more specific on datetime and number fields. For a datetime field you could check what parts are visible date and/or time and create XSD_DATE, XSD_TIME instead of XSD_DATETIME. Similar for numbers: based on the display selection you could choose other data types then XSD_DOUBLE. 
+<br>
+<br>
+The sample XSLT stylesheet is <a href="/blog/downloads">available for download</a>. 
+<br>
+<br>
+Next stop: Reverse the game - generate a form from a web service.</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">

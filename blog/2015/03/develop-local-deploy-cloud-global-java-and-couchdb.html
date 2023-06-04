@@ -130,8 +130,10 @@ ga('send', 'pageview');
 					<hr />
 					<div>Leaving the cosy world of <a href="http://www-03.ibm.com/software/products/en/ibmdominodesigner">Domino Designer</a> behind, venturing into <a href="http://www.bluemix.net">IBM Bluemix</a>, Java and <a href="https://cloudant.com/">Cloudant</a>, I'm challenged with a new set of task to master. Spoiled by Notes where <code>Ctrl+O</code> gives you instant access to any application, regardless of being stored locally or on a server I struggled a little with my usual practise of 
 <h3>develop local, deploy (Bluemix) global</h3> The task at hand is to develop a Java <a href="https://developer.ibm.com/wasdev/blog/2013/03/29/introducing_the_liberty_profile/">Liberty</a> based application, that uses CouchDB/Cloudant as its NoSQL data store. I want to be able to develop/test the application while being completely <a href="http://offlinefirst.org/">offline</a> and deploy it to Bluemix. I don't want any code to have conditions offline/online, but rather use configuration of the runtimes for it. 
-<br> Luckily I have access to <a href="https://twitter.com/Sai_Vennam">really smart developers</a> (thx Sai), so I succeeded. 
-<br> This is what I found out, I needed to do. The list serves as reference for myself and others living in a latency/bandwidth challenged environment. 
+<br>
+ Luckily I have access to <a href="https://twitter.com/Sai_Vennam">really smart developers</a> (thx Sai), so I succeeded. 
+<br>
+ This is what I found out, I needed to do. The list serves as reference for myself and others living in a latency/bandwidth challenged environment. 
 <ol>
  <li><b>Read</b>: There are a number of articles around, that contain bits and pieces of the information required. In no specific order: 
   <ul>
@@ -139,7 +141,7 @@ ga('send', 'pageview');
    <li>Sai Vennam introduces <a href="https://developer.ibm.com/bluemix/2014/07/08/cloudant_on_bluemix/">Cloudant on Bluemix</a></li>
    <li><a href="http://www-01.ibm.com/support/knowledgecenter/SSAW57_8.5.5/com.ibm.websphere.wlp.nd.doc/ae/twlp_setup.html?cp=SSAW57_8.5.5%2F1-6-0">Setting up the liberty profile</a></li>
    <li><a href="https://www-01.ibm.com/support/knowledgecenter/was_beta_liberty/com.ibm.websphere.wlp.nd.multiplatform.doc/ae/twlp_couchdb_create.html">Cloudant in the liberty profile</a></li>
-  </ul> </li>
+  </ul></li>
  <li><b>Install</b>: This is a big jump forward. No more looking for older versions, but rather bleeding edge. Tools of the trade: 
   <ul>
    <li><a href="http://git-scm.com/">GIT</a>. When you are on Windows or Mac, try the nice GUI of <a href="http://sourcetreeapp.com/">SourceTree</a>, and don't forget to learn <a href="https://github.com/nvie/gitflow">git-flow</a> (best explained <a href="https://www.atlassian.com/git/">here</a>)</li>
@@ -148,7 +150,7 @@ ga('send', 'pageview');
    <li><a href="http://maven.apache.org/">Maven</a> - the Java way to resolve dependencies (guess where bower and npm got their ideas from)</li>
    <li><a href="http://curl.haxx.se/">CURL</a> (that's my little command line ninja stuff, you can get away without it)</li>
    <li>Apache <a href="http://couchdb.apache.org/">CouchDB</a></li>
-  </ul> </li>
+  </ul></li>
  <li><b>Configure</b>: Java loves indirection. So there are a few moving parts as well (details below) 
   <ul>
    <li>The Cloudant service in Bluemix</li>
@@ -156,10 +158,9 @@ ga('send', 'pageview');
    <li>A local profile for a server running the Liberty 9.0 profile</li>
    <li>The configuration for the local CouchDB in the local server.xml</li>
    <li>Replication between your local CouchDB instance and the Cloudant server database (if you want to keep the data in sync)</li>
-  </ul> </li>
+  </ul></li>
 </ol> The flow of the data access looks like this 
-<br>
-<img src="/blog/images/2015/BlueMixLocal.jpg" border="0" alt="Develop local, deploy global"><h3>Code</h3>
+<br><img src="/blog/images/2015/BlueMixLocal.jpg" border="0" alt="Develop local, deploy global"><h3>Code</h3>
 <p>I consider configuration setting code too. So we have web.xml, server.xml (only the local one, the Bluemix server.xml is <b>automagic</b>), your Java code and the replication from/to local and couchDB</p>
 <h4>Local server.xml</h4> In Eclipse you configure a new liberty server, and then edit the server.xml. In the directory where the server.xml can be found, add a directory <code>lib</code> that will contain the jars to make everything work. I will list the jars, that are current at the time of writing this, but at any time you can peek at the Bluemix server.xml to see what is there (Sai mentioned, his team was contemplating local magic as well). 
 <br>
@@ -204,7 +205,8 @@ ga('send', 'pageview');
   &lt;/webApplication&gt;
 &lt;/server&gt;
 </code></pre>
-<br> You want to make sure that you have the <a href="https://dl.dropboxusercontent.com/u/865725/BlueMixEktorpLibsMarch2015.zip">exact</a> versions of the Java classes in the lib directory. 
+<br>
+ You want to make sure that you have the <a href="https://dl.dropboxusercontent.com/u/865725/BlueMixEktorpLibsMarch2015.zip">exact</a> versions of the Java classes in the lib directory. 
 <h4>web.xml</h4> The web.xml is easy, it needs to map to the jndiName you created in the server.xml, which needs to be the name you gave your Cloudant Blumix instance for the automagic to work. 
 <br>
 <pre><code class="language-xml">
@@ -236,10 +238,12 @@ public class Couch() {
     }
 }
 </code></pre>
-<br> You then simply call <code>Couch.getDB();</code> to access the database. Following these steps you get a valid connection both in Bluemix as well as in your local instance. The final step is replication. 
+<br>
+ You then simply call <code>Couch.getDB();</code> to access the database. Following these steps you get a valid connection both in Bluemix as well as in your local instance. The final step is replication. 
 <h4>Replication</h4> Replication (or in newspeak: sync) in Cloudant/CouchDB is always one way. To get a full sync you issue 2 commands, one each for each direction. The easiest one is in the Fauxton UI of your local CouchDB, but you can <code>POST</code> to localhost too. The format would be: 
 <br><code>curl http://localuser:localpassword@localhost:5984/_replicator -X POST -k -H 'Content-type: application/json' --data @replicateToServer.json</code>
-<br> The JSON file would look like this: 
+<br>
+ The JSON file would look like this: 
 <br>
 <pre><code class="language-js">
 {
@@ -248,8 +252,10 @@ public class Couch() {
  "connection_timeout": 60000
 }
 </code></pre>
-<br>To pull from the server, you just swap source and target. 
-<br>As usual YMMV</div>
+<br>
+To pull from the server, you just swap source and target. 
+<br>
+As usual YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">

@@ -120,18 +120,19 @@ ga('send', 'pageview');
 					<hr />
 					<div>One of the hallmarks and success factors of IBM Notes was the openness of the design of all Notes applications. Since lots of people put <a href="http://en.wikipedia.org/wiki/Blood,_Sweat_%26_Tears">blood, sweat and tears</a> into their applications, Lotus added the possibility to hide the design of an application to protect it from spying eyes. While I don't like hidden designs I can understand the rationale. 
 <br><a href="http://www.eproductivity.com">Others</a> keep their design open, but compile the LotusScript libraries with references to lss files outside, so the core business logic is protected. 
-<br> Hiding the design <a href="http://www.eknori.de/2013-07-13/hacking-notes-applications-with-hidden-design/">doesn't work for XPages</a>, you can <a href="http://www.ytria.com/">poke around</a> and get back to the source. So what are your options? 
+<br>
+ Hiding the design <a href="http://www.eknori.de/2013-07-13/hacking-notes-applications-with-hidden-design/">doesn't work for XPages</a>, you can <a href="http://www.ytria.com/">poke around</a> and get back to the source. So what are your options? 
 <ul>
  <li>Keep your business logic in Java classes (<a href="http://en.wikipedia.org/wiki/Plain_Old_Java_Object">Pojo</a>, Beans, Managed Beans) and develop them outside of the NSF and transfer them as <a href="http://en.wikipedia.org/wiki/JAR_%28file_format%29">jar</a> file only</li>
  <li>Deliver your custom controls as <a href="http://www-10.lotus.com/ldd/ddwiki.nsf/dx/Master_Table_of_Contents_for_XPages_Extensibility_APIs_Developer_Guide">Extension Library</a> (which can be deployed using an NSF) - which obviously requires advanced Skills</li>
  <li>Keep your XPages lean and handle the delicate parts in custom controls that you hide (see below)</li>
 </ul> Of course compiled Java can be <a href="http://java.decompiler.free.fr/">transformed back</a> to Java source code, so you might want to add another layer using <a href="http://java-source.net/open-source/obfuscators">Java obfuscation</a>, but then you might have crossed the line between precaution and <a href="http://en.wikipedia.org/wiki/Paranoia">paranoia</a> (to my best knowledge IBM doesn't use obfuscation in Java products). An additional level of protection is offered using <a href="http://www.waterfall2006.com/gorman.html">Refuctoring</a> (no, that's not a typo). 
-<br> So how would a typical workflow look like? There seem to be quite some moving parts involved: 
 <br>
-<img src="/blog/images/2013/ProtectXPages.jpg" border="0" alt="Protecting XPages Workflow">
+ So how would a typical workflow look like? There seem to be quite some moving parts involved: 
+<br><img src="/blog/images/2013/ProtectXPages.jpg" border="0" alt="Protecting XPages Workflow">
 <ol>
  <li>Develop and test your application as per normal. Keep items you want to protect in custom controls and Java classes</li>
- <li>Make sure you have your project build before doing the next steps </li>
+ <li>Make sure you have your project build before doing the next steps</li>
  <li>Link your database to an On Disk Project for version control (but you do that anyway don't you?). Let's call that project "<i>OnDisk Open</i>"</li>
  <li>Have your target database (the one that you will deliver to your customer) setup in a similar way. Let's call that project "<i>OnDisk Closed</i>"</li>
  <li>Copy all elements you want to keep open (Forms, Views, XPages, CSS etc.) from <i>OnDisk Open</i> to <i>OnDisk Closed</i></li>
@@ -164,86 +165,147 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
 					</h1>
 					<hr />
 					<div>When you build an XPages application, long running operations will time out. After all there is a timing limit how long a browser (or XPiNC) client (and the user) will wait for a response. You could resort to launching an agent via a console command, but besides the security consideration it is quite a hack and headache. Mixing XPages and agents doesn't have a happy ending (and should be confined to the upgrading phase of your classic application). 
-<br> Enter <a href="http://www.vogella.com/articles/JavaConcurrency/article.html">Java multi-threading</a>. I call it " <i>Teenage-mode</i>": your code does multiple things at the same time and doesn't seem to get distracted. 
-<br> When you read <a href="http://www.mindview.net/Books/TIJ/">the classics</a> you will find threading hard and rather threatening (pun intended), but thanks to progress in Java6 and above it isn't too hard. 
-<br> There is the <a href="http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/Executor.html">Executor</a> framework that handles all your <code>Runnables</code>. There are 2 challenges to overcome: one specific to Notes and one general to all concurrency programming. The former: The Notes <code>Session</code> class is not threadsave and can't be shared between threads, the later: you have to get your queueing right: 
+<br>
+ Enter <a href="http://www.vogella.com/articles/JavaConcurrency/article.html">Java multi-threading</a>. I call it " <i>Teenage-mode</i>": your code does multiple things at the same time and doesn't seem to get distracted. 
+<br>
+ When you read <a href="http://www.mindview.net/Books/TIJ/">the classics</a> you will find threading hard and rather threatening (pun intended), but thanks to progress in Java6 and above it isn't too hard. 
+<br>
+ There is the <a href="http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/Executor.html">Executor</a> framework that handles all your <code>Runnables</code>. There are 2 challenges to overcome: one specific to Notes and one general to all concurrency programming. The former: The Notes <code>Session</code> class is not threadsave and can't be shared between threads, the later: you have to get your queueing right: 
 <br><a href="http://chewonitcomics.blogspot.sg/2009/02/you-foreigner.html" title="Queuing is a challenge in Singapore"><img src="https://i485.photobucket.com/albums/rr219/chewonitcomics/myopic_mrt.jpg" border="0"></a>
-<br> (Image courtesy of <a href="http://chewonitcomics.blogspot.sg/">Lee Chee Chew</a>) 
-<br> To get a new <code>Session</code> object, we have the session cloner, thanks to the extension library. All your threads implement the <code>Runnable</code> interface that is later called by the executor framework. There are 2 approaches for background task: one where you expect the thread to return some value at some time and the other where a thread runs its course and terminates silently when done. For a <a href="/blog/2013/07/xpinc-development-insights.html">current project</a> I opted for the later. The threads contain a callback class where they report back what they have to say. To make it all work we need: 
+<br>
+ (Image courtesy of <a href="http://chewonitcomics.blogspot.sg/">Lee Chee Chew</a>) 
+<br>
+ To get a new <code>Session</code> object, we have the session cloner, thanks to the extension library. All your threads implement the <code>Runnable</code> interface that is later called by the executor framework. There are 2 approaches for background task: one where you expect the thread to return some value at some time and the other where a thread runs its course and terminates silently when done. For a <a href="/blog/2013/07/xpinc-development-insights.html">current project</a> I opted for the later. The threads contain a callback class where they report back what they have to say. To make it all work we need: 
 <ol>
  <li>A management class that executes the threads for us. Preferably long living (like session or application beans)</li>
  <li>A cloned Notes Session</li>
  <li>One or more classes implementing the runnable interface</li>
 </ol> Let's look at some code, first the class that runs in the background: 
-<div class="java5"><span class="kw2">package</span><span class="co2">com.notessensei.demo</span><span class="sy0">;</span>
+<div class="java5">
+ <span class="kw2">package</span> <span class="co2">com.notessensei.demo</span> <span class="sy0">;</span>
  <br>
- <br><span class="kw2">import</span><span class="co2">java.util.Collection</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">java.util.Map</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">lotus.domino.Database</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">lotus.domino.NotesException</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">lotus.domino.Session</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">com.ibm.domino.xsp.module.nsf.NSFComponentModule</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">com.ibm.domino.xsp.module.nsf.NotesContext</span><span class="sy0">;</span>
- <br><span class="kw2">import</span><span class="co2">com.ibm.domino.xsp.module.nsf.SessionCloner</span><span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">java.util.Collection</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">java.util.Map</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">lotus.domino.Database</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">lotus.domino.NotesException</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">lotus.domino.Session</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">com.ibm.domino.xsp.module.nsf.NSFComponentModule</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">com.ibm.domino.xsp.module.nsf.NotesContext</span> <span class="sy0">;</span>
+ <br><span class="kw2">import</span> <span class="co2">com.ibm.domino.xsp.module.nsf.SessionCloner</span> <span class="sy0">;</span>
  <br>
- <br><span class="kw2">public abstract class</span> AbstractNotesBackgroundTask <span class="kw2">implements</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Runnable.html"><span class="kw21">Runnable</span></a><span class="br0">{</span>
- <br> &nbsp; &nbsp; <span class="kw2">protected</span><span class="kw2">final</span> Session &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; notesSession <span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="kw2">protected</span><span class="kw2">final</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/Collection.html"><span class="kw46">Collection</span></a><span class="sy0">&lt;</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a><span class="sy0">&gt;</span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; callBackMessages <span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="kw2">private</span> SessionCloner &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; sessionCloner <span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="kw2">private</span> NSFComponentModule&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; module <span class="sy0">;</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw2">public</span> AbstractNotesBackgroundTask <span class="br0">(</span><span class="kw2">final</span> Session optionalSession, <span class="kw2">final</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/Collection.html"><span class="kw46">Collection</span></a><span class="sy0">&lt;</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a><span class="sy0">&gt;</span> messageHandler <span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">callBackMessages</span> = messageHandler <span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// optionalSession MUST be NULL when this should run in a thread, contain a session when</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// the class is running in the same thread as it was constructed</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">notesSession</span> = optionalSession <span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">setDominoContextCloner</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
+ <br><span class="kw2">public abstract class</span> AbstractNotesBackgroundTask <span class="kw2">implements</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Runnable.html"><span class="kw21">Runnable</span></a> <span class="br0">{</span>
  <br>
- <br> &nbsp; &nbsp; <span class="kw2">public</span><span class="kw3">void</span> run <span class="br0">(</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">callBackMessages</span>. <span class="me1">add</span><span class="br0">(</span><span class="st0">"Background task run starting: "</span> + <span class="kw2">this</span>. <span class="me1">getClass</span><span class="br0">(</span><span class="br0">)</span>. <span class="me1">toString</span><span class="br0">(</span><span class="br0">)</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">try</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Session session <span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span><span class="kw2">this</span>. <span class="me1">notesSession</span> == <span class="kw4">null</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; NotesContext context = <span class="kw2">new</span> NotesContext <span class="br0">(</span><span class="kw2">this</span>. <span class="me1">module</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; NotesContext. <span class="me1">initThread</span><span class="br0">(</span>context <span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; session = <span class="kw2">this</span>. <span class="me1">sessionCloner</span>. <span class="me1">getSession</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw1">else</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// We run in an established session</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; session = <span class="kw2">this</span>. <span class="me1">notesSession</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="coMULTI">/* Do the work here */</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">runNotes</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw2">catch</span><span class="br0">(</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Throwable.html"><span class="kw21">Throwable</span></a> e <span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e. <span class="me1">printStacktrace</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw2">finally</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span><span class="kw2">this</span>. <span class="me1">notesSession</span> == <span class="kw4">null</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; NotesContext. <span class="me1">termThread</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">try</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">sessionCloner</span>. <span class="me1">recycle</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw2">catch</span><span class="br0">(</span>NotesException e1 <span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e1. <span class="me1">printStacktrace</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">callBackMessages</span>. <span class="me1">add</span><span class="br0">(</span><span class="st0">"Background task run completed: "</span> + <span class="kw2">this</span>. <span class="me1">getClass</span><span class="br0">(</span><span class="br0">)</span>. <span class="me1">toString</span><span class="br0">(</span><span class="br0">)</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
+  &nbsp; &nbsp; <span class="kw2">protected</span> <span class="kw2">final</span> Session &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; notesSession <span class="sy0">;</span>
  <br>
- <br> &nbsp; &nbsp; <span class="kw2">private</span><span class="kw3">void</span> setDominoContextCloner <span class="br0">(</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// Domino stuff to be able to get a cloned session</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span><span class="br0">(</span><span class="kw2">this</span>. <span class="me1">notesSession</span> == <span class="kw4">null</span><span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">try</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">module</span> = NotesContext. <span class="me1">getCurrent</span><span class="br0">(</span><span class="br0">)</span>. <span class="me1">getModule</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">sessionCloner</span> = SessionCloner. <span class="me1">getSessionCloner</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span><span class="kw2">catch</span><span class="br0">(</span><a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Exception.html"><span class="kw21">Exception</span></a> e <span class="br0">)</span><span class="br0">{</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e. <span class="me1">printStacktrace</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; <span class="br0">}</span>
- <br> &nbsp; &nbsp; 
- <br> &nbsp; &nbsp; <span class="kw2">protected</span><span class="kw2">abstract</span><span class="kw3">void</span> runNotes <span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+  &nbsp; &nbsp; <span class="kw2">protected</span> <span class="kw2">final</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/Collection.html"><span class="kw46">Collection</span></a> <span class="sy0">&lt;</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> <span class="sy0">&gt;</span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; callBackMessages <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">private</span> SessionCloner &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; sessionCloner <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">private</span> NSFComponentModule&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; module <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="kw2">public</span> AbstractNotesBackgroundTask <span class="br0">(</span> <span class="kw2">final</span> Session optionalSession, <span class="kw2">final</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/util/Collection.html"><span class="kw46">Collection</span></a> <span class="sy0">&lt;</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/String.html"><span class="kw21">String</span></a> <span class="sy0">&gt;</span> messageHandler <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">callBackMessages</span> = messageHandler <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// optionalSession MUST be NULL when this should run in a thread, contain a session when</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// the class is running in the same thread as it was constructed</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">notesSession</span> = optionalSession <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">setDominoContextCloner</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">public</span> <span class="kw3">void</span> run <span class="br0">(</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">callBackMessages</span>. <span class="me1">add</span> <span class="br0">(</span> <span class="st0">"Background task run starting: "</span> + <span class="kw2">this</span>. <span class="me1">getClass</span> <span class="br0">(</span> <span class="br0">)</span>. <span class="me1">toString</span> <span class="br0">(</span> <span class="br0">)</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">try</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Session session <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span> <span class="kw2">this</span>. <span class="me1">notesSession</span> == <span class="kw4">null</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; NotesContext context = <span class="kw2">new</span> NotesContext <span class="br0">(</span> <span class="kw2">this</span>. <span class="me1">module</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; NotesContext. <span class="me1">initThread</span> <span class="br0">(</span>context <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; session = <span class="kw2">this</span>. <span class="me1">sessionCloner</span>. <span class="me1">getSession</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw1">else</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// We run in an established session</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; session = <span class="kw2">this</span>. <span class="me1">notesSession</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="coMULTI">/* Do the work here */</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">runNotes</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw2">catch</span> <span class="br0">(</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Throwable.html"><span class="kw21">Throwable</span></a> e <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e. <span class="me1">printStacktrace</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw2">finally</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span> <span class="kw2">this</span>. <span class="me1">notesSession</span> == <span class="kw4">null</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; NotesContext. <span class="me1">termThread</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">try</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">sessionCloner</span>. <span class="me1">recycle</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw2">catch</span> <span class="br0">(</span>NotesException e1 <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e1. <span class="me1">printStacktrace</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">callBackMessages</span>. <span class="me1">add</span> <span class="br0">(</span> <span class="st0">"Background task run completed: "</span> + <span class="kw2">this</span>. <span class="me1">getClass</span> <span class="br0">(</span> <span class="br0">)</span>. <span class="me1">toString</span> <span class="br0">(</span> <span class="br0">)</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+ <br>
+  &nbsp; &nbsp; <span class="kw2">private</span> <span class="kw3">void</span> setDominoContextCloner <span class="br0">(</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="co1">// Domino stuff to be able to get a cloned session</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">if</span> <span class="br0">(</span> <span class="kw2">this</span>. <span class="me1">notesSession</span> == <span class="kw4">null</span> <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">try</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">module</span> = NotesContext. <span class="me1">getCurrent</span> <span class="br0">(</span> <span class="br0">)</span>. <span class="me1">getModule</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">this</span>. <span class="me1">sessionCloner</span> = SessionCloner. <span class="me1">getSessionCloner</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span> <span class="kw2">catch</span> <span class="br0">(</span> <a href="http://java.sun.com/j2se/1%2E5%2E0/docs/api/java/lang/Exception.html"><span class="kw21">Exception</span></a> e <span class="br0">)</span> <span class="br0">{</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e. <span class="me1">printStacktrace</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; <span class="br0">}</span>
+ <br>
+  &nbsp; &nbsp; 
+ <br>
+  &nbsp; &nbsp; <span class="kw2">protected</span> <span class="kw2">abstract</span> <span class="kw3">void</span> runNotes <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
  <br><span class="br0">}</span>
 </div> You only need to subclass it and implement <code>runNotes()</code> to get started. However you probably want to hand over more parameters, so you need to modify the constructor accordingly. Please note: you can't bring Notes objects across thread boundaries. Next the class that controls all the threads. It should live in the session or application.</div>
 					<hr />
@@ -277,7 +339,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
  <li>In a data source you can specify databases by replica id. This is nice since you might not know where a local replica is located. However you only can specify the replica id and unless NotesDatabase.openByReplicaId() not the server. So you never know which database you might get (local or one of the known server). So I compute once (and keep it in the sessionScope) the actual filepath, trying local first, and use server/filepath instead of replica id for data sources</li>
  <li>The Java Collection framework is your friend. You can use them nicely as source for a repeat control. Just keep in mind: a list will give you the entry in your instance variable, while a map will give you they key only. Of course a key can be any Java object, so some creative key creation goes a long way</li>
  <li>A very popular way in Notes applications was the use of NotesDocument.computeWithForm(). When connecting to existing applications you will be tempted (or actually required) to use it too. When the computeWithForm tries to trigger some UI interaction in the @Formula, your XPiNC tab will lose focus to a native tab (I haven't figured out which one gets selected) and a externalContext.redirect() will simply not happen</li>
- <li>In an XPiNC application <code>sessionScope</code> and <code>applicationScope</code> are local to the current user. So status exchange via <code>applicationScope</code> won't work in XPiNC. After all you run a local JEE server instance in your local Expeditor framework (a.k.a Notes client). This even applies when you load a server based NSF (hardly a good idea in XPiNC). This changes when you configure XPiNC to run on the server, then the <code>applicationScope</code> is for all users. </li>
+ <li>In an XPiNC application <code>sessionScope</code> and <code>applicationScope</code> are local to the current user. So status exchange via <code>applicationScope</code> won't work in XPiNC. After all you run a local JEE server instance in your local Expeditor framework (a.k.a Notes client). This even applies when you load a server based NSF (hardly a good idea in XPiNC). This changes when you configure XPiNC to run on the server, then the <code>applicationScope</code> is for all users.</li>
  <li>Since XPiNC applications load all Java classes from the NSF into the JEE server memory, its best to load them from a local NSF, even for applications that need to have current data for all users. Here XPages' ability to use data from a different database comes in handy and you would load your data NSF from the server - I'll prepare some code snippets for future posts</li>
 </ul> As usual YMMV</div>
 					<hr />
@@ -301,9 +363,11 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
 					<hr />
 					<div>To understand a <a href="http://en.wikipedia.org/wiki/Massive_open_online_course">new phenomenon</a>, often a good way to get a grasp is full immersion. So I decided to participate in a <a href="http://www.mooc-list.com/">MOOC</a> at <a href="http://www.coursera.org/">Coursea</a> namely <a href="https://www.coursera.org/course/scigast">The Science of Gastronomy</a>. The course description reads quite appealing: 
 <br><i>This course introduces students to elements of science behind cooking, cuisine preparation and the <b>enjoyment of food</b>. The ultimate goal is to help students recognise the importance of scientific principles being applied in everyday life, so that they will appreciate and be able to apply some of these principles in their future cooking practice, including the manipulation of human perception. </i> (emphasis mine) 
-<br> The first week went of to an enjoyable start and I'll report on progress. One of the topics was the categorisation of cooking methods, here is my summary: 
+<br>
+ The first week went of to an enjoyable start and I'll report on progress. One of the topics was the categorisation of cooking methods, here is my summary: 
 <br><a href="/blog/images/2013/cookingtechniques.jpg" border="0" title="Methods of cooking"><img src="/blog/images/2013/cookingtechniques640.jpg" border="0" alt="How we cook"></a>
-<br> (Click on the image for a larger version) - Stay tuned</div>
+<br>
+ (Click on the image for a larger version) - Stay tuned</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -324,11 +388,13 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>  <a href
 					</h1>
 					<hr />
 					<div>Don't worry, there won't be another <a href="/blog/2013/04/mamil.html">Mamil</a> picture in this post. Yesterday I went on a <a href="http://www.endomondo.com/workouts/209616332/5158803">nice joy ride</a> with a group of <a href="http://www.meetup.com/Singapore-Adventurous-Group/events/120269572/">outdoor enthusiasts</a>. 
-<br> Thanks to the planning efforts of <a href="http://www.meetup.com/Singapore-Adventurous-Group/members/8717471">T.S. Chua</a> we navigated 100km of Singapore's <a href="http://www.nparks.gov.sg/cms/index.php?option=com_visitorsguide&amp;task=parkconnectors">Park Connector Network</a> and a few connecting roads. Including getting from and too the meeting point that was 120km for me, the longest bike ride I ever done in a single day (so much for <i>can't teach an old dog a new trick</i>). 
 <br>
-<img src="/blog/images/2013/PCN100June2013.jpg" border="0" alt="100 KM Ride">
-<br> I found the company a rather pleasant and cheerful lot and I'm looking forward to the <a href="http://www.meetup.com/Singapore-Cycling-Tours/events/117298232/">big round</a>. 
-<br> P.S.: I didn't get the Montague X70, but the <a href="http://www.montaguebikes.com/paratrooper-pro-folding-bike.html">Paratrooper pro</a> from the friendly folks (all bikers themselves) at <a href="http://www.mightyvelo.com/MightyVelo/montague.html">Mighty Velo</a>. Next stop: Ride home from the office.</div>
+ Thanks to the planning efforts of <a href="http://www.meetup.com/Singapore-Adventurous-Group/members/8717471">T.S. Chua</a> we navigated 100km of Singapore's <a href="http://www.nparks.gov.sg/cms/index.php?option=com_visitorsguide&amp;task=parkconnectors">Park Connector Network</a> and a few connecting roads. Including getting from and too the meeting point that was 120km for me, the longest bike ride I ever done in a single day (so much for <i>can't teach an old dog a new trick</i>). 
+<br><img src="/blog/images/2013/PCN100June2013.jpg" border="0" alt="100 KM Ride">
+<br>
+ I found the company a rather pleasant and cheerful lot and I'm looking forward to the <a href="http://www.meetup.com/Singapore-Cycling-Tours/events/117298232/">big round</a>. 
+<br>
+ P.S.: I didn't get the Montague X70, but the <a href="http://www.montaguebikes.com/paratrooper-pro-folding-bike.html">Paratrooper pro</a> from the friendly folks (all bikers themselves) at <a href="http://www.mightyvelo.com/MightyVelo/montague.html">Mighty Velo</a>. Next stop: Ride home from the office.</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -373,7 +439,7 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>  <a href
 				<aside id="sidebar_categoriesArchive" class="well">
 					<ul class="nav nav-list">
 						<li class="nav-header">Categories</li>
-						<li ><a href="/blog/categories/afterhours.html">After Hours</a></li>
+						<li ><a href="/blog/categories/afterhours.html">After hours</a></li>
 						<li ><a href="/blog/categories/agile.html">Agile</a></li>
 						<li ><a href="/blog/categories/apex.html">Apex</a></li>
 						<li ><a href="/blog/categories/blog.html">Blog</a></li>
@@ -437,6 +503,7 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>  <a href
 						<li ><a href="/blog/categories/technology.html">Technology</a></li>
 						<li ><a href="/blog/categories/travel.html">Travel</a></li>
 						<li ><a href="/blog/categories/twins.html">Twins</a></li>
+						<li ><a href="/blog/categories/typescript.html">TypeScript</a></li>
 						<li ><a href="/blog/categories/umsys.html">UMsys</a></li>
 						<li ><a href="/blog/categories/unittesting.html">UnitTesting</a></li>
 						<li ><a href="/blog/categories/vertx.html">vert.x</a></li>

@@ -119,20 +119,29 @@ ga('send', 'pageview');
 					</h1>
 					<hr />
 					<div>Our applications are increasingly moving to http(s) based interfaces, that is <a href="http://en.wikipedia.org/wiki/HTML5">HTML(5)</a> or <a href="http://play.google.com/">apps</a>. Besides the irony, that we abandon client applications on desktops to reintroduce them on mobile devices (is ObjectiveC the VB of the 21st century?), <i>that's a good thing</i>™ 
-<br> However from time to time, unless you <a href="https://www.ibm.com/cloud-computing/social/us/en/">live in the cloud</a>, we need to integrate into extisting standing desktop applications, mostly but not limited to Office applications. The emerging standard for this is clearly <a href="http://en.wikipedia.org/wiki/CMIS">CMIS</a>. Most office packages do support CMIS in one way or the other today. However it does not integrate into file managers like Finder, Explorer or Nautilus (at least not to my best knowledge at time of writing). One could sidestep that shortcoming by using <a href="http://cmissync.com/">CmisSync</a>, but that only works as long as you have enough local storage and corporate security lets you do so. 
-<br> Another challenge to sort out: once applications that "surround" Office documents are all HTML based, one should be able to commence editing directly from clicking something in the web based business application. So the criteria are: 
+<br>
+ However from time to time, unless you <a href="https://www.ibm.com/cloud-computing/social/us/en/">live in the cloud</a>, we need to integrate into extisting standing desktop applications, mostly but not limited to Office applications. The emerging standard for this is clearly <a href="http://en.wikipedia.org/wiki/CMIS">CMIS</a>. Most office packages do support CMIS in one way or the other today. However it does not integrate into file managers like Finder, Explorer or Nautilus (at least not to my best knowledge at time of writing). One could sidestep that shortcoming by using <a href="http://cmissync.com/">CmisSync</a>, but that only works as long as you have enough local storage and corporate security lets you do so. 
+<br>
+ Another challenge to sort out: once applications that "surround" Office documents are all HTML based, one should be able to commence editing directly from clicking something in the web based business application. So the criteria are: 
 <ol>
  <li>Ability to interact with documents using File-Open in applications (ironically the <a href="http://en.wikipedia.org/wiki/ODMA">ODMA</a> standard got that working more than 15 years ago, but died due to vendor negligence)</li>
  <li>Ability to interact with documents using the default file navigator (Finder, Nautilus, Explorer, mobile devices)</li>
  <li>Ability to have a full roundtrip editing experience in the browser. A user clicks on a button or link (or icon), the document opens, editing commences. When hitting the save button the original document is updated, so when someone else clicks on that link the latest updates can be seen there</li>
 </ol> Once you want to support non-Windows platforms (and work in multiple browsers) ActiveX (the approach Microsoft choose) is ruled out. Enter <a href="http://en.wikipedia.org/wiki/Webdav">webDAV</a>. It covers #1 and #2, with <a href="/blog/2011/06/it-isnt-a-standard-if-it-isnt-broken-today-webdav.html">some difficulties</a> to a point that the <a href="http://www.lialis.com/">commercial package</a> for webDAV on IBM platforms (Connections, Domino, Quickr) doesn't support Explorer on Windows 7, a flaw it coincidentally shares with a much <a href="http://sourceforge.net/projects/dominodav/">older package</a>, but not with <a href="http://www.openntf.org/internal/home.nsf/project.xsp?action=openDocument&amp;name=WebDAV%20for%20IBM%20Domino">the current project</a>. 
-<br> The challenge for #3: Whenever a browser encounters an URL with http(s) it will try to handle that target. If the mime type is not directly handled by the browser it will trigger the download of the file and hand it over to the application (with or without a dialog, depending on your settings). When the user then interacts with that document, it is the downloaded version in a temp directory. Changes are <b>not</b> send back! 
-<br> On the other hand: if a user opens a file directly in the office application by selecting a <a href="http://answers.microsoft.com/en-us/windows/forum/windows_7-networking/how-to-open-web-folder-in-windows-7/0552a422-9e7d-41e6-8971-200d2bd14621">webfolder</a>, a mounted <a href="http://manpages.ubuntu.com/manpages/dapper/man8/mount.davfs.8.html">file system</a> or directly specifying the URL, then roundtrip editing happens since the office applications check the URL for webDAV capabilities (I had some fun with <a href="http://ws.apache.org/commons/tcpmon/">Apache's TCPMon</a> figuring that out). 
-<br> The solution for this puzzle is to use a different protocol. Protocols are simply indicators for the operating system what application is in charge. The commonly known are <a href="http://en.wikipedia.org/wiki/Http">http(s)</a>, <a href="http://en.wikipedia.org/wiki/Ftp">ftp</a>, <a href="http://en.wikipedia.org/wiki/Secure_Shell">ssh</a>, <a href="http://en.wikipedia.org/wiki/Mailto">mailto</a> (and <a href="http://en.wikipedia.org/wiki/Gopher_%28protocol%29">gopher</a> for the old generation), but also <a href="http://en.wikipedia.org/wiki/IBM_Lotus_Notes">notes</a> or <a href="http://www.sap.com">sap</a> (and <a href="http://en.wikipedia.org/wiki/Internet_protocol_suite">others</a>). 
-<br> For my approach I used webdav(s) as protocol name. On Windows protocols live in the registry, on other operating system in configuration files. 
-<br> Once configured correctly a little <a href="https://github.com/OpenNTF/WebDAVForDomino/tree/master/com.ibm.xsp.webdav/webDAVHelper">helper application</a> would pick up the webdav(s) URL from the browser, check for the default application and launch it with the URL converted to http(s) on the command line - and voila roundtrip editing happens (check out the <a href="https://github.com/OpenNTF/WebDAVForDomino">project</a>). 
-<br> Of course some stuff needs handling: the office application doesn't share credentials with the browser, so SSO or other means need to be in place to ensure smooth user experience. Also MS-Office not only probes for webDAV capability of that URL, but also if that server behaves like SharePoint by probing an extra URL (some enlightenment what it is looking for would be nice). 
-<br> On Linux (and probably OS/X) one doesn't need a C++ program to figure out the right application, a shell script does the trick.</div>
+<br>
+ The challenge for #3: Whenever a browser encounters an URL with http(s) it will try to handle that target. If the mime type is not directly handled by the browser it will trigger the download of the file and hand it over to the application (with or without a dialog, depending on your settings). When the user then interacts with that document, it is the downloaded version in a temp directory. Changes are <b>not</b> send back! 
+<br>
+ On the other hand: if a user opens a file directly in the office application by selecting a <a href="http://answers.microsoft.com/en-us/windows/forum/windows_7-networking/how-to-open-web-folder-in-windows-7/0552a422-9e7d-41e6-8971-200d2bd14621">webfolder</a>, a mounted <a href="http://manpages.ubuntu.com/manpages/dapper/man8/mount.davfs.8.html">file system</a> or directly specifying the URL, then roundtrip editing happens since the office applications check the URL for webDAV capabilities (I had some fun with <a href="http://ws.apache.org/commons/tcpmon/">Apache's TCPMon</a> figuring that out). 
+<br>
+ The solution for this puzzle is to use a different protocol. Protocols are simply indicators for the operating system what application is in charge. The commonly known are <a href="http://en.wikipedia.org/wiki/Http">http(s)</a>, <a href="http://en.wikipedia.org/wiki/Ftp">ftp</a>, <a href="http://en.wikipedia.org/wiki/Secure_Shell">ssh</a>, <a href="http://en.wikipedia.org/wiki/Mailto">mailto</a> (and <a href="http://en.wikipedia.org/wiki/Gopher_%28protocol%29">gopher</a> for the old generation), but also <a href="http://en.wikipedia.org/wiki/IBM_Lotus_Notes">notes</a> or <a href="http://www.sap.com">sap</a> (and <a href="http://en.wikipedia.org/wiki/Internet_protocol_suite">others</a>). 
+<br>
+ For my approach I used webdav(s) as protocol name. On Windows protocols live in the registry, on other operating system in configuration files. 
+<br>
+ Once configured correctly a little <a href="https://github.com/OpenNTF/WebDAVForDomino/tree/master/com.ibm.xsp.webdav/webDAVHelper">helper application</a> would pick up the webdav(s) URL from the browser, check for the default application and launch it with the URL converted to http(s) on the command line - and voila roundtrip editing happens (check out the <a href="https://github.com/OpenNTF/WebDAVForDomino">project</a>). 
+<br>
+ Of course some stuff needs handling: the office application doesn't share credentials with the browser, so SSO or other means need to be in place to ensure smooth user experience. Also MS-Office not only probes for webDAV capability of that URL, but also if that server behaves like SharePoint by probing an extra URL (some enlightenment what it is looking for would be nice). 
+<br>
+ On Linux (and probably OS/X) one doesn't need a C++ program to figure out the right application, a shell script does the trick.</div>
 					<hr />
  <a href="/blog/2013/03/round-trip-editing-experience-in-web-browsers.html">Read more</a>
 					<p>
@@ -154,14 +163,21 @@ categories:  <a href="/blog/categories/linux.html">Linux</a>  <a href="/blog/cat
 					</h1>
 					<hr />
 					<div>All that can be automated is inherently boring 
-<br> All that is inherently boring will slip my attention 
-<br> All that slips my attention will lead to trouble 
-<br> Sooner or later the trouble will catch with me 
-<br> I therefore vow to fight the beast of boredom 
-<br> With skills and scripts and automation 
-<br> To spend time with and for what really matters 
 <br>
-<br> You, my user!</div>
+ All that is inherently boring will slip my attention 
+<br>
+ All that slips my attention will lead to trouble 
+<br>
+ Sooner or later the trouble will catch with me 
+<br>
+ I therefore vow to fight the beast of boredom 
+<br>
+ With skills and scripts and automation 
+<br>
+ To spend time with and for what really matters 
+<br>
+<br>
+ You, my user!</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -182,9 +198,9 @@ categories:  <a href="/blog/categories/software.html">Software</a>
 					</h1>
 					<hr />
 					<div>But there are the other too... 
+<br><img src="/blog/images/2013/OneInfourlovesls.jpg" title="One in four loves LotusScript">
 <br>
-<img src="/blog/images/2013/OneInfourlovesls.jpg" title="One in four loves LotusScript">
-<br> Comment from <a href="http://geekandpoke.typepad.com/">Oliver</a>:" <i>That's not originally mine. I never made a cartoon about LotusScript. I guess it originally was about VBA (or the like). Someone had forked the original cartoon. Why not ;) </i>"</div>
+ Comment from <a href="http://geekandpoke.typepad.com/">Oliver</a>:" <i>That's not originally mine. I never made a cartoon about LotusScript. I guess it originally was about VBA (or the like). Someone had forked the original cartoon. Why not ;) </i>"</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
@@ -214,9 +230,12 @@ table.commute td {vertical-align : top; border-bottom : 1px dotted #CCCCCC; bord
  <thead>
   <tr>
    <th>&nbsp;</th>
-   <th>Bus/MRT via Airport<br>(to office)</th>
-   <th>MRT<br>(from office)</th>
-   <th>Taxi<br>(to office)</th>
+   <th>Bus/MRT via Airport<br>
+    (to office)</th>
+   <th>MRT<br>
+    (from office)</th>
+   <th>Taxi<br>
+    (to office)</th>
   </tr>
  </thead>
  <tbody>
@@ -231,7 +250,7 @@ table.commute td {vertical-align : top; border-bottom : 1px dotted #CCCCCC; bord
      <li>Wait for the MRT to depart: 10min (can be 0-15 min)</li>
      <li>One stop to EXPO: 5min</li>
      <li>Walk to the office: 5min</li>
-    </ol> </td>
+    </ol></td>
    <td>
     <ol>
      <li>Walk to MRT: 5min</li>
@@ -246,12 +265,12 @@ table.commute td {vertical-align : top; border-bottom : 1px dotted #CCCCCC; bord
      <li>Wait for MRT: 3min (could be anything from 0-10)</li>
      <li>Ride on NS line to <a href="http://smrt.com.sg/Trains/NetworkMap/Khatib.aspx">Khatib</a>: 12min</li>
      <li>Walk home: 5min</li>
-    </ol> </td>
+    </ol></td>
    <td>
     <ol>
      <li>Call a cab: 5min (anything from 2-45)</li>
      <li>Ride to office: 24min</li>
-    </ol> </td>
+    </ol></td>
   </tr>
   <tr>
    <td>Total duration</td>
@@ -317,7 +336,7 @@ categories:  <a href="/blog/categories/singapore.html">Singapore</a>
 				<aside id="sidebar_categoriesArchive" class="well">
 					<ul class="nav nav-list">
 						<li class="nav-header">Categories</li>
-						<li ><a href="/blog/categories/afterhours.html">After Hours</a></li>
+						<li ><a href="/blog/categories/afterhours.html">After hours</a></li>
 						<li ><a href="/blog/categories/agile.html">Agile</a></li>
 						<li ><a href="/blog/categories/apex.html">Apex</a></li>
 						<li ><a href="/blog/categories/blog.html">Blog</a></li>
@@ -381,6 +400,7 @@ categories:  <a href="/blog/categories/singapore.html">Singapore</a>
 						<li ><a href="/blog/categories/technology.html">Technology</a></li>
 						<li ><a href="/blog/categories/travel.html">Travel</a></li>
 						<li ><a href="/blog/categories/twins.html">Twins</a></li>
+						<li ><a href="/blog/categories/typescript.html">TypeScript</a></li>
 						<li ><a href="/blog/categories/umsys.html">UMsys</a></li>
 						<li ><a href="/blog/categories/unittesting.html">UnitTesting</a></li>
 						<li ><a href="/blog/categories/vertx.html">vert.x</a></li>

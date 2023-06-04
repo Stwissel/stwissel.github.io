@@ -132,8 +132,7 @@ ga('send', 'pageview');
  <li>authentication is often long lasting (remember me...) based on <a href="https://jwt.io/">JWT</a></li>
  <li>authentication is highly flexible: login with {facebook|google|linkedin|twitter} or a corporate account. Increasingly 2 factor authentication is used (especially <a href="http://eur-lex.europa.eu/eli/reg/2016/679/oj">in Europe</a>)</li>
 </ul> How does Domino fit into the picture with its integrated http stack, authentication and database? The answer isn't very straight forward. Bundling components creates ease of administration, but carries the risk that new technologies are implemented late (or not at all). For anything internet facing that's quite some risk. So here is what I would do: 
-<br>
-<img src="/blog/images/2017/DominoAPIServer.jpg" border="0" alt="Red/Green Zone layout for Domino">
+<br><img src="/blog/images/2017/DominoAPIServer.jpg" border="0" alt="Red/Green Zone layout for Domino">
 <br>The main rationale for this approach is a best in breed selection of components separated by firewall components. In detail: 
 <ul>
  <li>The front facing machine is a <a href="http://nginx.org/">NGINX</a> http server. I would configure it to support http/2, <a href="https://developers.google.com/speed/pagespeed/module/">PageSpeed</a> and <a href="https://certbot.eff.org/">Certbot</a>. All calls to http would get redirected to https provided by <a href="https://letsencrypt.org/">LetsEncrypt</a> (or buy your own). Running in a VM or a Container I would wipe it from time to time (daily), so anything that might have established a foothold dies then</li>
@@ -141,9 +140,9 @@ ga('send', 'pageview');
  <li>The authProxy would be a <a href="https://nodejs.org/en/">NodeJS</a> application using the <a href="http://passportjs.org/">PassportJS</a> framework. It offers an unparalleled selection of more than 300 ways to authenticate. The identified user then can be <a href="http://www-01.ibm.com/support/docview.wss?uid=swg21970409">passed on to Domino</a>. In addition some URL sanitisation could be performed. Since only API calls would land there, checking them for plausibility can be done cheap and easy</li>
  <li>The Domino server's role is the provision of API access powered by its NoSQL NSF store. If so choosen its LDAP could serve as the identity source for the passport authentication</li>
 </ul> Who is member of the green or red zone is subject to debate, so you might want to go with a different approach like the one below. 
+<br><img src="/blog/images/2017/DominoAPIServer2.jpg" border="0" alt="Alternate layout for Domino SPA">
 <br>
-<img src="/blog/images/2017/DominoAPIServer2.jpg" border="0" alt="Alternate layout for Domino SPA">
-<br> As usual: YMMV</div>
+ As usual: YMMV</div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">

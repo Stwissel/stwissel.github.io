@@ -138,7 +138,8 @@ ga('send', 'pageview');
  <li>Make the public key of the root and intermediate certs available</li>
  <li>Import these certs in all browsers and runtimes that you will use for testing</li>
 </ul>
-<p>Normal mortal users, without these imports will get scary error messages. While this doesn't deter the determined, it's good for a laugh.<br> We don't want old school certs, so we aim at a modern <a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography">Elliptic-curve</a> cert (<a href="https://www.erianna.com/ecdsa-certificate-authorities-and-certificates-with-openssl/">Details here</a>). Here we go:</p>
+<p>Normal mortal users, without these imports will get scary error messages. While this doesn't deter the determined, it's good for a laugh.<br>
+  We don't want old school certs, so we aim at a modern <a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography">Elliptic-curve</a> cert (<a href="https://www.erianna.com/ecdsa-certificate-authorities-and-certificates-with-openssl/">Details here</a>). Here we go:</p>
 <h4>Setting up the directory structure</h4>
 <pre><code class="language-bash">mkdir -pv -m 600 /root/ca/intermediate
 cd /root/ca
@@ -163,8 +164,10 @@ openssl ecparam -genkey -name prime256v1 -outform PEM | openssl ec -aes256 -out 
 chmod 400 private/ca.key.pem
 openssl req -config openssl.cnf -key private/ca.key.pem -new -x509 -days 7300 -SHA384 -extensions v3_ca -out certs/ca.cert.pem
 </code></pre>
-<p>Keep them save - remember: its on my harddrive only isn't save!!!<br> You want to check the file using <code>openssl x509 -noout -text -in certs/ca.cert.pem</code> or on macOS just hit the space key in finder.</p><h4>The intermediate CA (one or more)</h4>
-<p>Good practise is to keep the root keys save and only use them for one or more intermediate certificate(s).<br> This allows to delegate cert creation to multiple players and also allows to invalidate an intermediate cert if needed.</p>
+<p>Keep them save - remember: its on my harddrive only isn't save!!!<br>
+  You want to check the file using <code>openssl x509 -noout -text -in certs/ca.cert.pem</code> or on macOS just hit the space key in finder.</p><h4>The intermediate CA (one or more)</h4>
+<p>Good practise is to keep the root keys save and only use them for one or more intermediate certificate(s).<br>
+  This allows to delegate cert creation to multiple players and also allows to invalidate an intermediate cert if needed.</p>
 <pre><code class="language-bash">openssl ecparam -genkey -name prime256v1 -outform PEM | openssl ec -aes256 -out intermediate/private/intermediate.key.pem
 chmod 400 intermediate/private/intermediate.key.pem
 openssl req -config intermediate/openssl.cnf -new -SHA384 -key intermediate/private/intermediate.key.pem -out intermediate/csr/intermediate.csr.pem
@@ -172,7 +175,8 @@ openssl ca -config openssl.cnf -extensions v3_intermediate_ca -days 3650 -notext
 chmod 444 intermediate/certs/intermediate.cert.pem
 openssl verify -CAfile certs/ca.cert.pem intermediate/certs/intermediate.cert.pem
 </code></pre>
-<p>The last command should return <strong>OK</strong>. Now we need to create the certificate chain.<br> That's the file you need to install in browsers or other key stores avoid <code>unknown certificate</code> errors.</p>
+<p>The last command should return <strong>OK</strong>. Now we need to create the certificate chain.<br>
+  That's the file you need to install in browsers or other key stores avoid <code>unknown certificate</code> errors.</p>
 <pre><code class="language-bash">cat intermediate/certs/intermediate.cert.pem certs/ca.cert.pem &gt; intermediate/certs/ca-chain.cert.pem
 chmod 444 intermediate/certs/ca-chain.cert.pem
 </code></pre>
