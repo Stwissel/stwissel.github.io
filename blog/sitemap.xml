@@ -6,20 +6,10 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Sun, 04 Jun 2023 14:38:56 +0000</pubdate>
+	<pubdate>Sun, 04 Jun 2023 14:42:17 +0000</pubdate>
 <item>
 	<title>Deploy a TypeScript app using Docker</title>
-	<description>&lt;svg xmlns="http://www.w3.org/2000/svg" class="adm-hidden"&gt;
- &lt;symbol id="adm-note"&gt;
-  &lt;svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"&gt;
-   &lt;g fill="currentColor"&gt;
-    &lt;path d="m15.4 5h4.5v2.7h-4.5z" transform="matrix(-.7071 -.7071 .7071 -.7071 25.7188 23.288)" /&gt;
-    &lt;path d="m13.9 7 3.1 3.1-9.5 9.6-3.5.3.3-3.5z" /&gt;
-   &lt;/g&gt;
-  &lt;/svg&gt;
- &lt;/symbol&gt;
-&lt;/svg&gt;
-&lt;p&gt;An application developed in TypeScript actually runs as JavaScript application. When deploying into a Docker image, wwe want to keep it small, here's how.&lt;/p&gt;
+	<description>&lt;p&gt;An application developed in TypeScript actually runs as JavaScript application. When deploying into a Docker image, wwe want to keep it small, here's how.&lt;/p&gt;
 &lt;h3&gt;Docker with a side of Docker&lt;/h3&gt;
 &lt;p&gt;Deployment has a few steps:&lt;/p&gt;
 &lt;ul&gt;
@@ -28,149 +18,7 @@
  &lt;li&gt;Run code quality (e.g. &lt;a href="https://www.sonarsource.com/"&gt;Sonar&lt;/a&gt;)&lt;/li&gt;
  &lt;li&gt;Finally package all up into the smallest of containers&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;Using &lt;a href="/blog/2023/05/tiptoe-in-typescript.html"&gt;last weeks example&lt;/a&gt; these are the moving parts.&lt;/p&gt;
-&lt;h3&gt;Dockerfile&lt;/h3&gt;
-&lt;pre&gt;&lt;code class="language-docker"&gt;# build container using an LTS Node version
-# does not get deployed to runtime
-FROM node:18-alpine
-
-# Create app directory
-WORKDIR /usr
-COPY package*.json ./
-COPY tsconfig.json ./
-COPY src ./src
-COPY test ./test
-RUN npm install
-RUN npm run build
-
-# Actual runtime container using an LTS Node version
-FROM node:18-alpine
-
-# Create app directory
-WORKDIR /usr/src/app
-COPY package*.json ./
-RUN npm ci --omit=dev
-
-#Only compiled JS source
-COPY  --from=0 /usr/dist .
-
-# Labels
-LABEL org.opencontainers.image.source="https://github.com/[yourorg]/[yourrepo]"
-
-# Run it
-EXPOSE 8080
-CMD ["node","index.js"]
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;A few pointers/explanations are warranted:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;This builds two containers, one to compile and run tests, one to be deployed to its runtime environment (&lt;a href="https://m.do.co/c/2ad45997ce93"&gt;DigialOcean&lt;/a&gt;, &lt;a href="https://www.linode.com/"&gt;Linode&lt;/a&gt; or one of the &lt;a href="https://www.google.com/search?q=cloud+service+providers"&gt;big boys&lt;/a&gt;)&lt;/li&gt;
- &lt;li&gt;for deployments stick to LTS versions&lt;/li&gt;
- &lt;li&gt;&lt;a href="https://docs.npmjs.com/cli/v9/commands/npm-ci"&gt;&lt;code&gt;npm ci&lt;/code&gt;&lt;/a&gt; is similar to &lt;code&gt;npm install&lt;/code&gt;, just less verbose for CI use&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;GitHub action&lt;/h3&gt;
-&lt;p&gt;A &lt;a href="https://github.com/features/actions"&gt;GitHub Action&lt;/a&gt; is a convenient way to automate build &amp;amp; deployment&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-yaml"&gt;name: Build and deploy docker
-
-on:
-  push:
-    branches:
-      - develop
-      - main
-
-jobs:
-  dockerbackend:
-    name: Build and store backend docker
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Backend
-        uses: actions/checkout@v3
-      - run: npm install
-
-      # Setup hardware emulator using QEMU
-      # needed so we can also run on ARM/Mac
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-
-      - name: Setup Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
-      - name: Docker Hub login
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: GitHub container Registry login
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get current date
-        id: date
-        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
-
-      - name: Build and Push
-        id: docker_build
-        uses: docker/build-push-action@v4
-        with:
-          context: ./
-          file: ./Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          push: true
-          platforms: linux/amd64, linux/arm64
-          tags: |
-            ghcr.io/[yourorg]/[your repo]:${GITHUB_REF##*/}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
-
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
-
-      - name: deploy to runtime host
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.DEPLOYMENT_HOST }}
-          username: ${{ secrets.DEPLOYMENT_USER }}
-          key: ${{ secrets.DEPLOYMENT_KEY }}
-          script: ~/bin/update-${GITHUB_REF##*/}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;ul&gt;
- &lt;li&gt;This action runs on push/merge to &lt;code&gt;main&lt;/code&gt; or &lt;code&gt;develop&lt;/code&gt;&lt;/li&gt;
- &lt;li&gt;&lt;code&gt;${GITHUB_REF##*/}&lt;/code&gt; returns that branch name&lt;/li&gt;
- &lt;li&gt;container images are build for Intel and Arm architecture, so it runs nicely on your M1/M2 Mac too&lt;/li&gt;
- &lt;li&gt;container images are saved to the &lt;a href="https://ghcr.io/"&gt;Github Container registry&lt;/a&gt;, you might want to change that to you registry of choice&lt;/li&gt;
- &lt;li&gt;All sensitive values are kept in &lt;a href="https://docs.github.com/en/actions/security-guides/encrypted-secrets"&gt;GitHub secrets&lt;/a&gt;, you need to update your repository with them&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;local script&lt;/h3&gt;
-&lt;p&gt;The final step is to get the deployment host to reload. Mine uses a &lt;code&gt;docker-compose.yml&lt;/code&gt; file to define the container runtime parameters, but command line would work as well.&lt;/p&gt;
-&lt;div class="adm-block adm-note"&gt;
- &lt;div class="adm-heading"&gt;
-  &lt;svg class="adm-icon"&gt;
-   &lt;use xlink:href="#adm-note" /&gt;
-  &lt;/svg&gt;&lt;span&gt;The script name matches the branch&lt;/span&gt;
- &lt;/div&gt;
- &lt;div class="adm-body"&gt;
-  &lt;p&gt;The last line of the GitHub action &lt;code&gt;script: ~/bin/update-${GITHUB_REF##*/}&lt;/code&gt; uses&lt;br&gt;
-    a variable to compute the script name. So it will either run &lt;code&gt;update-main&lt;/code&gt; or &lt;code&gt;update-develop&lt;/code&gt;. Both files should be in th &lt;code&gt;~/bin&lt;/code&gt; directory of the user&lt;/p&gt;
- &lt;/div&gt;
-&lt;/div&gt;
-&lt;pre&gt;&lt;code class="language-bash"&gt;#!/bin/bash
-cd /opt/myapp
-docker-compose pull
-docker-compose up -d
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+&lt;p&gt;Using &lt;a href="/blog/2023/05/tiptoe-in-typescript.html"&gt;last weeks example&lt;/a&gt; these are the moving parts.&lt;/p&gt;</description>
 	<link>2023/06/deploy-a-typescript-app-using-docker.html</link>
 	<author>Stephan H. Wissel</author>
 	<guid>867f9fd0-02d3-11ee-b016-fb241bb51570</guid>
