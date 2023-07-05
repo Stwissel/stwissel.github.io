@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Docker, nginx, SPA and brotli compression - NotesSensei's Blog</title>
+<title>Handle HTTP chunked responses - NotesSensei's Blog</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -12,14 +12,14 @@ ga('send', 'pageview');
 <meta http-equiv="X-UA-Compatible"  content="chrome=1" />
 <meta http-equiv="Content-Language" content="en" />
 <meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
-<meta property="og:title"     content="wissel.net - Docker, nginx, SPA and brotli compression" />
+<meta property="og:title"     content="wissel.net - Handle HTTP chunked responses" />
 <meta property="og:type"      content="blog" />
-<meta property="og:url"       content="https://wissel.net/blog/2023/06/docker-nginx-spa-and-brotli-compression.html" />
+<meta property="og:url"       content="https://wissel.net/blog/2023/07/handle-http-chunked-responses.html" />
 <meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
 <meta property="og:site_name" content="wissel.net" />
 <meta name="viewport"         content="width=device-width, initial-scale=1.0" />
 <meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
-<meta name="DC.Title"         content="NotesSensei's Weblog - Docker, nginx, SPA and brotli compression" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Handle HTTP chunked responses" />
 <meta name="Author"           content="Stephan H. Wissel" />
 <meta name="ICBM"             content="1.2994, 103.8425" />
 <meta name="Copyright"        content="2002,2022 Stephan H. Wissel - Creative commons licence" />
@@ -27,11 +27,11 @@ ga('send', 'pageview');
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
 <meta name="description"
-	content="Docker, nginx, SPA and brotli compression - Contemporary web development separates front-end and back-end, resulting in the front-end being a few static files. Besides setting long cache headers, pre-compression is one way to speed up delivery Setting the stage we have a NodeJS project that outputs our SPA in /usr/dist directory. Highly recom" />
+	content="Handle HTTP chunked responses - Objects I need a lot of objects. When dealing with APIs there is one fundamental question to answer: how much data do you want to retrieve? The old school answer: let&#39;s page results, 25 at a time. Then infinite scrolling came along and changed expectations. I got some chunk for you One way to operat" />
 <meta name="Keywords"
-	content="Docker,nginx,WebDevelopment," />
+	content="JavaScript,WebDevelopment," />
 <meta name="Abstract"
-	content="Docker, nginx, SPA and brotli compression - Contemporary web development separates front-end and back-end, resulting in the front-end being a few static files. Besides setting long cache headers, pre-compression is one way to speed up delivery Setting the stage we have a NodeJS project that outputs our SPA in /usr/dist directory. Highly recom" />
+	content="Handle HTTP chunked responses - Objects I need a lot of objects. When dealing with APIs there is one fundamental question to answer: how much data do you want to retrieve? The old school answer: let&#39;s page results, 25 at a time. Then infinite scrolling came along and changed expectations. I got some chunk for you One way to operat" />
 <!--[if lt IE 9]>
 		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
 <![endif]-->
@@ -96,12 +96,9 @@ ga('send', 'pageview');
     <ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2023/">2023</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2023/06/">June</a></li>
+  <li><a href="/blog/2023/07/">July</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/docker.html">Docker</a>
-  </li>
-  <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/nginx.html">nginx</a>
+    <span class="divider">|</span><a href="/blog/categories/javascript.html">JavaScript</a>
   </li>
   <li class="pull-right">
     <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
@@ -112,162 +109,97 @@ ga('send', 'pageview');
 			<div class="span12">
 				
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2023/06/deploy-a-typescript-app-using-docker.html"><i class="icon-hand-left"></i>Deploy a TypeScript app using Docker</a>
+					<li><a href="/blog/2023/06/docker-nginx-spa-and-brotli-compression.html"><i class="icon-hand-left"></i>Docker, nginx, SPA and brotli compression</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2023/07/handle-http-chunked-responses.html">Handle HTTP chunked responses<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 				<article class="well well-raised">
-					<h1><small>Docker, nginx, SPA and brotli compression</small></h1>
+					<h1><small>Handle HTTP chunked responses</small></h1>
 					<hr />
-					<div><p>Contemporary web development separates front-end and back-end, resulting in the front-end being a few static files. Besides setting long cache headers, pre-compression is one way to speed up delivery</p>
-<h3>Setting the stage</h3>
-<ul>
- <li>we have a NodeJS project that outputs our <a href="https://en.wikipedia.org/wiki/Single-page_application">SPA</a> in <code>/usr/dist</code> directory. Highly recommended here: <a href="https://vitejs.dev/">VITE</a>. Works for multi-page applications too.</li>
- <li>We target only <a href="https://caniuse.com/?search=brotli">modern browsers</a> that understand <a href="https://github.com/google/brotli">brotli</a> (Sorry not IE). Legacy will have to deal with uncompressed files</li>
- <li>We want to go light on CPU, so we compress at build time, not runtime</li>
-</ul>
-<h3>Things to know</h3>
-<ul>
- <li>When <a href="https://www.nginx.com/">nginx</a> is configured for brotli and the file <code>index.html</code> gets requested, the file <code>index.html.br</code> gets served if present and the browser indicated (what it does by default) that it can accept br</li>
- <li>There are tons of information about the <a href="https://www.sobyte.net/post/2022-04/docker-nginx-brotli/">need to compile nginx</a> due to the lack of brotli support out of the box. That's not necessary (see below)</li>
- <li>brotli is both OpenSource and the open standard <a href="https://www.ietf.org/rfc/rfc7932.txt">RFC 7932</a></li>
- <li>brotli currently <a href="https://github.com/google/brotli/issues/970">lacks</a> gzip's <code>-r</code> flag, so some bash magic is needed</li>
-</ul>
-<h3>Moving parts</h3>
-<ul>
- <li>DockerFile</li>
- <li>nginx configuration</li>
-</ul>
-<p>The Dockerfile will handle the brotli generation</p><h3>Dockerfile</h3>
-<pre><code class="language-docker"># build container using an LTS Node version
-# does not get deployed to runtime
-FROM node:18-alpine AS builder
-
-# Make sure we ot brotli
-RUN apk update
-RUN apk add --upgrade brotli
-
-# Create app directory
-WORKDIR /usr
-COPY package*.json ./
-COPY src ./src
-COPY public ./public
-RUN npm install
-RUN npm run build
-RUN cd /usr/dist &amp;&amp; find . -type f -exec brotli -v -Z {} \;
-
-# Actual runtime container
-FROM alpine
-RUN apk add brotli nginx nginx-mod-http-brotli
-
-#COPY nginx/*.conf /etc/nginx/
-COPY nginx/nginx.conf /etc/nginx/nginx.conf
-COPY nginx/error404.* /usr/share/nginx/html/
-COPY nginx/favicon.* /usr/share/nginx/html/
-
-# Actual data
-COPY --from=builder /usr/dist /usr/share/nginx/html/
-CMD ["nginx", "-g", "daemon off;"]
-EXPOSE 80
-</code></pre>
-<h3>nginx.conf</h3>
-<pre><code class="language-nginx"># nginx.conf
-# Adjusted nginx.conf, serve on site out of
-# a container with static brotli, no regex, no dynamic compression
-# comments removed check the nginx documentation https://nginx.org/en/docs/
-# Error and event logs to console for Docker to capture
-user nginx;
-
-worker_processes auto;
-pcre_jit off;
-error_log /dev/stdout info;
-include /etc/nginx/modules/*.conf;
-include /etc/nginx/conf.d/*.conf;
-
-events {
-    worker_connections 1024;
-}
-
-http {
-    access_log /dev/stdout;
-    include /etc/nginx/mime.types;
-    default_type application/octet-stream;
-    server_tokens off;
-    client_max_body_size 10m;
-    sendfile on;
-    tcp_nopush on;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_prefer_server_ciphers on;
-    ssl_session_cache shared:SSL:2m;
-    ssl_session_timeout 1h;
-    ssl_session_tickets off;
-
-    gzip off;
-    gzip_vary off;
-    brotli_static on;
-
-    # Helper variable for proxying websockets.
-    map $http_upgrade $connection_upgrade {
-        default upgrade;
-        '' close;
+					<div><p>Objects <a href="https://www.youtube.com/watch?v=nFDAK8NY4JY">I need a lot of objects</a>. When dealing with APIs there is one fundamental question to answer: how much data do you want to retrieve?</p>
+<p>The old school answer: let's page results, <a href="https://retrocomputing.stackexchange.com/questions/5629/why-did-80x25-become-the-text-monitor-standard">25 at a time</a>. Then <a href="https://www.nngroup.com/articles/infinite-scrolling-tips/">infinite scrolling came along</a> and changed expectations.</p>
+<h3>I got some chunk for you</h3>
+<p>One way to operate is for the server to send all data, but using <a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding"><code>Transfer-Encoding: chunked</code></a> (<a href="https://tools.ietf.org/html/rfc9112#section-7.1">RFC 9112</a>) in the header and deliver data in several packages, aptly named chunks. A client can process each chunk on arrival to allow interactivity before data transmission concludes.</p>
+<p>However this requires adjustments on both sides. The server needs to send data with a clear delimiter, e.g. <code>\n</code> (newline) and the client needs to process the data as a stream</p>
+<h3>The usual way won't work</h3>
+<p>We typically find code like this:</p>
+<pre><code class="language-js">fetch(url)
+  .then((resp) =&gt; resp.json())
+  .then((json) =&gt; {
+    for (let row in json) {
+      addRow(json[row], parentElement);
     }
-
-    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
-    '$status $body_bytes_sent "$http_referer" '
-    '"$http_user_agent" "$http_x_forwarded_for"';
-
-    server {
-        listen 80 default_server;
-        listen [::]:80 default_server;
-
-        root /usr/share/nginx/html;
-        error_page 404 /error404.html;
-
-        location / {
-            try_files $uri $uri/ =404;
-        }
-    }
-}
+  });
 </code></pre>
-<h3>Insights</h3>
-<ul>
- <li>I valiantly fought to get it to work with the official nginx image <code>nginx.alpine</code>, but that didn't work, so I had to fall back to alpine and install nginx and the module from the same repo</li>
- <li>Compression sizes are impressive. E.g. svg files shrink by 50%</li>
- <li>source code is <a href="https://github.com/Stwissel/docker-nginx-brotli">available on GitHub</a></li>
-</ul>
-<p>Sources:</p>
-<ul>
- <li><a href="https://linuxcommandlibrary.com/man/brotli">brotli man page</a></li>
- <li><a href="https://erikpoehler.com/2021/05/24/pre-compress-static-assets-with-brotli-or-gzip/">Article by Eric Pöhler</a></li>
- <li><a href="https://martinheinz.dev/blog/48">Article by Martin Heinz</a></li>
- <li><a href="https://stackoverflow.com/questions/76237701/how-to-enable-brotli-compression-in-nginx-and-docker-for-angular-app">Stackoverflow</a></li>
-</ul>
+<p><a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API"><code>fetch</code></a> hides a lot of complexity, we need to handle when we process a chunked result as it arrives.</p><p><img src="/blog/images/2023/ChunkedSequence.png" alt="Sequence of transformation"></p>
+<p>HTTP data arrives as stream of char, not as string. So the first transformation is a conversion to string using a <a href="https://developer.mozilla.org/en-US/docs/Web/API/TextDecoderStream">TextDecoderStream</a></p>
+<p>This is followed by a transformation into text snippets, using the <a href="https://developer.mozilla.org/en-US/docs/Web/API/TransformStream">TransformStream</a> interface, that can be treated with <code>JSON.parse</code>. The special challenge there is that a chunk might split a line in the middle leaving the first and last line unusable. The solution is not to process the last line, but prepend it to the next chunk and only flush it once the stream ends.</p>
+<pre><code class="language-js">/* Chops arriving chunks along new lines,
+    takes into account that a chunk might end middle of line */
+const splitStream = () =&gt; {
+  const splitOn = '\n';
+  let buffer = '';
+  return new TransformStream({
+    transform(chunk, controller) {
+      buffer += chunk;
+      const parts = buffer.split(splitOn);
+      parts.slice(0, -1).forEach((part) =&gt; controller.enqueue(part));
+      buffer = parts[parts.length - 1];
+    },
+    flush(controller) {
+      if (buffer) controller.enqueue(buffer);
+    }
+  });
+};
+</code></pre>
+<p>Next step is to convert the text lines into individual JSON objects, again using the <a href="https://developer.mozilla.org/en-US/docs/Web/API/TransformStream">TransformStream</a> interface. Note the conditions. They ensure we don't process <code>[</code> or <code>]</code>.</p>
+<pre><code class="language-js">/* Parses JSON if row looks like JSON (with eventual comma at end of line) */
+const parseJSON = () =&gt; {
+  return new TransformStream({
+    transform(chunk, controller) {
+      // IGONRES THE [ and ]
+      if (chunk.endsWith(',')) {
+        controller.enqueue(JSON.parse(chunk.slice(0, -1)));
+      } else if (chunk.endsWith('}')) {
+        controller.enqueue(JSON.parse(part));
+      }
+    }
+  });
+};
+</code></pre>
+<p>Finally a <a href="https://developer.mozilla.org/en-US/docs/Web/API/WritableStream">WritableStream</a> provides the destination where data gets processed.</p>
+<p>The whole thing gets wired up using <a href="https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/pipeThrough">pipeThrough</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/pipeTo">pipeTo</a> methods</p>
+<pre><code class="language-js">await httpResponse.body
+  .pipeThrough(new TextDecoderStream())
+  .pipeThrough(splitStream())
+  .pipeThrough(parseJSON())
+  .pipeTo(jsonToTableRow(insertPoint));
+</code></pre>
+<p>You can <a href="https://github.com/Stwissel/http-chunked">try for yourself</a>. Tip: to see the effect fully use the browser's developer tools to simulate a slow connection.</p>
+<p><strong>Just to be clear</strong>: There's no all-over speed gain to be had. I simulated 5000 entries over 5G, both fetch and chunked took about 9 seconds. However using "classic fetch" users stared for 9 seconds at an empty screen, while in the other case they instantly can interact with the data. Big win in "perceived speed".</p>
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 24 June 2023
+Stephan H Wissel</a> on 04 July 2023
 <span class="divider">|</span>
-<a href="/blog/2023/06/docker-nginx-spa-and-brotli-compression.html#comments">Comments (0)</a>
+<a href="/blog/2023/07/handle-http-chunked-responses.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/docker.html">Docker</a>  <a href="/blog/categories/nginx.html">nginx</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
 						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2023/06/docker-nginx-spa-and-brotli-compression.html";
+							var permaLink = "https://wissel.net/blog/2023/07/handle-http-chunked-responses.html";
 						</script>
 					</p>
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_61bc1e40-1231-11ee-a61a-ef046a8827ca" type="button">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_a73f182a6-e51d-4c0f-9b95-10c640d637dd" type="button">
 		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
 	            </button>
 	            </div>
-				<div id="commentform_61bc1e40-1231-11ee-a61a-ef046a8827ca"  class="collapse"></div>
+				<div id="commentform_a73f182a6-e51d-4c0f-9b95-10c640d637dd"  class="collapse"></div>
 				<div class="well well-raised">
 					<h4>Comments</h4>
 					<ol id="commentList">
@@ -277,12 +209,9 @@ categories:  <a href="/blog/categories/docker.html">Docker</a>  <a href="/blog/c
 					</ol>
 				</div>
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2023/06/deploy-a-typescript-app-using-docker.html"><i class="icon-hand-left"></i>Deploy a TypeScript app using Docker</a>
+					<li><a href="/blog/2023/06/docker-nginx-spa-and-brotli-compression.html"><i class="icon-hand-left"></i>Docker, nginx, SPA and brotli compression</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2023/07/handle-http-chunked-responses.html">Handle HTTP chunked responses<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 			</div>
@@ -290,12 +219,9 @@ categories:  <a href="/blog/categories/docker.html">Docker</a>  <a href="/blog/c
 		<ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2023/">2023</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2023/06/">June</a></li>
+  <li><a href="/blog/2023/07/">July</a></li>
   <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/docker.html">Docker</a>
-  </li>
-  <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/nginx.html">nginx</a>
+    <span class="divider">|</span><a href="/blog/categories/javascript.html">JavaScript</a>
   </li>
   <li class="pull-right">
     <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
@@ -363,7 +289,7 @@ categories:  <a href="/blog/categories/docker.html">Docker</a>  <a href="/blog/c
 	</footer>
 
 	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/2023/06/docker-nginx-spa-and-brotli-compression.html";
+		var permaLink = "https://wissel.net/blog/2023/07/handle-http-chunked-responses.html";
 	</script>
 		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
@@ -386,7 +312,7 @@ categories:  <a href="/blog/categories/docker.html">Docker</a>  <a href="/blog/c
 	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 	<script type="text/javascript">
 		var onloadCallback = function() {
-    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "61bc1e40-1231-11ee-a61a-ef046a8827ca");
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "a73f182a6-e51d-4c0f-9b95-10c640d637dd");
  		};
 	</script>
 
