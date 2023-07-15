@@ -14,7 +14,7 @@ ga('send', 'pageview');
 <meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
 <meta property="og:title"     content="wissel.net - Handle HTTP chunked responses" />
 <meta property="og:type"      content="blog" />
-<meta property="og:url"       content="https://wissel.net/blog/2023/07/handle-http-chunked-responses.html" />
+<meta property="og:url"       content="https://wissel.net/blog/2023/07/deploy-nodejs-with-private-packages-in-docker.html" />
 <meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
 <meta property="og:site_name" content="wissel.net" />
 <meta name="viewport"         content="width=device-width, initial-scale=1.0" />
@@ -27,11 +27,11 @@ ga('send', 'pageview');
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
 <meta name="description"
-	content="Handle HTTP chunked responses - Objects I need a lot of objects. When dealing with APIs there is one fundamental question to answer: how much data do you want to retrieve? The old school answer: let&#39;s page results, 25 at a time. Then infinite scrolling came along and changed expectations. I got some chunk for you One way to operat" />
+	content="Handle HTTP chunked responses - GitHub Actions are rapidly becoming my favorite CI environment. Their marketplace has an action for everything. Sometimes it takes a little trial and error before things work smoothly. This is one of that stories. Authentication is everything Imagine the following scenario: you have developed a set " />
 <meta name="Keywords"
-	content="JavaScript,WebDevelopment," />
+	content="GitHub,JavaScript,WebDevelopment," />
 <meta name="Abstract"
-	content="Handle HTTP chunked responses - Objects I need a lot of objects. When dealing with APIs there is one fundamental question to answer: how much data do you want to retrieve? The old school answer: let&#39;s page results, 25 at a time. Then infinite scrolling came along and changed expectations. I got some chunk for you One way to operat" />
+	content="Handle HTTP chunked responses - GitHub Actions are rapidly becoming my favorite CI environment. Their marketplace has an action for everything. Sometimes it takes a little trial and error before things work smoothly. This is one of that stories. Authentication is everything Imagine the following scenario: you have developed a set " />
 <!--[if lt IE 9]>
 		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
 <![endif]-->
@@ -98,6 +98,9 @@ ga('send', 'pageview');
   <li><a href="/blog/2023/">2023</a> <span class="divider">/</span></li>
   <li><a href="/blog/2023/07/">July</a></li>
   <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/github.html">GitHub</a>
+  </li>
+  <li class="pull-right">
     <span class="divider">|</span><a href="/blog/categories/javascript.html">JavaScript</a>
   </li>
   <li class="pull-right">
@@ -109,100 +112,172 @@ ga('send', 'pageview');
 			<div class="span12">
 				
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2023/06/docker-nginx-spa-and-brotli-compression.html"><i class="icon-hand-left"></i>Docker, nginx, SPA and brotli compression</a>
+					<li><a href="/blog/2023/07/handle-http-chunked-responses.html"><i class="icon-hand-left"></i>Handle HTTP chunked responses</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2023/07/deploy-nodejs-with-private-packages-in-docker.html">Handle HTTP chunked responses<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 				<article class="well well-raised">
 					<h1><small>Handle HTTP chunked responses</small></h1>
 					<hr />
-					<div><p>Objects <a href="https://www.youtube.com/watch?v=nFDAK8NY4JY">I need a lot of objects</a>. When dealing with APIs there is one fundamental question to answer: how much data do you want to retrieve?</p>
-<p>The old school answer: let's page results, <a href="https://retrocomputing.stackexchange.com/questions/5629/why-did-80x25-become-the-text-monitor-standard">25 at a time</a>. Then <a href="https://www.nngroup.com/articles/infinite-scrolling-tips/">infinite scrolling came along</a> and changed expectations.</p>
-<h3>I got some chunk for you</h3>
-<p>One way to operate is for the server to send all data, but using <a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding"><code>Transfer-Encoding: chunked</code></a> (<a href="https://tools.ietf.org/html/rfc9112#section-7.1">RFC 9112</a>) in the header and deliver data in several packages, aptly named chunks. A client can process each chunk on arrival to allow interactivity before data transmission concludes.</p>
-<p>However this requires adjustments on both sides. The server needs to send data with a clear delimiter, e.g. <code>\n</code> (newline) and the client needs to process the data as a stream</p>
-<h3>The usual way won't work</h3>
-<p>We typically find code like this:</p>
-<pre><code class="language-js">fetch(url)
-  .then((resp) =&gt; resp.json())
-  .then((json) =&gt; {
-    for (let row in json) {
-      addRow(json[row], parentElement);
-    }
-  });
+					<div><p><a href="https://github.com/features/actions">GitHub Actions</a> are rapidly becoming my favorite CI environment. Their <a href="https://github.com/marketplace?type=actions">marketplace</a> has an action for everything. Sometimes it takes a little trial and error before things work smoothly. This is one of that stories.</p>
+<h3>Authentication is everything</h3>
+<p>Imagine the following scenario: you have developed a set of private TypeScript (or JavaScript) packages and have <a href="https://docs.github.com/en/packages/quickstart">successfully deployed</a> them to the <strong>private</strong> GitHub npm registry under the name <code>@myfamousorg/coolpackage</code> - where <code>myfamousorg</code> must match the repository owner (org or individual).</p>
+<p>Now you want to use them in your application. That application shall be packed in a Container and made available in GitHub's private registry. All that automated using GitHub Actions.</p>
+<h3>You will need a PAT (or two)</h3>
+<p>In GitHub, head to the <a href="https://github.com/settings/tokens">Personal access tokens / Tokens (classic)</a> section of your developer settings in profile. You need to <a href="https://github.com/settings/tokens/new">create tokens</a> that allow you to handle packages.</p>
+<p><img src="/blog/images/2023/GitHubToken.png" alt="GitHub Tokens"></p>
+<p>There are two places where you want to enter that token:</p>
+<ul>
+ <li>In <code>https://github.com/[your-org]/[your-repo]/settings/secrets/actions</code> create a key <code>GIT_NPM_PACKAGES</code> and copy your PAT there. You can pick any name, you will need it in the GitHub action later</li>
+ <li>In <code>~/.npmrc</code>, your global settings for npm in your home directory. Don't put the info in the <code>.npmrc</code> in your git project.</li>
+</ul>
+<pre><code class="language-properties">prefix=/home/[your username]/.npm-packages
+@myfamousorg:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=[here goes the token]
+
 </code></pre>
-<p><a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API"><code>fetch</code></a> hides a lot of complexity, we need to handle when we process a chunked result as it arrives.</p><p><img src="/blog/images/2023/ChunkedSequence.png" alt="Sequence of transformation"></p>
-<p>HTTP data arrives as stream of char, not as string. So the first transformation is a conversion to string using a <a href="https://developer.mozilla.org/en-US/docs/Web/API/TextDecoderStream">TextDecoderStream</a></p>
-<p>This is followed by a transformation into text snippets, using the <a href="https://developer.mozilla.org/en-US/docs/Web/API/TransformStream">TransformStream</a> interface, that can be treated with <code>JSON.parse</code>. The special challenge there is that a chunk might split a line in the middle leaving the first and last line unusable. The solution is not to process the last line, but prepend it to the next chunk and only flush it once the stream ends.</p>
-<pre><code class="language-js">/* Chops arriving chunks along new lines,
-    takes into account that a chunk might end middle of line */
-const splitStream = () =&gt; {
-  const splitOn = '\n';
-  let buffer = '';
-  return new TransformStream({
-    transform(chunk, controller) {
-      buffer += chunk;
-      const parts = buffer.split(splitOn);
-      parts.slice(0, -1).forEach((part) =&gt; controller.enqueue(part));
-      buffer = parts[parts.length - 1];
-    },
-    flush(controller) {
-      if (buffer) controller.enqueue(buffer);
-    }
-  });
-};
+<p>The <code>prefix</code> property allows you to run `npm install -g [package] without admin access.</p><p>Next stop:</p>
+<h3>Dockerfile</h3>
+<p>The <code>Dockerfile</code> uses a two container approach: one to build the application and one to deliver the runtime with no <code>ts</code> files or development dependencies. Note that we copy a <code>github.npmrc</code> file into <code>.npmrc</code></p>
+<pre><code class="language-docker"># build container
+FROM node:18-alpine
+ARG GITHUB_TOKEN
+
+# Create app directory
+WORKDIR /usr
+COPY package*.json ./
+COPY tsconfig.json ./
+# GitHub Action specific npmrc
+COPY github.npmrc ./.npmrc
+COPY src ./src
+COPY test ./test
+# The PAT you created
+RUN GITHUB_TOKEN=$GITHUB_TOKEN; npm install
+RUN npm run build
+
+
+# Actual runtime container
+FROM node:18-alpine
+ARG GITHUB_TOKEN
+
+# Create app directory
+WORKDIR /usr/src/app
+COPY package*.json ./
+COPY github.npmrc ./.npmrc
+RUN GITHUB_TOKEN=$GITHUB_TOKEN; npm ci --omit=dev
+
+# Only source from build container
+COPY  --from=0 /usr/dist .
+
+# Labels
+LABEL org.opencontainers.image.source="https://github.com/myfamousorg/shinyapp"
+
+# Run it
+EXPOSE 3000
+CMD ["node","server.js"]
 </code></pre>
-<p>Next step is to convert the text lines into individual JSON objects, again using the <a href="https://developer.mozilla.org/en-US/docs/Web/API/TransformStream">TransformStream</a> interface. Note the conditions. They ensure we don't process <code>[</code> or <code>]</code>.</p>
-<pre><code class="language-js">/* Parses JSON if row looks like JSON (with eventual comma at end of line) */
-const parseJSON = () =&gt; {
-  return new TransformStream({
-    transform(chunk, controller) {
-      // IGONRES THE [ and ]
-      if (chunk.endsWith(',')) {
-        controller.enqueue(JSON.parse(chunk.slice(0, -1)));
-      } else if (chunk.endsWith('}')) {
-        controller.enqueue(JSON.parse(part));
-      }
-    }
-  });
-};
+<h3>project <code>github.npmrc</code></h3>
+<pre><code class="language-properties">//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+@myfamousorg:registry=https://npm.pkg.github.com/
 </code></pre>
-<p>Finally a <a href="https://developer.mozilla.org/en-US/docs/Web/API/WritableStream">WritableStream</a> provides the destination where data gets processed.</p>
-<p>The whole thing gets wired up using <a href="https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/pipeThrough">pipeThrough</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/pipeTo">pipeTo</a> methods</p>
-<pre><code class="language-js">await httpResponse.body
-  .pipeThrough(new TextDecoderStream())
-  .pipeThrough(splitStream())
-  .pipeThrough(parseJSON())
-  .pipeTo(jsonToTableRow(insertPoint));
+<h3>GitHub Action</h3>
+<p>Create <code>.gihub/workflows/create-container.yml</code> (or whatever name you deem fit) with content like this:</p>
+<pre><code class="language-yaml">name: Build docker container
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  dockerbackend:
+    name: Build and store backend docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Backend
+        uses: actions/checkout@v3
+
+      # Setup hardware emulator using QEMU
+      # to get image for both Intel and ARM
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      # Build environment thst caches layers
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      # Login to docker hub to get node:18-alpine
+      - name: Docker Hub login
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Login to github to deposit the result GITHUB_TOKEN works here
+      - name: GitHub container Registry login
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # The main action
+      - name: Build and Push
+        id: docker_build
+        uses: docker/build-push-action@v4
+        with:
+          context: ./
+          file: ./Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          # this triggers platform builds, requires the earlier QEMU setuo
+          platforms: linux/amd64, linux/arm64
+          tags: |
+            ghcr.io/myfamousorg/shinyapp:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          # This is where you need the PAT since GITHUB_TOKEN won't do
+          build-args: GITHUB_TOKEN=${{ secrets.GIT_NPM_PACKAGES }}
 </code></pre>
-<p>You can <a href="https://github.com/Stwissel/http-chunked">try for yourself</a>. Tip: to see the effect fully use the browser's developer tools to simulate a slow connection.</p>
-<p><strong>Just to be clear</strong>: There's no all-over speed gain to be had. I simulated 5000 entries over 5G, both fetch and chunked took about 9 seconds. However using "classic fetch" users stared for 9 seconds at an empty screen, while in the other case they instantly can interact with the data. Big win in "perceived speed".</p>
+<h2>Insights</h2>
+<ul>
+ <li>The default <code>GITHUB_TOKEN</code> doesn't work, you need a pat</li>
+ <li>The dual container approach makes your runtime substantially smaller (depending on how much dev dependencies can be omitted)</li>
+ <li>Alpine Linux seems to be the most efficient balance between ease-of-use and size</li>
+ <li>If you also want to run on Arm (macOS M1/M2), use the QEMU emulator</li>
+</ul>
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 04 July 2023
+Stephan H Wissel</a> on 16 July 2023
 <span class="divider">|</span>
-<a href="/blog/2023/07/handle-http-chunked-responses.html#comments">Comments (0)</a>
+<a href="/blog/2023/07/deploy-nodejs-with-private-packages-in-docker.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+categories:  <a href="/blog/categories/github.html">GitHub</a>  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
 						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2023/07/handle-http-chunked-responses.html";
+							var permaLink = "https://wissel.net/blog/2023/07/deploy-nodejs-with-private-packages-in-docker.html";
 						</script>
 					</p>
 				</article>
 				<a name="comments"></a>
 				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_a73f182a6-e51d-4c0f-9b95-10c640d637dd" type="button">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_a81d27ba-4cf9-444d-99e6-c4813be2e9f4" type="button">
 		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
 	            </button>
 	            </div>
-				<div id="commentform_a73f182a6-e51d-4c0f-9b95-10c640d637dd"  class="collapse"></div>
+				<div id="commentform_a81d27ba-4cf9-444d-99e6-c4813be2e9f4"  class="collapse"></div>
 				<div class="well well-raised">
 					<h4>Comments</h4>
 					<ol id="commentList">
@@ -212,12 +287,9 @@ categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href=
 					</ol>
 				</div>
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2023/06/docker-nginx-spa-and-brotli-compression.html"><i class="icon-hand-left"></i>Docker, nginx, SPA and brotli compression</a>
+					<li><a href="/blog/2023/07/handle-http-chunked-responses.html"><i class="icon-hand-left"></i>Handle HTTP chunked responses</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2023/07/deploy-nodejs-with-private-packages-in-docker.html">Handle HTTP chunked responses<i class="icon-hand-right"></i></a>
-					</li>
 				</ul>
 
 			</div>
@@ -226,6 +298,9 @@ categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href=
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2023/">2023</a> <span class="divider">/</span></li>
   <li><a href="/blog/2023/07/">July</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/github.html">GitHub</a>
+  </li>
   <li class="pull-right">
     <span class="divider">|</span><a href="/blog/categories/javascript.html">JavaScript</a>
   </li>
@@ -295,7 +370,7 @@ categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href=
 	</footer>
 
 	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/2023/07/handle-http-chunked-responses.html";
+		var permaLink = "https://wissel.net/blog/2023/07/deploy-nodejs-with-private-packages-in-docker.html";
 	</script>
 		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
@@ -318,7 +393,7 @@ categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href=
 	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 	<script type="text/javascript">
 		var onloadCallback = function() {
-    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "a73f182a6-e51d-4c0f-9b95-10c640d637dd");
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "a81d27ba-4cf9-444d-99e6-c4813be2e9f4");
  		};
 	</script>
 

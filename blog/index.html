@@ -98,6 +98,42 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2023/07/deploy-nodejs-with-private-packages-in-docker.html">Handle HTTP chunked responses</a></small></h1>
+					<hr />
+					<div><p><a href="https://github.com/features/actions">GitHub Actions</a> are rapidly becoming my favorite CI environment. Their <a href="https://github.com/marketplace?type=actions">marketplace</a> has an action for everything. Sometimes it takes a little trial and error before things work smoothly. This is one of that stories.</p>
+<h3>Authentication is everything</h3>
+<p>Imagine the following scenario: you have developed a set of private TypeScript (or JavaScript) packages and have <a href="https://docs.github.com/en/packages/quickstart">successfully deployed</a> them to the <strong>private</strong> GitHub npm registry under the name <code>@myfamousorg/coolpackage</code> - where <code>myfamousorg</code> must match the repository owner (org or individual).</p>
+<p>Now you want to use them in your application. That application shall be packed in a Container and made available in GitHub's private registry. All that automated using GitHub Actions.</p>
+<h3>You will need a PAT (or two)</h3>
+<p>In GitHub, head to the <a href="https://github.com/settings/tokens">Personal access tokens / Tokens (classic)</a> section of your developer settings in profile. You need to <a href="https://github.com/settings/tokens/new">create tokens</a> that allow you to handle packages.</p>
+<p><img src="/blog/images/2023/GitHubToken.png" alt="GitHub Tokens"></p>
+<p>There are two places where you want to enter that token:</p>
+<ul>
+ <li>In <code>https://github.com/[your-org]/[your-repo]/settings/secrets/actions</code> create a key <code>GIT_NPM_PACKAGES</code> and copy your PAT there. You can pick any name, you will need it in the GitHub action later</li>
+ <li>In <code>~/.npmrc</code>, your global settings for npm in your home directory. Don't put the info in the <code>.npmrc</code> in your git project.</li>
+</ul>
+<pre><code class="language-properties">prefix=/home/[your username]/.npm-packages
+@myfamousorg:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=[here goes the token]
+
+</code></pre>
+<p>The <code>prefix</code> property allows you to run `npm install -g [package] without admin access.</p></div>
+					<hr />
+ <a href="/blog/2023/07/deploy-nodejs-with-private-packages-in-docker.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 16 July 2023
+<span class="divider">|</span>
+<a href="/blog/2023/07/deploy-nodejs-with-private-packages-in-docker.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/github.html">GitHub</a>  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2023/07/deploy-nodejs-with-private-packages-in-docker.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2023/07/handle-http-chunked-responses.html">Handle HTTP chunked responses</a></small></h1>
 					<hr />
 					<div><p>Objects <a href="https://www.youtube.com/watch?v=nFDAK8NY4JY">I need a lot of objects</a>. When dealing with APIs there is one fundamental question to answer: how much data do you want to retrieve?</p>
@@ -405,69 +441,6 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2023/02/totp-and-vertx.html";
-						</script>
-					</p></p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2023/01/learning-how-nginx-proxy-works.html">learning how nginx proxy works</a></small></h1>
-					<hr />
-					<div><p>A common approach for web applications is to serve them behind a <a href="https://www.nginx.com/resources/glossary/reverse-proxy-server/">reverse proxy</a>. My favorite there is <a href="https://nginx.org/en/">nginx</a>. It has a fairly understandable configuration, supports http/2 and is fully supported by Letsencrypt's <a href="https://certbot.eff.org/instructions?ws=nginx&amp;os=centosrhel8">certbot</a>.</p>
-<h3>proxy_pass can be tricky</h3>
-<p>The configuration for reverse proxying is a combination of <code>location</code> and a <code>proxy_pass</code> statement, as well as some headers. In it simplest form the URL path and the proxy_path URL are the same, so you don't need a translation between direct access (e.g. local testing) and access through nginx. A configuration could look like this:</p>
-<pre><code class="language-nginx">location /someurl {
-        proxy_pass http://127.0.0.1:3000/someurl;
-        proxy_http_version 1.1;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Host $host;
-        proxy_set_header X-Forwarded-Port $server_port;
-    }
-</code></pre>
-<p>The headers ensure your application knows the original request source and allow upgrade from http to websockets.</p>
-<p>It gets interesting when <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location"><code>location</code></a> and <a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_pass"><code>proxy_pass</code></a> don't match. Differences can range from different url path to <a href="https://regex101.com/">regex</a> and rewrites. Especially when inheriting (or <a href="https://www.google.com/search?q=nginx+sample+redirection">googling</a>) configurations, understanding can be a challenge.</p>
-<h3>Express to the rescue</h3>
-<p>A few lines of <a href="https://expressjs.com/">expressjs</a> will echo back what ends up at the backend. Together with <a href="https://curl.se/">curl</a> it provides you a practical learning and testing environment.</p>
-<pre><code class="language-js">const express = require('express');
-const app = express();
-const port = 3010;
-
-app.get('*', (req, res) =&gt; {
-  res.setHeader('Content-Type', 'text/json');
-  let result = JSON.stringify(
-    {
-      headers: req.headers,
-      url: req.url,
-      query: req.query,
-      hostname: req.hostname
-    },
-    null,
-    2
-  );
-  res.send(result);
-  console.log(result);
-});
-
-app.listen(port, () =&gt; {
-  console.log(`Echo app listening for GET on port ${port}`);
-});
-</code></pre>
-<p>Enjoy, as usual YMMV!</p></div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 09 January 2023
-<span class="divider">|</span>
-<a href="/blog/2023/01/learning-how-nginx-proxy-works.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/nginx.html">nginx</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2023/01/learning-how-nginx-proxy-works.html";
 						</script>
 					</p></p>
 				</article>

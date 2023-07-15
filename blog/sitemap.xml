@@ -6,7 +6,33 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Sat, 15 Jul 2023 16:43:11 +0000</pubdate>
+	<pubdate>Sat, 15 Jul 2023 16:51:57 +0000</pubdate>
+<item>
+	<title>Handle HTTP chunked responses</title>
+	<description>&lt;p&gt;&lt;a href="https://github.com/features/actions"&gt;GitHub Actions&lt;/a&gt; are rapidly becoming my favorite CI environment. Their &lt;a href="https://github.com/marketplace?type=actions"&gt;marketplace&lt;/a&gt; has an action for everything. Sometimes it takes a little trial and error before things work smoothly. This is one of that stories.&lt;/p&gt;
+&lt;h3&gt;Authentication is everything&lt;/h3&gt;
+&lt;p&gt;Imagine the following scenario: you have developed a set of private TypeScript (or JavaScript) packages and have &lt;a href="https://docs.github.com/en/packages/quickstart"&gt;successfully deployed&lt;/a&gt; them to the &lt;strong&gt;private&lt;/strong&gt; GitHub npm registry under the name &lt;code&gt;@myfamousorg/coolpackage&lt;/code&gt; - where &lt;code&gt;myfamousorg&lt;/code&gt; must match the repository owner (org or individual).&lt;/p&gt;
+&lt;p&gt;Now you want to use them in your application. That application shall be packed in a Container and made available in GitHub's private registry. All that automated using GitHub Actions.&lt;/p&gt;
+&lt;h3&gt;You will need a PAT (or two)&lt;/h3&gt;
+&lt;p&gt;In GitHub, head to the &lt;a href="https://github.com/settings/tokens"&gt;Personal access tokens / Tokens (classic)&lt;/a&gt; section of your developer settings in profile. You need to &lt;a href="https://github.com/settings/tokens/new"&gt;create tokens&lt;/a&gt; that allow you to handle packages.&lt;/p&gt;
+&lt;p&gt;&lt;img src="/blog/images/2023/GitHubToken.png" alt="GitHub Tokens"&gt;&lt;/p&gt;
+&lt;p&gt;There are two places where you want to enter that token:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;In &lt;code&gt;https://github.com/[your-org]/[your-repo]/settings/secrets/actions&lt;/code&gt; create a key &lt;code&gt;GIT_NPM_PACKAGES&lt;/code&gt; and copy your PAT there. You can pick any name, you will need it in the GitHub action later&lt;/li&gt;
+ &lt;li&gt;In &lt;code&gt;~/.npmrc&lt;/code&gt;, your global settings for npm in your home directory. Don't put the info in the &lt;code&gt;.npmrc&lt;/code&gt; in your git project.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre&gt;&lt;code class="language-properties"&gt;prefix=/home/[your username]/.npm-packages
+@myfamousorg:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=[here goes the token]
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The &lt;code&gt;prefix&lt;/code&gt; property allows you to run `npm install -g [package] without admin access.&lt;/p&gt;</description>
+	<link>2023/07/deploy-nodejs-with-private-packages-in-docker.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>a81d27ba-4cf9-444d-99e6-c4813be2e9f4</guid>
+	<pubDate>16 July 2023</pubDate>
+
+</item>
 <item>
 	<title>Handle HTTP chunked responses</title>
 	<description>&lt;p&gt;Objects &lt;a href="https://www.youtube.com/watch?v=nFDAK8NY4JY"&gt;I need a lot of objects&lt;/a&gt;. When dealing with APIs there is one fundamental question to answer: how much data do you want to retrieve?&lt;/p&gt;
@@ -228,60 +254,6 @@ export default defineConfig({
 	<author>Stephan H. Wissel</author>
 	<guid>1d0ec360-a698-11ed-bf05-29eb7d3f90a2</guid>
 	<pubDate>07 February 2023</pubDate>
-
-</item>
-<item>
-	<title>learning how nginx proxy works</title>
-	<description>&lt;p&gt;A common approach for web applications is to serve them behind a &lt;a href="https://www.nginx.com/resources/glossary/reverse-proxy-server/"&gt;reverse proxy&lt;/a&gt;. My favorite there is &lt;a href="https://nginx.org/en/"&gt;nginx&lt;/a&gt;. It has a fairly understandable configuration, supports http/2 and is fully supported by Letsencrypt's &lt;a href="https://certbot.eff.org/instructions?ws=nginx&amp;amp;os=centosrhel8"&gt;certbot&lt;/a&gt;.&lt;/p&gt;
-&lt;h3&gt;proxy_pass can be tricky&lt;/h3&gt;
-&lt;p&gt;The configuration for reverse proxying is a combination of &lt;code&gt;location&lt;/code&gt; and a &lt;code&gt;proxy_pass&lt;/code&gt; statement, as well as some headers. In it simplest form the URL path and the proxy_path URL are the same, so you don't need a translation between direct access (e.g. local testing) and access through nginx. A configuration could look like this:&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-nginx"&gt;location /someurl {
-        proxy_pass http://127.0.0.1:3000/someurl;
-        proxy_http_version 1.1;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Host $host;
-        proxy_set_header X-Forwarded-Port $server_port;
-    }
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;The headers ensure your application knows the original request source and allow upgrade from http to websockets.&lt;/p&gt;
-&lt;p&gt;It gets interesting when &lt;a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#location"&gt;&lt;code&gt;location&lt;/code&gt;&lt;/a&gt; and &lt;a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_pass"&gt;&lt;code&gt;proxy_pass&lt;/code&gt;&lt;/a&gt; don't match. Differences can range from different url path to &lt;a href="https://regex101.com/"&gt;regex&lt;/a&gt; and rewrites. Especially when inheriting (or &lt;a href="https://www.google.com/search?q=nginx+sample+redirection"&gt;googling&lt;/a&gt;) configurations, understanding can be a challenge.&lt;/p&gt;
-&lt;h3&gt;Express to the rescue&lt;/h3&gt;
-&lt;p&gt;A few lines of &lt;a href="https://expressjs.com/"&gt;expressjs&lt;/a&gt; will echo back what ends up at the backend. Together with &lt;a href="https://curl.se/"&gt;curl&lt;/a&gt; it provides you a practical learning and testing environment.&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-js"&gt;const express = require('express');
-const app = express();
-const port = 3010;
-
-app.get('*', (req, res) =&amp;gt; {
-  res.setHeader('Content-Type', 'text/json');
-  let result = JSON.stringify(
-    {
-      headers: req.headers,
-      url: req.url,
-      query: req.query,
-      hostname: req.hostname
-    },
-    null,
-    2
-  );
-  res.send(result);
-  console.log(result);
-});
-
-app.listen(port, () =&amp;gt; {
-  console.log(`Echo app listening for GET on port ${port}`);
-});
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Enjoy, as usual YMMV!&lt;/p&gt;</description>
-	<link>2023/01/learning-how-nginx-proxy-works.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>82166c60-8fdf-11ed-8979-03757e79d1b5</guid>
-	<pubDate>09 January 2023</pubDate>
 
 </item>
 
