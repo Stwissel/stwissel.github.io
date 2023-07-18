@@ -6,7 +6,7 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Sat, 15 Jul 2023 16:56:56 +0000</pubdate>
+	<pubdate>Tue, 18 Jul 2023 08:35:26 +0000</pubdate>
 <item>
 	<title>Deploy private npm packages into private containers using github actions</title>
 	<description>&lt;p&gt;&lt;a href="https://github.com/features/actions"&gt;GitHub Actions&lt;/a&gt; are rapidly becoming my favorite CI environment. Their &lt;a href="https://github.com/marketplace?type=actions"&gt;marketplace&lt;/a&gt; has an action for everything. Sometimes it takes a little trial and error before things work smoothly. This is one of that stories.&lt;/p&gt;
@@ -31,6 +31,25 @@
 	<author>Stephan H. Wissel</author>
 	<guid>a81d27ba-4cf9-444d-99e6-c4813be2e9f4</guid>
 	<pubDate>16 July 2023</pubDate>
+
+</item>
+<item>
+	<title>Keep your github container registry tidy</title>
+	<description>&lt;p&gt;SO you drank the cool-aid, like me, and use &lt;a href="https://github.com/features/actions"&gt;GitHub Actions&lt;/a&gt; to build your projects and &lt;a href="https://github.com/features/packages"&gt;GitHub pacckages&lt;/a&gt; for your private containers, maven produced Jars, npm modules. Soon your honeymoon is over and you hit the storage limit of your account.&lt;/p&gt;
+&lt;h3&gt;You need to clean up&lt;/h3&gt;
+&lt;p&gt;Looking at the packages you will notice, that they are all there, all the version, in case of containers even the untagged ones. The root of the problem is equally the solution: a GitHub Action to &lt;a href="https://github.com/marketplace/actions/delete-package-versions"&gt;delete package versions&lt;/a&gt;. The package is very flexible and well documented, outlining &lt;a href="https://github.com/marketplace/actions/delete-package-versions#scenarios"&gt;several scenarios&lt;/a&gt; how to put it to use&lt;/p&gt;
+&lt;h2&gt;Things to watch out for&lt;/h2&gt;
+&lt;p&gt;You have to decide when you want to put it to use:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;on schedule, like &lt;a href="https://www.youtube.com/watch?v=mthSq-u2i7A"&gt;every Friday&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;manual, pressing a button&lt;/li&gt;
+ &lt;li&gt;on each build, when you add a new package&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I also experienced that &lt;code&gt;{{ secrets.GITHUB_TOKEN }}&lt;/code&gt; wouldn't work when the package you target is private, even when it is in the same repository. Once you know, it's not a big deal, just create a &lt;a href="https://github.com/settings/tokens"&gt;PAT&lt;/a&gt; and add it to the repository's secrets. You might want to add &lt;code&gt;workflow_dispatch&lt;/code&gt; to all triggers, so you can test run them anytime.&lt;/p&gt;</description>
+	<link>2023/07/keep-your-github-container-registry-tidy.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>8d4324b0-253b-11ee-aa6d-b183cc9640ea</guid>
+	<pubDate>08 July 2023</pubDate>
 
 </item>
 <item>
@@ -231,29 +250,6 @@ export default defineConfig({
 	<author>Stephan H. Wissel</author>
 	<guid>2ee20120-ba65-11ed-97fc-17798ed6a7c6</guid>
 	<pubDate>04 March 2023</pubDate>
-
-</item>
-<item>
-	<title>TOTP and vert.x</title>
-	<description>&lt;p&gt;Time-based one-time passwords (&lt;a href="https://en.wikipedia.org/wiki/Time-based_one-time_password"&gt;TOTP&lt;/a&gt;) are a common security feature in Identity Providers (&lt;a href="https://en.wikipedia.org/wiki/Identity_provider"&gt;IdP&lt;/a&gt;). There are use cases beyond IdP, mine was "Understanding what &lt;a href="https://www.twilio.com/docs/glossary/totp"&gt;it takes&lt;/a&gt;").&lt;/p&gt;
-&lt;h3&gt;TOTP interaction&lt;/h3&gt;
-&lt;p&gt;You have two phases: enrollment and use. During enrollment a secret is generated and (typically) presented as &lt;a href="https://en.wikipedia.org/wiki/QR_code"&gt;QR Code&lt;/a&gt;. A user points &lt;a href="https://authy.com"&gt;one&lt;/a&gt; &lt;a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2"&gt;of&lt;/a&gt; &lt;a href="https://www.microsoft.com/en-us/security/mobile-authenticator-app"&gt;the&lt;/a&gt; many Authenticator &lt;a href="https://www.pcmag.com/picks/the-best-authenticator-apps"&gt;apps&lt;/a&gt; to it and gets a numeric code that changes once a minute.&lt;/p&gt;
-&lt;p&gt;When you use it, you pick the current number and paste it into the provided field. The backend validates the correctness with some time leeway.&lt;/p&gt;
-&lt;h3&gt;What it is not&lt;/h3&gt;
-&lt;p&gt;Typically when enrolling you also get recovery codes, sometimes called &lt;em&gt;scratch codes&lt;/em&gt;. They are &lt;strong&gt;NOT&lt;/strong&gt; part of TOTP and implementation is site specific and not standardized. An implementer might choose to check your recovery codes when your TOTP fails or provide a separate interaction using those.&lt;/p&gt;
-&lt;p&gt;The initial confirmation, is actually the first instance of "&lt;strong&gt;use&lt;/strong&gt;" and one could have a successful enrollment without it. This is depending on the implementation.&lt;/p&gt;
-&lt;p&gt;It isn't &lt;a href="https://www.brainyquote.com/quotes/douglas_adams_109728"&gt;foolproof&lt;/a&gt;. An attacker could trick you into typing your TOTP code into a spoofed form or just hijack your &lt;a href="https://en.wikipedia.org/wiki/Session_hijacking"&gt;session (cookie)&lt;/a&gt;. That's why responsible web apps run a tight security with &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP"&gt;CSP&lt;/a&gt; and &lt;a href="https://letsencrypt.org"&gt;TLS&lt;/a&gt; (and once browser support is better &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy"&gt;Permission Policy&lt;/a&gt;)&lt;/p&gt;
-&lt;h3&gt;Setting up a sample application&lt;/h3&gt;
-&lt;p&gt;We need a landing page and its supporting files (css, js, png) served statically and 3 routes:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;request&lt;/li&gt;
- &lt;li&gt;save&lt;/li&gt;
- &lt;li&gt;verify&lt;/li&gt;
-&lt;/ul&gt;</description>
-	<link>2023/02/totp-and-vertx.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>1d0ec360-a698-11ed-bf05-29eb7d3f90a2</guid>
-	<pubDate>07 February 2023</pubDate>
 
 </item>
 
