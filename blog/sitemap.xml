@@ -6,7 +6,54 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Tue, 22 Aug 2023 05:08:39 +0000</pubdate>
+	<pubdate>Tue, 29 Aug 2023 12:13:32 +0000</pubdate>
+<item>
+	<title>Fun with Azure Active Directory &amp; JWT</title>
+	<description>&lt;p&gt;&lt;a href="https://en.wikipedia.org/wiki/Active_Directory"&gt;Active Directory&lt;/a&gt; has been the dominant standard for IT directories, even if it isn't &lt;a href="/blog/2014/01/a-short-history-of-directory-trees.html"&gt;the prettiest tree&lt;/a&gt; in the forrest. It's younger sibling &lt;a href="https://en.wikipedia.org/wiki/Microsoft_Azure_Active_Directory"&gt;~~Azure Active Directory~~ Entra ID&lt;/a&gt; is a big player in cloud based &lt;a href="https://en.wikipedia.org/wiki/Identity_provider"&gt;Identity Providers (IdP)&lt;/a&gt;. Unsurprisingly it behaves differently than the gold standard &lt;a href="https://www.keycloak.org/"&gt;KeyCloak&lt;/a&gt;&lt;/p&gt;
+&lt;h3&gt;JWT expectations&lt;/h3&gt;
+&lt;p&gt;A &lt;a href="https://en.wikipedia.org/wiki/JSON_Web_Token"&gt;Json Web Token (JWT)&lt;/a&gt; payload is a &lt;strong&gt;very&lt;/strong&gt; losely definded &lt;a href="https://en.wikipedia.org/wiki/JSON"&gt;JSON&lt;/a&gt; object with various claims. There is only a minimal consent of properties":&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-json"&gt;{
+  "iss": "https://where-it-came-from",
+  "audience": "https://where-it-should-be-valid",
+  "iat": "DATE/TIME -&amp;gt; issued at",
+  "exp": "DATE/TIME -&amp;gt; expiry",
+  "scope": "space separated list of scopes",
+  "email": "user's email"
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The whole thing is (un)defined in &lt;a href="https://datatracker.ietf.org/doc/html/rfc7519"&gt;RFC7519&lt;/a&gt;, sufficiently loose, so anyone can claim to be standard compliant and nothing is interoperable (just like &lt;a href="https://datatracker.ietf.org/doc/html/rfc5545"&gt;ical&lt;/a&gt;). There is a &lt;a href="https://www.iana.org/assignments/jwt/jwt.xhtml"&gt;list of known claims&lt;/a&gt;, but RFC7519 states: "&lt;em&gt;None of the claims&lt;br&gt;
+   defined below are intended to be mandatory to use or implement in all&lt;br&gt;
+   cases, but rather they provide a starting point for a set of useful,&lt;br&gt;
+   interoperable claims.&lt;/em&gt;"&lt;/p&gt;
+&lt;p&gt;To ease validation of signatures, one can use an URL &lt;code&gt;.../.well-known/openid-configuration&lt;/code&gt; which provides a number of needed properties:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;various endpoint URLs for authentication and token exchange&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;issuer&lt;/code&gt;: The value corresponding to the &lt;code&gt;iss&lt;/code&gt; property in a JWT&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;jwks_uri&lt;/code&gt;: URL to read the public key to validate signatures&lt;/li&gt;
+ &lt;li&gt;&lt;code&gt;scopes_supported&lt;/code&gt;: what scopes does the API support&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Azure - same but different&lt;/h3&gt;
+&lt;p&gt;When you setup &lt;a href="https://help.hcltechsw.com/domino/12.0.2/admin/secu_config_http_bearer_auth_using_oidc_c.html"&gt;Domino for JWT&lt;/a&gt; you need a series of specific conditions. The interesting parts from the documentation:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;em&gt;One of the JWT's "aud" (audience) claims must match the Domino Internet Site's host name&lt;/em&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;em&gt;JWTs must contain a "iss" (issuer) claim matching the "issuer" returned from the OIDC provider's .well-known/openid-configuration endpoint&lt;/em&gt;&lt;/li&gt;
+ &lt;li&gt;&lt;em&gt;JWTs must contain a "scope" claim that includes "Domino.user.all"&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;When you follow &lt;a href="https://opensource.hcltechsw.com/Domino-rest-api/howto/IdP/configuringAD.html"&gt;KEEP's how to configure Azure AD&lt;/a&gt; you will find a set of pain points, in no specific order:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;You can't remove claims you don't need&lt;/li&gt;
+ &lt;li&gt;Azure AD will not issue a &lt;code&gt;scope&lt;/code&gt; claim, but an &lt;code&gt;scp&lt;/code&gt; claim&lt;/li&gt;
+ &lt;li&gt;The &lt;code&gt;aud&lt;/code&gt; claim is fixed to the "Application ID URI"&lt;/li&gt;
+ &lt;li&gt;The &lt;code&gt;iss&lt;/code&gt; claim in a token does not match the &lt;code&gt;issuer&lt;/code&gt; property from &lt;code&gt;well-known/openid-configuration&lt;/code&gt;&lt;/li&gt;
+ &lt;li&gt;The &lt;code&gt;jwks_uri&lt;/code&gt; URL does not return an &lt;code&gt;alg&lt;/code&gt; property for the algorythm (nor did I find any way to request an &lt;a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography"&gt;Elliptic-curve&lt;/a&gt; signer)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;So there's tons of fun to be had with Azure ~~Active Directory~~ Entra ID&lt;/p&gt;</description>
+	<link>2023/08/fun-with-azure-active-directory-and-jwt.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>0fd1b040-465c-11ee-8527-1ded1f8f3d81</guid>
+	<pubDate>29 August 2023</pubDate>
+
+</item>
 <item>
 	<title>Primary Posture Applications</title>
 	<description>&lt;p&gt;We use a multitude of applications per day. Each of them captures some level of attention and interaction. &lt;a href="https://en.wikipedia.org/wiki/Alan_Cooper"&gt;Alan Cooper&lt;/a&gt; coined the term &lt;a href="https://en.wikipedia.org/wiki/Application_posture"&gt;Application posture&lt;/a&gt;, with the mainly used application being the &lt;a href="https://uxplanet.org/application-posture-d896bceda537"&gt;&lt;strong&gt;sovereign application&lt;/strong&gt;&lt;/a&gt;. I personally like the term &lt;strong&gt;primary posture application&lt;/strong&gt; better and will use it in this post&lt;/p&gt;
@@ -242,32 +289,6 @@ export default defineConfig({
 	<author>Stephan H. Wissel</author>
 	<guid>303976e0-e34e-11ed-9d33-933d38277195</guid>
 	<pubDate>25 April 2023</pubDate>
-
-</item>
-<item>
-	<title>Tabs vs Spaces - Mozilla changes sides</title>
-	<description>&lt;p&gt;In a surprise move the &lt;a href="https://foundation.mozilla.org/en/"&gt;Mozilla Foundation&lt;/a&gt; announced to join team &lt;code&gt;spaces&lt;/code&gt; in the ongoing developer dispute &lt;a href="https://www.reddit.com/r/programming/comments/p1j1c/tabs_vs_spaces_vs_both/"&gt;Tabs vs. Spaces&lt;/a&gt;.&lt;/p&gt;
-&lt;h3&gt;Rationale and Value proposition&lt;/h3&gt;
-&lt;p&gt;In a &lt;a href="https://wiki.mozilla.org/Do_Not_Fool"&gt;recent statement&lt;/a&gt; Mozilla confirmed: "_We are seeing the errors of our way being team &lt;code&gt;tabs&lt;/code&gt; for &lt;a href="https://en.wikipedia.org/wiki/Tab_(interface)"&gt;so long&lt;/a&gt;_". Mozilla sees an number of advantages in the switch from &lt;code&gt;tabs&lt;/code&gt; to &lt;code&gt;spaces&lt;/code&gt;:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;Differentiation: IE, Edge, Chrome, Safari, Brave and all the other browsers will look dated compared to the spaces based &lt;a href="https://www.mozilla.org/en-US/firefox/new/"&gt;Firefox&lt;/a&gt;&lt;/li&gt;
- &lt;li&gt;Freedom from &lt;a href="https://patents.google.com/patent/US20070136665A1/en"&gt;patent US20070136665A1&lt;/a&gt;&lt;/li&gt;
- &lt;li&gt;Value delivery: a tab only delivers a paltry &lt;code&gt;HEX09&lt;/code&gt;, while a single space delivers already a &lt;code&gt;HEX20&lt;/code&gt; and gets delivered two to four times in the same visual space&lt;/li&gt;
- &lt;li&gt;Upgradable: &lt;code&gt;HEX20&lt;/code&gt; can be upgraded to &lt;code&gt;HEXA0&lt;/code&gt; with no optical change (OK, your &lt;a href="https://yaml.org/"&gt;YAML&lt;/a&gt; will break, but it will break anyway)&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;Consequences&lt;/h3&gt;
-&lt;p&gt;Mozilla will rollout "Firefox Spaces" in phases:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;In the first interation warnings will be generated if a site you visit uses tabs. The warnings are on the console only&lt;/li&gt;
- &lt;li&gt;Phase 2 will feature warning banner overlays&lt;/li&gt;
- &lt;li&gt;Phase 3 will see the replacment of tab navigation by "Firefox in Space"&lt;/li&gt;
- &lt;li&gt;Finally sites using tabs will be blocked and reported to &lt;a href="https://www.nist.gov/cyberframework"&gt;NIST's Cyber division&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;As usual &lt;a href="https://en.wikipedia.org/wiki/April_Fools%27_Day"&gt;YMMV&lt;/a&gt;&lt;/p&gt;</description>
-	<link>2023/04/tabs-vs-spaces-mozilla-changes-sides.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>fc6f48a0-d086-11ed-b815-e39bf3008cd8</guid>
-	<pubDate>01 April 2023</pubDate>
 
 </item>
 

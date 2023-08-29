@@ -113,6 +113,64 @@ ga('send', 'pageview');
 				</div>
 				<article class="well well-raised">
 					<h1>
+						<small><a href="/blog/2023/08/fun-with-azure-active-directory-and-jwt.html">Fun with Azure Active Directory & JWT</a></small>
+					</h1>
+					<hr />
+					<div><p><a href="https://en.wikipedia.org/wiki/Active_Directory">Active Directory</a> has been the dominant standard for IT directories, even if it isn't <a href="/blog/2014/01/a-short-history-of-directory-trees.html">the prettiest tree</a> in the forrest. It's younger sibling <a href="https://en.wikipedia.org/wiki/Microsoft_Azure_Active_Directory">~~Azure Active Directory~~ Entra ID</a> is a big player in cloud based <a href="https://en.wikipedia.org/wiki/Identity_provider">Identity Providers (IdP)</a>. Unsurprisingly it behaves differently than the gold standard <a href="https://www.keycloak.org/">KeyCloak</a></p>
+<h3>JWT expectations</h3>
+<p>A <a href="https://en.wikipedia.org/wiki/JSON_Web_Token">Json Web Token (JWT)</a> payload is a <strong>very</strong> losely definded <a href="https://en.wikipedia.org/wiki/JSON">JSON</a> object with various claims. There is only a minimal consent of properties":</p>
+<pre><code class="language-json">{
+  "iss": "https://where-it-came-from",
+  "audience": "https://where-it-should-be-valid",
+  "iat": "DATE/TIME -&gt; issued at",
+  "exp": "DATE/TIME -&gt; expiry",
+  "scope": "space separated list of scopes",
+  "email": "user's email"
+}
+</code></pre>
+<p>The whole thing is (un)defined in <a href="https://datatracker.ietf.org/doc/html/rfc7519">RFC7519</a>, sufficiently loose, so anyone can claim to be standard compliant and nothing is interoperable (just like <a href="https://datatracker.ietf.org/doc/html/rfc5545">ical</a>). There is a <a href="https://www.iana.org/assignments/jwt/jwt.xhtml">list of known claims</a>, but RFC7519 states: "<em>None of the claims<br>
+   defined below are intended to be mandatory to use or implement in all<br>
+   cases, but rather they provide a starting point for a set of useful,<br>
+   interoperable claims.</em>"</p>
+<p>To ease validation of signatures, one can use an URL <code>.../.well-known/openid-configuration</code> which provides a number of needed properties:</p>
+<ul>
+ <li>various endpoint URLs for authentication and token exchange</li>
+ <li><code>issuer</code>: The value corresponding to the <code>iss</code> property in a JWT</li>
+ <li><code>jwks_uri</code>: URL to read the public key to validate signatures</li>
+ <li><code>scopes_supported</code>: what scopes does the API support</li>
+</ul>
+<h3>Azure - same but different</h3>
+<p>When you setup <a href="https://help.hcltechsw.com/domino/12.0.2/admin/secu_config_http_bearer_auth_using_oidc_c.html">Domino for JWT</a> you need a series of specific conditions. The interesting parts from the documentation:</p>
+<ul>
+ <li><em>One of the JWT's "aud" (audience) claims must match the Domino Internet Site's host name</em></li>
+ <li><em>JWTs must contain a "iss" (issuer) claim matching the "issuer" returned from the OIDC provider's .well-known/openid-configuration endpoint</em></li>
+ <li><em>JWTs must contain a "scope" claim that includes "Domino.user.all"</em></li>
+</ul>
+<p>When you follow <a href="https://opensource.hcltechsw.com/Domino-rest-api/howto/IdP/configuringAD.html">KEEP's how to configure Azure AD</a> you will find a set of pain points, in no specific order:</p>
+<ul>
+ <li>You can't remove claims you don't need</li>
+ <li>Azure AD will not issue a <code>scope</code> claim, but an <code>scp</code> claim</li>
+ <li>The <code>aud</code> claim is fixed to the "Application ID URI"</li>
+ <li>The <code>iss</code> claim in a token does not match the <code>issuer</code> property from <code>well-known/openid-configuration</code></li>
+ <li>The <code>jwks_uri</code> URL does not return an <code>alg</code> property for the algorythm (nor did I find any way to request an <a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography">Elliptic-curve</a> signer)</li>
+</ul>
+<p>So there's tons of fun to be had with Azure ~~Active Directory~~ Entra ID</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 29 August 2023
+<span class="divider">|</span>
+<a href="/blog/2023/08/fun-with-azure-active-directory-and-jwt.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/jwt.html">JWT</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2023/08/fun-with-azure-active-directory-and-jwt.html";
+						</script>
+					</p>
+				</article>
+				<article class="well well-raised">
+					<h1>
 						<small><a href="/blog/2023/08/primary-posture-applications.html">Primary Posture Applications</a></small>
 					</h1>
 					<hr />
@@ -213,6 +271,7 @@ categories:  <a href="/blog/categories/software.html">Software</a>
 						<li ><a href="/blog/categories/intercultural.html">Intercultural</a></li>
 						<li ><a href="/blog/categories/java.html">Java</a></li>
 						<li ><a href="/blog/categories/javascript.html">JavaScript</a></li>
+						<li ><a href="/blog/categories/jwt.html">JWT</a></li>
 						<li ><a href="/blog/categories/k8s.html">K8S</a></li>
 						<li ><a href="/blog/categories/learning.html">Learning</a></li>
 						<li ><a href="/blog/categories/lightning.html">Lightning</a></li>
