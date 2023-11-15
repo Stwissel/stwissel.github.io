@@ -98,6 +98,51 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2023/11/nginx-as-ingress-for-docker-compose.html">nginx as ingress for Docker compose</a></small></h1>
+					<hr />
+					<div><p>In June I wrote about how to use <a href="/blog/2023/06/docker-nginx-spa-and-brotli-compression.html">Docker &amp; nginx</a> to deliver statically rendered <a href="https://github.com/google/brotli">brotli</a> files for your web (frontend) application. It improves delivery quite a bid, but left me wonder: isn't there too much static WebServer involved?</p>
+<h3>Double hop to deliver static files</h3>
+<p>A typical web application using micro/mini/midi services looks like this:</p>
+<p><img src="/blog/images/2023/TypicalDockerConfig.jpg" alt="A typical Docker configuration"></p>
+<p>It is common, easy and concerns quite separated. However it comes with a set of challenges:</p>
+<ul>
+ <li>nginx doesn't do http/2 on <a href="https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/"><code>proxy_pass</code></a>, so you miss the ability to serve static files directly with http/2</li>
+ <li>For static file we have two nginx involved</li>
+ <li>Each service needs to be exposed to the host at some port</li>
+ <li>The service architecture leaks to the host based nginx. SO any change in service needs an update to the <code>docker-compose.yml</code> <strong>AND</strong> the host based nginx configuration</li>
+ <li>the containers depend on that, external to them, configuration</li>
+</ul>
+<p>So I tried to design a better way to handle this without going all <a href="https://kubernetes.io/">K-in</a>:</p>
+<p><img src="/blog/images/2023/DockerConfigWithNginx.jpg" alt="Docker configuration with ingress as component"></p>
+<p>This looed like a more promising approach:</p>
+<ul>
+ <li>Services could be addressed with their internal network name</li>
+ <li>Only Ports 80 and 443 of one container need exposure on the host</li>
+ <li>The nginx configuration inside the container is immutable and can't accidentially be reconfigured in production (your image comes from a pipeline isn't it)</li>
+</ul>
+<h3>Challenges</h3>
+<ul>
+ <li>When trying to configure certbot, I initially tried using the <code>--nginx</code> parameter with an http challenge and shared data mounts. None of the attempts worked satisfactory, so at the end I settled on a<a href="https://letsencrypt.org/docs/challenge-types/#dns-01-challenge">DNS-01</a> using <a href="https://www.cloudflare.com/">CloudFlare</a>.</li>
+ <li>Since I wanted the nginx configuration to be inside the container image (and not on a data mount), a good understandig of nginx's configuration is necessary. The only persisted information was <code>/etc/letsencrypt</code> for the certificate and a secret for CloudFlare credentials</li>
+ <li>When the nginx configuration is statically configured for TLS, on initial load it will fail since the certs don't exist yet. Auntie Google suggested a manual run of certbot, but I favour <code>docker compose up</code> to handle everything</li>
+ <li>I ended up creating my own docker images, which was an epiphany: it absolutely makes sense to build a container image for single use instead of trying hard to make it configurable and vulnerable to mis-configuration</li>
+</ul></div>
+					<hr />
+ <a href="/blog/2023/11/nginx-as-ingress-for-docker-compose.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 15 November 2023
+<span class="divider">|</span>
+<a href="/blog/2023/11/nginx-as-ingress-for-docker-compose.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/docker.html">Docker</a>  <a href="/blog/categories/nginx.html">nginx</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2023/11/nginx-as-ingress-for-docker-compose.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2023/10/quarkus-and-graalvm-starter.html">Quarkus and GraalVM starter</a></small></h1>
 					<hr />
 					<div><p>When <a href="https://www.java.com/en/">Java</a> is one of the languanges in your portfolio, you might have heard of <a href="https://quarkus.io/">Quarkus</a>, an alternative to <a href="https://spring.io/projects/spring-boot">Spring Boot</a> build on top of <a href="https://vertx.io">vert.x</a> and <a href="https://www.graalvm.org/">GraalVM</a>, a polyglot runtime for Java and other languages.</p>
@@ -444,44 +489,6 @@ categories:  <a href="/blog/categories/docker.html">Docker</a>  <a href="/blog/c
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2023/06/deploy-a-typescript-app-using-docker.html";
-						</script>
-					</p></p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2023/05/tiptoe-in-typescript.html">TipToe in TypeScript</a></small></h1>
-					<hr />
-					<div><p><a href="https://www.typescriptlang.org/">TypeScript</a> is all the rage in JavaScript land and I'm enjoying the ride so far. I shall refrain from debating <a href="https://www.google.com/search?q=typescript+vs.+javascript">TypeScript vs. JavaScript</a> or <a href="https://www.typescriptlang.org/play">geeting started</a> activities. This article's focus getting a TypeScript (server side) project going in <a href="https://code.visualstudio.com/">VSCode</a>. It reflects what worked for me with my limited knowledge.</p>
-<h3>Who's at the party?</h3>
-<p>On a first look it seems, one just needs <code>tsc</code> and all is good. However there are more <a href="https://gist.github.com/Stwissel/889f1ee888d0d7dbe2c8933b3395ff81">moving parts involved</a>, lets have a look:</p>
-<p><a href="/blog/images/2023/TypeScriptProjectLarge.png"><img src="/blog/images/2023/TypeScriptProject.png" alt="TypeScript project"></a></p>
-<p>VSCode plugins, style and build automation shall be subject to a future post, lets focus on the TypeScript parts here. Let's get started with sample <a href="https://expressjs.com/">ExpressJS</a> project. My test framework of choice shall be <a href="https://mochajs.org/">MochaJS</a> with the <a href="https://www.chaijs.com/">Chai assertion library</a>.</p>
-<pre><code class="language-bash">#!/bin/bash
-# Setting up an Express TypeScript project
-mkdir ts-demo
-cd ts-demo
-curl https://raw.githubusercontent.com/github/gitignore/main/Node.gitignore -o .gitignore
-git init -q
-npm init -y
-npm install --save express
-npm install --save-dev @types/express @types/node
-npm install --save-dev chai chai-as-promised mocha ts-node ts-node-dev typescript
-npm install --save-dev @types/chai @types/chai-as-promised @types/mocha
-mkdir src
-mkdir test
-</code></pre>
-<p>We see, development has more dependencies than runtime. Note all the <code>@types</code> packages are only needed in development, so the are added to the <code>devDependencies</code> only.</p></div>
-					<hr />
- <a href="/blog/2023/05/tiptoe-in-typescript.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 31 May 2023
-<span class="divider">|</span>
-<a href="/blog/2023/05/tiptoe-in-typescript.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/typescript.html">TypeScript</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2023/05/tiptoe-in-typescript.html";
 						</script>
 					</p></p>
 				</article>
