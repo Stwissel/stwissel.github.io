@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Maven build with multiple Java versions - NotesSensei's Blog</title>
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-72033-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible"  content="chrome=1" />
+<meta http-equiv="Content-Language" content="en" />
+<meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
+<meta property="og:title"     content="wissel.net - Maven build with multiple Java versions" />
+<meta property="og:type"      content="blog" />
+<meta property="og:url"       content="https://wissel.net/blog/2024/04/maven-build-with-multiple-java-versions.html" />
+<meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
+<meta property="og:site_name" content="wissel.net" />
+<meta name="viewport"         content="width=device-width, initial-scale=1.0" />
+<meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Maven build with multiple Java versions" />
+<meta name="Author"           content="Stephan H. Wissel" />
+<meta name="ICBM"             content="1.2994, 103.8425" />
+<meta name="Copyright"        content="2002,2022 Stephan H. Wissel - Creative commons licence" />
+<meta name="twitter:site"     content="@notessensei" />
+<meta name="twitter:card"     content="summary" />
+<meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
+<meta name="description"
+	content="Maven build with multiple Java versions - Imagine, you are tasked with maintaining a Java application that needs to run on more than one Java version. You want to ensure that it compiles, tests and builds on all of them. This is our story, buckle up, there are a few moving parts The big picture We use Apache Maven to drive the project using" />
+<meta name="Keywords"
+	content="Java,WebDevelopment," />
+<meta name="Abstract"
+	content="Maven build with multiple Java versions - Imagine, you are tasked with maintaining a Java application that needs to run on more than one Java version. You want to ensure that it compiles, tests and builds on all of them. This is our story, buckle up, there are a few moving parts The big picture We use Apache Maven to drive the project using" />
+<!--[if lt IE 9]>
+		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
+
+
+<link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="https://feeds.feedburner.com/Wisselnetfeed" />
+
+<meta name="Revisit-After" content="90 Days" />
+</head>
+<body class="line-numbers">
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<a class="btn btn-navbar" data-toggle="collapse"
+				data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+				class="icon-bar"></span> <span class="icon-bar"></span>
+			</a> <a class="brand" href="/">wissel.net</a>
+			<div class="nav-collapse">
+				<ul class="nav">
+					<li><a href="/index.html">Home</a></li>
+					<li class="active"><a href="/blog/">Blog</a></li>
+					<li><a href="/blog/series.html">Series</a></li>
+					<li><a href="/blog/downloads/">Downloads</a></li>
+					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
+					<li><a href="/blog/imprint.html">About / Imprint</a></li>
+				</ul>
+				<form action="//www.google.com/cse" id="cse-search-box"
+					class="navbar-search pull-right">
+					<div>
+						<input type="hidden" name="cx"
+							value="partner-pub-4562257798204150:muo14ionenw" /> <input
+							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
+							name="q" class="search-query span2" placeholder="Search" />
+						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+<div class="navbar-spacer"></div>
+
+	<div class="container">
+    		<br />
+		<header>
+			<div id="mainsmall"  class="hero-unit">
+				<h2>wissel.net</h2>
+				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+			</div>
+		</header>
+
+     
+    <ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/">2024</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/04/">April</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
+  </li>
+</ul>
+
+		<div class="row-fluid">
+			<div class="span12">
+				
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2023/11/nginx-as-ingress-for-docker-compose.html"><i class="icon-hand-left"></i>nginx as ingress for Docker compose</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+				<article class="well well-raised">
+					<h1><small>Maven build with multiple Java versions</small></h1>
+					<hr />
+					<div><p>Imagine, you are tasked with maintaining a <a href="https://opensource.hcltechsw.com/Domino-rest-api/index.html">Java application</a> that needs to run on more than one Java version. You want to ensure that it compiles, tests and builds on all of them.<br>
+  This is our story, buckle up, there are a few moving parts</p>
+<h3>The big picture</h3>
+<ul>
+ <li>We use <a href="https://maven.apache.org/">Apache Maven</a> to drive the project using the <code>pom.xml</code></li>
+ <li>The <a href="https://maven.apache.org/plugins/maven-toolchains-plugin/">Maven Toolchains</a> plugin controls the Java versions</li>
+ <li>Using <code>&lt;properties&gt; ... &lt;/properties&gt;</code> and <a href="https://maven.apache.org/guides/introduction/introduction-to-profiles.html">Build Profiles</a> to adjust conditions for processing</li>
+ <li>Annotatiosn like <code>@Only8</code> and <code>@Only17</code> help to qualify tests</li>
+ <li>Our build tool (<a href="https://www.jenkins.io/">Jenkins</a> or <a href="https://github.com/features/actions">Github Actions</a>) will use a container provided (in our case based on <a href="https://www.redhat.com/en/blog/introducing-red-hat-universal-base-image">Redhat UBI</a>)</li>
+</ul><h3>Getting the image ready</h3>
+<p>In our image we need Java8, Java17, Maven and a <code>toolchains.xml</code> file. We will install maven in <code>/opt/maven</code> and thus the <code>toolchains.xml</code> needs to be in <code>/opt/maven/conf</code>. on your developer workstation you put it in <code>~/.m2/</code>. The <code>toolchains.xml</code> needs to have the exact path of the JDKs. Since this can vary between maintenance releases, we grab the path from an actual install (see shell script below).</p>
+<p>When you install more than one Java version you can use <code>update-alternatives --config java</code> to see the available versions. e.g</p>
+<pre><code class="language-bash">  Selection    Command
+-----------------------------------------------
+*  1           java-1.8.0-openjdk.x86_64 (/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.402.b06-2.el8.x86_64/jre/bin/java)
+ + 2           java-17-openjdk.x86_64 (/usr/lib/jvm/java-17-openjdk-17.0.10.0.7-2.el8.x86_64/bin/java)
+</code></pre>
+<p>Note: the name doesn't change per Java version, but the path contains patch levels. So we need to automate processing. We start with an template xml file which I keep in <code>~/install</code>:</p>
+<pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;toolchains&gt;
+    &lt;!-- JDK toolchains --&gt;
+    &lt;toolchain&gt;
+        &lt;!-- x86_64 --&gt;
+        &lt;type&gt;jdk&lt;/type&gt;
+        &lt;provides&gt;
+            &lt;version&gt;17&lt;/version&gt;
+            &lt;vendor&gt;openjdk&lt;/vendor&gt;
+        &lt;/provides&gt;
+        &lt;configuration&gt;
+            &lt;jdkHome&gt;openjdk17&lt;/jdkHome&gt;
+        &lt;/configuration&gt;
+    &lt;/toolchain&gt;
+
+    &lt;toolchain&gt;
+        &lt;!-- x86_64 --&gt;
+        &lt;type&gt;jdk&lt;/type&gt;
+        &lt;provides&gt;
+            &lt;version&gt;1.8&lt;/version&gt;
+            &lt;vendor&gt;openjdk&lt;/vendor&gt;
+        &lt;/provides&gt;
+        &lt;configuration&gt;
+            &lt;jdkHome&gt;openjdk8&lt;/jdkHome&gt;
+        &lt;/configuration&gt;
+    &lt;/toolchain&gt;
+&lt;/toolchains&gt;
+</code></pre>
+<p>The placeholders <code>openjdk8</code> and <code>openjdk17</code> will get replaced with the actual path. On Redhat that looks like this (note: you might need additional <code>yum</code> installed components):</p>
+<pre><code class="language-bash"># Install software packages
+yum install -y unzip zip curl nano
+
+# Java install for each version
+yum install -y java-1.8.0-openjdk-headless java-1.8.0-openjdk-devel
+yum install -y java-17-openjdk-headless java-17-openjdk-devel
+
+# Capture the java 8 version
+update-alternatives --set java java-1.8.0-openjdk.x86_64
+j8dir=$(readlink -f $(which java))
+
+# Make sure the default java is 17
+update-alternatives --set java java-17-openjdk.x86_64
+j17dir=$(readlink -f $(which java))
+
+# install maven
+mkdir -p /opt
+curl -sS -o apache-maven-3.9.6-bin.tar.gz https://dlcdn.apache.org/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.tar.gz
+tar xf apache-maven-3.9.6-bin.tar.gz -C /opt
+ln -s /opt/apache-maven-3.9.6 /opt/maven
+rm apache-maven-3.9.6-bin.tar.gz
+ln -s /opt/maven/bin/mvn /usr/bin/mvn
+
+# Create updated maven toolchains.xml file
+rm -f /opt/maven/conf/toolchains.xml
+cp ~/install/toolchains.xml /opt/maven/conf/toolchains.xml
+sed -i '' -e "s|openjdk8|$j8dir|g" /opt/maven/conf/toolchains.xml
+sed -i '' -e "s|openjdk17|$j17dir|g" /opt/maven/conf/toolchains.xml
+</code></pre>
+<h3>The <code>pom.xml</code> file</h3>
+<p>We have 3 areas we need to adjust</p>
+<ul>
+ <li><code>&lt;properties&gt;</code>: Any value you want to manipulate from the outside or want to overwrite in a profile should be in the properties section</li>
+ <li><code>&lt;plugins&gt;</code>: To activate the toolchains plugin</li>
+ <li><code>&lt;profiles&gt;</code>: to provide version specific values. We found that quite a number of dependencies require Java versions greater than eight. On Java17 we want to use those, while on Java8 sticking to the last version. The relevant parts of the <code>pom.xml</code> look like this (note: I omitted all pieces that are not relevant here, but you will need a complete <code>pom.xml</code>):</li>
+</ul>
+<pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+  &lt;properties&gt;
+    &lt;!-- Java 17 compatible values --&gt;
+    &lt;java.version&gt;17&lt;/java.version&gt;
+    &lt;mockito.version&gt;5.11.0&lt;/mockito.version&gt;
+    &lt;flexmark.version&gt;0.64.8&lt;/flexmark.version&gt;
+    &lt;saxon.version&gt;12.4&lt;/saxon.version&gt;
+    &lt;ical.version&gt;4.0.0-rc5&lt;/ical.version&gt;
+  &lt;/properties&gt;
+
+  &lt;build&gt;
+    &lt;plugins&gt;
+      &lt;plugin&gt;
+        &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+        &lt;version&gt;3.13.0&lt;/version&gt;
+        &lt;configuration&gt;
+          &lt;source&gt;${java.version}&lt;/source&gt;
+          &lt;target&gt;${java.version}&lt;/target&gt;
+        &lt;/configuration&gt;
+      &lt;/plugin&gt;
+
+      &lt;plugin&gt;
+        &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-toolchains-plugin&lt;/artifactId&gt;
+        &lt;version&gt;1.1&lt;/version&gt;
+        &lt;executions&gt;
+          &lt;execution&gt;
+            &lt;goals&gt;
+              &lt;goal&gt;toolchain&lt;/goal&gt;
+            &lt;/goals&gt;
+          &lt;/execution&gt;
+        &lt;/executions&gt;
+        &lt;configuration&gt;
+          &lt;toolchains&gt;
+            &lt;jdk&gt;
+              &lt;version&gt;${java.version}&lt;/version&gt;
+              &lt;vendor&gt;openjdk&lt;/vendor&gt;
+            &lt;/jdk&gt;
+          &lt;/toolchains&gt;
+        &lt;/configuration&gt;
+      &lt;/plugin&gt;
+    &lt;/plugins&gt;
+  &lt;/build&gt;
+
+  &lt;profiles&gt;
+    &lt;profile&gt;
+      &lt;id&gt;Java8&lt;/id&gt;
+      &lt;properties&gt;
+        &lt;!-- Java 8 compatible values --&gt;
+    &lt;java.version&gt;1.8&lt;/java.version&gt;
+    &lt;mockito.version&gt;4.11.0&lt;/mockito.version&gt;
+    &lt;flexmark.version&gt;0.62.2&lt;/flexmark.version&gt;
+    &lt;saxon.version&gt;11.6&lt;/saxon.version&gt;
+    &lt;ical.version&gt;4.0.0-rc3&lt;/ical.version&gt;
+      &lt;/properties&gt;
+    &lt;/profile&gt;
+  &lt;/profiles&gt;
+
+&lt;/project&gt;
+</code></pre>
+<p>Now you are all set. Running <code>mvn clean package</code> will process your app with Java 17, while <code>mvn clean package -PJava8</code> will process with Java 8. Note that after a maven run you need to copy the <code>target</code> directory to preserve your version.</p>
+<p>There are a few more ideas to contemplate:</p>
+<ul>
+ <li>activate the profile based on the Java version and use <code>-Djava.version=1.8</code> on the command line</li>
+ <li>Switch the <code>target</code> directory based on the Java version to e.g <code>target8</code> and <code>target17</code></li>
+ <li>In a multi-module setups you might want to conditionally include version specific child projects</li>
+</ul>
+<p>The use of <code>@Anotations</code> will be covered in another story at another time.</p>
+<p>As usual YMMV</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 16 April 2024
+<span class="divider">|</span>
+<a href="/blog/2024/04/maven-build-with-multiple-java-versions.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2024/04/maven-build-with-multiple-java-versions.html";
+						</script>
+					</p>
+				</article>
+				<a name="comments"></a>
+				<div class="well well-raised" style="text-align : center">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_e01d6620-fbcb-11ee-83f2-810c012896ec" type="button">
+		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
+	            </button>
+	            </div>
+				<div id="commentform_e01d6620-fbcb-11ee-83f2-810c012896ec"  class="collapse"></div>
+				<div class="well well-raised">
+					<h4>Comments</h4>
+					<ol id="commentList">
+						<li id="nocomments">
+							<h5>No comments yet, be the first to comment</h5>
+						</li>
+					</ol>
+				</div>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2023/11/nginx-as-ingress-for-docker-compose.html"><i class="icon-hand-left"></i>nginx as ingress for Docker compose</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+			</div>
+		</div>
+		<ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/">2024</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/04/">April</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
+  </li>
+</ul>
+
+	</div>
+	<footer>
+		<div class="container">
+			<div class="row">
+				<div class="span2">
+					<h4>About Me</h4>
+					<p>
+						I work as "Solution Director Innovation" for HCL Software. I'm based in Singapore.
+						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
+					</p>
+					<a href="//stackoverflow.com/users/131021/stwissel">
+					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
+				</a>
+				</div>
+				<div class="span2">
+					<h4>Contact</h4>
+					<ul>
+						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
+						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
+						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
+						<li><a href="https://about.me/stephan.wissel/#" title="Another identity site, nothing much here">About Me</a></li>
+						<li><a href="https://github.com/Stwissel">GitHub</a></li>
+						<li><a href="https://bitbucket.org/stwissel/">Bitbucket</a></li>
+						<li><a href="https://www.twitter.com/notessensei">Twitter</a></li>
+					</ul>
+				</div>
+				<div class="span8">
+					<h4>Disclaimer</h4>
+					<p>This site is in no way affiliated, endorsed, sanctioned,
+						supported, nor enlightened by my current or previous employers.
+						I may be an employee, but the opinions, theories, facts, etc.
+						presented here are my own and are in now way given in any official
+						capacity. In short, these are my words and this is my site, not
+						my current or former employers' - and don't even begin to think otherwise.</p>
+					<p>
+						<b>&copy; 2003 - 2023 Stephan H. Wissel - some rights reserved</b> as
+						listed here: <a rel="license"
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
+							alt="Creative Commons License" style="border-width: 0"
+							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
+						Unless otherwise labeled by its originating author, the content
+						found on this site is made available under the terms of an <a
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
+							target="_blank"
+							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
+							Creative Commons License</a>, with the exception that no rights are
+						granted -- since they are not mine to grant -- in any logo,
+						graphic design, trademarks or trade names of any type. Code
+						samples and code downloads on this site are, unless otherwise
+						labeled, made available under an <a
+							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
+							2.0</a> license. Other license models are available on written
+						request and written confirmation.
+					</p>
+				</div>
+			</div>
+		</div>
+	</footer>
+
+	<script type="text/javascript">
+		var permaLink = "https://wissel.net/blog/2024/04/maven-build-with-multiple-java-versions.html";
+	</script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
+	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
+	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
+	<script type="text/javascript" src="/blog/js2/admonition.js"></script>
+	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		_uacct = "UA-72033-1";
+		urchinTracker();
+	</script>
+	<script type="text/javascript" src="//feeds.feedburner.com/~s/Wisselnet?i=https://wissel.net/blog" charset="utf-8"></script>
+
+		<script src="/blog/js2/mustache.js"></script>
+	<script src="/blog/js2/blogcomments.js"></script>
+	<script type="text/javascript" src="/blog/js2/Markdown.Converter.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Sanitizer.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Editor.js"></script>
+	<script type="text/javascript" src="//www.google.com/recaptcha/api.js"></script>
+	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+	<script type="text/javascript">
+		var onloadCallback = function() {
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "e01d6620-fbcb-11ee-83f2-810c012896ec");
+ 		};
+	</script>
+
+</body>
+</html>
