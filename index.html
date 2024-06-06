@@ -98,6 +98,52 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2024/06/nosql-schema-design.html">NoSQL schema design</a></small></h1>
+					<hr />
+					<div><p>A question that pops up frequently in developer discussions is "how to structure your data in a NoSQL way?". To shed a light on this, we have a look at the approach invented <a href="https://www.dataversity.net/sql-at-50-a-lesson-in-how-to-stay-relevant-around-data/">50 years ago</a> and still an <a href="https://www.geeksforgeeks.org/normal-forms-in-dbms/">all time favorite</a></p>
+<h3>Normalization</h3>
+<p>In a simple order example, we are looking at four tables:</p>
+<ul>
+ <li>Customer</li>
+ <li>Product</li>
+ <li>Order</li>
+ <li>OrderEntry</li>
+</ul>
+<p><img src="/blog/images/2024/nosqlschema.png" alt="CLassic SQL schema"></p>
+<p>In this design, there are no duplicates and some simple SQL can list out all I need, for example the order value for a given order:</p>
+<pre><code class="language-sql">SELECT oi.order_id,
+       SUM(oi.quantity * p.price) AS order_total
+FROM OrderItem oi
+JOIN Product p ON oi.product_id = p.id
+GROUP BY oi.order_id
+WHERE oi.order_id = 67111;
+</code></pre>
+<p>or the revenue per customer:</p>
+<pre><code class="language-sql">SELECT c.id AS customer_id,
+       c.name AS customer_name,
+       SUM(oi.quantity * p.price) AS revenue
+FROM Customer c
+JOIN Order o ON c.id = o.customer_id
+JOIN OrderItem oi ON o.id = oi.order_id
+JOIN Product p ON oi.product_id = p.id
+GROUP BY c.id, c.name;
+</code></pre></div>
+					<hr />
+ <a href="/blog/2024/06/nosql-schema-design.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 06 June 2024
+<span class="divider">|</span>
+<a href="/blog/2024/06/nosql-schema-design.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/nosql.html">NoSQL</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2024/06/nosql-schema-design.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2024/05/devcontainers-the-fine-print.html">Development Containers - the fine print</a></small></h1>
 					<hr />
 					<div><p><a href="https://containers.dev/">Development Containers</a> are supposed to liberate your development environment from a specific local installation, like <a href="https://opencontainers.org/">container technology</a> liberated your runtimes (a.k.a <a href="https://yaml.org/">YAML</a>ed them into <a href="https://www.docker.com/">Docker</a> or <a href="https://kubernetes.io/">Kubernetes</a>).</p>
@@ -504,40 +550,6 @@ categories:  <a href="/blog/categories/github.html">GitHub</a>  <a href="/blog/c
 						</script>
 					</p></p>
 				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2023/07/handle-http-chunked-responses.html">Handle HTTP chunked responses</a></small></h1>
-					<hr />
-					<div><p>Objects <a href="https://www.youtube.com/watch?v=nFDAK8NY4JY">I need a lot of objects</a>. When dealing with APIs there is one fundamental question to answer: how much data do you want to retrieve?</p>
-<p>The old school answer: let's page results, <a href="https://retrocomputing.stackexchange.com/questions/5629/why-did-80x25-become-the-text-monitor-standard">25 at a time</a>. Then <a href="https://www.nngroup.com/articles/infinite-scrolling-tips/">infinite scrolling came along</a> and changed expectations.</p>
-<h3>I got some chunk for you</h3>
-<p>One way to operate is for the server to send all data, but using <a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding"><code>Transfer-Encoding: chunked</code></a> (<a href="https://tools.ietf.org/html/rfc9112#section-7.1">RFC 9112</a>) in the header and deliver data in several packages, aptly named chunks. A client can process each chunk on arrival to allow interactivity before data transmission concludes.</p>
-<p>However this requires adjustments on both sides. The server needs to send data with a clear delimiter, e.g. <code>\n</code> (newline) and the client needs to process the data as a stream</p>
-<h3>The usual way won't work</h3>
-<p>We typically find code like this:</p>
-<pre><code class="language-js">fetch(url)
-  .then((resp) =&gt; resp.json())
-  .then((json) =&gt; {
-    for (let row in json) {
-      addRow(json[row], parentElement);
-    }
-  });
-</code></pre>
-<p><a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API"><code>fetch</code></a> hides a lot of complexity, we need to handle when we process a chunked result as it arrives.</p></div>
-					<hr />
- <a href="/blog/2023/07/handle-http-chunked-responses.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 04 July 2023
-<span class="divider">|</span>
-<a href="/blog/2023/07/handle-http-chunked-responses.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2023/07/handle-http-chunked-responses.html";
-						</script>
-					</p></p>
-				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/all.html" title="That's a loooong list!">Older entries<i class="icon-hand-right"></i></a>
 					</li>
@@ -652,6 +664,7 @@ categories:  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href=
 						<li ><a href="/blog/categories/nodejs.html">NodeJS</a></li>
 						<li ><a href="/blog/categories/nodered.html">NodeRED</a></li>
 						<li ><a href="/blog/categories/nokia.html">Nokia</a></li>
+						<li ><a href="/blog/categories/nosql.html">NoSQL</a></li>
 						<li ><a href="/blog/categories/omnisophie.html">Omnisophie</a></li>
 						<li ><a href="/blog/categories/opensource.html">OpenSource</a></li>
 						<li ><a href="/blog/categories/pmd.html">PMD</a></li>

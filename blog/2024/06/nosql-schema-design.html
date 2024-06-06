@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>NoSQL schema design - NotesSensei's Blog</title>
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-72033-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible"  content="chrome=1" />
+<meta http-equiv="Content-Language" content="en" />
+<meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
+<meta property="og:title"     content="wissel.net - NoSQL schema design" />
+<meta property="og:type"      content="blog" />
+<meta property="og:url"       content="https://wissel.net/blog/2024/06/nosql-schema-design.html" />
+<meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
+<meta property="og:site_name" content="wissel.net" />
+<meta name="viewport"         content="width=device-width, initial-scale=1.0" />
+<meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - NoSQL schema design" />
+<meta name="Author"           content="Stephan H. Wissel" />
+<meta name="ICBM"             content="1.2994, 103.8425" />
+<meta name="Copyright"        content="2002,2022 Stephan H. Wissel - Creative commons licence" />
+<meta name="twitter:site"     content="@notessensei" />
+<meta name="twitter:card"     content="summary" />
+<meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
+<meta name="description"
+	content="NoSQL schema design - A question that pops up frequently in developer discussions is &#39;how to structure your data in a NoSQL way?&#39;. To shed a light on this, we have a look at the approach invented 50 years ago and still an all time favorite Normalization In a simple order example, we are looking at four tables: Customer P" />
+<meta name="Keywords"
+	content="NoSQL,WebDevelopment," />
+<meta name="Abstract"
+	content="NoSQL schema design - A question that pops up frequently in developer discussions is &#39;how to structure your data in a NoSQL way?&#39;. To shed a light on this, we have a look at the approach invented 50 years ago and still an all time favorite Normalization In a simple order example, we are looking at four tables: Customer P" />
+<!--[if lt IE 9]>
+		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
+
+
+<link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="https://feeds.feedburner.com/Wisselnetfeed" />
+
+<meta name="Revisit-After" content="90 Days" />
+</head>
+<body class="line-numbers">
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<a class="btn btn-navbar" data-toggle="collapse"
+				data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+				class="icon-bar"></span> <span class="icon-bar"></span>
+			</a> <a class="brand" href="/">wissel.net</a>
+			<div class="nav-collapse">
+				<ul class="nav">
+					<li><a href="/index.html">Home</a></li>
+					<li class="active"><a href="/blog/">Blog</a></li>
+					<li><a href="/blog/series.html">Series</a></li>
+					<li><a href="/blog/downloads/">Downloads</a></li>
+					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
+					<li><a href="/blog/imprint.html">About / Imprint</a></li>
+				</ul>
+				<form action="//www.google.com/cse" id="cse-search-box"
+					class="navbar-search pull-right">
+					<div>
+						<input type="hidden" name="cx"
+							value="partner-pub-4562257798204150:muo14ionenw" /> <input
+							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
+							name="q" class="search-query span2" placeholder="Search" />
+						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+<div class="navbar-spacer"></div>
+
+	<div class="container">
+    		<br />
+		<header>
+			<div id="mainsmall"  class="hero-unit">
+				<h2>wissel.net</h2>
+				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+			</div>
+		</header>
+
+     
+    <ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/">2024</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/06/">June</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/nosql.html">NoSQL</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
+  </li>
+</ul>
+
+		<div class="row-fluid">
+			<div class="span12">
+				
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2024/05/devcontainers-the-fine-print.html"><i class="icon-hand-left"></i>Development Containers - the fine print</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+				<article class="well well-raised">
+					<h1><small>NoSQL schema design</small></h1>
+					<hr />
+					<div><p>A question that pops up frequently in developer discussions is "how to structure your data in a NoSQL way?". To shed a light on this, we have a look at the approach invented <a href="https://www.dataversity.net/sql-at-50-a-lesson-in-how-to-stay-relevant-around-data/">50 years ago</a> and still an <a href="https://www.geeksforgeeks.org/normal-forms-in-dbms/">all time favorite</a></p>
+<h3>Normalization</h3>
+<p>In a simple order example, we are looking at four tables:</p>
+<ul>
+ <li>Customer</li>
+ <li>Product</li>
+ <li>Order</li>
+ <li>OrderEntry</li>
+</ul>
+<p><img src="/blog/images/2024/nosqlschema.png" alt="CLassic SQL schema"></p>
+<p>In this design, there are no duplicates and some simple SQL can list out all I need, for example the order value for a given order:</p>
+<pre><code class="language-sql">SELECT oi.order_id,
+       SUM(oi.quantity * p.price) AS order_total
+FROM OrderItem oi
+JOIN Product p ON oi.product_id = p.id
+GROUP BY oi.order_id
+WHERE oi.order_id = 67111;
+</code></pre>
+<p>or the revenue per customer:</p>
+<pre><code class="language-sql">SELECT c.id AS customer_id,
+       c.name AS customer_name,
+       SUM(oi.quantity * p.price) AS revenue
+FROM Customer c
+JOIN Order o ON c.id = o.customer_id
+JOIN OrderItem oi ON o.id = oi.order_id
+JOIN Product p ON oi.product_id = p.id
+GROUP BY c.id, c.name;
+</code></pre><svg xmlns="http://www.w3.org/2000/svg" class="adm-hidden">
+ <symbol id="adm-danger">
+  <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+   <path d="m8.5 4h8.5l-4 8h3l-7.1 9.5 1.6-8.5h-1.5z" fill="currentColor" />
+  </svg>
+ </symbol>
+</svg>
+<h3>Not so fast</h3>
+<p>When looking at real diagrams, you will find duplicate information all over:</p>
+<ul>
+ <li>The Order table will have an address and a total</li>
+ <li>The OrderEntries has a description and a price</li>
+</ul>
+<p>The reason is twofold: one is performance (a flat query for the total field runs better than a <code>SUM(..)</code> over a <code>JOIN</code>) and secondly, the seeming redundancy (price in OrderEntry, address in Order) actually isn't redundant, but shows different data:</p>
+<p>The base table (Customer, Product) show "value as it is current", while the derived tables (Order, OrderEntry) show "value as it is business actual" or "point-in-time". Your system might have a service to determine a sales price based on many factors, so a <code>JOIN</code> won't do, a customer might move, but the old orders, being a business record, <strong>MUST NOT</strong> show the new address - that would be altering a legal "document".</p>
+<p>Which brings us to the insight:</p>
+<div class="adm-block adm-danger">
+ <div class="adm-heading">
+  <svg class="adm-icon">
+   <use xlink:href="#adm-danger" />
+  </svg><span>Insight</span>
+ </div>
+ <div class="adm-body">
+  <p>Business runs on documents, not tables</p>
+ </div>
+</div>
+<h3>The NoSQL way</h3>
+<p>Accnowledging the business nature of <em>point-in-time</em> data a NoSQL document might look like that:</p>
+<pre><code class="language-json">{
+  "id": 123,
+  "date": "2019-01-01",
+  "address": "3rd rock from the sun",
+  "customer": {
+    "id": 456,
+    "name": "John Doe"
+  },
+  "items": [
+    {
+      "id": 789,
+      "name": "light saber",
+      "quantity": 2,
+      "price": 10.0
+    },
+    {
+      "id": 101,
+      "name": "Force training manual",
+      "quantity": 1,
+      "price": 20.0
+    }
+  ]
+}
+</code></pre>
+<p><img src="/blog/images/2024/nosqljson.png" alt="NoSQL object"></p>
+<div class="adm-block adm-danger">
+ <div class="adm-heading">
+  <svg class="adm-icon">
+   <use xlink:href="#adm-danger" />
+  </svg><span>Lookup instead of JOIN</span>
+ </div>
+ <div class="adm-body">
+  <p>Instead of <code>JOIN</code>ing tables, information is looked up (Some <a href="https://en.wikipedia.org/wiki/COBOL">languages</a> even had a special <code>MOVE CORRESPONDING</code> instruction specifically for that) at creation time.</p>
+  <p>A <strong>business function</strong> needs to take care when values in the base information changes (e.g. update all order adresses where the status indicates they are affected).</p>
+ </div>
+</div>
+<h3>No light without shadow</h3>
+<p><a href="https://en.wikipedia.org/wiki/SQL">SQL</a>, wich is a total misnomer once you look at the <code>INSERT</code>, <code>UPDATE</code> and <code>DELETE</code> statements (or <code>ALTER TABLE</code> for that matter), has the advantage of little fragmentation (<a href="https://en.wikipedia.org/wiki/PL/SQL">PL/SQL</a>, <a href="https://en.wikipedia.org/wiki/Transact-SQL">T-SQL</a>) and the ability to pack the business functions into triggers.</p>
+<p>In the NoSQL world wheels are reinvented daily: <a href="https://www.mongodb.com/docs/manual/crud/">MQL</a>, <a href="https://docs.couchdb.org/en/stable/intro/tour.html#running-a-mango-query">mango</a>, <a href="https://help.hcltechsw.com/dom_designer/14.0.0/basic/dql_overview.html">DQL</a>, <a href="https://goessner.net/articles/JsonPath/">JSONPath</a> and <a href="https://en.wikipedia.org/wiki/Document-oriented_database">more</a>.</p>
+<p>So choose your persistance wisely</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 06 June 2024
+<span class="divider">|</span>
+<a href="/blog/2024/06/nosql-schema-design.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/nosql.html">NoSQL</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2024/06/nosql-schema-design.html";
+						</script>
+					</p>
+				</article>
+				<a name="comments"></a>
+				<div class="well well-raised" style="text-align : center">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_0d152760-23ce-11ef-ab74-87542543d935" type="button">
+		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
+	            </button>
+	            </div>
+				<div id="commentform_0d152760-23ce-11ef-ab74-87542543d935"  class="collapse"></div>
+				<div class="well well-raised">
+					<h4>Comments</h4>
+					<ol id="commentList">
+						<li id="nocomments">
+							<h5>No comments yet, be the first to comment</h5>
+						</li>
+					</ol>
+				</div>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2024/05/devcontainers-the-fine-print.html"><i class="icon-hand-left"></i>Development Containers - the fine print</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+			</div>
+		</div>
+		<ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/">2024</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/06/">June</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/nosql.html">NoSQL</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
+  </li>
+</ul>
+
+	</div>
+	<footer>
+		<div class="container">
+			<div class="row">
+				<div class="span2">
+					<h4>About Me</h4>
+					<p>
+						I work as "Solution Director Innovation" for HCL Software. I'm based in Singapore.
+						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
+					</p>
+					<a href="//stackoverflow.com/users/131021/stwissel">
+					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
+				</a>
+				</div>
+				<div class="span2">
+					<h4>Contact</h4>
+					<ul>
+						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
+						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
+						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
+						<li><a href="https://about.me/stephan.wissel/#" title="Another identity site, nothing much here">About Me</a></li>
+						<li><a href="https://github.com/Stwissel">GitHub</a></li>
+						<li><a href="https://bitbucket.org/stwissel/">Bitbucket</a></li>
+						<li><a href="https://www.twitter.com/notessensei">Twitter</a></li>
+					</ul>
+				</div>
+				<div class="span8">
+					<h4>Disclaimer</h4>
+					<p>This site is in no way affiliated, endorsed, sanctioned,
+						supported, nor enlightened by my current or previous employers.
+						I may be an employee, but the opinions, theories, facts, etc.
+						presented here are my own and are in now way given in any official
+						capacity. In short, these are my words and this is my site, not
+						my current or former employers' - and don't even begin to think otherwise.</p>
+					<p>
+						<b>&copy; 2003 - 2024 Stephan H. Wissel - some rights reserved</b> as
+						listed here: <a rel="license"
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
+							alt="Creative Commons License" style="border-width: 0"
+							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
+						Unless otherwise labeled by its originating author, the content
+						found on this site is made available under the terms of an <a
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
+							target="_blank"
+							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
+							Creative Commons License</a>, with the exception that no rights are
+						granted -- since they are not mine to grant -- in any logo,
+						graphic design, trademarks or trade names of any type. Code
+						samples and code downloads on this site are, unless otherwise
+						labeled, made available under an <a
+							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
+							2.0</a> license. Other license models are available on written
+						request and written confirmation.
+					</p>
+				</div>
+			</div>
+		</div>
+	</footer>
+
+	<script type="text/javascript">
+		var permaLink = "https://wissel.net/blog/2024/06/nosql-schema-design.html";
+	</script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
+	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
+	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
+	<script type="text/javascript" src="/blog/js2/admonition.js"></script>
+	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		_uacct = "UA-72033-1";
+		urchinTracker();
+	</script>
+	<script type="text/javascript" src="//feeds.feedburner.com/~s/Wisselnet?i=https://wissel.net/blog" charset="utf-8"></script>
+
+		<script src="/blog/js2/mustache.js"></script>
+	<script src="/blog/js2/blogcomments.js"></script>
+	<script type="text/javascript" src="/blog/js2/Markdown.Converter.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Sanitizer.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Editor.js"></script>
+	<script type="text/javascript" src="//www.google.com/recaptcha/api.js"></script>
+	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+	<script type="text/javascript">
+		var onloadCallback = function() {
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "0d152760-23ce-11ef-ab74-87542543d935");
+ 		};
+	</script>
+
+</body>
+</html>
