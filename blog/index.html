@@ -98,6 +98,44 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2024/06/how-deep-do-you-authenticate.html">How deep do you authenticate?</a></small></h1>
+					<hr />
+					<div><p>Accessing applications usually entails some kind of identity. Some part(s) of your application provide identity (called <a href="https://www.cloudflare.com/learning/access-management/what-is-an-identity-provider/">IdP</a>), while other's consume it (paraphrased from <a href="https://en.wikipedia.org/wiki/Captain_Obvious">Captain Obvious</a>). Identity could be provided from a record or document in your or another database, an LDAP directory, an <a href="https://auth0.com/docs/authenticate/protocols/openid-connect-protocol">OICD</a> or a 3d party like your eMail provider or social account, or with some hoops and loops <a href="https://webauthn.io/">Webauthn</a> (a.k.a <a href="https://fidoalliance.org/passkeys/">passkey</a>).</p>
+<p>The question is: how deep does it go?</p>
+<h3>A typical archtecture</h3>
+<p>For simplicity I'm skipping load balancers and cache facilities</p>
+<p><a href="/blog/images/2024/ApplicationTiers.png"><img src="/blog/images/2024/ApplicationTiers640.png" alt="ApplicationTiers 0-4"></a></p>
+<p>Each tier might or might not have its own identity, lets have a closer look</p>
+<h3>(0) User tier</h3>
+<p>When is authentication information stored at the user tier (think Browser, app or OS) and how immediate is it? Like a username/password or a passkey private key. Those can be exchanged for a token. Or is it a session cookie or an access_token allowing immediate access? How are those credentials protected and/or synced? How vulnerable are they on physical access?</p>
+<h3>(1) Access tier</h3>
+<p>A.k.a the firewall or VPN Does it assert a valid user? Are the credentials the same or different from your application. Does your access tier include IP ranges or geo location as part of identity? I've seen identity requirements 100% on VPN, but rarely on firewalls</p>
+<h3>(2) Web tier</h3>
+<p>TYpically you find a static web server like <a href="https://nginx.org/en/">nginx</a>, <a href="https://httpd.apache.org/">Apache http</a>, the <a href="https://kubernetes.io/docs/concepts/services-networking/ingress/">Kubernetes Ingress</a> or a service by <a href="https://www.cloudflare.com/network-services/products/">a cloud provider</a>.</p>
+<p>Even when all your static resources are served by your application tier, you can identify your web tier where requests flow through. When you can establish identity there (and reject invalid ones), you have one more protective layer. nginx+ can do that <a href="https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-jwt-authentication/">with JWT</a></p>
+<h3>(3) Application tier</h3>
+<p>YOur application could be a <a href="https://en.wikipedia.org/wiki/Monolithic_application">monolith</a>, <a href="https://www.ufried.com/blog/microservices_fallacy_10_microliths/">microlith</a>, <a href="https://microservices.io/">microservice</a>, follow a <a href="https://www.oreilly.com/library/view/software-architecture-patterns/9781491971437/ch01.html">layered architecture</a>, be <a href="https://blog.knoldus.com/message-driven-architecture/">message driven</a>, <a href="https://www.confluent.io/resources/ebook/designing-event-driven-systems/">event driven</a> or be contemporary with the <a href="https://amzn.to/4bx0qG5">hexagonal architecture</a>. In any case your user facing access will require identity.</p>
+<p>It becomes blurry when your user facing services then call out to other services (via http or message/event), what identity are they using to communicate: user, service or both? You might start looking at <a href="https://auth0.com/docs/manage-users/access-control/rbac">RBAC</a>. In any case, this needs to be planned carefully</p>
+<h3>(4) Persistence / database tier</h3>
+<p>The prevalent examples you find online , especially in the realm of <a href="https://www.google.com/search?q=dbaas">DBaaS</a>, use just one service identity to access your persistence (file system, database , <a href="https://wiki.lspace.org/Imps">imp</a>, etc.). So database logs won't tell you who accessed data (RW/RO) and you won't have a chance to implement <a href="https://www.immuta.com/guides/data-security-101/row-level-security/">row level security</a>.</p>
+<p>Interestingly this isn't a limitation of databases, they all come with user management, but rather the headache maintaining it or setup <a href="https://www.postgresql.org/docs/9.4/auth-methods.html">another auth</a></p>
+<p>When we designed the <a href="https://opensource.hcltechsw.com/Domino-rest-api/">Domino REST API</a>, we decided to stick to the <a href="https://jwt.io">JWT</a> based user identity all the way to the database. <a href="https://couchdb.apache.org/">Apache CouchDB</a> also allows for <a href="https://docs.couchdb.org/en/stable/api/server/authn.html#jwt-authentication">JWT based authentication</a>. It was lacking the ability to point to an IdP's jwks, so I contributed the <a href="https://github.com/beyonddemise/couchdb-idp-updater">CouchDB IdP updater</a>, go check it out.</p>
+<p>How do you use identity?</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 23 June 2024
+<span class="divider">|</span>
+<a href="/blog/2024/06/how-deep-do-you-authenticate.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/development.html">Development</a>  <a href="/blog/categories/identitymanagement.html">Identity Management</a>  <a href="/blog/categories/jwt.html">JWT</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2024/06/how-deep-do-you-authenticate.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2024/06/nosql-schema-design.html">NoSQL schema design</a></small></h1>
 					<hr />
 					<div><p>A question that pops up frequently in developer discussions is "how to structure your data in a NoSQL way?". To shed a light on this, we have a look at the approach invented <a href="https://www.dataversity.net/sql-at-50-a-lesson-in-how-to-stay-relevant-around-data/">50 years ago</a> and still an <a href="https://www.geeksforgeeks.org/normal-forms-in-dbms/">all time favorite</a></p>
@@ -400,7 +438,7 @@ Stephan H Wissel</a> on 29 August 2023
 <span class="divider">|</span>
 <a href="/blog/2023/08/fun-with-azure-active-directory-and-jwt.html#comments">Comments (4)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/jwt.html">JWT</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+categories:  <a href="/blog/categories/identitymanagement.html">Identity Management</a>  <a href="/blog/categories/jwt.html">JWT</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2023/08/fun-with-azure-active-directory-and-jwt.html";
@@ -514,42 +552,6 @@ categories:  <a href="/blog/categories/container.html">Container</a>  <a href="/
 						</script>
 					</p></p>
 				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2023/07/deploy-nodejs-with-private-packages-in-docker.html">Deploy private npm packages into private containers using github actions</a></small></h1>
-					<hr />
-					<div><p><a href="https://github.com/features/actions">GitHub Actions</a> are rapidly becoming my favorite CI environment. Their <a href="https://github.com/marketplace?type=actions">marketplace</a> has an action for everything. Sometimes it takes a little trial and error before things work smoothly. This is one of that stories.</p>
-<h3>Authentication is everything</h3>
-<p>Imagine the following scenario: you have developed a set of private TypeScript (or JavaScript) packages and have <a href="https://docs.github.com/en/packages/quickstart">successfully deployed</a> them to the <strong>private</strong> GitHub npm registry under the name <code>@myfamousorg/coolpackage</code> - where <code>myfamousorg</code> must match the repository owner (org or individual).</p>
-<p>Now you want to use them in your application. That application shall be packed in a Container and made available in GitHub's private registry. All that automated using GitHub Actions.</p>
-<h3>You will need a PAT (or two)</h3>
-<p>In GitHub, head to the <a href="https://github.com/settings/tokens">Personal access tokens / Tokens (classic)</a> section of your developer settings in profile. You need to <a href="https://github.com/settings/tokens/new">create tokens</a> that allow you to handle packages.</p>
-<p><img src="/blog/images/2023/GitHubToken.png" alt="GitHub Tokens"></p>
-<p>There are two places where you want to enter that token:</p>
-<ul>
- <li>In <code>https://github.com/[your-org]/[your-repo]/settings/secrets/actions</code> create a key <code>GIT_NPM_PACKAGES</code> and copy your PAT there. You can pick any name, you will need it in the GitHub action later</li>
- <li>In <code>~/.npmrc</code>, your global settings for npm in your home directory. Don't put the info in the <code>.npmrc</code> in your git project.</li>
-</ul>
-<pre><code class="language-properties">prefix=/home/[your username]/.npm-packages
-@myfamousorg:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=[here goes the token]
-
-</code></pre>
-<p>The <code>prefix</code> property allows you to run `npm install -g [package] without admin access.</p></div>
-					<hr />
- <a href="/blog/2023/07/deploy-nodejs-with-private-packages-in-docker.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 16 July 2023
-<span class="divider">|</span>
-<a href="/blog/2023/07/deploy-nodejs-with-private-packages-in-docker.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/github.html">GitHub</a>  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2023/07/deploy-nodejs-with-private-packages-in-docker.html";
-						</script>
-					</p></p>
-				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/all.html" title="That's a loooong list!">Older entries<i class="icon-hand-right"></i></a>
 					</li>
@@ -645,6 +647,7 @@ categories:  <a href="/blog/categories/github.html">GitHub</a>  <a href="/blog/c
 						<li ><a href="/blog/categories/ibm.html">IBM</a></li>
 						<li ><a href="/blog/categories/ibmlotus.html">IBM - Lotus</a></li>
 						<li ><a href="/blog/categories/ibmnotes.html">IBM Notes</a></li>
+						<li ><a href="/blog/categories/identitymanagement.html">Identity Management</a></li>
 						<li ><a href="/blog/categories/intercultural.html">Intercultural</a></li>
 						<li ><a href="/blog/categories/java.html">Java</a></li>
 						<li ><a href="/blog/categories/javascript.html">JavaScript</a></li>
