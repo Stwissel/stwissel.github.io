@@ -98,6 +98,74 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2024/08/simplify-junit-tests-with-custom-annotations.html">Simplify JUnit tests with custom annotations</a></small></h1>
+					<hr />
+					<div><p>In the beginning <a href="https://en.wikipedia.org/wiki/Test-driven_development">was a test</a>, that provided to be vital, but not sufficient. In modern application development we encounter:</p>
+<ul>
+ <li>Unit Tests: testing a single function or a tuple of related functions</li>
+ <li>Module Tests: testing bigger parts of your application, without actual external dependencies</li>
+ <li>Integration or End-to-End tests: a.k.a life firing exercise</li>
+</ul>
+<p>This entry isn't a discussion about the merits of <a href="https://en.wikipedia.org/wiki/Software_development_process">how much and when</a> test, but making tests easy to setup and distinguish</p>
+<h3>The manual way</h3>
+<p>We typically use <a href="https://site.mockito.org/">Mockito</a>, <a href="https://vertx.io/">vert.x</a> and <a href="https://rest-assured.io/">REST-assured</a> in our tests, so a typical test class would look like this:</p>
+<pre><code class="language-java">@ExtendWith(VertxExtension.class, MockitoExtension.class, MyCustomExtension.class})
+@Tag("UnitTest")
+class SomethingTest {
+
+  @Test
+  does_it_blend() {
+    // Test goes here
+  }
+}
+</code></pre>
+<p>It is just two lines, but everywhere. You can simplify it by creating your own annotation.</p>
+<h3>The custom annotation</h3>
+<pre><code class="language-java">@Target({TYPE, METHOD, ANNOTATION_TYPE})
+@Retention(RUNTIME)
+@ExtendWith({VertxExtension.class, MockitoExtension.class, KeepMockFactoryExtension.class})
+@Tag("UnitTest")
+public @interface UnitTest {
+  // no action needed here, JUnit use only!
+}
+</code></pre>
+<p>Now you simply use:</p>
+<pre><code class="language-java">@UnitTest
+class SomethingTest {
+
+  @Test
+  does_it_blend() {
+    // Test goes here
+  }
+}
+</code></pre>
+<p>While this looks like minor cosmetic, it allows to control test extensions from a single place, your annotation source. Repeat that process for the other test types (ModuleTests, IntegrationTests, PerformanceTests etc.) you want to use.</p>
+<p>In your <a href="https://maven.apache.org/guides/introduction/introduction-to-the-pom.html">pom.xml</a>, in the build-plugins section you can use the tag to ensure all your unit test, but only them execute on <code>mvn test</code> and the others on <code>mvn verify</code></p>
+<pre><code class="language-xml">&lt;plugin&gt;
+  &lt;!-- Run UNIT and MODULE tests, no backend calls --&gt;
+  &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+  &lt;artifactId&gt;maven-surefire-plugin&lt;/artifactId&gt;
+  &lt;configuration&gt;
+    &lt;groups&gt;UnitTest,ModuleTest&lt;/groups&gt;
+  &lt;/configuration&gt;
+&lt;/plugin&gt;
+</code></pre>
+<p>As usual YMMV</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 05 August 2024
+<span class="divider">|</span>
+<a href="/blog/2024/08/simplify-junit-tests-with-custom-annotations.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/junit.html">jUnit</a>  <a href="/blog/categories/tdd.html">TDD</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2024/08/simplify-junit-tests-with-custom-annotations.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2024/07/hexagonal-architecture-meets-maven.html">Hexagonal Architecture meets Maven</a></small></h1>
 					<hr />
 					<div><p>Know your <a href="https://www.geeksforgeeks.org/java-design-patterns/">patterns</a>, so you don't re-invent the wheel. Patterns are like <a href="https://www.lego.com/en-us/categories/adults-welcome">LEGO</a>: You can combine them to larger patterns. One of those is the <a href="https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)">Hexagonal Achitecture</a> officially called:</p>
@@ -506,47 +574,6 @@ categories:  <a href="/blog/categories/software.html">Software</a>
 						</script>
 					</p></p>
 				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2023/07/passphrase-generator.html">Passphrase Generator</a></small></h1>
-					<hr />
-					<div><p>Passphrases are considered easier to remember for humans and harder to crack for machines, famously explained in <a href="https://xkcd.com/936/">this comic</a>:</p>
-<p><a href="https://xkcd.com/936/"><img src="https://imgs.xkcd.com/comics/password_strength.png" alt="Pasword strength"></a></p>
-<p>The challenge then is to have a good word list to pick from. There are <a href="https://wordcounter.io//blog/how-many-words-does-the-average-person-know">various measurements</a> on how many words one person would <strong>use</strong> which could be as low as a thousand. Note there is a huge difference between <em>recognize</em> and <em>use</em>.</p>
-<h3>Passphrases and dices</h3>
-<p>In a recent <a href="https://chaos.social/@stw/110756503711275152">Toot exchange</a> <a href="https://chaos.social/@ospalh">ospalh</a> pointed me to <a href="https://en.wikipedia.org/wiki/Diceware">Diceware</a>, a method to use <a href="https://diceware.dmuth.org">dice rolls</a> and a word list to determine a passphrase. Usually one uses the regular 6 sides dices and 5 dices, which lets you pick from a 7776 member word list. The <a href="https://www.eff.org">EFF</a> published <a href="https://www.eff.org/deeplinks/2018/08/dragon-con-diceware">a version using the 20-sided dice</a> from <a href="https://en.wikipedia.org/wiki/Dungeons_%26_Dragons">Dungeon and Dragons</a> as well as various word lists.</p>
-<h3>Wordlists</h3>
-<p>An attacker who doesn't know that they are dealing with a passphrase, using conventional cracking methods stands little chance to decipher the phrase. However as the defender you must assume, they know your word list, so it is imperative to keep it long, while maintaining the odds to remember (in any case you can use some <a href="https://bitwarden.com">extra brain</a>). SOme of the word lists you can find online:</p>
-<ul>
- <li><a href="https://theworld.com/%7Ereinhold/diceware.wordlist.asc">Arnold Reinhold's Diceware list</a>, 1995, 7776 entries</li>
- <li><a href="https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt">EFF list from 2016</a>, 2016, 7776 entries (introduced <a href="https://www.eff.org/deeplinks/2016/07/new-wordlists-random-passphrases">here</a>)</li>
- <li><a href="https://www.eff.org/deeplinks/2018/08/dragon-con-diceware">Fandom generated word lists</a> by EFF for the 20 side dice</li>
- <li><a href="https://www.eff.org/files/2018/08/29/gameofthrones_8k-2018.txt">Game of Thrones</a>, 2018, 4000 entries</li>
- <li><a href="https://www.eff.org/files/2018/08/29/harrypotter_8k_3column-txt.txt">Harry Potter</a>, 2018, 4000 entries</li>
- <li><a href="https://www.eff.org/files/2018/08/29/memory-alpha_8k_2018.txt">Star Track</a>, 2018, 4000 entries</li>
- <li><a href="https://www.eff.org/files/2018/08/29/starwars_8k_2018.txt">Star Wars</a>, 2018, 4000 entries</li>
-</ul>
-<h3>Math.random() to replace dices</h3>
-<p>Let's roll (pun intended) our own passphrase generator. To make it a little more fun these are our constrains:</p>
-<ul>
- <li>passphrase has 5 elements: 4 words and one 6 digit number</li>
- <li>the number appears at a random position</li>
- <li>elements are separated by a <code>-</code> (for readability, in active use you might just filter them out)</li>
-</ul></div>
-					<hr />
- <a href="/blog/2023/07/passphrase-generator.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 24 July 2023
-<span class="divider">|</span>
-<a href="/blog/2023/07/passphrase-generator.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2023/07/passphrase-generator.html";
-						</script>
-					</p></p>
-				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/all.html" title="That's a loooong list!">Older entries<i class="icon-hand-right"></i></a>
 					</li>
@@ -646,6 +673,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 						<li ><a href="/blog/categories/intercultural.html">Intercultural</a></li>
 						<li ><a href="/blog/categories/java.html">Java</a></li>
 						<li ><a href="/blog/categories/javascript.html">JavaScript</a></li>
+						<li ><a href="/blog/categories/junit.html">jUnit</a></li>
 						<li ><a href="/blog/categories/jwt.html">JWT</a></li>
 						<li ><a href="/blog/categories/k8s.html">K8S</a></li>
 						<li ><a href="/blog/categories/learning.html">Learning</a></li>
@@ -676,6 +704,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 						<li ><a href="/blog/categories/socialbusiness.html">SocialBusiness</a></li>
 						<li ><a href="/blog/categories/software.html">Software</a></li>
 						<li ><a href="/blog/categories/sywtbadd.html">SYWTBADD</a></li>
+						<li ><a href="/blog/categories/tdd.html">TDD</a></li>
 						<li ><a href="/blog/categories/technology.html">Technology</a></li>
 						<li ><a href="/blog/categories/travel.html">Travel</a></li>
 						<li ><a href="/blog/categories/twins.html">Twins</a></li>

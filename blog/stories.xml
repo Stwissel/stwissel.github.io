@@ -6,7 +6,66 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 24 Jul 2024 14:24:15 +0000</pubdate>
+	<pubdate>Mon, 05 Aug 2024 18:21:14 +0000</pubdate>
+<item>
+	<title>Simplify JUnit tests with custom annotations</title>
+	<description>&lt;p&gt;In the beginning &lt;a href="https://en.wikipedia.org/wiki/Test-driven_development"&gt;was a test&lt;/a&gt;, that provided to be vital, but not sufficient. In modern application development we encounter:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;Unit Tests: testing a single function or a tuple of related functions&lt;/li&gt;
+ &lt;li&gt;Module Tests: testing bigger parts of your application, without actual external dependencies&lt;/li&gt;
+ &lt;li&gt;Integration or End-to-End tests: a.k.a life firing exercise&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This entry isn't a discussion about the merits of &lt;a href="https://en.wikipedia.org/wiki/Software_development_process"&gt;how much and when&lt;/a&gt; test, but making tests easy to setup and distinguish&lt;/p&gt;
+&lt;h3&gt;The manual way&lt;/h3&gt;
+&lt;p&gt;We typically use &lt;a href="https://site.mockito.org/"&gt;Mockito&lt;/a&gt;, &lt;a href="https://vertx.io/"&gt;vert.x&lt;/a&gt; and &lt;a href="https://rest-assured.io/"&gt;REST-assured&lt;/a&gt; in our tests, so a typical test class would look like this:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;@ExtendWith(VertxExtension.class, MockitoExtension.class, MyCustomExtension.class})
+@Tag("UnitTest")
+class SomethingTest {
+
+  @Test
+  does_it_blend() {
+    // Test goes here
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;It is just two lines, but everywhere. You can simplify it by creating your own annotation.&lt;/p&gt;
+&lt;h3&gt;The custom annotation&lt;/h3&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;@Target({TYPE, METHOD, ANNOTATION_TYPE})
+@Retention(RUNTIME)
+@ExtendWith({VertxExtension.class, MockitoExtension.class, KeepMockFactoryExtension.class})
+@Tag("UnitTest")
+public @interface UnitTest {
+  // no action needed here, JUnit use only!
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now you simply use:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;@UnitTest
+class SomethingTest {
+
+  @Test
+  does_it_blend() {
+    // Test goes here
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;While this looks like minor cosmetic, it allows to control test extensions from a single place, your annotation source. Repeat that process for the other test types (ModuleTests, IntegrationTests, PerformanceTests etc.) you want to use.&lt;/p&gt;
+&lt;p&gt;In your &lt;a href="https://maven.apache.org/guides/introduction/introduction-to-the-pom.html"&gt;pom.xml&lt;/a&gt;, in the build-plugins section you can use the tag to ensure all your unit test, but only them execute on &lt;code&gt;mvn test&lt;/code&gt; and the others on &lt;code&gt;mvn verify&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-xml"&gt;&amp;lt;plugin&amp;gt;
+  &amp;lt;!-- Run UNIT and MODULE tests, no backend calls --&amp;gt;
+  &amp;lt;groupId&amp;gt;org.apache.maven.plugins&amp;lt;/groupId&amp;gt;
+  &amp;lt;artifactId&amp;gt;maven-surefire-plugin&amp;lt;/artifactId&amp;gt;
+  &amp;lt;configuration&amp;gt;
+    &amp;lt;groups&amp;gt;UnitTest,ModuleTest&amp;lt;/groups&amp;gt;
+  &amp;lt;/configuration&amp;gt;
+&amp;lt;/plugin&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2024/08/simplify-junit-tests-with-custom-annotations.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>7dcc0100-5352-11ef-986c-b512cf968114</guid>
+	<pubDate>05 August 2024</pubDate>
+
+</item>
 <item>
 	<title>Hexagonal Architecture meets Maven</title>
 	<description>&lt;p&gt;Know your &lt;a href="https://www.geeksforgeeks.org/java-design-patterns/"&gt;patterns&lt;/a&gt;, so you don't re-invent the wheel. Patterns are like &lt;a href="https://www.lego.com/en-us/categories/adults-welcome"&gt;LEGO&lt;/a&gt;: You can combine them to larger patterns. One of those is the &lt;a href="https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)"&gt;Hexagonal Achitecture&lt;/a&gt; officially called:&lt;/p&gt;
@@ -327,37 +386,6 @@ sdk install mvn
 	<author>Stephan H. Wissel</author>
 	<guid>77462770-40a2-11ee-9a9a-81b1521576ba</guid>
 	<pubDate>21 August 2023</pubDate>
-
-</item>
-<item>
-	<title>Passphrase Generator</title>
-	<description>&lt;p&gt;Passphrases are considered easier to remember for humans and harder to crack for machines, famously explained in &lt;a href="https://xkcd.com/936/"&gt;this comic&lt;/a&gt;:&lt;/p&gt;
-&lt;p&gt;&lt;a href="https://xkcd.com/936/"&gt;&lt;img src="https://imgs.xkcd.com/comics/password_strength.png" alt="Pasword strength"&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;The challenge then is to have a good word list to pick from. There are &lt;a href="https://wordcounter.io//blog/how-many-words-does-the-average-person-know"&gt;various measurements&lt;/a&gt; on how many words one person would &lt;strong&gt;use&lt;/strong&gt; which could be as low as a thousand. Note there is a huge difference between &lt;em&gt;recognize&lt;/em&gt; and &lt;em&gt;use&lt;/em&gt;.&lt;/p&gt;
-&lt;h3&gt;Passphrases and dices&lt;/h3&gt;
-&lt;p&gt;In a recent &lt;a href="https://chaos.social/@stw/110756503711275152"&gt;Toot exchange&lt;/a&gt; &lt;a href="https://chaos.social/@ospalh"&gt;ospalh&lt;/a&gt; pointed me to &lt;a href="https://en.wikipedia.org/wiki/Diceware"&gt;Diceware&lt;/a&gt;, a method to use &lt;a href="https://diceware.dmuth.org"&gt;dice rolls&lt;/a&gt; and a word list to determine a passphrase. Usually one uses the regular 6 sides dices and 5 dices, which lets you pick from a 7776 member word list. The &lt;a href="https://www.eff.org"&gt;EFF&lt;/a&gt; published &lt;a href="https://www.eff.org/deeplinks/2018/08/dragon-con-diceware"&gt;a version using the 20-sided dice&lt;/a&gt; from &lt;a href="https://en.wikipedia.org/wiki/Dungeons_%26_Dragons"&gt;Dungeon and Dragons&lt;/a&gt; as well as various word lists.&lt;/p&gt;
-&lt;h3&gt;Wordlists&lt;/h3&gt;
-&lt;p&gt;An attacker who doesn't know that they are dealing with a passphrase, using conventional cracking methods stands little chance to decipher the phrase. However as the defender you must assume, they know your word list, so it is imperative to keep it long, while maintaining the odds to remember (in any case you can use some &lt;a href="https://bitwarden.com"&gt;extra brain&lt;/a&gt;). SOme of the word lists you can find online:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;&lt;a href="https://theworld.com/%7Ereinhold/diceware.wordlist.asc"&gt;Arnold Reinhold's Diceware list&lt;/a&gt;, 1995, 7776 entries&lt;/li&gt;
- &lt;li&gt;&lt;a href="https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt"&gt;EFF list from 2016&lt;/a&gt;, 2016, 7776 entries (introduced &lt;a href="https://www.eff.org/deeplinks/2016/07/new-wordlists-random-passphrases"&gt;here&lt;/a&gt;)&lt;/li&gt;
- &lt;li&gt;&lt;a href="https://www.eff.org/deeplinks/2018/08/dragon-con-diceware"&gt;Fandom generated word lists&lt;/a&gt; by EFF for the 20 side dice&lt;/li&gt;
- &lt;li&gt;&lt;a href="https://www.eff.org/files/2018/08/29/gameofthrones_8k-2018.txt"&gt;Game of Thrones&lt;/a&gt;, 2018, 4000 entries&lt;/li&gt;
- &lt;li&gt;&lt;a href="https://www.eff.org/files/2018/08/29/harrypotter_8k_3column-txt.txt"&gt;Harry Potter&lt;/a&gt;, 2018, 4000 entries&lt;/li&gt;
- &lt;li&gt;&lt;a href="https://www.eff.org/files/2018/08/29/memory-alpha_8k_2018.txt"&gt;Star Track&lt;/a&gt;, 2018, 4000 entries&lt;/li&gt;
- &lt;li&gt;&lt;a href="https://www.eff.org/files/2018/08/29/starwars_8k_2018.txt"&gt;Star Wars&lt;/a&gt;, 2018, 4000 entries&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;Math.random() to replace dices&lt;/h3&gt;
-&lt;p&gt;Let's roll (pun intended) our own passphrase generator. To make it a little more fun these are our constrains:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;passphrase has 5 elements: 4 words and one 6 digit number&lt;/li&gt;
- &lt;li&gt;the number appears at a random position&lt;/li&gt;
- &lt;li&gt;elements are separated by a &lt;code&gt;-&lt;/code&gt; (for readability, in active use you might just filter them out)&lt;/li&gt;
-&lt;/ul&gt;</description>
-	<link>2023/07/passphrase-generator.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>20817830-29fb-11ee-8ef8-8bb241062b76</guid>
-	<pubDate>24 July 2023</pubDate>
 
 </item>
 
