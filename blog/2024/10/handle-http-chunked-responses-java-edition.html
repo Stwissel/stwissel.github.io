@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Handle HTTP chunked responses - Java edition - NotesSensei's Blog</title>
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-72033-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible"  content="chrome=1" />
+<meta http-equiv="Content-Language" content="en" />
+<meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
+<meta property="og:title"     content="wissel.net - Handle HTTP chunked responses - Java edition" />
+<meta property="og:type"      content="blog" />
+<meta property="og:url"       content="https://wissel.net/blog/2024/10/handle-http-chunked-responses-java-edition.html" />
+<meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
+<meta property="og:site_name" content="wissel.net" />
+<meta name="viewport"         content="width=device-width, initial-scale=1.0" />
+<meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Handle HTTP chunked responses - Java edition" />
+<meta name="Author"           content="Stephan H. Wissel" />
+<meta name="ICBM"             content="1.2994, 103.8425" />
+<meta name="Copyright"        content="2002,2022 Stephan H. Wissel - Creative commons licence" />
+<meta name="twitter:site"     content="@notessensei" />
+<meta name="twitter:card"     content="summary" />
+<meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
+<meta name="description"
+	content="Handle HTTP chunked responses - Java edition - The Domino REST API delivers collections using chunked transfer encoding. This has the advantage, that you can process results as they arrive. It produces the challenge that the usual client side code is designed to first wait for completion of the request. I wrote about the JavaScript solution a wh" />
+<meta name="Keywords"
+	content="Java,WebDevelopment," />
+<meta name="Abstract"
+	content="Handle HTTP chunked responses - Java edition - The Domino REST API delivers collections using chunked transfer encoding. This has the advantage, that you can process results as they arrive. It produces the challenge that the usual client side code is designed to first wait for completion of the request. I wrote about the JavaScript solution a wh" />
+<!--[if lt IE 9]>
+		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
+
+
+<link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="https://feeds.feedburner.com/Wisselnetfeed" />
+
+<meta name="Revisit-After" content="90 Days" />
+</head>
+<body class="line-numbers">
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<a class="btn btn-navbar" data-toggle="collapse"
+				data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+				class="icon-bar"></span> <span class="icon-bar"></span>
+			</a> <a class="brand" href="/">wissel.net</a>
+			<div class="nav-collapse">
+				<ul class="nav">
+					<li><a href="/index.html">Home</a></li>
+					<li class="active"><a href="/blog/">Blog</a></li>
+					<li><a href="/blog/series.html">Series</a></li>
+					<li><a href="/blog/downloads/">Downloads</a></li>
+					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
+					<li><a href="/blog/imprint.html">About / Imprint</a></li>
+				</ul>
+				<form action="//www.google.com/cse" id="cse-search-box"
+					class="navbar-search pull-right">
+					<div>
+						<input type="hidden" name="cx"
+							value="partner-pub-4562257798204150:muo14ionenw" /> <input
+							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
+							name="q" class="search-query span2" placeholder="Search" />
+						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+<div class="navbar-spacer"></div>
+
+	<div class="container">
+    		<br />
+		<header>
+			<div id="mainsmall"  class="hero-unit">
+				<h2>wissel.net</h2>
+				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+			</div>
+		</header>
+
+     
+    <ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/">2024</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/10/">October</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
+  </li>
+</ul>
+
+		<div class="row-fluid">
+			<div class="span12">
+				
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2024/08/quarkus-in-multimodule-projects.html"><i class="icon-hand-left"></i>Quarkus in Multi-Module projects</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+				<article class="well well-raised">
+					<h1><small>Handle HTTP chunked responses - Java edition</small></h1>
+					<hr />
+					<div><p>The <a href="https://opensource.hcltechsw.com/Domino-rest-api/">Domino REST API</a> delivers collections using <a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding">chunked transfer encoding</a>. This has the advantage, that you can process results as they arrive. It produces the challenge that the usual client side code is designed to first wait for completion of the request. I wrote about the JavaScript solution <a href="/blog/2023/07/handle-http-chunked-responses.html">a while ago</a>, this is the Java edition.</p>
+<h3>Client choices</h3>
+<p>In JavaScript land the choice of client is simple: <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API">the Fetch API</a>. In Java we have some choices:</p>
+<ul>
+ <li>Since Java 11 there's a <a href="https://openjdk.org/groups/net/httpclient/intro.html">HttpClient</a> in the JDK</li>
+ <li>A very popular library is provided by the <a href="https://hc.apache.org/httpcomponents-client-5.4.x/index.html">Apache HTTP components</a></li>
+ <li>The SPRING framework, undisputed king of Java web frameworks, offers its <a href="https://docs.spring.io/spring-framework/reference/integration/rest-clients.html">own sset of clients</a></li>
+ <li>The vert.x framework, which we used to build <a href="https://opensource.hcltechsw.com/Domino-rest-api/references/security/index.html?h=vert.x">DRAPI</a>, features its <a href="https://vertx.io/docs/vertx-web-client/java/">own client</a></li>
+</ul>
+<p>There are probably more around. This article uses the JDK <a href="https://openjdk.org/groups/net/httpclient/intro.html">HttpClient</a>. I'll skip the parts with Authentication and TLS handling, check the <a href="https://github.com/Stwissel/java11-httpclient-chunked">full example</a> for details.</p>
+<h3>How it works</h3>
+<p>First we create an <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpClient.html">java.net.http.HttpClient</a>. It takes care of the http version and the TLS context.</p>
+<pre><code class="language-java">HttpClient getClient(SSLContext sslContext) {
+  return HttpClient.newBuilder()
+           .sslContext(sslContext)
+           .build();
+}
+</code></pre>
+<p>Then we build and execute the request. The <em>magic</em> is the <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpResponse.BodySubscriber.html">BodySubscriber</a> (more on that below).</p>
+<pre><code class="language-java">Integer runGetRequest(HttpClient client, String url, String authHeader, BodySubscriber subscriber) throws Exception {
+  HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Authorization", authHeader)
+            .GET()
+            .build();
+
+  CompletableFuture&lt;Integer&gt; response =
+          client.sendAsync(request, responseInfo -&gt; subscriber)
+          .whenComplete((r, t) -&gt; System.out.println("Response: " + r.statusCode()))
+          .thenApply(HttpResponse::body);
+
+  return response.get();
+}
+</code></pre><p>We will see that the call returns the size of data returned, not the individual records. Before digging into the BodySubscriber, we need to decide what to do with the identified "lines". In my example I use a <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Consumer.html">java.util.function.Consumer</a> that takes in the line String and does whatever processing is required. In a high volume system you want to queue this if the processing is non-trivial.</p>
+<pre><code class="language-java">Consumer&lt;String&gt; getConsumer() {
+return new Consumer&lt;String&gt;() {
+        int count = 0;
+
+         @Override
+         public void accept(String t) {
+            // SKip the first and last line
+            if ("]".equals(t) || "[".equals(t)) {
+               return;
+            }
+            String actual = t.endsWith(",") ? t.substring(0, t.length() - 1) : t;
+            JsonObject json = JsonParser.parseString(actual)
+                  .getAsJsonObject().get("@meta").getAsJsonObject();
+
+            // This is where the action happens
+            System.out.println(json.get("unid").getAsString());
+            count++;
+            System.out.println("Count: " + count);
+          }
+    };
+}
+</code></pre>
+<p>Now we are ready to implement the <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpResponse.BodySubscriber.html">BodySubscriber</a>. When you are familiar with the <a href="https://en.wikipedia.org/wiki/Observer_pattern">Observer pattern</a> The BodySubscriber is easy to understand, it follows the <a href="https://reactivex.io/">reactive approach</a> implementing <code>onSubscribe</code>, <code>onNext</code>, <code>onError</code> and <code>onComplete</code>.</p>
+<pre><code class="language-java">public class DocumentSubscriber implements BodySubscriber&lt;Integer&gt; {
+
+    public DocumentSubscriber(Consumer&lt;String&gt; dataSink) {
+        this.dataSink = dataSink;
+    }
+
+    final Consumer&lt;String&gt; dataSink;
+    final CompletableFuture&lt;Integer&gt; result = new CompletableFuture&lt;&gt;();
+    Flow.Subscription subscription;
+    int totalsize = 0;
+    String current = "";
+
+    @Override
+    public void onSubscribe(Flow.Subscription subscription) {
+        this.subscription = subscription;
+        // Poll the data source
+        this.subscription.request(1);
+
+    }
+
+    @Override
+    public void onNext(List&lt;ByteBuffer&gt; buffers) {
+        int size = buffers.stream().mapToInt(ByteBuffer::remaining).sum();
+        byte[] bytes = new byte[size];
+        int offset = 0;
+        for (ByteBuffer buffer : buffers) {
+            int remaining = buffer.remaining();
+            buffer.get(bytes, offset, remaining);
+            offset += remaining;
+            // record size
+            totalsize += remaining;
+        }
+        String chunk = this.current + new String(bytes, StandardCharsets.UTF_8);
+        String[] lines = chunk.split("\n");
+        var lineCounter = lines.length - 1;
+        // capture the last line for the next chunk
+        this.current = lines[lineCounter];
+        for (int i = 0; i &lt; lineCounter; i++) {
+            var oneLine = lines[i];
+            dataSink.accept(oneLine);
+        }
+        this.subscription.request(1);
+    }
+
+    @Override
+    public void onError(Throwable throwable) {
+        result.completeExceptionally(throwable);
+    }
+
+    @Override
+    public void onComplete() {
+        dataSink.accept(current);
+        result.complete(totalsize);
+    }
+
+    @Override
+    public CompletionStage&lt;Integer&gt; getBody() {
+        return result;
+    }
+}
+</code></pre>
+<p>There are a few interesting aspects to pay attention to:</p>
+<ul>
+ <li>The DRAPI JSON result is send line by line bundled in chunks, so the separator is <code>\n</code></li>
+ <li>a chunk doesn't care for the records returned and can stop in the middle of a line to continue in the next chunk</li>
+ <li>So after converting the bytes into a string and splitting it into lines, the last line needs to be memorized for the next chunk</li>
+ <li>On completion there's one line left to produce, so the <code>onComplete</code> has a call to the Consumer</li>
+</ul>
+<p>Check the <a href="https://github.com/Stwissel/java11-httpclient-chunked">full example</a>.</p>
+<p>As usual YMMV</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 09 October 2024
+<span class="divider">|</span>
+<a href="/blog/2024/10/handle-http-chunked-responses-java-edition.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2024/10/handle-http-chunked-responses-java-edition.html";
+						</script>
+					</p>
+				</article>
+				<a name="comments"></a>
+				<div class="well well-raised" style="text-align : center">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_49d83e50-8632-11ef-acaa-2d2a7a285b28" type="button">
+		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
+	            </button>
+	            </div>
+				<div id="commentform_49d83e50-8632-11ef-acaa-2d2a7a285b28"  class="collapse"></div>
+				<div class="well well-raised">
+					<h4>Comments</h4>
+					<ol id="commentList">
+						<li id="nocomments">
+							<h5>No comments yet, be the first to comment</h5>
+						</li>
+					</ol>
+				</div>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2024/08/quarkus-in-multimodule-projects.html"><i class="icon-hand-left"></i>Quarkus in Multi-Module projects</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+			</div>
+		</div>
+		<ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/">2024</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/10/">October</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
+  </li>
+</ul>
+
+	</div>
+	<footer>
+		<div class="container">
+			<div class="row">
+				<div class="span2">
+					<h4>About Me</h4>
+					<p>
+						I work as "Solution Director Innovation" for HCL Software. I'm based in Singapore.
+						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
+					</p>
+					<a href="//stackoverflow.com/users/131021/stwissel">
+					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
+				</a>
+				</div>
+				<div class="span2">
+					<h4>Contact</h4>
+					<ul>
+						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
+						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
+						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
+						<li><a href="https://about.me/stephan.wissel/#" title="Another identity site, nothing much here">About Me</a></li>
+						<li><a href="https://github.com/Stwissel">GitHub</a></li>
+						<li><a href="https://bitbucket.org/stwissel/">Bitbucket</a></li>
+						<li><a href="https://www.twitter.com/notessensei">Twitter</a></li>
+					</ul>
+				</div>
+				<div class="span8">
+					<h4>Disclaimer</h4>
+					<p>This site is in no way affiliated, endorsed, sanctioned,
+						supported, nor enlightened by my current or previous employers.
+						I may be an employee, but the opinions, theories, facts, etc.
+						presented here are my own and are in now way given in any official
+						capacity. In short, these are my words and this is my site, not
+						my current or former employers' - and don't even begin to think otherwise.</p>
+					<p>
+						<b>&copy; 2003 - 2024 Stephan H. Wissel - some rights reserved</b> as
+						listed here: <a rel="license"
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
+							alt="Creative Commons License" style="border-width: 0"
+							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
+						Unless otherwise labeled by its originating author, the content
+						found on this site is made available under the terms of an <a
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
+							target="_blank"
+							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
+							Creative Commons License</a>, with the exception that no rights are
+						granted -- since they are not mine to grant -- in any logo,
+						graphic design, trademarks or trade names of any type. Code
+						samples and code downloads on this site are, unless otherwise
+						labeled, made available under an <a
+							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
+							2.0</a> license. Other license models are available on written
+						request and written confirmation.
+					</p>
+				</div>
+			</div>
+		</div>
+	</footer>
+
+	<script type="text/javascript">
+		var permaLink = "https://wissel.net/blog/2024/10/handle-http-chunked-responses-java-edition.html";
+	</script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
+	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
+	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
+	<script type="text/javascript" src="/blog/js2/admonition.js"></script>
+	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		_uacct = "UA-72033-1";
+		urchinTracker();
+	</script>
+	<script type="text/javascript" src="//feeds.feedburner.com/~s/Wisselnet?i=https://wissel.net/blog" charset="utf-8"></script>
+
+		<script src="/blog/js2/mustache.js"></script>
+	<script src="/blog/js2/blogcomments.js"></script>
+	<script type="text/javascript" src="/blog/js2/Markdown.Converter.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Sanitizer.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Editor.js"></script>
+	<script type="text/javascript" src="//www.google.com/recaptcha/api.js"></script>
+	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+	<script type="text/javascript">
+		var onloadCallback = function() {
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "49d83e50-8632-11ef-acaa-2d2a7a285b28");
+ 		};
+	</script>
+
+</body>
+</html>

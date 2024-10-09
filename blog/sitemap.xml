@@ -6,7 +6,49 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 28 Aug 2024 13:21:13 +0000</pubdate>
+	<pubdate>Wed, 09 Oct 2024 12:53:17 +0000</pubdate>
+<item>
+	<title>Handle HTTP chunked responses - Java edition</title>
+	<description>&lt;p&gt;The &lt;a href="https://opensource.hcltechsw.com/Domino-rest-api/"&gt;Domino REST API&lt;/a&gt; delivers collections using &lt;a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding"&gt;chunked transfer encoding&lt;/a&gt;. This has the advantage, that you can process results as they arrive. It produces the challenge that the usual client side code is designed to first wait for completion of the request. I wrote about the JavaScript solution &lt;a href="/blog/2023/07/handle-http-chunked-responses.html"&gt;a while ago&lt;/a&gt;, this is the Java edition.&lt;/p&gt;
+&lt;h3&gt;Client choices&lt;/h3&gt;
+&lt;p&gt;In JavaScript land the choice of client is simple: &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API"&gt;the Fetch API&lt;/a&gt;. In Java we have some choices:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;Since Java 11 there's a &lt;a href="https://openjdk.org/groups/net/httpclient/intro.html"&gt;HttpClient&lt;/a&gt; in the JDK&lt;/li&gt;
+ &lt;li&gt;A very popular library is provided by the &lt;a href="https://hc.apache.org/httpcomponents-client-5.4.x/index.html"&gt;Apache HTTP components&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;The SPRING framework, undisputed king of Java web frameworks, offers its &lt;a href="https://docs.spring.io/spring-framework/reference/integration/rest-clients.html"&gt;own sset of clients&lt;/a&gt;&lt;/li&gt;
+ &lt;li&gt;The vert.x framework, which we used to build &lt;a href="https://opensource.hcltechsw.com/Domino-rest-api/references/security/index.html?h=vert.x"&gt;DRAPI&lt;/a&gt;, features its &lt;a href="https://vertx.io/docs/vertx-web-client/java/"&gt;own client&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;There are probably more around. This article uses the JDK &lt;a href="https://openjdk.org/groups/net/httpclient/intro.html"&gt;HttpClient&lt;/a&gt;. I'll skip the parts with Authentication and TLS handling, check the &lt;a href="https://github.com/Stwissel/java11-httpclient-chunked"&gt;full example&lt;/a&gt; for details.&lt;/p&gt;
+&lt;h3&gt;How it works&lt;/h3&gt;
+&lt;p&gt;First we create an &lt;a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpClient.html"&gt;java.net.http.HttpClient&lt;/a&gt;. It takes care of the http version and the TLS context.&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;HttpClient getClient(SSLContext sslContext) {
+  return HttpClient.newBuilder()
+           .sslContext(sslContext)
+           .build();
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Then we build and execute the request. The &lt;em&gt;magic&lt;/em&gt; is the &lt;a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpResponse.BodySubscriber.html"&gt;BodySubscriber&lt;/a&gt; (more on that below).&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;Integer runGetRequest(HttpClient client, String url, String authHeader, BodySubscriber subscriber) throws Exception {
+  HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Authorization", authHeader)
+            .GET()
+            .build();
+
+  CompletableFuture&amp;lt;Integer&amp;gt; response =
+          client.sendAsync(request, responseInfo -&amp;gt; subscriber)
+          .whenComplete((r, t) -&amp;gt; System.out.println("Response: " + r.statusCode()))
+          .thenApply(HttpResponse::body);
+
+  return response.get();
+}
+&lt;/code&gt;&lt;/pre&gt;</description>
+	<link>2024/10/handle-http-chunked-responses-java-edition.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>49d83e50-8632-11ef-acaa-2d2a7a285b28</guid>
+	<pubDate>09 October 2024</pubDate>
+
+</item>
 <item>
 	<title>Quarkus in Multi-Module projects</title>
 	<description>&lt;p&gt;You are developing a web application using &lt;a href="https://quarkus.io/"&gt;Quarkus&lt;/a&gt; that consists of multiple (micro)services and a bunch of supporting libraries. Since maven modules provide sufficient isolation, you decide to use a parent project to keep dependency versions and parameters in sync and a &lt;a href="https://www.baeldung.com/java-maven-reactor"&gt;Maven Reactor&lt;/a&gt; to build them together.&lt;/p&gt;
@@ -333,53 +375,6 @@ sdk install mvn
 	<author>Stephan H. Wissel</author>
 	<guid>59234250-69c9-11ee-ba4c-cfc559bbd988</guid>
 	<pubDate>13 October 2023</pubDate>
-
-</item>
-<item>
-	<title>Fun with Azure Active Directory &amp; JWT</title>
-	<description>&lt;p&gt;&lt;a href="https://en.wikipedia.org/wiki/Active_Directory"&gt;Active Directory&lt;/a&gt; has been the dominant standard for IT directories, even if it isn't &lt;a href="/blog/2014/01/a-short-history-of-directory-trees.html"&gt;the prettiest tree&lt;/a&gt; in the forrest. It's younger sibling &lt;a href="https://en.wikipedia.org/wiki/Microsoft_Azure_Active_Directory"&gt;~~Azure Active Directory~~ Entra ID&lt;/a&gt; is a big player in cloud based &lt;a href="https://en.wikipedia.org/wiki/Identity_provider"&gt;Identity Providers (IdP)&lt;/a&gt;. Unsurprisingly it behaves differently than the gold standard &lt;a href="https://www.keycloak.org/"&gt;KeyCloak&lt;/a&gt;&lt;/p&gt;
-&lt;h3&gt;JWT expectations&lt;/h3&gt;
-&lt;p&gt;A &lt;a href="https://en.wikipedia.org/wiki/JSON_Web_Token"&gt;Json Web Token (JWT)&lt;/a&gt; payload is a &lt;strong&gt;very&lt;/strong&gt; losely definded &lt;a href="https://en.wikipedia.org/wiki/JSON"&gt;JSON&lt;/a&gt; object with various claims. There is only a minimal consent of properties":&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-json"&gt;{
-  "iss": "https://where-it-came-from",
-  "audience": "https://where-it-should-be-valid",
-  "iat": "DATE/TIME -&amp;gt; issued at",
-  "exp": "DATE/TIME -&amp;gt; expiry",
-  "scope": "space separated list of scopes",
-  "email": "user's email"
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;The whole thing is (un)defined in &lt;a href="https://datatracker.ietf.org/doc/html/rfc7519"&gt;RFC7519&lt;/a&gt;, sufficiently loose, so anyone can claim to be standard compliant and nothing is interoperable (just like &lt;a href="https://datatracker.ietf.org/doc/html/rfc5545"&gt;ical&lt;/a&gt;). There is a &lt;a href="https://www.iana.org/assignments/jwt/jwt.xhtml"&gt;list of known claims&lt;/a&gt;, but RFC7519 states: "&lt;em&gt;None of the claims&lt;br&gt;
-   defined below are intended to be mandatory to use or implement in all&lt;br&gt;
-   cases, but rather they provide a starting point for a set of useful,&lt;br&gt;
-   interoperable claims.&lt;/em&gt;"&lt;/p&gt;
-&lt;p&gt;To ease validation of signatures, one can use an URL &lt;code&gt;.../.well-known/openid-configuration&lt;/code&gt; which provides a number of needed properties:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;various endpoint URLs for authentication and token exchange&lt;/li&gt;
- &lt;li&gt;&lt;code&gt;issuer&lt;/code&gt;: The value corresponding to the &lt;code&gt;iss&lt;/code&gt; property in a JWT&lt;/li&gt;
- &lt;li&gt;&lt;code&gt;jwks_uri&lt;/code&gt;: URL to read the public key to validate signatures&lt;/li&gt;
- &lt;li&gt;&lt;code&gt;scopes_supported&lt;/code&gt;: what scopes does the API support&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;Azure - same but different&lt;/h3&gt;
-&lt;p&gt;When you setup &lt;a href="https://help.hcltechsw.com/domino/12.0.2/admin/secu_config_http_bearer_auth_using_oidc_c.html"&gt;Domino for JWT&lt;/a&gt; you need a series of specific conditions. The interesting parts from the documentation:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;&lt;em&gt;One of the JWT's "aud" (audience) claims must match the Domino Internet Site's host name&lt;/em&gt;&lt;/li&gt;
- &lt;li&gt;&lt;em&gt;JWTs must contain a "iss" (issuer) claim matching the "issuer" returned from the OIDC provider's .well-known/openid-configuration endpoint&lt;/em&gt;&lt;/li&gt;
- &lt;li&gt;&lt;em&gt;JWTs must contain a "scope" claim that includes "Domino.user.all"&lt;/em&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;When you follow &lt;a href="https://opensource.hcltechsw.com/Domino-rest-api/howto/IdP/configuringAD.html"&gt;KEEP's how to configure Azure AD&lt;/a&gt; you will find a set of pain points, in no specific order:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;You can't remove claims you don't need&lt;/li&gt;
- &lt;li&gt;Azure AD will not issue a &lt;code&gt;scope&lt;/code&gt; claim, but an &lt;code&gt;scp&lt;/code&gt; claim&lt;/li&gt;
- &lt;li&gt;The &lt;code&gt;aud&lt;/code&gt; claim is fixed to the "Application ID URI"&lt;/li&gt;
- &lt;li&gt;The &lt;code&gt;iss&lt;/code&gt; claim in a token does not match the &lt;code&gt;issuer&lt;/code&gt; property from &lt;code&gt;well-known/openid-configuration&lt;/code&gt;&lt;/li&gt;
- &lt;li&gt;The &lt;code&gt;jwks_uri&lt;/code&gt; URL does not return an &lt;code&gt;alg&lt;/code&gt; property for the algorythm (nor did I find any way to request an &lt;a href="https://en.wikipedia.org/wiki/Elliptic-curve_cryptography"&gt;Elliptic-curve&lt;/a&gt; signer)&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;So there's tons of fun to be had with Azure ~~Active Directory~~ Entra ID&lt;/p&gt;</description>
-	<link>2023/08/fun-with-azure-active-directory-and-jwt.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>0fd1b040-465c-11ee-8527-1ded1f8f3d81</guid>
-	<pubDate>29 August 2023</pubDate>
 
 </item>
 
