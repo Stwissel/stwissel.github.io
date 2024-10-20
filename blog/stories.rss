@@ -6,7 +6,30 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 09 Oct 2024 12:57:36 +0000</pubdate>
+	<pubdate>Sun, 20 Oct 2024 14:07:52 +0000</pubdate>
+<item>
+	<title>One-Off IdP with KeyCloak</title>
+	<description>&lt;p&gt;When end-2-end testing applications that use an &lt;a href="https://en.wikipedia.org/wiki/Identity_provider"&gt;IdP&lt;/a&gt;, an IdP needs to be in a known state to make test repeatable.&lt;/p&gt;
+&lt;p&gt;Typically a container is used, with a configuration that needs to be reset before (and after) a run. Restoring the IdP configuration isn't ideal, since addring new test cases (e.g. adding a user with different properties to check application behavior). I propose a different approach: One-off IdP&lt;/p&gt;
+&lt;h3&gt;Container without persistence&lt;/h3&gt;
+&lt;p&gt;I start with an empty deployment of &lt;a href="https://www.keycloak.org/"&gt;KeyCloak&lt;/a&gt; running in a docker container.&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-shell"&gt;#!/bin/bash
+#Run a clean KeyCloak
+docker run --rm -p 8080:8080 \
+       --name testcloak \
+       -e KEYCLOAK_ADMIN=admin \
+       -e KEYCLOAK_ADMIN_PASSWORD=password \
+       quay.io/keycloak/keycloak:latest start-dev
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The &lt;code&gt;--rm&lt;/code&gt; parameter ensures that the container is discarded after use. There is &lt;strong&gt;no&lt;/strong&gt; persistence flag (&lt;code&gt;--mount&lt;/code&gt;), so when the container goes down, all data perishes (and that's intendet).&lt;/p&gt;
+&lt;h3&gt;Configuration sequence&lt;/h3&gt;
+&lt;p&gt;The empty KeyCloak only knows the realm &lt;code&gt;master&lt;/code&gt; and the user &lt;code&gt;admin&lt;/code&gt;. To turn it into a fully functional IdP we need to configure it. Since we want this process to be repeatable we shall use &lt;a href="https://www.keycloak.org/docs-api/latest/rest-api/index.html"&gt;Keycloak's REST API&lt;/a&gt;. The documentation is complete, including an &lt;a href="https://www.openapis.org/"&gt;OpenAPI&lt;/a&gt; spec, but in a dictionary style, so all is good when you know what you are looking for. To learn what is needed the browser development tools while using the admin UI teach us the what.&lt;/p&gt;</description>
+	<link>2024/10/onetime-idp-with-keycloak.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>83111210-8eba-11ef-9eab-1f7495f5460d</guid>
+	<pubDate>20 October 2024</pubDate>
+
+</item>
 <item>
 	<title>Handle HTTP chunked responses - Java edition</title>
 	<description>&lt;p&gt;The &lt;a href="https://opensource.hcltechsw.com/Domino-rest-api/"&gt;Domino REST API&lt;/a&gt; delivers collections using &lt;a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding"&gt;chunked transfer encoding&lt;/a&gt;. This has the advantage, that you can process results as they arrive. It produces the challenge that the usual client side code is designed to first wait for completion of the request. I wrote about the JavaScript solution &lt;a href="/blog/2023/07/handle-http-chunked-responses.html"&gt;a while ago&lt;/a&gt;, this is the Java edition.&lt;/p&gt;
@@ -334,47 +357,6 @@ GROUP BY c.id, c.name;
 	<author>Stephan H. Wissel</author>
 	<guid>c5cd81d0-83ab-11ee-a943-5f6e43c4acd6</guid>
 	<pubDate>15 November 2023</pubDate>
-
-</item>
-<item>
-	<title>Quarkus and GraalVM starter</title>
-	<description>&lt;p&gt;When &lt;a href="https://www.java.com/en/"&gt;Java&lt;/a&gt; is one of the languanges in your portfolio, you might have heard of &lt;a href="https://quarkus.io/"&gt;Quarkus&lt;/a&gt;, an alternative to &lt;a href="https://spring.io/projects/spring-boot"&gt;Spring Boot&lt;/a&gt; build on top of &lt;a href="https://vertx.io"&gt;vert.x&lt;/a&gt; and &lt;a href="https://www.graalvm.org/"&gt;GraalVM&lt;/a&gt;, a polyglot runtime for Java and other languages.&lt;/p&gt;
-&lt;p&gt;This article describes the getting started that worked for me.&lt;/p&gt;
-&lt;h3&gt;Moving parts&lt;/h3&gt;
-&lt;p&gt;The fist hurdle to overcome is to install all the bits and pieces. There are plenty of versions (Java 11 - Java 21) and methods (maven, CLI, packet managers), so it con be confusing what to pick. I tried most of them and created a mess and a deep appreciation for the "reset to snapshot" feature afforded by virtual machines. Instructions work for macOS, Linux or &lt;a href="https://www.graalvm.org/"&gt;Linux on Windows&lt;/a&gt;.Here we go:&lt;/p&gt;
-&lt;ol&gt;
- &lt;li&gt;install &lt;a href="https://sdkman.io/"&gt;SdkMan&lt;/a&gt;.&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;The tool helps to keep your software development kits under control. From their website:&lt;/p&gt;
-&lt;p&gt;&lt;em&gt;"Meet SDKMAN! ? your reliable companion for effortlessly managing multiple Software Development Kits on Unix systems. Imagine having different versions of SDKs and needing a stress-free way to switch between them. SDKMAN! steps in with its easy-to-use Command Line Interface (CLI) and API."&lt;/em&gt;&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-bash"&gt;curl -s "https://get.sdkman.io" | bash
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;You can thank me later. Side note: there are 16 different JDK offerings that can be installed, we are spoiled &lt;a href="https://thedecisionlab.com/reference-guide/economics/the-paradox-of-choice"&gt;for choices&lt;/a&gt;&lt;/p&gt;
-&lt;ol&gt;
- &lt;li&gt;install &lt;a href="https://www.graalvm.org/"&gt;GraalVM&lt;/a&gt;&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;Currently, as of time of writing, there are three GraalVM distributions available. The Open Source, community supported &lt;a href="https://github.com/oracle/graal/"&gt;GraalVM Community Edition&lt;/a&gt;, the commercial, Oracle supported &lt;a href="https://www.graalvm.org/downloads/"&gt;Oracle GraalVM&lt;/a&gt; which requires a license in production and the ReedHat backed &lt;a href="https://github.com/graalvm/mandrel"&gt;Mandrel&lt;/a&gt;. Mandrel is advertised as "specifically to support Quarkus". The Java 21 version was not yet available on sdkman, so I used the community edition. To stick with Mandrel I will use the container build option, later more on that&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-bash"&gt;# List SDKs
-sdk list java
-# install GraalVM
-sdk install java 21-graaalce
-&lt;/code&gt;&lt;/pre&gt;
-&lt;ol&gt;
- &lt;li&gt;Install &lt;a href="https://quarkus.io/"&gt;Quarkus&lt;/a&gt;&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;This will install the Quarkus CLI and for good measure &lt;a href="https://maven.apache.org"&gt;Apache Maven&lt;/a&gt;. The Quarkus CLI makes a &lt;a href="https://quarkus.io/guides/ide-tooling"&gt;pleasant developer experience&lt;/a&gt;&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-bash"&gt;sdk install quarkus
-sdk install mvn
-&lt;/code&gt;&lt;/pre&gt;
-&lt;ol&gt;
- &lt;li&gt;Install &lt;a href="https://www.docker.com/"&gt;Docker&lt;/a&gt;&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;You can use &lt;a href="https://www.docker.com/products/docker-desktop/"&gt;Docker desktop&lt;/a&gt; (required a license for larger organisations) or &lt;a href="https://rancherdesktop.io/"&gt;Rancher Desktop&lt;/a&gt; (which also handles Kubernetes), &lt;a href="https://podman-desktop.io/"&gt;Podman Desktop&lt;/a&gt;, any of &lt;a href="https://alternativeto.net/browse/search/?q=Docker"&gt;the alternatives&lt;/a&gt; or the command line. New to Docker? There's &lt;a href="https://www.google.com/search?q=how+to+install+docker"&gt;plenty of fish&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;Now we are good to go. Skipping the &lt;a href="https://quarkus.io/get-started/"&gt;Code with Quarkus&lt;/a&gt; tutorial lets build a n app in java and native put it into a container&lt;/p&gt;</description>
-	<link>2023/10/quarkus-and-graalvm-starter.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>59234250-69c9-11ee-ba4c-cfc559bbd988</guid>
-	<pubDate>13 October 2023</pubDate>
 
 </item>
 

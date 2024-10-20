@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>One-Off IdP with KeyCloak - NotesSensei's Blog</title>
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-72033-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible"  content="chrome=1" />
+<meta http-equiv="Content-Language" content="en" />
+<meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
+<meta property="og:title"     content="wissel.net - One-Off IdP with KeyCloak" />
+<meta property="og:type"      content="blog" />
+<meta property="og:url"       content="https://wissel.net/blog/2024/10/onetime-idp-with-keycloak.html" />
+<meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
+<meta property="og:site_name" content="wissel.net" />
+<meta name="viewport"         content="width=device-width, initial-scale=1.0" />
+<meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - One-Off IdP with KeyCloak" />
+<meta name="Author"           content="Stephan H. Wissel" />
+<meta name="ICBM"             content="1.2994, 103.8425" />
+<meta name="Copyright"        content="2002,2022 Stephan H. Wissel - Creative commons licence" />
+<meta name="twitter:site"     content="@notessensei" />
+<meta name="twitter:card"     content="summary" />
+<meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
+<meta name="description"
+	content="One-Off IdP with KeyCloak - When end-2-end testing applications that use an IdP, an IdP needs to be in a known state to make test repeatable. Typically a container is used, with a configuration that needs to be reset before (and after) a run. Restoring the IdP configuration isn&#39;t ideal, since addring new test cases (e.g. addin" />
+<meta name="Keywords"
+	content="Curl,WebDevelopment," />
+<meta name="Abstract"
+	content="One-Off IdP with KeyCloak - When end-2-end testing applications that use an IdP, an IdP needs to be in a known state to make test repeatable. Typically a container is used, with a configuration that needs to be reset before (and after) a run. Restoring the IdP configuration isn&#39;t ideal, since addring new test cases (e.g. addin" />
+<!--[if lt IE 9]>
+		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
+
+
+<link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="https://feeds.feedburner.com/Wisselnetfeed" />
+
+<meta name="Revisit-After" content="90 Days" />
+</head>
+<body class="line-numbers">
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<a class="btn btn-navbar" data-toggle="collapse"
+				data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+				class="icon-bar"></span> <span class="icon-bar"></span>
+			</a> <a class="brand" href="/">wissel.net</a>
+			<div class="nav-collapse">
+				<ul class="nav">
+					<li><a href="/index.html">Home</a></li>
+					<li class="active"><a href="/blog/">Blog</a></li>
+					<li><a href="/blog/series.html">Series</a></li>
+					<li><a href="/blog/downloads/">Downloads</a></li>
+					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
+					<li><a href="/blog/imprint.html">About / Imprint</a></li>
+				</ul>
+				<form action="//www.google.com/cse" id="cse-search-box"
+					class="navbar-search pull-right">
+					<div>
+						<input type="hidden" name="cx"
+							value="partner-pub-4562257798204150:muo14ionenw" /> <input
+							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
+							name="q" class="search-query span2" placeholder="Search" />
+						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+<div class="navbar-spacer"></div>
+
+	<div class="container">
+    		<br />
+		<header>
+			<div id="mainsmall"  class="hero-unit">
+				<h2>wissel.net</h2>
+				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+			</div>
+		</header>
+
+     
+    <ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/">2024</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/10/">October</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/curl.html">Curl</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
+  </li>
+</ul>
+
+		<div class="row-fluid">
+			<div class="span12">
+				
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2024/10/handle-http-chunked-responses-java-edition.html"><i class="icon-hand-left"></i>Handle HTTP chunked responses - Java edition</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+				<article class="well well-raised">
+					<h1><small>One-Off IdP with KeyCloak</small></h1>
+					<hr />
+					<div><p>When end-2-end testing applications that use an <a href="https://en.wikipedia.org/wiki/Identity_provider">IdP</a>, an IdP needs to be in a known state to make test repeatable.</p>
+<p>Typically a container is used, with a configuration that needs to be reset before (and after) a run. Restoring the IdP configuration isn't ideal, since addring new test cases (e.g. adding a user with different properties to check application behavior). I propose a different approach: One-off IdP</p>
+<h3>Container without persistence</h3>
+<p>I start with an empty deployment of <a href="https://www.keycloak.org/">KeyCloak</a> running in a docker container.</p>
+<pre><code class="language-shell">#!/bin/bash
+#Run a clean KeyCloak
+docker run --rm -p 8080:8080 \
+       --name testcloak \
+       -e KEYCLOAK_ADMIN=admin \
+       -e KEYCLOAK_ADMIN_PASSWORD=password \
+       quay.io/keycloak/keycloak:latest start-dev
+</code></pre>
+<p>The <code>--rm</code> parameter ensures that the container is discarded after use. There is <strong>no</strong> persistence flag (<code>--mount</code>), so when the container goes down, all data perishes (and that's intendet).</p>
+<h3>Configuration sequence</h3>
+<p>The empty KeyCloak only knows the realm <code>master</code> and the user <code>admin</code>. To turn it into a fully functional IdP we need to configure it. Since we want this process to be repeatable we shall use <a href="https://www.keycloak.org/docs-api/latest/rest-api/index.html">Keycloak's REST API</a>. The documentation is complete, including an <a href="https://www.openapis.org/">OpenAPI</a> spec, but in a dictionary style, so all is good when you know what you are looking for. To learn what is needed the browser development tools while using the admin UI teach us the what.</p><p><img src="../../../images/2024/keycloak.png" alt="keycloak configuration sequence"></p>
+<p>Let's look at them in Detail:</p>
+<h3>Is Keycloak running? (GET 302)</h3>
+<p>A simple check if Keycloak is up. In a CD pipeline you would loop a few times when you don't get the 302.</p>
+<pre><code class="language-shell">curl 'http://localhost:8090'
+</code></pre>
+<h3>Get Admin access &amp; refresh token (POST 200)</h3>
+<p>Get both the <code>access_token</code> and the <code>refresh_token</code>, Access tokens in Keycloak are, as it should be, <strong>very</strong> short lived. You might need the refresh URL too</p>
+<pre><code class="language-shell">curl 'http://localhost:8090/realms/master/protocol/openid-connect/token' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'client_id=admin-cli' \
+--data-urlencode 'username=admin' \
+--data-urlencode 'password=password' \
+--data-urlencode 'grant_type=password'
+</code></pre>
+<p>Refresh access token</p>
+<pre><code class="language-shell">curl 'http://localhost:8090/realms/master/protocol/openid-connect/token' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'client_id=admin-cli' \
+--data-urlencode 'grant_type=refresh_token' \
+--data-urlencode 'refresh_token=ey..Cw'
+</code></pre>
+<h3>Create REALM (POST 201)</h3>
+<p>The realm ist the base unit, like the organisation. We create the realm <a href="https://en.wikipedia.org/wiki/Foundation_(book_series)">`empire'</a></p>
+<pre><code class="language-shell">curl 'http://localhost:8090/admin/realms' \
+--header 'Authorization: Bearer ey..Dg' \
+--header 'Content-Type: application/json' \
+--data '{
+    "id": "empire",
+    "realm": "empire",
+    "displayName": "Display name for empire",
+    "enabled": true,
+    "sslRequired": "NONE",
+    "registrationAllowed": true,
+    "loginWithEmailAllowed": true,
+    "duplicateEmailsAllowed": false,
+    "resetPasswordAllowed": true,
+    "editUsernameAllowed": true,
+    "bruteForceProtected": true
+}'
+</code></pre>
+<h3>Create CLIENT (POST 201)</h3>
+<p>The client is what defines an application that will request user consent and authenticate to the service provider using the access*token. Our client is called <a href="https://en.wikipedia.org/wiki/Foundation*(TV_series)"><code>trantor</code></a></p>
+<pre><code class="language-shell">curl 'http://localhost:8090/admin/realms/empire/clients' \
+--header 'Authorization: Bearer ey..Dg' \
+--header 'Content-Type: application/json' \
+--data '{
+    "clientId": "trantor",
+    "enabled": true,
+    "publicClient": true,
+    "directAccessGrantsEnabled": true
+}'
+</code></pre>
+<h3>Create SCOPE (POST 201)</h3>
+<p>Each database we want to access is represented by a scope. We need to create and map the scopes to our client. In the URLs we now find unids representing scope &amp; clients</p>
+<pre><code class="language-shell">curl 'http://localhost:8090/admin/realms/empire/client-scopes' \
+--header 'Authorization: Bearer eyJ..Dg' \
+--header 'Content-Type: application/json' \
+--data '{
+    "name": "approvals",
+    "description": "Access to approvals",
+    "type": "default",
+    "protocol": "openid-connect",
+    "attributes": {
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "Do you want to allow access to approvals",
+        "include.in.token.scope": "true"
+    }
+}'
+</code></pre>
+<h3>Map SCOPE (PUT 204)</h3>
+<pre><code class="language-shell">curl --request PUT 'http://localhost:8090/admin/realms/empire/clients/{{CLIENT_ID}}/default-client-scopes/{{SCOPE_ID}}' \
+--header 'Authorization: Bearer ey..Dg' \
+--header 'Content-Type: application/json' \
+--data '{}'
+</code></pre>
+<h3>Read Attributes (GET 200)</h3>
+<p>Before we can add user attributes like CN, we need to read exisiting attributes</p>
+<pre><code class="language-shell">curl 'http://localhost:8090/admin/realms/empire/users/profile' \
+--header 'Authorization: Bearer eyJ..Dg'
+</code></pre>
+<h3>Create Attribute (PUT 200)</h3>
+<pre><code class="language-shell">curl --request PUT 'http://localhost:8090/admin/realms/empire/users/profile' \
+--header 'Authorization: Bearer ey..Dg' \
+--header 'Content-Type: application/json' \
+--data '{"attributes":["name":"CN","displayName":"Domino Common Name","permissions":{"edit":["admin"],"view":["user"]},"multivalued":false,"annotations":{},"validations":{}}],"groups":[{"name":"user-metadata","displayHeader":"User metadata","displayDescription":"Attributes, which refer to user metadata"}]}'
+</code></pre>
+<h3>Map Attribute (POST 201)</h3>
+<pre><code class="language-shell">curl 'http://localhost:8090/admin/realms/empire/clients/{{CLIENT_ID}}/protocol-mappers/models' \
+--header 'Authorization: Bearer ey..Dg' \
+--header 'Content-Type: application/json' \
+--data '{
+    "protocol": "openid-connect",
+    "protocolMapper": "oidc-usermodel-attribute-mapper",
+    "name": "DominoCN",
+    "config": {
+        "claim.name": "CN",
+        "jsonType.label": "String",
+        "id.token.claim": "true",
+        "access.token.claim": "true",
+        "lightweight.claim": "false",
+        "userinfo.token.claim": "true",
+        "introspection.token.claim": "true",
+        "user.attribute": "CN"
+    }
+}'
+</code></pre>
+<h3>Map audience (POST 201)</h3>
+<p>DRAPI wants an <code>audience</code> named <code>Domino</code>, so we add one</p>
+<pre><code class="language-shell">curl 'http://localhost:8090/admin/realms/empire/clients/{{CLIENT_ID}}/protocol-mappers/models' \
+--header 'Authorization: Bearer ey..Dg' \
+--header 'Content-Type: application/json' \
+--data '{
+    "protocol": "openid-connect",
+    "protocolMapper": "oidc-audience-mapper",
+    "name": "DominoMapper",
+    "config": {
+        "included.client.audience": "",
+        "included.custom.audience": "Domino",
+        "id.token.claim": "false",
+        "access.token.claim": "true",
+        "lightweight.claim": "false",
+        "introspection.token.claim": "true"
+    }
+}'
+</code></pre>
+<h3>Create USER (POST 201)</h3>
+<p>Finally we can create users</p>
+<pre><code class="language-shell">curl 'http://localhost:8090/admin/realms/empire/users' \
+--header 'Authorization: Bearer ey..Dg' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "requiredActions": [],
+    "username": "hariseldon",
+    "enabled": true,
+    "firstName": "Hari",
+    "lastName": "Seldon",
+    "email": "hari@foundation.org",
+    "emailVerified": true,
+    "credentials": [
+        {
+            "type": "password",
+            "value": "password",
+            "temporary": false
+        }
+    ],
+    "attributes": {
+        "CN": "{{USER_CN}}"
+    }
+}'
+</code></pre>
+<h3>Login User (POST 200)</h3>
+<p>A succesful user creation will yield an access token one can validate <a href="https://jwt.io">jwt.io</a></p>
+<pre><code class="language-shell">curl 'http://localhost:8090/realms/empire/protocol/openid-connect/token' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'grant_type=password' \
+--data-urlencode 'username=hariseldon' \
+--data-urlencode 'password=password' \
+--data-urlencode 'client_id=trantor'
+</code></pre>
+<h3>What's next</h3>
+<p>In a future installment I'll tie everything together in an automation script, one can use in the CI/CD pipeline</p>
+<p>As usual YMMV</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 20 October 2024
+<span class="divider">|</span>
+<a href="/blog/2024/10/onetime-idp-with-keycloak.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/curl.html">Curl</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2024/10/onetime-idp-with-keycloak.html";
+						</script>
+					</p>
+				</article>
+				<a name="comments"></a>
+				<div class="well well-raised" style="text-align : center">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_83111210-8eba-11ef-9eab-1f7495f5460d" type="button">
+		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
+	            </button>
+	            </div>
+				<div id="commentform_83111210-8eba-11ef-9eab-1f7495f5460d"  class="collapse"></div>
+				<div class="well well-raised">
+					<h4>Comments</h4>
+					<ol id="commentList">
+						<li id="nocomments">
+							<h5>No comments yet, be the first to comment</h5>
+						</li>
+					</ol>
+				</div>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2024/10/handle-http-chunked-responses-java-edition.html"><i class="icon-hand-left"></i>Handle HTTP chunked responses - Java edition</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+			</div>
+		</div>
+		<ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/">2024</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/10/">October</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/curl.html">Curl</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/webdevelopment.html">WebDevelopment</a>
+  </li>
+</ul>
+
+	</div>
+	<footer>
+		<div class="container">
+			<div class="row">
+				<div class="span2">
+					<h4>About Me</h4>
+					<p>
+						I work as "Solution Director Innovation" for HCL Software. I'm based in Singapore.
+						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
+					</p>
+					<a href="//stackoverflow.com/users/131021/stwissel">
+					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
+				</a>
+				</div>
+				<div class="span2">
+					<h4>Contact</h4>
+					<ul>
+						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
+						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
+						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
+						<li><a href="https://about.me/stephan.wissel/#" title="Another identity site, nothing much here">About Me</a></li>
+						<li><a href="https://github.com/Stwissel">GitHub</a></li>
+						<li><a href="https://bitbucket.org/stwissel/">Bitbucket</a></li>
+						<li><a href="https://www.twitter.com/notessensei">Twitter</a></li>
+					</ul>
+				</div>
+				<div class="span8">
+					<h4>Disclaimer</h4>
+					<p>This site is in no way affiliated, endorsed, sanctioned,
+						supported, nor enlightened by my current or previous employers.
+						I may be an employee, but the opinions, theories, facts, etc.
+						presented here are my own and are in now way given in any official
+						capacity. In short, these are my words and this is my site, not
+						my current or former employers' - and don't even begin to think otherwise.</p>
+					<p>
+						<b>&copy; 2003 - 2024 Stephan H. Wissel - some rights reserved</b> as
+						listed here: <a rel="license"
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
+							alt="Creative Commons License" style="border-width: 0"
+							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
+						Unless otherwise labeled by its originating author, the content
+						found on this site is made available under the terms of an <a
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
+							target="_blank"
+							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
+							Creative Commons License</a>, with the exception that no rights are
+						granted -- since they are not mine to grant -- in any logo,
+						graphic design, trademarks or trade names of any type. Code
+						samples and code downloads on this site are, unless otherwise
+						labeled, made available under an <a
+							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
+							2.0</a> license. Other license models are available on written
+						request and written confirmation.
+					</p>
+				</div>
+			</div>
+		</div>
+	</footer>
+
+	<script type="text/javascript">
+		var permaLink = "https://wissel.net/blog/2024/10/onetime-idp-with-keycloak.html";
+	</script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
+	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
+	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
+	<script type="text/javascript" src="/blog/js2/admonition.js"></script>
+	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		_uacct = "UA-72033-1";
+		urchinTracker();
+	</script>
+	<script type="text/javascript" src="//feeds.feedburner.com/~s/Wisselnet?i=https://wissel.net/blog" charset="utf-8"></script>
+
+		<script src="/blog/js2/mustache.js"></script>
+	<script src="/blog/js2/blogcomments.js"></script>
+	<script type="text/javascript" src="/blog/js2/Markdown.Converter.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Sanitizer.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Editor.js"></script>
+	<script type="text/javascript" src="//www.google.com/recaptcha/api.js"></script>
+	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+	<script type="text/javascript">
+		var onloadCallback = function() {
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "83111210-8eba-11ef-9eab-1f7495f5460d");
+ 		};
+	</script>
+
+</body>
+</html>
