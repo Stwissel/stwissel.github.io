@@ -112,6 +112,9 @@ ga('send', 'pageview');
 					<li><a href="/blog/2024/10/handle-http-chunked-responses-java-edition.html"><i class="icon-hand-left"></i>Handle HTTP chunked responses - Java edition</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+					<span class="divider">|</span>
+					<li><a href="/blog/2024/11/using-rbac-with-openapi-and-vertx.html">Using RBAC with OpenAPI and vert.x<i class="icon-hand-right"></i></a>
+					</li>
 				</ul>
 
 				<article class="well well-raised">
@@ -135,11 +138,11 @@ docker run --rm -p 8080:8080 \
 <p>Let's look at them in Detail:</p>
 <h3>Is Keycloak running? (GET 302)</h3>
 <p>A simple check if Keycloak is up. In a CD pipeline you would loop a few times when you don't get the 302.</p>
-<pre><code class="language-shell">curl 'http://localhost:8090'
+<pre><code class="language-shell">curl 'http://localhost:8080'
 </code></pre>
 <h3>Get Admin access &amp; refresh token (POST 200)</h3>
 <p>Get both the <code>access_token</code> and the <code>refresh_token</code>, Access tokens in Keycloak are, as it should be, <strong>very</strong> short lived. You might need the refresh URL too</p>
-<pre><code class="language-shell">curl 'http://localhost:8090/realms/master/protocol/openid-connect/token' \
+<pre><code class="language-shell">curl 'http://localhost:8080/realms/master/protocol/openid-connect/token' \
 --header 'Content-Type: application/x-www-form-urlencoded' \
 --data-urlencode 'client_id=admin-cli' \
 --data-urlencode 'username=admin' \
@@ -147,7 +150,7 @@ docker run --rm -p 8080:8080 \
 --data-urlencode 'grant_type=password'
 </code></pre>
 <p>Refresh access token</p>
-<pre><code class="language-shell">curl 'http://localhost:8090/realms/master/protocol/openid-connect/token' \
+<pre><code class="language-shell">curl 'http://localhost:8080/realms/master/protocol/openid-connect/token' \
 --header 'Content-Type: application/x-www-form-urlencoded' \
 --data-urlencode 'client_id=admin-cli' \
 --data-urlencode 'grant_type=refresh_token' \
@@ -155,7 +158,7 @@ docker run --rm -p 8080:8080 \
 </code></pre>
 <h3>Create REALM (POST 201)</h3>
 <p>The realm ist the base unit, like the organisation. We create the realm <a href="https://en.wikipedia.org/wiki/Foundation_(book_series)">`empire'</a></p>
-<pre><code class="language-shell">curl 'http://localhost:8090/admin/realms' \
+<pre><code class="language-shell">curl 'http://localhost:8080/admin/realms' \
 --header 'Authorization: Bearer ey..Dg' \
 --header 'Content-Type: application/json' \
 --data '{
@@ -174,7 +177,7 @@ docker run --rm -p 8080:8080 \
 </code></pre>
 <h3>Create CLIENT (POST 201)</h3>
 <p>The client is what defines an application that will request user consent and authenticate to the service provider using the access*token. Our client is called <a href="https://en.wikipedia.org/wiki/Foundation*(TV_series)"><code>trantor</code></a></p>
-<pre><code class="language-shell">curl 'http://localhost:8090/admin/realms/empire/clients' \
+<pre><code class="language-shell">curl 'http://localhost:8080/admin/realms/empire/clients' \
 --header 'Authorization: Bearer ey..Dg' \
 --header 'Content-Type: application/json' \
 --data '{
@@ -186,7 +189,7 @@ docker run --rm -p 8080:8080 \
 </code></pre>
 <h3>Create SCOPE (POST 201)</h3>
 <p>Each database we want to access is represented by a scope. We need to create and map the scopes to our client. In the URLs we now find unids representing scope &amp; clients</p>
-<pre><code class="language-shell">curl 'http://localhost:8090/admin/realms/empire/client-scopes' \
+<pre><code class="language-shell">curl 'http://localhost:8080/admin/realms/empire/client-scopes' \
 --header 'Authorization: Bearer eyJ..Dg' \
 --header 'Content-Type: application/json' \
 --data '{
@@ -202,24 +205,24 @@ docker run --rm -p 8080:8080 \
 }'
 </code></pre>
 <h3>Map SCOPE (PUT 204)</h3>
-<pre><code class="language-shell">curl --request PUT 'http://localhost:8090/admin/realms/empire/clients/{{CLIENT_ID}}/default-client-scopes/{{SCOPE_ID}}' \
+<pre><code class="language-shell">curl --request PUT 'http://localhost:8080/admin/realms/empire/clients/{{CLIENT_ID}}/default-client-scopes/{{SCOPE_ID}}' \
 --header 'Authorization: Bearer ey..Dg' \
 --header 'Content-Type: application/json' \
 --data '{}'
 </code></pre>
 <h3>Read Attributes (GET 200)</h3>
 <p>Before we can add user attributes like CN, we need to read exisiting attributes</p>
-<pre><code class="language-shell">curl 'http://localhost:8090/admin/realms/empire/users/profile' \
+<pre><code class="language-shell">curl 'http://localhost:8080/admin/realms/empire/users/profile' \
 --header 'Authorization: Bearer eyJ..Dg'
 </code></pre>
 <h3>Create Attribute (PUT 200)</h3>
-<pre><code class="language-shell">curl --request PUT 'http://localhost:8090/admin/realms/empire/users/profile' \
+<pre><code class="language-shell">curl --request PUT 'http://localhost:8080/admin/realms/empire/users/profile' \
 --header 'Authorization: Bearer ey..Dg' \
 --header 'Content-Type: application/json' \
 --data '{"attributes":["name":"CN","displayName":"Domino Common Name","permissions":{"edit":["admin"],"view":["user"]},"multivalued":false,"annotations":{},"validations":{}}],"groups":[{"name":"user-metadata","displayHeader":"User metadata","displayDescription":"Attributes, which refer to user metadata"}]}'
 </code></pre>
 <h3>Map Attribute (POST 201)</h3>
-<pre><code class="language-shell">curl 'http://localhost:8090/admin/realms/empire/clients/{{CLIENT_ID}}/protocol-mappers/models' \
+<pre><code class="language-shell">curl 'http://localhost:8080/admin/realms/empire/clients/{{CLIENT_ID}}/protocol-mappers/models' \
 --header 'Authorization: Bearer ey..Dg' \
 --header 'Content-Type: application/json' \
 --data '{
@@ -240,7 +243,7 @@ docker run --rm -p 8080:8080 \
 </code></pre>
 <h3>Map audience (POST 201)</h3>
 <p>DRAPI wants an <code>audience</code> named <code>Domino</code>, so we add one</p>
-<pre><code class="language-shell">curl 'http://localhost:8090/admin/realms/empire/clients/{{CLIENT_ID}}/protocol-mappers/models' \
+<pre><code class="language-shell">curl 'http://localhost:8080/admin/realms/empire/clients/{{CLIENT_ID}}/protocol-mappers/models' \
 --header 'Authorization: Bearer ey..Dg' \
 --header 'Content-Type: application/json' \
 --data '{
@@ -259,7 +262,7 @@ docker run --rm -p 8080:8080 \
 </code></pre>
 <h3>Create USER (POST 201)</h3>
 <p>Finally we can create users</p>
-<pre><code class="language-shell">curl 'http://localhost:8090/admin/realms/empire/users' \
+<pre><code class="language-shell">curl 'http://localhost:8080/admin/realms/empire/users' \
 --header 'Authorization: Bearer ey..Dg' \
 --header 'Content-Type: application/json' \
 --data-raw '{
@@ -284,7 +287,7 @@ docker run --rm -p 8080:8080 \
 </code></pre>
 <h3>Login User (POST 200)</h3>
 <p>A succesful user creation will yield an access token one can validate <a href="https://jwt.io">jwt.io</a></p>
-<pre><code class="language-shell">curl 'http://localhost:8090/realms/empire/protocol/openid-connect/token' \
+<pre><code class="language-shell">curl 'http://localhost:8080/realms/empire/protocol/openid-connect/token' \
 --header 'Content-Type: application/x-www-form-urlencoded' \
 --data-urlencode 'grant_type=password' \
 --data-urlencode 'username=hariseldon' \
@@ -327,6 +330,9 @@ categories:  <a href="/blog/categories/curl.html">Curl</a>  <a href="/blog/categ
 					<li><a href="/blog/2024/10/handle-http-chunked-responses-java-edition.html"><i class="icon-hand-left"></i>Handle HTTP chunked responses - Java edition</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+					<span class="divider">|</span>
+					<li><a href="/blog/2024/11/using-rbac-with-openapi-and-vertx.html">Using RBAC with OpenAPI and vert.x<i class="icon-hand-right"></i></a>
+					</li>
 				</ul>
 
 			</div>

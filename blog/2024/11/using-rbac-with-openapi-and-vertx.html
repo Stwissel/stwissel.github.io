@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Using RBAC with OpenAPI and vert.x - NotesSensei's Blog</title>
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-72033-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible"  content="chrome=1" />
+<meta http-equiv="Content-Language" content="en" />
+<meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
+<meta property="og:title"     content="wissel.net - Using RBAC with OpenAPI and vert.x" />
+<meta property="og:type"      content="blog" />
+<meta property="og:url"       content="https://wissel.net/blog/2024/11/using-rbac-with-openapi-and-vertx.html" />
+<meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
+<meta property="og:site_name" content="wissel.net" />
+<meta name="viewport"         content="width=device-width, initial-scale=1.0" />
+<meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Using RBAC with OpenAPI and vert.x" />
+<meta name="Author"           content="Stephan H. Wissel" />
+<meta name="ICBM"             content="1.2994, 103.8425" />
+<meta name="Copyright"        content="2002,2022 Stephan H. Wissel - Creative commons licence" />
+<meta name="twitter:site"     content="@notessensei" />
+<meta name="twitter:card"     content="summary" />
+<meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
+<meta name="description"
+	content="Using RBAC with OpenAPI and vert.x - I&#39;m stronlgy in favour of Contract-First Development, when in comes to APIs. All invested parties, including your future self, agree on a neutral format, that both API providers and consumers will stick to. For REST APIs that is the OpenAPI spec A popular critique of that approach is that it reeks o" />
+<meta name="Keywords"
+	content="Java,OpenAPI,vert.x," />
+<meta name="Abstract"
+	content="Using RBAC with OpenAPI and vert.x - I&#39;m stronlgy in favour of Contract-First Development, when in comes to APIs. All invested parties, including your future self, agree on a neutral format, that both API providers and consumers will stick to. For REST APIs that is the OpenAPI spec A popular critique of that approach is that it reeks o" />
+<!--[if lt IE 9]>
+		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
+
+
+<link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="https://feeds.feedburner.com/Wisselnetfeed" />
+
+<meta name="Revisit-After" content="90 Days" />
+</head>
+<body class="line-numbers">
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<a class="btn btn-navbar" data-toggle="collapse"
+				data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+				class="icon-bar"></span> <span class="icon-bar"></span>
+			</a> <a class="brand" href="/">wissel.net</a>
+			<div class="nav-collapse">
+				<ul class="nav">
+					<li><a href="/index.html">Home</a></li>
+					<li class="active"><a href="/blog/">Blog</a></li>
+					<li><a href="/blog/series.html">Series</a></li>
+					<li><a href="/blog/downloads/">Downloads</a></li>
+					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
+					<li><a href="/blog/imprint.html">About / Imprint</a></li>
+				</ul>
+				<form action="//www.google.com/cse" id="cse-search-box"
+					class="navbar-search pull-right">
+					<div>
+						<input type="hidden" name="cx"
+							value="partner-pub-4562257798204150:muo14ionenw" /> <input
+							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
+							name="q" class="search-query span2" placeholder="Search" />
+						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+<div class="navbar-spacer"></div>
+
+	<div class="container">
+    		<br />
+		<header>
+			<div id="mainsmall"  class="hero-unit">
+				<h2>wissel.net</h2>
+				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+			</div>
+		</header>
+
+     
+    <ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/">2024</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/11/">November</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/openapi.html">OpenAPI</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/vertx.html">vert.x</a>
+  </li>
+</ul>
+
+		<div class="row-fluid">
+			<div class="span12">
+				
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2024/10/onetime-idp-with-keycloak.html"><i class="icon-hand-left"></i>One-Off IdP with KeyCloak</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+				<article class="well well-raised">
+					<h1><small>Using RBAC with OpenAPI and vert.x</small></h1>
+					<hr />
+					<div><p>I'm stronlgy in favour of <a href="https://openpracticelibrary.com/practice/contract-first-development/">Contract-First Development</a>, when in comes to APIs. All invested parties, including your future self, agree on a neutral format, that both API providers and consumers will stick to. For REST APIs that is the <a href="https://www.openapis.org/">OpenAPI spec</a></p>
+<p>A popular critique of that approach is that it reeks of <a href="https://en.wikipedia.org/wiki/Big_design_up_front">Big Design Upfront</a>, happily skipping over the fact that nothing stops the teams to iterate over the specification too, one path, one schema at the time</p>
+<h3>The source of truth</h3>
+<p>The specification becomes the single authorative source for endpoints, security requirements, data formats and responses. While it is possible to generate the spec from source code, like. e.g. <a href="https://spring.io/projects">Spring</a> or <a href="https://quarkus.io/extensions/io.quarkus/quarkus-smallrye-openapi/">Quarkus</a>, I see clear advantages to provide the specification standalone. Create it <a href="https://tools.openapis.org/">with a tool</a> like <a href="https://studio.apicur.io/">Apicur.io</a>, <a href="https://stoplight.io/">Stoplight</a> or <a href="https://apigit.com/">APIGit</a>. Or use <a href="https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi">a plugin</a> (or <a href="https://marketplace.visualstudio.com/search?term=OpenAPI&amp;target=VSCode">another</a>) in your <a href="https://visualstudio.microsoft.com/#vscode-section">IDE</a> or <a href="https://plugins.jetbrains.com/search?search=OpenAPI">the other one</a></p>
+<p>Once you have your first draft, you want to implement it server side. <a href="https://vertx.io">Eclipse vert.x</a> offers the <a href="https://vertx.io/docs/vertx-web-openapi-router/java/">Vert.x OpenAPI Router</a> for exactly that. You can get more details from my <a href="https://stwissel.github.io/presentations/OpenAPI2023/index.html">OpenAPI talk</a>, or by peeking into the <a href="https://github.com/Stwissel/openapi-talk">sample project</a> (which used vert.x inside <a href="https://quarkus.io/">Quarkus</a>).</p><h3>Roles in @Annotations</h3>
+<p>Most of the <a href="https://en.wikipedia.org/wiki/Role-based_access_control">RBAC</a> (Role Based Access Control) usen Annotations like e.g. <a href="https://quarkus.io/guides/security-jwt">Quarkus</a>. You simply decorate a method:</p>
+<pre><code class="language-java">@GET
+@Path("helloworld")
+@RolesAllowed({ "Coda", "Moonshadow" })
+@Produces(MediaType.TEXT_PLAIN)
+public String helloWorld(@Context SecurityContext ctx) {
+  return "Hello world builders";
+}
+</code></pre>
+<p>This is nice and dandy and makes the Java source code eaasy to understand. But it does nothing to help a consumer of the API, who wouldn't access the backend's source code, to understand the API requirements. So it is better to define the roles in the OpenAPI contract.</p>
+<h3>Roles in OpenAPI</h3>
+<p>Neither the <a href="https://spec.openapis.org/oas/v3.0.4.html">3.0.x</a> nor the <a href="https://spec.openapis.org/oas/latest.html">3.1.x</a> mention "roles" anywhere. The closest match can be found as "scope" in the <a href="https://spec.openapis.org/oas/latest.html#oauth2-security-requirement">OAuth2 security object</a>. Scopes are not roles and I don't advocate overloading of terms. So my approach is to introduce a <a href="https://spec.openapis.org/oas/latest.html#specification-extensions">specification extension</a>, as proposed by the OpenAPI standard. In my OpenAPI file I have, on the level of operation, an array at <code>x-roles</code> containing the roles that are permitted to run that operation.</p>
+<h3>From OpenAPI to vert.x</h3>
+<p>The sequence to get there is:</p>
+<ul>
+ <li>Load the specification</li>
+ <li>Loop through the routes</li>
+ <li>Check if they have roles, if yes add an <a href="https://vertx.io/docs/4.5.10/apidocs/index.html?io/vertx/ext/web/handler/AuthorizationHandler.html">AuthorizationHandler</a></li>
+ <li>load the actual handler doing the work</li>
+</ul>
+<pre><code class="language-java">public class Demo extends AbstractVerticle {
+  @Override
+    public void start(Promise&lt;Void&gt; startPromise) throws Exception {
+      OpenAPIContract.from(this.getVertx(), "openapi.json")
+        .compose(this::defineRouterActions)
+        .compose(router -&gt; server.requestHandler(router).listen(8080))
+        .onFailure(startPromise::fail)
+        .onSuccess(r -&gt; {
+                    System.out.printf("%nServer up and running on port %s%n%n", r.actualPort());
+                    startPromise.complete();
+                });
+    }
+
+    Future&lt;Router&gt; defineRouterActions(final OpenAPIContract contract) {
+      final RouterBuilder builder = RouterBuilder.create(this.getVertx(), contract);
+      builder.getRoutes().forEach(this::setupRoute);
+      return Future.succeededFuture(builder.createRouter());
+    }
+
+    void setupRoute(final OpenAPIRoute route) {
+        Operation operation = route.getOperation();
+        Object roles = operation.getExtensions().get("x-roles");
+        if ((roles instanceof JsonArray) &amp;&amp; (!(JsonArray) roles).isEmpty()) {
+          route.addHandler(RoleAuthortizationHandler.get((JsonArray) roles));
+        }
+        // Here would be the actual handler
+
+    }
+}
+</code></pre>
+<p>The interesting part is the <code>RoleAuthortizationHandler</code> that implements <a href="https://vertx.io/docs/4.5.10/apidocs/index.html?io/vertx/ext/web/handler/AuthorizationHandler.html">AuthorizationHandler</a> and checks if the current user has the rquired role. The static method ensures, that we reuse already defined handlers.</p>
+<pre><code class="language-java">public class RoleAuthortizationHandler implements AuthorizationHandler {
+
+    static final Map&lt;String, RoleAuthortizationHandler&gt; HANDLERS = new HashMap&lt;&gt;();
+
+    public static RoleAuthortizationHandler get(JsonArray roles) {
+        RoleAuthortizationHandler handler = HANDLERS.get(roles.encode());
+        if (handler == null) {
+            handler = new RoleAuthortizationHandler(roles);
+            HANDLERS.put(roles.encode(), handler);
+        }
+        return handler;
+    }
+
+    private final Set&lt;String&gt; permittedRoles = new HashSet&lt;&gt;();
+
+    RoleAuthortizationHandler(JsonArray roles) {
+        roles.stream().map(Object::toString).forEach(permittedRoles::add);
+    }
+
+    @Override
+    public void handle(RoutingContext ctx) {
+        UserContext userCtx = ctx.user();
+        if (userCtx == null || !userCtx.authenticated()) {
+            ctx.fail(401);
+            return;
+        }
+        JsonArray roles = userCtx.get().principal().getJsonArray("groups", new JsonArray());
+        permittedRoles.stream()
+                .filter(roles::contains)
+                .findAny()
+                .ifPresentOrElse(
+                        role -&gt; ctx.next(),
+                        () -&gt; ctx.fail(403));
+    }
+
+    @Override
+    public AuthorizationHandler addAuthorizationProvider(
+            AuthorizationProvider authorizationProvider) {
+        throw new UnsupportedOperationException(
+                "Method 'addAuthorizationProvider' is not supported");
+    }
+
+    @Override
+    public AuthorizationHandler variableConsumer(
+            BiConsumer&lt;RoutingContext, AuthorizationContext&gt; handler) {
+        throw new UnsupportedOperationException("Method 'variableConsumer' is not supported");
+    }
+
+}
+</code></pre>
+<p>Check out <a href="https://github.com/Stwissel/openapi-talk">the sample project</a>, as usual YMMV</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 08 November 2024
+<span class="divider">|</span>
+<a href="/blog/2024/11/using-rbac-with-openapi-and-vertx.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/openapi.html">OpenAPI</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2024/11/using-rbac-with-openapi-and-vertx.html";
+						</script>
+					</p>
+				</article>
+				<a name="comments"></a>
+				<div class="well well-raised" style="text-align : center">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_600b57a0-9dcc-11ef-b719-8793681eb8df" type="button">
+		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
+	            </button>
+	            </div>
+				<div id="commentform_600b57a0-9dcc-11ef-b719-8793681eb8df"  class="collapse"></div>
+				<div class="well well-raised">
+					<h4>Comments</h4>
+					<ol id="commentList">
+						<li id="nocomments">
+							<h5>No comments yet, be the first to comment</h5>
+						</li>
+					</ol>
+				</div>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2024/10/onetime-idp-with-keycloak.html"><i class="icon-hand-left"></i>One-Off IdP with KeyCloak</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+			</div>
+		</div>
+		<ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/">2024</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2024/11/">November</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/java.html">Java</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/openapi.html">OpenAPI</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/vertx.html">vert.x</a>
+  </li>
+</ul>
+
+	</div>
+	<footer>
+		<div class="container">
+			<div class="row">
+				<div class="span2">
+					<h4>About Me</h4>
+					<p>
+						I work as "Solution Director Innovation" for HCL Software. I'm based in Singapore.
+						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
+					</p>
+					<a href="//stackoverflow.com/users/131021/stwissel">
+					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
+				</a>
+				</div>
+				<div class="span2">
+					<h4>Contact</h4>
+					<ul>
+						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
+						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
+						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
+						<li><a href="https://about.me/stephan.wissel/#" title="Another identity site, nothing much here">About Me</a></li>
+						<li><a href="https://github.com/Stwissel">GitHub</a></li>
+						<li><a href="https://bitbucket.org/stwissel/">Bitbucket</a></li>
+						<li><a href="https://www.twitter.com/notessensei">Twitter</a></li>
+					</ul>
+				</div>
+				<div class="span8">
+					<h4>Disclaimer</h4>
+					<p>This site is in no way affiliated, endorsed, sanctioned,
+						supported, nor enlightened by my current or previous employers.
+						I may be an employee, but the opinions, theories, facts, etc.
+						presented here are my own and are in now way given in any official
+						capacity. In short, these are my words and this is my site, not
+						my current or former employers' - and don't even begin to think otherwise.</p>
+					<p>
+						<b>&copy; 2003 - 2024 Stephan H. Wissel - some rights reserved</b> as
+						listed here: <a rel="license"
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
+							alt="Creative Commons License" style="border-width: 0"
+							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
+						Unless otherwise labeled by its originating author, the content
+						found on this site is made available under the terms of an <a
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
+							target="_blank"
+							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
+							Creative Commons License</a>, with the exception that no rights are
+						granted -- since they are not mine to grant -- in any logo,
+						graphic design, trademarks or trade names of any type. Code
+						samples and code downloads on this site are, unless otherwise
+						labeled, made available under an <a
+							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
+							2.0</a> license. Other license models are available on written
+						request and written confirmation.
+					</p>
+				</div>
+			</div>
+		</div>
+	</footer>
+
+	<script type="text/javascript">
+		var permaLink = "https://wissel.net/blog/2024/11/using-rbac-with-openapi-and-vertx.html";
+	</script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
+	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
+	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
+	<script type="text/javascript" src="/blog/js2/admonition.js"></script>
+	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		_uacct = "UA-72033-1";
+		urchinTracker();
+	</script>
+	<script type="text/javascript" src="//feeds.feedburner.com/~s/Wisselnet?i=https://wissel.net/blog" charset="utf-8"></script>
+
+		<script src="/blog/js2/mustache.js"></script>
+	<script src="/blog/js2/blogcomments.js"></script>
+	<script type="text/javascript" src="/blog/js2/Markdown.Converter.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Sanitizer.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Editor.js"></script>
+	<script type="text/javascript" src="//www.google.com/recaptcha/api.js"></script>
+	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+	<script type="text/javascript">
+		var onloadCallback = function() {
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "600b57a0-9dcc-11ef-b719-8793681eb8df");
+ 		};
+	</script>
+
+</body>
+</html>

@@ -98,6 +98,29 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2024/11/using-rbac-with-openapi-and-vertx.html">Using RBAC with OpenAPI and vert.x</a></small></h1>
+					<hr />
+					<div><p>I'm stronlgy in favour of <a href="https://openpracticelibrary.com/practice/contract-first-development/">Contract-First Development</a>, when in comes to APIs. All invested parties, including your future self, agree on a neutral format, that both API providers and consumers will stick to. For REST APIs that is the <a href="https://www.openapis.org/">OpenAPI spec</a></p>
+<p>A popular critique of that approach is that it reeks of <a href="https://en.wikipedia.org/wiki/Big_design_up_front">Big Design Upfront</a>, happily skipping over the fact that nothing stops the teams to iterate over the specification too, one path, one schema at the time</p>
+<h3>The source of truth</h3>
+<p>The specification becomes the single authorative source for endpoints, security requirements, data formats and responses. While it is possible to generate the spec from source code, like. e.g. <a href="https://spring.io/projects">Spring</a> or <a href="https://quarkus.io/extensions/io.quarkus/quarkus-smallrye-openapi/">Quarkus</a>, I see clear advantages to provide the specification standalone. Create it <a href="https://tools.openapis.org/">with a tool</a> like <a href="https://studio.apicur.io/">Apicur.io</a>, <a href="https://stoplight.io/">Stoplight</a> or <a href="https://apigit.com/">APIGit</a>. Or use <a href="https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi">a plugin</a> (or <a href="https://marketplace.visualstudio.com/search?term=OpenAPI&amp;target=VSCode">another</a>) in your <a href="https://visualstudio.microsoft.com/#vscode-section">IDE</a> or <a href="https://plugins.jetbrains.com/search?search=OpenAPI">the other one</a></p>
+<p>Once you have your first draft, you want to implement it server side. <a href="https://vertx.io">Eclipse vert.x</a> offers the <a href="https://vertx.io/docs/vertx-web-openapi-router/java/">Vert.x OpenAPI Router</a> for exactly that. You can get more details from my <a href="https://stwissel.github.io/presentations/OpenAPI2023/index.html">OpenAPI talk</a>, or by peeking into the <a href="https://github.com/Stwissel/openapi-talk">sample project</a> (which used vert.x inside <a href="https://quarkus.io/">Quarkus</a>).</p></div>
+					<hr />
+ <a href="/blog/2024/11/using-rbac-with-openapi-and-vertx.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 08 November 2024
+<span class="divider">|</span>
+<a href="/blog/2024/11/using-rbac-with-openapi-and-vertx.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/openapi.html">OpenAPI</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2024/11/using-rbac-with-openapi-and-vertx.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2024/10/onetime-idp-with-keycloak.html">One-Off IdP with KeyCloak</a></small></h1>
 					<hr />
 					<div><p>When end-2-end testing applications that use an <a href="https://en.wikipedia.org/wiki/Identity_provider">IdP</a>, an IdP needs to be in a known state to make test repeatable.</p>
@@ -502,51 +525,6 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 						</script>
 					</p></p>
 				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2023/11/nginx-as-ingress-for-docker-compose.html">nginx as ingress for Docker compose</a></small></h1>
-					<hr />
-					<div><p>In June I wrote about how to use <a href="/blog/2023/06/docker-nginx-spa-and-brotli-compression.html">Docker &amp; nginx</a> to deliver statically rendered <a href="https://github.com/google/brotli">brotli</a> files for your web (frontend) application. It improves delivery quite a bid, but left me wonder: isn't there too much static WebServer involved?</p>
-<h3>Double hop to deliver static files</h3>
-<p>A typical web application using micro/mini/midi services looks like this:</p>
-<p><img src="/blog/images/2023/TypicalDockerConfig.jpg" alt="A typical Docker configuration"></p>
-<p>It is common, easy and concerns quite separated. However it comes with a set of challenges:</p>
-<ul>
- <li>nginx doesn't do http/2 on <a href="https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/"><code>proxy_pass</code></a>, so you miss the ability to serve static files directly with http/2</li>
- <li>For static file we have two nginx involved</li>
- <li>Each service needs to be exposed to the host at some port</li>
- <li>The service architecture leaks to the host based nginx. SO any change in service needs an update to the <code>docker-compose.yml</code> <strong>AND</strong> the host based nginx configuration</li>
- <li>the containers depend on that, external to them, configuration</li>
-</ul>
-<p>So I tried to design a better way to handle this without going all <a href="https://kubernetes.io/">K-in</a>:</p>
-<p><img src="/blog/images/2023/DockerConfigWithNginx.jpg" alt="Docker configuration with ingress as component"></p>
-<p>This looed like a more promising approach:</p>
-<ul>
- <li>Services could be addressed with their internal network name</li>
- <li>Only Ports 80 and 443 of one container need exposure on the host</li>
- <li>The nginx configuration inside the container is immutable and can't accidentially be reconfigured in production (your image comes from a pipeline isn't it)</li>
-</ul>
-<h3>Challenges</h3>
-<ul>
- <li>When trying to configure certbot, I initially tried using the <code>--nginx</code> parameter with an http challenge and shared data mounts. None of the attempts worked satisfactory, so at the end I settled on a<a href="https://letsencrypt.org/docs/challenge-types/#dns-01-challenge">DNS-01</a> using <a href="https://www.cloudflare.com/">CloudFlare</a>.</li>
- <li>Since I wanted the nginx configuration to be inside the container image (and not on a data mount), a good understandig of nginx's configuration is necessary. The only persisted information was <code>/etc/letsencrypt</code> for the certificate and a secret for CloudFlare credentials</li>
- <li>When the nginx configuration is statically configured for TLS, on initial load it will fail since the certs don't exist yet. Auntie Google suggested a manual run of certbot, but I favour <code>docker compose up</code> to handle everything</li>
- <li>I ended up creating my own docker images, which was an epiphany: it absolutely makes sense to build a container image for single use instead of trying hard to make it configurable and vulnerable to mis-configuration</li>
-</ul></div>
-					<hr />
- <a href="/blog/2023/11/nginx-as-ingress-for-docker-compose.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 15 November 2023
-<span class="divider">|</span>
-<a href="/blog/2023/11/nginx-as-ingress-for-docker-compose.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/docker.html">Docker</a>  <a href="/blog/categories/nginx.html">nginx</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2023/11/nginx-as-ingress-for-docker-compose.html";
-						</script>
-					</p></p>
-				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/all.html" title="That's a loooong list!">Older entries<i class="icon-hand-right"></i></a>
 					</li>
@@ -668,6 +646,7 @@ categories:  <a href="/blog/categories/docker.html">Docker</a>  <a href="/blog/c
 						<li ><a href="/blog/categories/nokia.html">Nokia</a></li>
 						<li ><a href="/blog/categories/nosql.html">NoSQL</a></li>
 						<li ><a href="/blog/categories/omnisophie.html">Omnisophie</a></li>
+						<li ><a href="/blog/categories/openapi.html">OpenAPI</a></li>
 						<li ><a href="/blog/categories/opensource.html">OpenSource</a></li>
 						<li ><a href="/blog/categories/pmd.html">PMD</a></li>
 						<li ><a href="/blog/categories/protocols.html">Protocols</a></li>

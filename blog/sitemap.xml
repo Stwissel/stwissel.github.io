@@ -6,7 +6,20 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Sun, 20 Oct 2024 14:15:44 +0000</pubdate>
+	<pubdate>Fri, 08 Nov 2024 15:06:58 +0000</pubdate>
+<item>
+	<title>Using RBAC with OpenAPI and vert.x</title>
+	<description>&lt;p&gt;I'm stronlgy in favour of &lt;a href="https://openpracticelibrary.com/practice/contract-first-development/"&gt;Contract-First Development&lt;/a&gt;, when in comes to APIs. All invested parties, including your future self, agree on a neutral format, that both API providers and consumers will stick to. For REST APIs that is the &lt;a href="https://www.openapis.org/"&gt;OpenAPI spec&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;A popular critique of that approach is that it reeks of &lt;a href="https://en.wikipedia.org/wiki/Big_design_up_front"&gt;Big Design Upfront&lt;/a&gt;, happily skipping over the fact that nothing stops the teams to iterate over the specification too, one path, one schema at the time&lt;/p&gt;
+&lt;h3&gt;The source of truth&lt;/h3&gt;
+&lt;p&gt;The specification becomes the single authorative source for endpoints, security requirements, data formats and responses. While it is possible to generate the spec from source code, like. e.g. &lt;a href="https://spring.io/projects"&gt;Spring&lt;/a&gt; or &lt;a href="https://quarkus.io/extensions/io.quarkus/quarkus-smallrye-openapi/"&gt;Quarkus&lt;/a&gt;, I see clear advantages to provide the specification standalone. Create it &lt;a href="https://tools.openapis.org/"&gt;with a tool&lt;/a&gt; like &lt;a href="https://studio.apicur.io/"&gt;Apicur.io&lt;/a&gt;, &lt;a href="https://stoplight.io/"&gt;Stoplight&lt;/a&gt; or &lt;a href="https://apigit.com/"&gt;APIGit&lt;/a&gt;. Or use &lt;a href="https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi"&gt;a plugin&lt;/a&gt; (or &lt;a href="https://marketplace.visualstudio.com/search?term=OpenAPI&amp;amp;target=VSCode"&gt;another&lt;/a&gt;) in your &lt;a href="https://visualstudio.microsoft.com/#vscode-section"&gt;IDE&lt;/a&gt; or &lt;a href="https://plugins.jetbrains.com/search?search=OpenAPI"&gt;the other one&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Once you have your first draft, you want to implement it server side. &lt;a href="https://vertx.io"&gt;Eclipse vert.x&lt;/a&gt; offers the &lt;a href="https://vertx.io/docs/vertx-web-openapi-router/java/"&gt;Vert.x OpenAPI Router&lt;/a&gt; for exactly that. You can get more details from my &lt;a href="https://stwissel.github.io/presentations/OpenAPI2023/index.html"&gt;OpenAPI talk&lt;/a&gt;, or by peeking into the &lt;a href="https://github.com/Stwissel/openapi-talk"&gt;sample project&lt;/a&gt; (which used vert.x inside &lt;a href="https://quarkus.io/"&gt;Quarkus&lt;/a&gt;).&lt;/p&gt;</description>
+	<link>2024/11/using-rbac-with-openapi-and-vertx.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>600b57a0-9dcc-11ef-b719-8793681eb8df</guid>
+	<pubDate>08 November 2024</pubDate>
+
+</item>
 <item>
 	<title>One-Off IdP with KeyCloak</title>
 	<description>&lt;p&gt;When end-2-end testing applications that use an &lt;a href="https://en.wikipedia.org/wiki/Identity_provider"&gt;IdP&lt;/a&gt;, an IdP needs to be in a known state to make test repeatable.&lt;/p&gt;
@@ -322,41 +335,6 @@ GROUP BY c.id, c.name;
 	<author>Stephan H. Wissel</author>
 	<guid>e01d6620-fbcb-11ee-83f2-810c012896ec</guid>
 	<pubDate>16 April 2024</pubDate>
-
-</item>
-<item>
-	<title>nginx as ingress for Docker compose</title>
-	<description>&lt;p&gt;In June I wrote about how to use &lt;a href="/blog/2023/06/docker-nginx-spa-and-brotli-compression.html"&gt;Docker &amp;amp; nginx&lt;/a&gt; to deliver statically rendered &lt;a href="https://github.com/google/brotli"&gt;brotli&lt;/a&gt; files for your web (frontend) application. It improves delivery quite a bid, but left me wonder: isn't there too much static WebServer involved?&lt;/p&gt;
-&lt;h3&gt;Double hop to deliver static files&lt;/h3&gt;
-&lt;p&gt;A typical web application using micro/mini/midi services looks like this:&lt;/p&gt;
-&lt;p&gt;&lt;img src="/blog/images/2023/TypicalDockerConfig.jpg" alt="A typical Docker configuration"&gt;&lt;/p&gt;
-&lt;p&gt;It is common, easy and concerns quite separated. However it comes with a set of challenges:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;nginx doesn't do http/2 on &lt;a href="https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/"&gt;&lt;code&gt;proxy_pass&lt;/code&gt;&lt;/a&gt;, so you miss the ability to serve static files directly with http/2&lt;/li&gt;
- &lt;li&gt;For static file we have two nginx involved&lt;/li&gt;
- &lt;li&gt;Each service needs to be exposed to the host at some port&lt;/li&gt;
- &lt;li&gt;The service architecture leaks to the host based nginx. SO any change in service needs an update to the &lt;code&gt;docker-compose.yml&lt;/code&gt; &lt;strong&gt;AND&lt;/strong&gt; the host based nginx configuration&lt;/li&gt;
- &lt;li&gt;the containers depend on that, external to them, configuration&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;So I tried to design a better way to handle this without going all &lt;a href="https://kubernetes.io/"&gt;K-in&lt;/a&gt;:&lt;/p&gt;
-&lt;p&gt;&lt;img src="/blog/images/2023/DockerConfigWithNginx.jpg" alt="Docker configuration with ingress as component"&gt;&lt;/p&gt;
-&lt;p&gt;This looed like a more promising approach:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;Services could be addressed with their internal network name&lt;/li&gt;
- &lt;li&gt;Only Ports 80 and 443 of one container need exposure on the host&lt;/li&gt;
- &lt;li&gt;The nginx configuration inside the container is immutable and can't accidentially be reconfigured in production (your image comes from a pipeline isn't it)&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;Challenges&lt;/h3&gt;
-&lt;ul&gt;
- &lt;li&gt;When trying to configure certbot, I initially tried using the &lt;code&gt;--nginx&lt;/code&gt; parameter with an http challenge and shared data mounts. None of the attempts worked satisfactory, so at the end I settled on a&lt;a href="https://letsencrypt.org/docs/challenge-types/#dns-01-challenge"&gt;DNS-01&lt;/a&gt; using &lt;a href="https://www.cloudflare.com/"&gt;CloudFlare&lt;/a&gt;.&lt;/li&gt;
- &lt;li&gt;Since I wanted the nginx configuration to be inside the container image (and not on a data mount), a good understandig of nginx's configuration is necessary. The only persisted information was &lt;code&gt;/etc/letsencrypt&lt;/code&gt; for the certificate and a secret for CloudFlare credentials&lt;/li&gt;
- &lt;li&gt;When the nginx configuration is statically configured for TLS, on initial load it will fail since the certs don't exist yet. Auntie Google suggested a manual run of certbot, but I favour &lt;code&gt;docker compose up&lt;/code&gt; to handle everything&lt;/li&gt;
- &lt;li&gt;I ended up creating my own docker images, which was an epiphany: it absolutely makes sense to build a container image for single use instead of trying hard to make it configurable and vulnerable to mis-configuration&lt;/li&gt;
-&lt;/ul&gt;</description>
-	<link>2023/11/nginx-as-ingress-for-docker-compose.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>c5cd81d0-83ab-11ee-a943-5f6e43c4acd6</guid>
-	<pubDate>15 November 2023</pubDate>
 
 </item>
 
