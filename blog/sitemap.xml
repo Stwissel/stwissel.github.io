@@ -6,7 +6,79 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 20 Nov 2024 11:04:21 +0000</pubdate>
+	<pubdate>Mon, 30 Dec 2024 05:23:31 +0000</pubdate>
+<item>
+	<title>Java Record Derived Creation (stopgap until JEP 468 arrives)</title>
+	<description>&lt;p&gt;Java 14 (in a preview feature) introduced &lt;a href="https://docs.oracle.com/en/java/javase/14/language/records.html"&gt;Records&lt;/a&gt;. In a nutshell: Records are (&lt;a href="https://codeadventures.littlebluefrog.nl/posts/06-immutability-in-records/"&gt;mostly&lt;/a&gt;) immutable objects with a greatly reduced amount of boilerplate code requirements. For a detailed introduction head over to &lt;a href="https://www.baeldung.com/java-record-keyword"&gt;Baeldung&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;When records need update&lt;/h3&gt;
+&lt;p&gt;The short answer: create a new record and use the existing as input. Let's look at an example:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;public record Billionaire(String name, Long wealth, Temporal assessment) {
+
+  public Billionaire cloneWithNewAssesment(Long newWealth, Temporal currentAssesment) {
+    return new Billionaire(this.name, newWealth,currentAssesment);
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;By itself this is a clean solution. You might add another function for unchanged assesment values. It gets messy when your records have a few more fields.&lt;/p&gt;
+&lt;p&gt;To address this, &lt;a href="https://openjdk.org/jeps/468"&gt;JEP 468&lt;/a&gt; has neen proposed. Unfortunately it isn't seen anywhere in &lt;a href="https://openjdk.org/projects/jdk/23/"&gt;JDK 23&lt;/a&gt; or &lt;a href="https://openjdk.org/projects/jdk/24/"&gt;JDK 24&lt;/a&gt;. Its syntax follows the spirit of boilerplate avoidance.&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;// Wealth changed
+Billonaire theUpdated = oldBillionaire with { newWealth, newAssesment}
+
+// Wealth unchanged
+Billonaire anotherUpdated = oldBillionaire with { newAssesment}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Ultimately that's the way to go. Until then I needed a stopgap measure. It contains quite some boilerplate, following the &lt;a href="https://www.digitalocean.com/community/tutorials/builder-design-pattern-in-java"&gt;builder pattern&lt;/a&gt; to make use easier&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;public record Billionaire(String name, Long wealth, Temporal assessment) {
+
+  public BillionaireUpdater forCloning() {
+    return new BillionaireUpdater(this);
+  }
+}
+
+public class BillionaireUpdater {
+
+  Long wealth = null;
+  Temporal assessment = null;
+  final Billionaire old;
+
+
+  public BillionaireUpdater(Billionaire old) {
+    this.old = old;
+  }
+
+  public BillionaireUpdater wealth(Long wealth) {
+    this.wealth = wealth;
+    return this;
+  }
+
+  public BillionaireUpdater assessment(Temporal assessment) {
+    this.assessment = assessment;
+    return this;
+  }
+
+  public Billionaire build() {
+    return new Billionaire(
+      old.name(),
+      this.wealth == null ? old.wealth : this.wealth,
+      this.assesment == null ? old.assesment : this.assesment
+    );
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This approach keeps the "bulky" code outside the record, so once &lt;a href="https://openjdk.org/jeps/468"&gt;JEP 468&lt;/a&gt; becomes available, updating should be managable leading to the ultimate removal of the &lt;code&gt;Updater&lt;/code&gt; classes. The use is quite straight forward:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;Billionaire theUpdated = oldBillionaire.forCloning()
+                                    .wealth(insaneAmount)
+                                    .assesment(dateOfAssesment)
+                                    .build();
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2024/12/java-record-derived-creation.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>5f44d330-c664-11ef-af6d-a7bb66125fd9</guid>
+	<pubDate>30 December 2024</pubDate>
+
+</item>
 <item>
 	<title>Building ARM64 on Github</title>
 	<description>&lt;p&gt;Getting your &lt;a href="https://www.redhat.com/en/topics/devops/what-is-ci-cd"&gt;CI/CD&lt;/a&gt; pipeline right can be a daunting task. Here is one I had to address:&lt;/p&gt;
@@ -262,80 +334,6 @@ GROUP BY c.id, c.name;
 	<author>Stephan H. Wissel</author>
 	<guid>0d152760-23ce-11ef-ab74-87542543d935</guid>
 	<pubDate>06 June 2024</pubDate>
-
-</item>
-<item>
-	<title>Development Containers - the fine print</title>
-	<description>&lt;p&gt;&lt;a href="https://containers.dev/"&gt;Development Containers&lt;/a&gt; are supposed to liberate your development environment from a specific local installation, like &lt;a href="https://opencontainers.org/"&gt;container technology&lt;/a&gt; liberated your runtimes (a.k.a &lt;a href="https://yaml.org/"&gt;YAML&lt;/a&gt;ed them into &lt;a href="https://www.docker.com/"&gt;Docker&lt;/a&gt; or &lt;a href="https://kubernetes.io/"&gt;Kubernetes&lt;/a&gt;).&lt;/p&gt;
-&lt;p&gt;&lt;img src="/blog/images/2024/MustUseHelmchart.png" alt="Helmchart Pun"&gt;&lt;/p&gt;
-&lt;h3&gt;Development != Runtime&lt;/h3&gt;
-&lt;p&gt;Containerization for development has some overlap and quite some difference to containerization for production:&lt;/p&gt;
-&lt;table&gt;
- &lt;thead&gt;
-  &lt;tr&gt;
-   &lt;th&gt;Topic&lt;/th&gt;
-   &lt;th&gt;Development&lt;/th&gt;
-   &lt;th&gt;Production&lt;/th&gt;
-  &lt;/tr&gt;
- &lt;/thead&gt;
- &lt;tbody&gt;
-  &lt;tr&gt;
-   &lt;td&gt;Mutability&lt;/td&gt;
-   &lt;td&gt;You alter container content&lt;/td&gt;
-   &lt;td&gt;Container is static&lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td&gt;Network&lt;/td&gt;
-   &lt;td&gt;Use internal network&lt;/td&gt;
-   &lt;td&gt;Use internal network&lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td&gt;Access&lt;/td&gt;
-   &lt;td&gt;Developer tools++&lt;/td&gt;
-   &lt;td&gt;Browser / App&lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td&gt;Containers&lt;/td&gt;
-   &lt;td&gt;multiple&lt;/td&gt;
-   &lt;td&gt;multiple&lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td&gt;Volumes&lt;/td&gt;
-   &lt;td&gt;primary container binds projectdir&lt;br&gt;
-    all others &lt;strong&gt;mount&lt;/strong&gt; only&lt;/td&gt;
-   &lt;td&gt;all: bind or mount&lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td&gt;Configuration&lt;/td&gt;
-   &lt;td&gt;&lt;code&gt;devcontainer.json&lt;/code&gt;, &lt;code&gt;docker-compose.yml&lt;/code&gt;&lt;/td&gt;
-   &lt;td&gt;&lt;code&gt;docker-compose.yml&lt;/code&gt;,&lt;code&gt;Helm Chart&lt;/code&gt;&lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td&gt;Scope&lt;/td&gt;
-   &lt;td&gt;Runtime &amp;amp; Tooling&lt;/td&gt;
-   &lt;td&gt;Runtime&lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td&gt;Dockerfile&lt;/td&gt;
-   &lt;td&gt;Setup development environment&lt;/td&gt;
-   &lt;td&gt;Configure production&lt;/td&gt;
-  &lt;/tr&gt;
- &lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h3&gt;Insights&lt;/h3&gt;
-&lt;ul&gt;
- &lt;li&gt;There are many &lt;a href="https://containers.dev/overview"&gt;getting started&lt;/a&gt; resources available: &lt;a href="https://code.visualstudio.com/docs/devcontainers/containers"&gt;here&lt;/a&gt;, &lt;a href="https://code.visualstudio.com/docs/devcontainers/tutorial"&gt;here&lt;/a&gt;, &lt;a href="https://www.jetbrains.com/help/idea/connect-to-devcontainer.html"&gt;here&lt;/a&gt;, &lt;a href="https://www.google.com/search?q=devcontainer+tutorial"&gt;here&lt;/a&gt; and &lt;a href="https://github.com/0916dhkim/vscode-devcontainer-tutorial"&gt;here&lt;/a&gt;. They are working examples, commonly strong on what and how, but light on why&lt;/li&gt;
- &lt;li&gt;There are &lt;a href="https://containers.dev/templates"&gt;plenty of templates&lt;/a&gt; to learn by example&lt;/li&gt;
- &lt;li&gt;There seem to be substantial differences how it works on different platforms, subtle and annoying&lt;/li&gt;
- &lt;li&gt;On macOS (14.4.1) with with the &lt;a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers"&gt;devcontainer plugin&lt;/a&gt; 0.364.0 mount binds would not work in auxiliary containers, only in the main app&lt;/li&gt;
- &lt;li&gt;I couldn't find any descrption which subset of &lt;a href="https://compose-spec.io"&gt;&lt;code&gt;docker-compose.yml&lt;/code&gt;&lt;/a&gt; is supported&lt;/li&gt;
- &lt;li&gt;The most interesting templates, for now, live on the &lt;a href="https://mcr.microsoft.com/en-us/"&gt;Microsoft Artifact Registry&lt;/a&gt;, when you know &lt;a href="https://mcr.microsoft.com/en-us/catalog?search=Container%20Images"&gt;how to look&lt;/a&gt;. Starting with those saves you tons of time and frustration&lt;/li&gt;
- &lt;li&gt;You will love &lt;code&gt;code --list-extensions&lt;/code&gt; to figure out the extensions you have in your vscode (unless you are a code n00b and don't have any)&lt;/li&gt;
-&lt;/ul&gt;</description>
-	<link>2024/05/devcontainers-the-fine-print.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>99f119a0-0b87-11ef-b8a5-450dafcfe327</guid>
-	<pubDate>12 May 2024</pubDate>
 
 </item>
 

@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<title>NotesSensei's Blog - by year: Year 2024</title>
+<title>NotesSensei's Blog by month: By Date: December 2024</title>
 <script>
 window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
 ga('create', 'UA-72033-1', 'auto');
@@ -98,211 +97,109 @@ ga('send', 'pageview');
 		</header>
 
 
-
 		<div class="row-fluid">
 			<div class="span9">
 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2023/11/index.html"><i class="icon-hand-left"></i>By Date: November 2023</a>
+					<li><a href="/blog/2024/11/index.html"><i class="icon-hand-left"></i>By Date: November 2024</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
 					<span class="divider">|</span>
-					<li><a href="/blog/2024/04/index.html">By Date: April 2024<i class="icon-hand-right"></i></a>
+					<li><a href="/blog/categories/afterhours.html">After hours<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 
 				<div class="well well-raised">
-					<h1>Year 2024</h1>
-				</div>
-				<div class="well">
-					<h1>
-						<a href="12">December</a>
-					</h1>
+					<h1>By Date: December 2024</h1>
 				</div>
 				<article class="well well-raised">
 					<h1>
 						<small><a href="/blog/2024/12/java-record-derived-creation.html">Java Record Derived Creation (stopgap until JEP 468 arrives)</a></small>
 					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+					<hr />
+					<div><p>Java 14 (in a preview feature) introduced <a href="https://docs.oracle.com/en/java/javase/14/language/records.html">Records</a>. In a nutshell: Records are (<a href="https://codeadventures.littlebluefrog.nl/posts/06-immutability-in-records/">mostly</a>) immutable objects with a greatly reduced amount of boilerplate code requirements. For a detailed introduction head over to <a href="https://www.baeldung.com/java-record-keyword">Baeldung</a>.</p>
+<h3>When records need update</h3>
+<p>The short answer: create a new record and use the existing as input. Let's look at an example:</p>
+<pre><code class="language-java">public record Billionaire(String name, Long wealth, Temporal assessment) {
+
+  public Billionaire cloneWithNewAssesment(Long newWealth, Temporal currentAssesment) {
+    return new Billionaire(this.name, newWealth,currentAssesment);
+  }
+}
+</code></pre>
+<p>By itself this is a clean solution. You might add another function for unchanged assesment values. It gets messy when your records have a few more fields.</p>
+<p>To address this, <a href="https://openjdk.org/jeps/468">JEP 468</a> has neen proposed. Unfortunately it isn't seen anywhere in <a href="https://openjdk.org/projects/jdk/23/">JDK 23</a> or <a href="https://openjdk.org/projects/jdk/24/">JDK 24</a>. Its syntax follows the spirit of boilerplate avoidance.</p>
+<pre><code class="language-java">// Wealth changed
+Billonaire theUpdated = oldBillionaire with { newWealth, newAssesment}
+
+// Wealth unchanged
+Billonaire anotherUpdated = oldBillionaire with { newAssesment}
+</code></pre>
+<p>Ultimately that's the way to go. Until then I needed a stopgap measure. It contains quite some boilerplate, following the <a href="https://www.digitalocean.com/community/tutorials/builder-design-pattern-in-java">builder pattern</a> to make use easier</p>
+<pre><code class="language-java">public record Billionaire(String name, Long wealth, Temporal assessment) {
+
+  public BillionaireUpdater forCloning() {
+    return new BillionaireUpdater(this);
+  }
+}
+
+public class BillionaireUpdater {
+
+  Long wealth = null;
+  Temporal assessment = null;
+  final Billionaire old;
+
+
+  public BillionaireUpdater(Billionaire old) {
+    this.old = old;
+  }
+
+  public BillionaireUpdater wealth(Long wealth) {
+    this.wealth = wealth;
+    return this;
+  }
+
+  public BillionaireUpdater assessment(Temporal assessment) {
+    this.assessment = assessment;
+    return this;
+  }
+
+  public Billionaire build() {
+    return new Billionaire(
+      old.name(),
+      this.wealth == null ? old.wealth : this.wealth,
+      this.assesment == null ? old.assesment : this.assesment
+    );
+  }
+}
+</code></pre>
+<p>This approach keeps the "bulky" code outside the record, so once <a href="https://openjdk.org/jeps/468">JEP 468</a> becomes available, updating should be managable leading to the ultimate removal of the <code>Updater</code> classes. The use is quite straight forward:</p>
+<pre><code class="language-java">Billionaire theUpdated = oldBillionaire.forCloning()
+                                    .wealth(insaneAmount)
+                                    .assesment(dateOfAssesment)
+                                    .build();
+
+</code></pre>
+<p>As usual YMMV</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 30 December 2024
 <span class="divider">|</span>
 <a href="/blog/2024/12/java-record-derived-creation.html#comments">Comments (0)</a>
 <span class="divider">|</span>
 categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2024/12/java-record-derived-creation.html";
+						</script>
+					</p>
 				</article>
- 				<div class="well">
-					<h1>
-						<a href="11">November</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2024/11/building-arm64-on-github.html">Building ARM64 on Github</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 20 November 2024
-<span class="divider">|</span>
-<a href="/blog/2024/11/building-arm64-on-github.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/quarkus.html">Quarkus</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2024/11/using-rbac-with-openapi-and-vertx.html">Using RBAC with OpenAPI and vert.x</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 08 November 2024
-<span class="divider">|</span>
-<a href="/blog/2024/11/using-rbac-with-openapi-and-vertx.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/openapi.html">OpenAPI</a>  <a href="/blog/categories/vertx.html">vert.x</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						<a href="10">October</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2024/10/onetime-idp-with-keycloak.html">One-Off IdP with KeyCloak</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 20 October 2024
-<span class="divider">|</span>
-<a href="/blog/2024/10/onetime-idp-with-keycloak.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/curl.html">Curl</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2024/10/handle-http-chunked-responses-java-edition.html">Handle HTTP chunked responses - Java edition</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 09 October 2024
-<span class="divider">|</span>
-<a href="/blog/2024/10/handle-http-chunked-responses-java-edition.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						<a href="08">August</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2024/08/quarkus-in-multimodule-projects.html">Quarkus in Multi-Module projects</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 28 August 2024
-<span class="divider">|</span>
-<a href="/blog/2024/08/quarkus-in-multimodule-projects.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/maven.html">Maven</a>  <a href="/blog/categories/quarkus.html">Quarkus</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2024/08/simplify-junit-tests-with-custom-annotations.html">Simplify JUnit tests with custom annotations</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 05 August 2024
-<span class="divider">|</span>
-<a href="/blog/2024/08/simplify-junit-tests-with-custom-annotations.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/junit.html">jUnit</a>  <a href="/blog/categories/maven.html">Maven</a>  <a href="/blog/categories/tdd.html">TDD</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						<a href="07">July</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2024/07/hexagonal-architecture-meets-maven.html">Hexagonal Architecture meets Maven</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 24 July 2024
-<span class="divider">|</span>
-<a href="/blog/2024/07/hexagonal-architecture-meets-maven.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/maven.html">Maven</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						<a href="06">June</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2024/06/how-deep-do-you-authenticate.html">How deep do you authenticate?</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 23 June 2024
-<span class="divider">|</span>
-<a href="/blog/2024/06/how-deep-do-you-authenticate.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/development.html">Development</a>  <a href="/blog/categories/identitymanagement.html">Identity Management</a>  <a href="/blog/categories/jwt.html">JWT</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2024/06/nosql-schema-design.html">NoSQL schema design</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 06 June 2024
-<span class="divider">|</span>
-<a href="/blog/2024/06/nosql-schema-design.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/nosql.html">NoSQL</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						<a href="05">May</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2024/05/devcontainers-the-fine-print.html">Development Containers - the fine print</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 12 May 2024
-<span class="divider">|</span>
-<a href="/blog/2024/05/devcontainers-the-fine-print.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/container.html">Container</a>  <a href="/blog/categories/docker.html">Docker</a>  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/nodejs.html">NodeJS</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
- 				<div class="well">
-					<h1>
-						<a href="04">April</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2024/04/maven-build-with-multiple-java-versions.html">Maven build with multiple Java versions</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 16 April 2024
-<span class="divider">|</span>
-<a href="/blog/2024/04/maven-build-with-multiple-java-versions.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/maven.html">Maven</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-				</article>
- 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2023/11/index.html"><i class="icon-hand-left"></i>By Date: November 2023</a>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2024/11/index.html"><i class="icon-hand-left"></i>By Date: November 2024</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
 					<span class="divider">|</span>
-					<li><a href="/blog/2024/04/index.html">By Date: April 2024<i class="icon-hand-right"></i></a>
+					<li><a href="/blog/categories/afterhours.html">After hours<i class="icon-hand-right"></i></a>
 					</li>
 				</ul>
 
@@ -434,7 +331,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 						<li ><a href="/blog/2021/">2021</a></li>
 						<li ><a href="/blog/2022/">2022</a></li>
 						<li ><a href="/blog/2023/">2023</a></li>
-						<li  class="active"><a href="/blog/2024/">2024</a></li>
+						<li ><a href="/blog/2024/">2024</a></li>
 						<li ><a href="/blog/all.html" title="That's a long list!">Complete archive</a></li>
 					</ul>
 				</aside>
@@ -447,8 +344,8 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 			</div>
 		</div>
 	</div>
-	<!-- Footer ================================================== -->
-			<footer>
+	<!-- Footer	================================================== -->
+		<footer>
 		<div class="container">
 			<div class="row">
 				<div class="span2">
@@ -507,9 +404,6 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 		</div>
 	</footer>
 
-	<script type="text/javascript">
-		var permaLink = "https://wissel.net/blog/";
-	</script>
 		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/blog/js/blogmain.js"></script>

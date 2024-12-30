@@ -98,6 +98,87 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2024/12/java-record-derived-creation.html">Java Record Derived Creation (stopgap until JEP 468 arrives)</a></small></h1>
+					<hr />
+					<div><p>Java 14 (in a preview feature) introduced <a href="https://docs.oracle.com/en/java/javase/14/language/records.html">Records</a>. In a nutshell: Records are (<a href="https://codeadventures.littlebluefrog.nl/posts/06-immutability-in-records/">mostly</a>) immutable objects with a greatly reduced amount of boilerplate code requirements. For a detailed introduction head over to <a href="https://www.baeldung.com/java-record-keyword">Baeldung</a>.</p>
+<h3>When records need update</h3>
+<p>The short answer: create a new record and use the existing as input. Let's look at an example:</p>
+<pre><code class="language-java">public record Billionaire(String name, Long wealth, Temporal assessment) {
+
+  public Billionaire cloneWithNewAssesment(Long newWealth, Temporal currentAssesment) {
+    return new Billionaire(this.name, newWealth,currentAssesment);
+  }
+}
+</code></pre>
+<p>By itself this is a clean solution. You might add another function for unchanged assesment values. It gets messy when your records have a few more fields.</p>
+<p>To address this, <a href="https://openjdk.org/jeps/468">JEP 468</a> has neen proposed. Unfortunately it isn't seen anywhere in <a href="https://openjdk.org/projects/jdk/23/">JDK 23</a> or <a href="https://openjdk.org/projects/jdk/24/">JDK 24</a>. Its syntax follows the spirit of boilerplate avoidance.</p>
+<pre><code class="language-java">// Wealth changed
+Billonaire theUpdated = oldBillionaire with { newWealth, newAssesment}
+
+// Wealth unchanged
+Billonaire anotherUpdated = oldBillionaire with { newAssesment}
+</code></pre>
+<p>Ultimately that's the way to go. Until then I needed a stopgap measure. It contains quite some boilerplate, following the <a href="https://www.digitalocean.com/community/tutorials/builder-design-pattern-in-java">builder pattern</a> to make use easier</p>
+<pre><code class="language-java">public record Billionaire(String name, Long wealth, Temporal assessment) {
+
+  public BillionaireUpdater forCloning() {
+    return new BillionaireUpdater(this);
+  }
+}
+
+public class BillionaireUpdater {
+
+  Long wealth = null;
+  Temporal assessment = null;
+  final Billionaire old;
+
+
+  public BillionaireUpdater(Billionaire old) {
+    this.old = old;
+  }
+
+  public BillionaireUpdater wealth(Long wealth) {
+    this.wealth = wealth;
+    return this;
+  }
+
+  public BillionaireUpdater assessment(Temporal assessment) {
+    this.assessment = assessment;
+    return this;
+  }
+
+  public Billionaire build() {
+    return new Billionaire(
+      old.name(),
+      this.wealth == null ? old.wealth : this.wealth,
+      this.assesment == null ? old.assesment : this.assesment
+    );
+  }
+}
+</code></pre>
+<p>This approach keeps the "bulky" code outside the record, so once <a href="https://openjdk.org/jeps/468">JEP 468</a> becomes available, updating should be managable leading to the ultimate removal of the <code>Updater</code> classes. The use is quite straight forward:</p>
+<pre><code class="language-java">Billionaire theUpdated = oldBillionaire.forCloning()
+                                    .wealth(insaneAmount)
+                                    .assesment(dateOfAssesment)
+                                    .build();
+
+</code></pre>
+<p>As usual YMMV</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 30 December 2024
+<span class="divider">|</span>
+<a href="/blog/2024/12/java-record-derived-creation.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2024/12/java-record-derived-creation.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2024/11/building-arm64-on-github.html">Building ARM64 on Github</a></small></h1>
 					<hr />
 					<div><p>Getting your <a href="https://www.redhat.com/en/topics/devops/what-is-ci-cd">CI/CD</a> pipeline right can be a daunting task. Here is one I had to address:</p>
@@ -439,90 +520,6 @@ categories:  <a href="/blog/categories/nosql.html">NoSQL</a>  <a href="/blog/cat
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2024/06/nosql-schema-design.html";
-						</script>
-					</p></p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2024/05/devcontainers-the-fine-print.html">Development Containers - the fine print</a></small></h1>
-					<hr />
-					<div><p><a href="https://containers.dev/">Development Containers</a> are supposed to liberate your development environment from a specific local installation, like <a href="https://opencontainers.org/">container technology</a> liberated your runtimes (a.k.a <a href="https://yaml.org/">YAML</a>ed them into <a href="https://www.docker.com/">Docker</a> or <a href="https://kubernetes.io/">Kubernetes</a>).</p>
-<p><img src="/blog/images/2024/MustUseHelmchart.png" alt="Helmchart Pun"></p>
-<h3>Development != Runtime</h3>
-<p>Containerization for development has some overlap and quite some difference to containerization for production:</p>
-<table>
- <thead>
-  <tr>
-   <th>Topic</th>
-   <th>Development</th>
-   <th>Production</th>
-  </tr>
- </thead>
- <tbody>
-  <tr>
-   <td>Mutability</td>
-   <td>You alter container content</td>
-   <td>Container is static</td>
-  </tr>
-  <tr>
-   <td>Network</td>
-   <td>Use internal network</td>
-   <td>Use internal network</td>
-  </tr>
-  <tr>
-   <td>Access</td>
-   <td>Developer tools++</td>
-   <td>Browser / App</td>
-  </tr>
-  <tr>
-   <td>Containers</td>
-   <td>multiple</td>
-   <td>multiple</td>
-  </tr>
-  <tr>
-   <td>Volumes</td>
-   <td>primary container binds projectdir<br>
-    all others <strong>mount</strong> only</td>
-   <td>all: bind or mount</td>
-  </tr>
-  <tr>
-   <td>Configuration</td>
-   <td><code>devcontainer.json</code>, <code>docker-compose.yml</code></td>
-   <td><code>docker-compose.yml</code>,<code>Helm Chart</code></td>
-  </tr>
-  <tr>
-   <td>Scope</td>
-   <td>Runtime &amp; Tooling</td>
-   <td>Runtime</td>
-  </tr>
-  <tr>
-   <td>Dockerfile</td>
-   <td>Setup development environment</td>
-   <td>Configure production</td>
-  </tr>
- </tbody>
-</table>
-<h3>Insights</h3>
-<ul>
- <li>There are many <a href="https://containers.dev/overview">getting started</a> resources available: <a href="https://code.visualstudio.com/docs/devcontainers/containers">here</a>, <a href="https://code.visualstudio.com/docs/devcontainers/tutorial">here</a>, <a href="https://www.jetbrains.com/help/idea/connect-to-devcontainer.html">here</a>, <a href="https://www.google.com/search?q=devcontainer+tutorial">here</a> and <a href="https://github.com/0916dhkim/vscode-devcontainer-tutorial">here</a>. They are working examples, commonly strong on what and how, but light on why</li>
- <li>There are <a href="https://containers.dev/templates">plenty of templates</a> to learn by example</li>
- <li>There seem to be substantial differences how it works on different platforms, subtle and annoying</li>
- <li>On macOS (14.4.1) with with the <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers">devcontainer plugin</a> 0.364.0 mount binds would not work in auxiliary containers, only in the main app</li>
- <li>I couldn't find any descrption which subset of <a href="https://compose-spec.io"><code>docker-compose.yml</code></a> is supported</li>
- <li>The most interesting templates, for now, live on the <a href="https://mcr.microsoft.com/en-us/">Microsoft Artifact Registry</a>, when you know <a href="https://mcr.microsoft.com/en-us/catalog?search=Container%20Images">how to look</a>. Starting with those saves you tons of time and frustration</li>
- <li>You will love <code>code --list-extensions</code> to figure out the extensions you have in your vscode (unless you are a code n00b and don't have any)</li>
-</ul></div>
-					<hr />
- <a href="/blog/2024/05/devcontainers-the-fine-print.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 12 May 2024
-<span class="divider">|</span>
-<a href="/blog/2024/05/devcontainers-the-fine-print.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/container.html">Container</a>  <a href="/blog/categories/docker.html">Docker</a>  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/nodejs.html">NodeJS</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2024/05/devcontainers-the-fine-print.html";
 						</script>
 					</p></p>
 				</article>
