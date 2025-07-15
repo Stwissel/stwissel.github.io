@@ -99,6 +99,101 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2025/07/report-your-csp.html">Report your CSP (violations)</a></small></h1>
+					<hr />
+					<div><p>I'm a big fan of a strict <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP">Content Security Policy (CSP)</a>. It can be a pain to setup (but there is help, <a href="https://report-uri.com/home/generate"><strong>here</strong></a>, <a href="https://cybeready.com/top-9-content-security-policy-generators/">here</a>, <a href="https://chromewebstore.google.com/detail/content-security-policy-c/ahlnecfloencbkpfnpljbojmjkfgnmdc?hl=en">here</a> and <a href="https://www.quantcdn.io/tools/automatic-csp-generator"><strong>here</strong></a>) and <a href="https://csp-evaluator.withgoogle.com/">evaluate</a>.</p>
+<h3>Let's report it</h3>
+<p>You won't know if a policy was tried to be violated unless the attempt is reported back to your application. For that purpose we use the CSP directives <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/report-to"><code>report-to</code></a> and the older, deprecated <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/report-uri"><code>report-uri</code></a>. Until Firefox catches up, use both. When a browser supports <code>report-to</code>, <code>report-uri</code> gets ignored.</p>
+<p>Reporting isn't only useful in production, but already during development and especially during retrofitting. There you can swap the <code>Content-Security-Policy</code> header for <code>Content-Security-Policy-Report-Only</code>. It will allow all content to load, but report back all violations.</p>
+<p>You then run your <a href="https://www.browserstack.com/guide/end-to-end-testing">E2E Tests</a> (You have those, haven't you?) and get a free overview what loads from where. Adjust the CSP, rinse and repeat.</p>
+<h3>Where to report to?</h3>
+<p>There are numerous SaaS providers with fancy dashboards, that offer ready made solutions. When you are pressed for time, that might be your best option. I haven't evaluated them, so I can't recommend or endorse them.</p>
+<p>What I can do, is showing you server side code snippets, to integrate reporting into your application. A CSP violation report has the mime type <code>application/reports+json</code> and for the older format <code>application/csp-report</code>, we shall use this.</p>
+<h3>Vert.x</h3>
+<p>The <a href="https://opensource.hcltechsw.com/Domino-rest-api/">Domino REST API</a> got implemented using <a href="https://vertx.io">Vert.x</a>, so this goes first.</p>
+<pre><code class="language-Java">public void cspReport(final Router router) {
+  router.route("/csp-violation-report")
+     .method(HttpMethod.POST)
+     .consumes("application/csp-report",
+               "application/reports+json")
+     .handler(ctx -&gt; {
+        try {
+          final JsonObject json = ctx.body().asJsonObject();
+          // Do something with the log
+          logCspViolation(json);
+        } catch (Exception e) {
+          // Add you loggin here
+        }
+        ctx.response().setStatusCode(204).end();
+     });
+}
+</code></pre>
+<h4>Quarkus</h4>
+<p><a href="https://quarkus.io/guides/rest">Quarkus REST</a> goes next.</p>
+<pre><code class="language-java">@POST
+@Path("/csp-violation-report")
+@Consumes("application/csp-report","application/reports+json")
+public void cspReport(final HttpServerResponse response, final JsonObject body) {
+  // Do something with the log
+  logCspViolation(body);
+  response.setStatusCode(204).end();
+}
+</code></pre>
+<h3>ExpressJS</h3>
+<p>The popular NodeJS web framework <a href="https://expressjs.com/">ExpressJS</a> next:</p>
+<pre><code class="language-js">const setupCspReportRoute = (app) =&gt; {
+  app.post('/csp-violation-report', express.json(), (req, res) =&gt; {
+    logCspViolation(req.body);
+    res.status(204).end();
+  });
+};
+</code></pre>
+<h3>Rust / Rocket</h3>
+<p>It isn't done, until it has been rewritten in <a href="https://www.rust-lang.org/">Rust</a>, in this case using <a href="https://rocket.rs/">Rocket</a>.</p>
+<pre><code class="language-rust">use rocket::{post, routes, serde::json::Json, http::Status};
+use serde_json::Value;
+use my_app::logCspViolation;
+
+#[post("/csp-violation-report", format = "json", data = "&lt;body&gt;")]
+fn csp_report(body: Json&lt;Value&gt;) -&gt; Status {
+    logCspViolation(&amp;body);
+    Status::NoContent
+}
+
+// To mount the route in your Rocket app:
+rocket::build().mount("/", routes![csp_report]);
+</code></pre>
+<h3>Rust / Axum</h3>
+<p>There are <a href="https://blog.logrocket.com/top-rust-web-frameworks/">more options</a> around in Rust, e.g. <a href="https://github.com/tokio-rs/axum">Axum</a></p>
+<pre><code class="language-rust">use axum::{routing::post, Json, Router, http::StatusCode};
+use serde_json::Value;
+use my_app::logCspViolation;
+
+async fn csp_report(Json(body): Json&lt;Value&gt;) -&gt; StatusCode {
+    logCspViolation(&amp;body);
+    StatusCode::NO_CONTENT
+}
+
+// To mount the route in your Axum app:
+let app = Router::new().route("/csp-violation-report", post(csp_report));
+</code></pre>
+<p>How do you handle <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP">CSP</a>?</p>
+<p>As usual YMMV</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 07 July 2025
+<span class="divider">|</span>
+<a href="/blog/2025/07/report-your-csp.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2025/07/report-your-csp.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2025/06/html-templates-spa.html">HTML's template element in single page applications</a></small></h1>
 					<hr />
 					<div><p>"<em>We need to use [insert-framework-of-the-day]!</em>" is the typical answer when asking for a light web single page application (SPA).</p>
@@ -464,38 +559,6 @@ categories:  <a href="/blog/categories/drapi.html">DRAPI</a>  <a href="/blog/cat
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2024/10/handle-http-chunked-responses-java-edition.html";
-						</script>
-					</p></p>
-				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2024/08/quarkus-in-multimodule-projects.html">Quarkus in Multi-Module projects</a></small></h1>
-					<hr />
-					<div><p>You are developing a web application using <a href="https://quarkus.io/">Quarkus</a> that consists of multiple (micro)services and a bunch of supporting libraries. Since maven modules provide sufficient isolation, you decide to use a parent project to keep dependency versions and parameters in sync and a <a href="https://www.baeldung.com/java-maven-reactor">Maven Reactor</a> to build them together.</p>
-<p>This blog post is for you. A special thanks to <a href="https://github.com/aloubyansky">Alexey</a> for helping out.</p>
-<h2>Moving parts</h2>
-<p>Our objective is to have a development setup where we can edit any of the services or libraries and then run them individually or all together. Ideally without the need to alter configurations between runs and the ability to deploy the setup using devcontainers (note: that's about the development setup, not about deploying the finished application). There are some moving parts:</p>
-<ul>
- <li><a href="https://quarkus.io/">Quarkus</a> CLI or Maven plugin</li>
- <li><a href="https://maven.apache.org/guides/mini/guide-multiple-modules.html">Multi-Module Maven</a> to keep libraries and services together and apart</li>
- <li><a href="https://maven.apache.org/guides/introduction/introduction-to-profiles.html">Maven profiles</a> to conditionally modify maven runs</li>
- <li>Maven's <a href="https://www.baeldung.com/maven-plugin-management"><code>&lt;pluginManagement&gt;</code></a> and <a href="https://www.baeldung.com/maven-dependencymanagement-vs-dependencies-tags"><code>&lt;dependencyManagement&gt;</code></a> to define configurations without activating them</li>
- <li>Your <a href="https://news.ycombinator.com/item?id=26367535">favourite Ide</a> configured for <a href="https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack">Java</a> and <a href="https://marketplace.visualstudio.com/items?itemName=redhat.vscode-quarkus">Quarkus</a></li>
- <li>Understand how VSCode's <a href="https://code.visualstudio.com/docs/editor/tasks">Tasks</a> work</li>
- <li>Know how to setup <a href="https://containers.dev/">DevContainers</a>, especially when you need <a href="https://stackoverflow.com/questions/59231953/what-makes-an-application-a-sidecar">sidecars</a></li>
-</ul>
-<p>That's a lot, let's dig in.</p></div>
-					<hr />
- <a href="/blog/2024/08/quarkus-in-multimodule-projects.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 28 August 2024
-<span class="divider">|</span>
-<a href="/blog/2024/08/quarkus-in-multimodule-projects.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/maven.html">Maven</a>  <a href="/blog/categories/quarkus.html">Quarkus</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2024/08/quarkus-in-multimodule-projects.html";
 						</script>
 					</p></p>
 				</article>

@@ -6,7 +6,93 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Mon, 23 Jun 2025 14:08:23 +0000</pubdate>
+	<pubdate>Tue, 15 Jul 2025 08:47:26 +0000</pubdate>
+<item>
+	<title>Report your CSP (violations)</title>
+	<description>&lt;p&gt;I'm a big fan of a strict &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP"&gt;Content Security Policy (CSP)&lt;/a&gt;. It can be a pain to setup (but there is help, &lt;a href="https://report-uri.com/home/generate"&gt;&lt;strong&gt;here&lt;/strong&gt;&lt;/a&gt;, &lt;a href="https://cybeready.com/top-9-content-security-policy-generators/"&gt;here&lt;/a&gt;, &lt;a href="https://chromewebstore.google.com/detail/content-security-policy-c/ahlnecfloencbkpfnpljbojmjkfgnmdc?hl=en"&gt;here&lt;/a&gt; and &lt;a href="https://www.quantcdn.io/tools/automatic-csp-generator"&gt;&lt;strong&gt;here&lt;/strong&gt;&lt;/a&gt;) and &lt;a href="https://csp-evaluator.withgoogle.com/"&gt;evaluate&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;Let's report it&lt;/h3&gt;
+&lt;p&gt;You won't know if a policy was tried to be violated unless the attempt is reported back to your application. For that purpose we use the CSP directives &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/report-to"&gt;&lt;code&gt;report-to&lt;/code&gt;&lt;/a&gt; and the older, deprecated &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/report-uri"&gt;&lt;code&gt;report-uri&lt;/code&gt;&lt;/a&gt;. Until Firefox catches up, use both. When a browser supports &lt;code&gt;report-to&lt;/code&gt;, &lt;code&gt;report-uri&lt;/code&gt; gets ignored.&lt;/p&gt;
+&lt;p&gt;Reporting isn't only useful in production, but already during development and especially during retrofitting. There you can swap the &lt;code&gt;Content-Security-Policy&lt;/code&gt; header for &lt;code&gt;Content-Security-Policy-Report-Only&lt;/code&gt;. It will allow all content to load, but report back all violations.&lt;/p&gt;
+&lt;p&gt;You then run your &lt;a href="https://www.browserstack.com/guide/end-to-end-testing"&gt;E2E Tests&lt;/a&gt; (You have those, haven't you?) and get a free overview what loads from where. Adjust the CSP, rinse and repeat.&lt;/p&gt;
+&lt;h3&gt;Where to report to?&lt;/h3&gt;
+&lt;p&gt;There are numerous SaaS providers with fancy dashboards, that offer ready made solutions. When you are pressed for time, that might be your best option. I haven't evaluated them, so I can't recommend or endorse them.&lt;/p&gt;
+&lt;p&gt;What I can do, is showing you server side code snippets, to integrate reporting into your application. A CSP violation report has the mime type &lt;code&gt;application/reports+json&lt;/code&gt; and for the older format &lt;code&gt;application/csp-report&lt;/code&gt;, we shall use this.&lt;/p&gt;
+&lt;h3&gt;Vert.x&lt;/h3&gt;
+&lt;p&gt;The &lt;a href="https://opensource.hcltechsw.com/Domino-rest-api/"&gt;Domino REST API&lt;/a&gt; got implemented using &lt;a href="https://vertx.io"&gt;Vert.x&lt;/a&gt;, so this goes first.&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-Java"&gt;public void cspReport(final Router router) {
+  router.route("/csp-violation-report")
+     .method(HttpMethod.POST)
+     .consumes("application/csp-report",
+               "application/reports+json")
+     .handler(ctx -&amp;gt; {
+        try {
+          final JsonObject json = ctx.body().asJsonObject();
+          // Do something with the log
+          logCspViolation(json);
+        } catch (Exception e) {
+          // Add you loggin here
+        }
+        ctx.response().setStatusCode(204).end();
+     });
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4&gt;Quarkus&lt;/h4&gt;
+&lt;p&gt;&lt;a href="https://quarkus.io/guides/rest"&gt;Quarkus REST&lt;/a&gt; goes next.&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;@POST
+@Path("/csp-violation-report")
+@Consumes("application/csp-report","application/reports+json")
+public void cspReport(final HttpServerResponse response, final JsonObject body) {
+  // Do something with the log
+  logCspViolation(body);
+  response.setStatusCode(204).end();
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;ExpressJS&lt;/h3&gt;
+&lt;p&gt;The popular NodeJS web framework &lt;a href="https://expressjs.com/"&gt;ExpressJS&lt;/a&gt; next:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-js"&gt;const setupCspReportRoute = (app) =&amp;gt; {
+  app.post('/csp-violation-report', express.json(), (req, res) =&amp;gt; {
+    logCspViolation(req.body);
+    res.status(204).end();
+  });
+};
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;Rust / Rocket&lt;/h3&gt;
+&lt;p&gt;It isn't done, until it has been rewritten in &lt;a href="https://www.rust-lang.org/"&gt;Rust&lt;/a&gt;, in this case using &lt;a href="https://rocket.rs/"&gt;Rocket&lt;/a&gt;.&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-rust"&gt;use rocket::{post, routes, serde::json::Json, http::Status};
+use serde_json::Value;
+use my_app::logCspViolation;
+
+#[post("/csp-violation-report", format = "json", data = "&amp;lt;body&amp;gt;")]
+fn csp_report(body: Json&amp;lt;Value&amp;gt;) -&amp;gt; Status {
+    logCspViolation(&amp;amp;body);
+    Status::NoContent
+}
+
+// To mount the route in your Rocket app:
+rocket::build().mount("/", routes![csp_report]);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;Rust / Axum&lt;/h3&gt;
+&lt;p&gt;There are &lt;a href="https://blog.logrocket.com/top-rust-web-frameworks/"&gt;more options&lt;/a&gt; around in Rust, e.g. &lt;a href="https://github.com/tokio-rs/axum"&gt;Axum&lt;/a&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-rust"&gt;use axum::{routing::post, Json, Router, http::StatusCode};
+use serde_json::Value;
+use my_app::logCspViolation;
+
+async fn csp_report(Json(body): Json&amp;lt;Value&amp;gt;) -&amp;gt; StatusCode {
+    logCspViolation(&amp;amp;body);
+    StatusCode::NO_CONTENT
+}
+
+// To mount the route in your Axum app:
+let app = Router::new().route("/csp-violation-report", post(csp_report));
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;How do you handle &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP"&gt;CSP&lt;/a&gt;?&lt;/p&gt;
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2025/07/report-your-csp.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>e2912cf0-6148-11f0-b6bc-9dae663e3d57</guid>
+	<pubDate>07 July 2025</pubDate>
+
+</item>
 <item>
 	<title>HTML's template element in single page applications</title>
 	<description>&lt;p&gt;"&lt;em&gt;We need to use [insert-framework-of-the-day]!&lt;/em&gt;" is the typical answer when asking for a light web single page application (SPA).&lt;/p&gt;
@@ -286,28 +372,6 @@ docker run --rm -p 8080:8080 \
 	<author>Stephan H. Wissel</author>
 	<guid>49d83e50-8632-11ef-acaa-2d2a7a285b28</guid>
 	<pubDate>09 October 2024</pubDate>
-
-</item>
-<item>
-	<title>Quarkus in Multi-Module projects</title>
-	<description>&lt;p&gt;You are developing a web application using &lt;a href="https://quarkus.io/"&gt;Quarkus&lt;/a&gt; that consists of multiple (micro)services and a bunch of supporting libraries. Since maven modules provide sufficient isolation, you decide to use a parent project to keep dependency versions and parameters in sync and a &lt;a href="https://www.baeldung.com/java-maven-reactor"&gt;Maven Reactor&lt;/a&gt; to build them together.&lt;/p&gt;
-&lt;p&gt;This blog post is for you. A special thanks to &lt;a href="https://github.com/aloubyansky"&gt;Alexey&lt;/a&gt; for helping out.&lt;/p&gt;
-&lt;h2&gt;Moving parts&lt;/h2&gt;
-&lt;p&gt;Our objective is to have a development setup where we can edit any of the services or libraries and then run them individually or all together. Ideally without the need to alter configurations between runs and the ability to deploy the setup using devcontainers (note: that's about the development setup, not about deploying the finished application). There are some moving parts:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;&lt;a href="https://quarkus.io/"&gt;Quarkus&lt;/a&gt; CLI or Maven plugin&lt;/li&gt;
- &lt;li&gt;&lt;a href="https://maven.apache.org/guides/mini/guide-multiple-modules.html"&gt;Multi-Module Maven&lt;/a&gt; to keep libraries and services together and apart&lt;/li&gt;
- &lt;li&gt;&lt;a href="https://maven.apache.org/guides/introduction/introduction-to-profiles.html"&gt;Maven profiles&lt;/a&gt; to conditionally modify maven runs&lt;/li&gt;
- &lt;li&gt;Maven's &lt;a href="https://www.baeldung.com/maven-plugin-management"&gt;&lt;code&gt;&amp;lt;pluginManagement&amp;gt;&lt;/code&gt;&lt;/a&gt; and &lt;a href="https://www.baeldung.com/maven-dependencymanagement-vs-dependencies-tags"&gt;&lt;code&gt;&amp;lt;dependencyManagement&amp;gt;&lt;/code&gt;&lt;/a&gt; to define configurations without activating them&lt;/li&gt;
- &lt;li&gt;Your &lt;a href="https://news.ycombinator.com/item?id=26367535"&gt;favourite Ide&lt;/a&gt; configured for &lt;a href="https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack"&gt;Java&lt;/a&gt; and &lt;a href="https://marketplace.visualstudio.com/items?itemName=redhat.vscode-quarkus"&gt;Quarkus&lt;/a&gt;&lt;/li&gt;
- &lt;li&gt;Understand how VSCode's &lt;a href="https://code.visualstudio.com/docs/editor/tasks"&gt;Tasks&lt;/a&gt; work&lt;/li&gt;
- &lt;li&gt;Know how to setup &lt;a href="https://containers.dev/"&gt;DevContainers&lt;/a&gt;, especially when you need &lt;a href="https://stackoverflow.com/questions/59231953/what-makes-an-application-a-sidecar"&gt;sidecars&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;That's a lot, let's dig in.&lt;/p&gt;</description>
-	<link>2024/08/quarkus-in-multimodule-projects.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>1b7989c0-6525-11ef-a221-1bdb47be5f49</guid>
-	<pubDate>28 August 2024</pubDate>
 
 </item>
 
