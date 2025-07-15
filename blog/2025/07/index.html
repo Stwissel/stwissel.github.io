@@ -123,86 +123,16 @@ ga('send', 'pageview');
 <p>Reporting isn't only useful in production, but already during development and especially during retrofitting. There you can swap the <code>Content-Security-Policy</code> header for <code>Content-Security-Policy-Report-Only</code>. It will allow all content to load, but report back all violations.</p>
 <p>You then run your <a href="https://www.browserstack.com/guide/end-to-end-testing">E2E Tests</a> (You have those, haven't you?) and get a free overview what loads from where. Adjust the CSP, rinse and repeat.</p>
 <h3>Where to report to?</h3>
-<p>There are numerous SaaS providers with fancy dashboards, that offer ready made solutions. When you are pressed for time, that might be your best option. I haven't evaluated them, so I can't recommend or endorse them.</p>
-<p>What I can do, is showing you server side code snippets, to integrate reporting into your application. A CSP violation report has the mime type <code>application/reports+json</code> and for the older format <code>application/csp-report</code>, we shall use this.</p>
-<h3>Vert.x</h3>
-<p>The <a href="https://opensource.hcltechsw.com/Domino-rest-api/">Domino REST API</a> got implemented using <a href="https://vertx.io">Vert.x</a>, so this goes first.</p>
-<pre><code class="language-Java">public void cspReport(final Router router) {
-  router.route("/csp-violation-report")
-     .method(HttpMethod.POST)
-     .consumes("application/csp-report",
-               "application/reports+json")
-     .handler(ctx -&gt; {
-        try {
-          final JsonObject json = ctx.body().asJsonObject();
-          // Do something with the log
-          logCspViolation(json);
-        } catch (Exception e) {
-          // Add you loggin here
-        }
-        ctx.response().setStatusCode(204).end();
-     });
-}
-</code></pre>
-<h4>Quarkus</h4>
-<p><a href="https://quarkus.io/guides/rest">Quarkus REST</a> goes next.</p>
-<pre><code class="language-java">@POST
-@Path("/csp-violation-report")
-@Consumes("application/csp-report","application/reports+json")
-public void cspReport(final HttpServerResponse response, final JsonObject body) {
-  // Do something with the log
-  logCspViolation(body);
-  response.setStatusCode(204).end();
-}
-</code></pre>
-<h3>ExpressJS</h3>
-<p>The popular NodeJS web framework <a href="https://expressjs.com/">ExpressJS</a> next:</p>
-<pre><code class="language-js">const setupCspReportRoute = (app) =&gt; {
-  app.post('/csp-violation-report', express.json(), (req, res) =&gt; {
-    logCspViolation(req.body);
-    res.status(204).end();
-  });
-};
-</code></pre>
-<h3>Rust / Rocket</h3>
-<p>It isn't done, until it has been rewritten in <a href="https://www.rust-lang.org/">Rust</a>, in this case using <a href="https://rocket.rs/">Rocket</a>.</p>
-<pre><code class="language-rust">use rocket::{post, routes, serde::json::Json, http::Status};
-use serde_json::Value;
-use my_app::logCspViolation;
-
-#[post("/csp-violation-report", format = "json", data = "&lt;body&gt;")]
-fn csp_report(body: Json&lt;Value&gt;) -&gt; Status {
-    logCspViolation(&amp;body);
-    Status::NoContent
-}
-
-// To mount the route in your Rocket app:
-rocket::build().mount("/", routes![csp_report]);
-</code></pre>
-<h3>Rust / Axum</h3>
-<p>There are <a href="https://blog.logrocket.com/top-rust-web-frameworks/">more options</a> around in Rust, e.g. <a href="https://github.com/tokio-rs/axum">Axum</a></p>
-<pre><code class="language-rust">use axum::{routing::post, Json, Router, http::StatusCode};
-use serde_json::Value;
-use my_app::logCspViolation;
-
-async fn csp_report(Json(body): Json&lt;Value&gt;) -&gt; StatusCode {
-    logCspViolation(&amp;body);
-    StatusCode::NO_CONTENT
-}
-
-// To mount the route in your Axum app:
-let app = Router::new().route("/csp-violation-report", post(csp_report));
-</code></pre>
-<p>How do you handle <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP">CSP</a>?</p>
-<p>As usual YMMV</p></div>
+<p>There are numerous SaaS providers with fancy dashboards, that offer ready made solutions. When you are pressed for time, that might be your best option. I haven't evaluated them, so I can't recommend or endorse them.</p></div>
 					<hr />
+ <a href="/blog/2025/07/report-your-csp.html">Read more</a>
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 07 July 2025
 <span class="divider">|</span>
 <a href="/blog/2025/07/report-your-csp.html#comments">Comments (0)</a>
 <span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/javascript.html">JavaScript</a>  <a href="/blog/categories/rust.html">Rust</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2025/07/report-your-csp.html";
@@ -303,6 +233,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 						<li ><a href="/blog/categories/protocols.html">Protocols</a></li>
 						<li ><a href="/blog/categories/quarkus.html">Quarkus</a></li>
 						<li ><a href="/blog/categories/reactive.html">Reactive</a></li>
+						<li ><a href="/blog/categories/rust.html">Rust</a></li>
 						<li ><a href="/blog/categories/salesforce.html">Salesforce</a></li>
 						<li ><a href="/blog/categories/sametime.html">Sametime</a></li>
 						<li ><a href="/blog/categories/sfdx.html">SFDX</a></li>
