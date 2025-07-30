@@ -99,6 +99,35 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2025/07/couchdb-and-jwks-certificates.html">CouchDB and JWKS certificates</a></small></h1>
+					<hr />
+					<div><p>Depending on <a href="/blog/2024/06/how-deep-do-you-authenticate.html">how deep you authenticate</a>, you might be tasked maintaining a user base (and welcome to "I forgot my password" well). The standing recommendation is to implement a single source of identity using a directory as <a href="https://www.cloudflare.com/learning/access-management/what-is-an-identity-provider">Identity Provider (IdP)</a>. My favorite <a href="https://couchdb.apache.org/">NoSQL database</a> can be <a href="https://docs.couchdb.org/en/stable/api/server/authn.html#jwt-authentication">configured</a> to trust JWT signed by a known IdP.</p>
+<h3>Some assembly required</h3>
+<p>CouchDB can be configured in three ways: Edit the respective ini file, use the Fauxton UI or use the REST API. I like the later since I'm comfortable with <a href="https://curl.se/">curl</a> and <a href="https://www.usebruno.com/">Bruno</a> (not a fan of Postman anymore). The steps are:</p>
+<ul>
+ <li>configure a client on your identity provider</li>
+ <li>enable JWT authentication</li>
+ <li>specify what claims are mandatory</li>
+ <li>specify how to map roles</li>
+ <li>add trustedd public keys</li>
+ <li>restart your node</li>
+</ul></div>
+					<hr />
+ <a href="/blog/2025/07/couchdb-and-jwks-certificates.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 30 July 2025
+<span class="divider">|</span>
+<a href="/blog/2025/07/couchdb-and-jwks-certificates.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/couchdb.html">CouchDB</a>  <a href="/blog/categories/jwt.html">JWT</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2025/07/couchdb-and-jwks-certificates.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2025/07/report-your-csp.html">Report your CSP (violations)</a></small></h1>
 					<hr />
 					<div><p>I'm a big fan of a strict <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP">Content Security Policy (CSP)</a>. It can be a pain to setup (but there is help, <a href="https://report-uri.com/home/generate"><strong>here</strong></a>, <a href="https://cybeready.com/top-9-content-security-policy-generators/">here</a>, <a href="https://chromewebstore.google.com/detail/content-security-policy-c/ahlnecfloencbkpfnpljbojmjkfgnmdc?hl=en">here</a> and <a href="https://www.quantcdn.io/tools/automatic-csp-generator"><strong>here</strong></a>) and <a href="https://csp-evaluator.withgoogle.com/">evaluate</a>.</p>
@@ -440,58 +469,6 @@ categories:  <a href="/blog/categories/curl.html">Curl</a>  <a href="/blog/categ
 						</script>
 					</p></p>
 				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2024/10/handle-http-chunked-responses-java-edition.html">Handle HTTP chunked responses - Java edition</a></small></h1>
-					<hr />
-					<div><p>The <a href="https://opensource.hcltechsw.com/Domino-rest-api/">Domino REST API</a> delivers collections using <a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding">chunked transfer encoding</a>. This has the advantage, that you can process results as they arrive. It produces the challenge that the usual client side code is designed to first wait for completion of the request. I wrote about the JavaScript solution <a href="/blog/2023/07/handle-http-chunked-responses.html">a while ago</a>, this is the Java edition.</p>
-<h3>Client choices</h3>
-<p>In JavaScript land the choice of client is simple: <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API">the Fetch API</a>. In Java we have some choices:</p>
-<ul>
- <li>Since Java 11 there's a <a href="https://openjdk.org/groups/net/httpclient/intro.html">HttpClient</a> in the JDK</li>
- <li>A very popular library is provided by the <a href="https://hc.apache.org/httpcomponents-client-5.4.x/index.html">Apache HTTP components</a></li>
- <li>The SPRING framework, undisputed king of Java web frameworks, offers its <a href="https://docs.spring.io/spring-framework/reference/integration/rest-clients.html">own sset of clients</a></li>
- <li>The vert.x framework, which we used to build <a href="https://opensource.hcltechsw.com/Domino-rest-api/references/security/index.html?h=vert.x">DRAPI</a>, features its <a href="https://vertx.io/docs/vertx-web-client/java/">own client</a></li>
-</ul>
-<p>There are probably more around. This article uses the JDK <a href="https://openjdk.org/groups/net/httpclient/intro.html">HttpClient</a>. I'll skip the parts with Authentication and TLS handling, check the <a href="https://github.com/Stwissel/java11-httpclient-chunked">full example</a> for details.</p>
-<h3>How it works</h3>
-<p>First we create an <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpClient.html">java.net.http.HttpClient</a>. It takes care of the http version and the TLS context.</p>
-<pre><code class="language-java">HttpClient getClient(SSLContext sslContext) {
-  return HttpClient.newBuilder()
-           .sslContext(sslContext)
-           .build();
-}
-</code></pre>
-<p>Then we build and execute the request. The <em>magic</em> is the <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpResponse.BodySubscriber.html">BodySubscriber</a> (more on that below).</p>
-<pre><code class="language-java">Integer runGetRequest(HttpClient client, String url, String authHeader, BodySubscriber subscriber) throws Exception {
-  HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header("Authorization", authHeader)
-            .GET()
-            .build();
-
-  CompletableFuture&lt;Integer&gt; response =
-          client.sendAsync(request, responseInfo -&gt; subscriber)
-          .whenComplete((r, t) -&gt; System.out.println("Response: " + r.statusCode()))
-          .thenApply(HttpResponse::body);
-
-  return response.get();
-}
-</code></pre></div>
-					<hr />
- <a href="/blog/2024/10/handle-http-chunked-responses-java-edition.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 09 October 2024
-<span class="divider">|</span>
-<a href="/blog/2024/10/handle-http-chunked-responses-java-edition.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/drapi.html">DRAPI</a>  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2024/10/handle-http-chunked-responses-java-edition.html";
-						</script>
-					</p></p>
-				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/all.html" title="That's a loooong list!">Older entries<i class="icon-hand-right"></i></a>
 					</li>
@@ -557,7 +534,7 @@ categories:  <a href="/blog/categories/drapi.html">DRAPI</a>  <a href="/blog/cat
 				<aside id="sidebar_categoriesArchive" class="well">
 					<ul class="nav nav-list">
 						<li class="nav-header">Categories</li>
-						<li ><a href="/blog/categories/afterhours.html">After hours</a></li>
+						<li ><a href="/blog/categories/afterhours.html">After Hours</a></li>
 						<li ><a href="/blog/categories/agile.html">Agile</a></li>
 						<li ><a href="/blog/categories/ai.html">AI</a></li>
 						<li ><a href="/blog/categories/apex.html">Apex</a></li>

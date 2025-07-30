@@ -6,7 +6,26 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Tue, 15 Jul 2025 11:16:11 +0000</pubdate>
+	<pubdate>Wed, 30 Jul 2025 15:18:13 +0000</pubdate>
+<item>
+	<title>CouchDB and JWKS certificates</title>
+	<description>&lt;p&gt;Depending on &lt;a href="/blog/2024/06/how-deep-do-you-authenticate.html"&gt;how deep you authenticate&lt;/a&gt;, you might be tasked maintaining a user base (and welcome to "I forgot my password" well). The standing recommendation is to implement a single source of identity using a directory as &lt;a href="https://www.cloudflare.com/learning/access-management/what-is-an-identity-provider"&gt;Identity Provider (IdP)&lt;/a&gt;. My favorite &lt;a href="https://couchdb.apache.org/"&gt;NoSQL database&lt;/a&gt; can be &lt;a href="https://docs.couchdb.org/en/stable/api/server/authn.html#jwt-authentication"&gt;configured&lt;/a&gt; to trust JWT signed by a known IdP.&lt;/p&gt;
+&lt;h3&gt;Some assembly required&lt;/h3&gt;
+&lt;p&gt;CouchDB can be configured in three ways: Edit the respective ini file, use the Fauxton UI or use the REST API. I like the later since I'm comfortable with &lt;a href="https://curl.se/"&gt;curl&lt;/a&gt; and &lt;a href="https://www.usebruno.com/"&gt;Bruno&lt;/a&gt; (not a fan of Postman anymore). The steps are:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;configure a client on your identity provider&lt;/li&gt;
+ &lt;li&gt;enable JWT authentication&lt;/li&gt;
+ &lt;li&gt;specify what claims are mandatory&lt;/li&gt;
+ &lt;li&gt;specify how to map roles&lt;/li&gt;
+ &lt;li&gt;add trustedd public keys&lt;/li&gt;
+ &lt;li&gt;restart your node&lt;/li&gt;
+&lt;/ul&gt;</description>
+	<link>2025/07/couchdb-and-jwks-certificates.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>268f01d0-6d46-11f0-802c-d975bb98b8ec</guid>
+	<pubDate>30 July 2025</pubDate>
+
+</item>
 <item>
 	<title>Report your CSP (violations)</title>
 	<description>&lt;p&gt;I'm a big fan of a strict &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP"&gt;Content Security Policy (CSP)&lt;/a&gt;. It can be a pain to setup (but there is help, &lt;a href="https://report-uri.com/home/generate"&gt;&lt;strong&gt;here&lt;/strong&gt;&lt;/a&gt;, &lt;a href="https://cybeready.com/top-9-content-security-policy-generators/"&gt;here&lt;/a&gt;, &lt;a href="https://chromewebstore.google.com/detail/content-security-policy-c/ahlnecfloencbkpfnpljbojmjkfgnmdc?hl=en"&gt;here&lt;/a&gt; and &lt;a href="https://www.quantcdn.io/tools/automatic-csp-generator"&gt;&lt;strong&gt;here&lt;/strong&gt;&lt;/a&gt;) and &lt;a href="https://csp-evaluator.withgoogle.com/"&gt;evaluate&lt;/a&gt;.&lt;/p&gt;
@@ -259,48 +278,6 @@ docker run --rm -p 8080:8080 \
 	<author>Stephan H. Wissel</author>
 	<guid>83111210-8eba-11ef-9eab-1f7495f5460d</guid>
 	<pubDate>20 October 2024</pubDate>
-
-</item>
-<item>
-	<title>Handle HTTP chunked responses - Java edition</title>
-	<description>&lt;p&gt;The &lt;a href="https://opensource.hcltechsw.com/Domino-rest-api/"&gt;Domino REST API&lt;/a&gt; delivers collections using &lt;a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding"&gt;chunked transfer encoding&lt;/a&gt;. This has the advantage, that you can process results as they arrive. It produces the challenge that the usual client side code is designed to first wait for completion of the request. I wrote about the JavaScript solution &lt;a href="/blog/2023/07/handle-http-chunked-responses.html"&gt;a while ago&lt;/a&gt;, this is the Java edition.&lt;/p&gt;
-&lt;h3&gt;Client choices&lt;/h3&gt;
-&lt;p&gt;In JavaScript land the choice of client is simple: &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API"&gt;the Fetch API&lt;/a&gt;. In Java we have some choices:&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;Since Java 11 there's a &lt;a href="https://openjdk.org/groups/net/httpclient/intro.html"&gt;HttpClient&lt;/a&gt; in the JDK&lt;/li&gt;
- &lt;li&gt;A very popular library is provided by the &lt;a href="https://hc.apache.org/httpcomponents-client-5.4.x/index.html"&gt;Apache HTTP components&lt;/a&gt;&lt;/li&gt;
- &lt;li&gt;The SPRING framework, undisputed king of Java web frameworks, offers its &lt;a href="https://docs.spring.io/spring-framework/reference/integration/rest-clients.html"&gt;own sset of clients&lt;/a&gt;&lt;/li&gt;
- &lt;li&gt;The vert.x framework, which we used to build &lt;a href="https://opensource.hcltechsw.com/Domino-rest-api/references/security/index.html?h=vert.x"&gt;DRAPI&lt;/a&gt;, features its &lt;a href="https://vertx.io/docs/vertx-web-client/java/"&gt;own client&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;There are probably more around. This article uses the JDK &lt;a href="https://openjdk.org/groups/net/httpclient/intro.html"&gt;HttpClient&lt;/a&gt;. I'll skip the parts with Authentication and TLS handling, check the &lt;a href="https://github.com/Stwissel/java11-httpclient-chunked"&gt;full example&lt;/a&gt; for details.&lt;/p&gt;
-&lt;h3&gt;How it works&lt;/h3&gt;
-&lt;p&gt;First we create an &lt;a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpClient.html"&gt;java.net.http.HttpClient&lt;/a&gt;. It takes care of the http version and the TLS context.&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-java"&gt;HttpClient getClient(SSLContext sslContext) {
-  return HttpClient.newBuilder()
-           .sslContext(sslContext)
-           .build();
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Then we build and execute the request. The &lt;em&gt;magic&lt;/em&gt; is the &lt;a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpResponse.BodySubscriber.html"&gt;BodySubscriber&lt;/a&gt; (more on that below).&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-java"&gt;Integer runGetRequest(HttpClient client, String url, String authHeader, BodySubscriber subscriber) throws Exception {
-  HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header("Authorization", authHeader)
-            .GET()
-            .build();
-
-  CompletableFuture&amp;lt;Integer&amp;gt; response =
-          client.sendAsync(request, responseInfo -&amp;gt; subscriber)
-          .whenComplete((r, t) -&amp;gt; System.out.println("Response: " + r.statusCode()))
-          .thenApply(HttpResponse::body);
-
-  return response.get();
-}
-&lt;/code&gt;&lt;/pre&gt;</description>
-	<link>2024/10/handle-http-chunked-responses-java-edition.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>49d83e50-8632-11ef-acaa-2d2a7a285b28</guid>
-	<pubDate>09 October 2024</pubDate>
 
 </item>
 
