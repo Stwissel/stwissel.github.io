@@ -99,6 +99,51 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2025/10/a-flexible-filter-for-collections-or-maps.html">A flexible filter for collections or maps</a></small></h1>
+					<hr />
+					<div><p>Building a proxy for http requests I came across an interesting generic problem: filter or mutate a map but only for the occurence of some given set of keys.</p>
+<h3>That's a lot of <code>if - else - switch</code></h3>
+<p>The going approach is to have a specialized method with a switch:</p>
+<pre><code class="language-java">  Map&lt;String, String&gt; transformMap(Map&lt;String, String&gt; input, String joker) {
+    Map&lt;String, String&gt; result = new HashMap&lt;&gt;();
+
+    input.entrySet().forEach(entry -&gt; {
+      String key = entry.getKey();
+      String value = entry.getValue();
+      switch (key) {
+        case "a":
+          result.put(key, "alpha");
+          break;
+        case "b":
+          result.put(key, "beta");
+          break;
+        case "j":
+          result.put(key, joker + "!");
+        default:
+          result.put(key, value);
+      }
+    });
+
+    return result;
+  }
+</code></pre>
+<p>This gets big and hard to maintain fast, so I was thinking of a more neutral approach entertaining <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/function/Function.html">Function</a> and <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html">Optional</a>, hear me out.</p></div>
+					<hr />
+ <a href="/blog/2025/10/a-flexible-filter-for-collections-or-maps.html">Read more</a>
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 04 October 2025
+<span class="divider">|</span>
+<a href="/blog/2025/10/a-flexible-filter-for-collections-or-maps.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/java.html">Java</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2025/10/a-flexible-filter-for-collections-or-maps.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2025/09/arguing-with-claude-about-stablecoins.html">Arguing with Claude about StableCoins</a></small></h1>
 					<hr />
 					<div><p>Winding down after a busy week, I decided to have som fun with <a href="https://claude.ai/">Claude</a>, so I <a href="https://claude.ai/share/dd6f0e0d-1671-427e-ad4a-23239c3001ea">asked</a></p>
@@ -382,87 +427,6 @@ categories:  <a href="/blog/categories/linux.html">Linux</a>  <a href="/blog/cat
 						</script>
 					</p></p>
 				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2024/12/java-record-derived-creation.html">Java Record Derived Creation (stopgap until JEP 468 arrives)</a></small></h1>
-					<hr />
-					<div><p>Java 14 (in a preview feature) introduced <a href="https://docs.oracle.com/en/java/javase/14/language/records.html">Records</a>. In a nutshell: Records are (<a href="https://codeadventures.littlebluefrog.nl/posts/06-immutability-in-records/">mostly</a>) immutable objects with a greatly reduced amount of boilerplate code requirements. For a detailed introduction head over to <a href="https://www.baeldung.com/java-record-keyword">Baeldung</a>.</p>
-<h3>When records need update</h3>
-<p>The short answer: create a new record and use the existing as input. Let's look at an example:</p>
-<pre><code class="language-java">public record Billionaire(String name, Long wealth, Temporal assessment) {
-
-  public Billionaire cloneWithNewAssesment(Long newWealth, Temporal currentAssesment) {
-    return new Billionaire(this.name, newWealth,currentAssesment);
-  }
-}
-</code></pre>
-<p>By itself this is a clean solution. You might add another function for unchanged assesment values. It gets messy when your records have a few more fields.</p>
-<p>To address this, <a href="https://openjdk.org/jeps/468">JEP 468</a> has neen proposed. Unfortunately it isn't seen anywhere in <a href="https://openjdk.org/projects/jdk/23/">JDK 23</a> or <a href="https://openjdk.org/projects/jdk/24/">JDK 24</a>. Its syntax follows the spirit of boilerplate avoidance.</p>
-<pre><code class="language-java">// Wealth changed
-Billonaire theUpdated = oldBillionaire with { newWealth, newAssesment}
-
-// Wealth unchanged
-Billonaire anotherUpdated = oldBillionaire with { newAssesment}
-</code></pre>
-<p>Ultimately that's the way to go. Until then I needed a stopgap measure. It contains quite some boilerplate, following the <a href="https://www.digitalocean.com/community/tutorials/builder-design-pattern-in-java">builder pattern</a> to make use easier</p>
-<pre><code class="language-java">public record Billionaire(String name, Long wealth, Temporal assessment) {
-
-  public BillionaireUpdater forCloning() {
-    return new BillionaireUpdater(this);
-  }
-}
-
-public class BillionaireUpdater {
-
-  Long wealth = null;
-  Temporal assessment = null;
-  final Billionaire old;
-
-
-  public BillionaireUpdater(Billionaire old) {
-    this.old = old;
-  }
-
-  public BillionaireUpdater wealth(Long wealth) {
-    this.wealth = wealth;
-    return this;
-  }
-
-  public BillionaireUpdater assessment(Temporal assessment) {
-    this.assessment = assessment;
-    return this;
-  }
-
-  public Billionaire build() {
-    return new Billionaire(
-      old.name(),
-      this.wealth == null ? old.wealth : this.wealth,
-      this.assesment == null ? old.assesment : this.assesment
-    );
-  }
-}
-</code></pre>
-<p>This approach keeps the "bulky" code outside the record, so once <a href="https://openjdk.org/jeps/468">JEP 468</a> becomes available, updating should be managable leading to the ultimate removal of the <code>Updater</code> classes. The use is quite straight forward:</p>
-<pre><code class="language-java">Billionaire theUpdated = oldBillionaire.forCloning()
-                                    .wealth(insaneAmount)
-                                    .assesment(dateOfAssesment)
-                                    .build();
-
-</code></pre>
-<p>As usual YMMV</p></div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 30 December 2024
-<span class="divider">|</span>
-<a href="/blog/2024/12/java-record-derived-creation.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2024/12/java-record-derived-creation.html";
-						</script>
-					</p></p>
-				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/all.html" title="That's a loooong list!">Older entries<i class="icon-hand-right"></i></a>
 					</li>
@@ -528,7 +492,7 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
 				<aside id="sidebar_categoriesArchive" class="well">
 					<ul class="nav nav-list">
 						<li class="nav-header">Categories</li>
-						<li ><a href="/blog/categories/afterhours.html">After hours</a></li>
+						<li ><a href="/blog/categories/afterhours.html">After Hours</a></li>
 						<li ><a href="/blog/categories/agile.html">Agile</a></li>
 						<li ><a href="/blog/categories/ai.html">AI</a></li>
 						<li ><a href="/blog/categories/apex.html">Apex</a></li>

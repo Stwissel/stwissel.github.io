@@ -6,7 +6,42 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Fri, 26 Sep 2025 01:40:16 +0000</pubdate>
+	<pubdate>Sat, 04 Oct 2025 17:17:38 +0000</pubdate>
+<item>
+	<title>A flexible filter for collections or maps</title>
+	<description>&lt;p&gt;Building a proxy for http requests I came across an interesting generic problem: filter or mutate a map but only for the occurence of some given set of keys.&lt;/p&gt;
+&lt;h3&gt;That's a lot of &lt;code&gt;if - else - switch&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;The going approach is to have a specialized method with a switch:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;  Map&amp;lt;String, String&amp;gt; transformMap(Map&amp;lt;String, String&amp;gt; input, String joker) {
+    Map&amp;lt;String, String&amp;gt; result = new HashMap&amp;lt;&amp;gt;();
+
+    input.entrySet().forEach(entry -&amp;gt; {
+      String key = entry.getKey();
+      String value = entry.getValue();
+      switch (key) {
+        case "a":
+          result.put(key, "alpha");
+          break;
+        case "b":
+          result.put(key, "beta");
+          break;
+        case "j":
+          result.put(key, joker + "!");
+        default:
+          result.put(key, value);
+      }
+    });
+
+    return result;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This gets big and hard to maintain fast, so I was thinking of a more neutral approach entertaining &lt;a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/function/Function.html"&gt;Function&lt;/a&gt; and &lt;a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html"&gt;Optional&lt;/a&gt;, hear me out.&lt;/p&gt;</description>
+	<link>2025/10/a-flexible-filter-for-collections-or-maps.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>8e33a610-a13a-11f0-a492-855ef152a38b</guid>
+	<pubDate>04 October 2025</pubDate>
+
+</item>
 <item>
 	<title>Arguing with Claude about StableCoins</title>
 	<description>&lt;p&gt;Winding down after a busy week, I decided to have som fun with &lt;a href="https://claude.ai/"&gt;Claude&lt;/a&gt;, so I &lt;a href="https://claude.ai/share/dd6f0e0d-1671-427e-ad4a-23239c3001ea"&gt;asked&lt;/a&gt;&lt;/p&gt;
@@ -200,78 +235,6 @@ sudo ufw enable
 	<author>Stephan H. Wissel</author>
 	<guid>dd7313e0-f3a3-11ef-85ce-6116619fca24</guid>
 	<pubDate>26 February 2025</pubDate>
-
-</item>
-<item>
-	<title>Java Record Derived Creation (stopgap until JEP 468 arrives)</title>
-	<description>&lt;p&gt;Java 14 (in a preview feature) introduced &lt;a href="https://docs.oracle.com/en/java/javase/14/language/records.html"&gt;Records&lt;/a&gt;. In a nutshell: Records are (&lt;a href="https://codeadventures.littlebluefrog.nl/posts/06-immutability-in-records/"&gt;mostly&lt;/a&gt;) immutable objects with a greatly reduced amount of boilerplate code requirements. For a detailed introduction head over to &lt;a href="https://www.baeldung.com/java-record-keyword"&gt;Baeldung&lt;/a&gt;.&lt;/p&gt;
-&lt;h3&gt;When records need update&lt;/h3&gt;
-&lt;p&gt;The short answer: create a new record and use the existing as input. Let's look at an example:&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-java"&gt;public record Billionaire(String name, Long wealth, Temporal assessment) {
-
-  public Billionaire cloneWithNewAssesment(Long newWealth, Temporal currentAssesment) {
-    return new Billionaire(this.name, newWealth,currentAssesment);
-  }
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;By itself this is a clean solution. You might add another function for unchanged assesment values. It gets messy when your records have a few more fields.&lt;/p&gt;
-&lt;p&gt;To address this, &lt;a href="https://openjdk.org/jeps/468"&gt;JEP 468&lt;/a&gt; has neen proposed. Unfortunately it isn't seen anywhere in &lt;a href="https://openjdk.org/projects/jdk/23/"&gt;JDK 23&lt;/a&gt; or &lt;a href="https://openjdk.org/projects/jdk/24/"&gt;JDK 24&lt;/a&gt;. Its syntax follows the spirit of boilerplate avoidance.&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-java"&gt;// Wealth changed
-Billonaire theUpdated = oldBillionaire with { newWealth, newAssesment}
-
-// Wealth unchanged
-Billonaire anotherUpdated = oldBillionaire with { newAssesment}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Ultimately that's the way to go. Until then I needed a stopgap measure. It contains quite some boilerplate, following the &lt;a href="https://www.digitalocean.com/community/tutorials/builder-design-pattern-in-java"&gt;builder pattern&lt;/a&gt; to make use easier&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-java"&gt;public record Billionaire(String name, Long wealth, Temporal assessment) {
-
-  public BillionaireUpdater forCloning() {
-    return new BillionaireUpdater(this);
-  }
-}
-
-public class BillionaireUpdater {
-
-  Long wealth = null;
-  Temporal assessment = null;
-  final Billionaire old;
-
-
-  public BillionaireUpdater(Billionaire old) {
-    this.old = old;
-  }
-
-  public BillionaireUpdater wealth(Long wealth) {
-    this.wealth = wealth;
-    return this;
-  }
-
-  public BillionaireUpdater assessment(Temporal assessment) {
-    this.assessment = assessment;
-    return this;
-  }
-
-  public Billionaire build() {
-    return new Billionaire(
-      old.name(),
-      this.wealth == null ? old.wealth : this.wealth,
-      this.assesment == null ? old.assesment : this.assesment
-    );
-  }
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;This approach keeps the "bulky" code outside the record, so once &lt;a href="https://openjdk.org/jeps/468"&gt;JEP 468&lt;/a&gt; becomes available, updating should be managable leading to the ultimate removal of the &lt;code&gt;Updater&lt;/code&gt; classes. The use is quite straight forward:&lt;/p&gt;
-&lt;pre&gt;&lt;code class="language-java"&gt;Billionaire theUpdated = oldBillionaire.forCloning()
-                                    .wealth(insaneAmount)
-                                    .assesment(dateOfAssesment)
-                                    .build();
-
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
-	<link>2024/12/java-record-derived-creation.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>5f44d330-c664-11ef-af6d-a7bb66125fd9</guid>
-	<pubDate>30 December 2024</pubDate>
 
 </item>
 
