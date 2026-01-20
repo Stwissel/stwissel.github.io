@@ -99,6 +99,61 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2026/01/running-your-spa-on-cloudflare.html">Running your SPA on Cloudflare</a></small></h1>
+					<hr />
+					<div><p>Your application is ready, you want to prepare for the incoming storm of users, so you separate your SPI server from your UI. To host the UI <a href="https://www.cloudflare.com/">Cloudflare</a> is chosen, while the API server sits in its data centre. There are a few steps to be had, which are simple, just the AI was acting cute, so I write it down.</p>
+<p><img src="/blog/images/2026/CloudflareSPA.png" alt="Cloudflare hosted SPA"></p>
+<h2>Workers &amp; Pages</h2>
+<p>We shall update our single page application whenever new contenet gets merged into <code>main</code>. All calls to <code>/api/*</code> need to get routed to the API server. These are the steps that wrok. Nota bene: if you want to push from your local machine, the steps are differen and a story for another time.</p>
+<ul>
+ <li>In Cloudflare head to `Build, Compute &amp; AI, Workers &amp; Pages</li>
+ <li>Don't get distracted by the blue "Create application" button, you want to click above it and select <code>+ Add</code> and then Pages (don't select "Worker")</li>
+ <li>Select "Import an existing Git repository" and select your repo (You need the <a href="https://developers.cloudflare.com/cloudflare-one/integrations/cloud-and-saas/github/">GitHub integration</a> for that).</li>
+ <li>configure your build settings, for a <a href="https://vite.dev/guide/">viteJS</a> applicationa, the build command is <code>npm run build</code> and the output directory is <code>dist</code>. Save it and you are good to go.</li>
+</ul>
+<p>Next step is to configure "Custom domains", so <code>app.example.com</code> points to your page. Follow the UI, it is almost automagic when Cloudflare is your DNS provider</p>
+<h2>Redirecting <code>/api</code></h2>
+<p>We want loudflare to proxy it, not to <code>30x</code> redirect. This will allow to harden the API (e.g. drop all request not coming from Cloudflare) later on. Search, with and without AI, suggested solutions revolving around files: <code>_routes.json</code> or <code>_worker.js</code> or elaborate wrangler setups. They all have in common: they didn't work.</p>
+<p>What worked: create a folder <code>functions</code> at the root of your repository. Inside add a file <code>[[path]].js</code> - yes, that's two pairs of square brackets and th letters p a t h. It's the catch all for functions. Inside you add:</p>
+<pre><code class="language-js">export async function onRequest(context) {
+&nbsp;&nbsp;const { request } = context;
+&nbsp;&nbsp;const url = new URL(request.url);
+
+&nbsp;&nbsp;// Test endpoint
+&nbsp;&nbsp;if (url.pathname === '/helloworld') {
+&nbsp;&nbsp;&nbsp;&nbsp;return new Response('Workers of the world unite!', {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;headers: { 'Content-Type': 'text/plain' }
+&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;}
+
+&nbsp;&nbsp;// Proxy API requests
+&nbsp;&nbsp;if (url.pathname.startsWith('/api/')) {
+&nbsp;&nbsp;&nbsp;&nbsp;url.hostname = 'api.example.com';
+&nbsp;&nbsp;&nbsp;&nbsp;url.port = '4443';
+&nbsp;&nbsp;&nbsp;&nbsp;url.protocol = 'https:';
+
+&nbsp;&nbsp;&nbsp;&nbsp;return fetch(url, request);
+&nbsp;&nbsp;}
+
+&nbsp;&nbsp;return context.next();
+</code></pre>
+<p>Hardening the setup is a story for another time.</p>
+<p>As usual YMMV</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 20 January 2026
+<span class="divider">|</span>
+<a href="/blog/2026/01/running-your-spa-on-cloudflare.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/cloudflare.html">Cloudflare</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2026/01/running-your-spa-on-cloudflare.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2025/12/unless-you-have-a-google-size-api-problem-use-curl.html">Unless you have a Google size API problem use curl</a></small></h1>
 					<hr />
 					<div><p>A few days ago <a href="https://www.linkedin.com/posts/notessensei_api-curl-activity-7409921612931620864-uJXO">I posted on LinkedIn</a>:</p>
@@ -421,31 +476,6 @@ categories:  <a href="/blog/categories/webcomponents.html">WebComponents</a>  <a
 						</script>
 					</p></p>
 				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2025/05/fun-with-ai-system-prompts.html">Fun with AI system prompts</a></small></h1>
-					<hr />
-					<div><p><a href="https://www.google.com/search?q=ai+chatbots">AI Chatbots</a> are a popular topic. As part of a session at <a href="https://engage.ug/">Engage 2025</a> I was looking for an easy to grasp example to understand the difference of user prompt and system prompt, the later typically invisible to the user. My goal was to make it abundantly clear how important the system prompt is.</p>
-<p>I settled sending the same user prompt with vastly different system prompts. Here is what I got.</p>
-<h3>Romeo at the balcony</h3>
-<p>Mercutio’s mocking my love and he’s never been in love himself.</p>
-<p>Wait. What’s that light coming from the window over there? It’s like the east, with Juliet as the morning sun! Rise, Juliet, beautiful sun, and kill the jealous moon who’s already fading and sad because you are far more beautiful than she is. Don’t swear off men like the virgin moon goddess Diana—the moon envies you anyway. Her virginal appearance is weak and pale and only fools want to emulate it. Get rid of it.</p>
-<p>It’s my lady! Oh, it’s my love. Oh, if only she knew I love her. She’s talking but I can’t hear anything. What does it matter?</p>
-<p>Her expression means something and I can answer that. No, I’m being too forward. She’s not talking to me. Oh, if two of the most beautiful stars had to leave heaven on important business, they’d ask her eyes to do the twinkling for them while they were gone! What if her eyes took their places in the sky and those stars became her eyes? Her beautiful face would outshine those stars in her head like daylight outshines lamps, while her eyes in the sky would be so bright at nighttime that birds would be convinced it was day. Look at how she leans her cheek on her hand. I wish I were a glove on her hand so I could touch her cheek!</p></div>
-					<hr />
- <a href="/blog/2025/05/fun-with-ai-system-prompts.html">Read more</a>
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 07 May 2025
-<span class="divider">|</span>
-<a href="/blog/2025/05/fun-with-ai-system-prompts.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ai.html">AI</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2025/05/fun-with-ai-system-prompts.html";
-						</script>
-					</p></p>
-				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/all.html" title="That's a loooong list!">Older entries<i class="icon-hand-right"></i></a>
 					</li>
@@ -523,6 +553,7 @@ categories:  <a href="/blog/categories/ai.html">AI</a>
 						<li ><a href="/blog/categories/buyingbroadband.html">Buying Broadband</a></li>
 						<li ><a href="/blog/categories/caldav.html">calDAV</a></li>
 						<li ><a href="/blog/categories/cloudcomputing.html">Cloud Computing</a></li>
+						<li ><a href="/blog/categories/cloudflare.html">Cloudflare</a></li>
 						<li ><a href="/blog/categories/container.html">Container</a></li>
 						<li ><a href="/blog/categories/continuousintegration.html">Continuous integration</a></li>
 						<li ><a href="/blog/categories/couchdb.html">CouchDB</a></li>
@@ -624,6 +655,7 @@ categories:  <a href="/blog/categories/ai.html">AI</a>
 						<li ><a href="/blog/2023/">2023</a></li>
 						<li ><a href="/blog/2024/">2024</a></li>
 						<li ><a href="/blog/2025/">2025</a></li>
+						<li ><a href="/blog/2026/">2026</a></li>
 						<li ><a href="/blog/all.html" title="That's a long list!">Complete archive</a></li>
 					</ul>
 				</aside>

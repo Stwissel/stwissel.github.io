@@ -6,7 +6,53 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 31 Dec 2025 12:56:23 +0000</pubdate>
+	<pubdate>Tue, 20 Jan 2026 19:51:54 +0000</pubdate>
+<item>
+	<title>Running your SPA on Cloudflare</title>
+	<description>&lt;p&gt;Your application is ready, you want to prepare for the incoming storm of users, so you separate your SPI server from your UI. To host the UI &lt;a href="https://www.cloudflare.com/"&gt;Cloudflare&lt;/a&gt; is chosen, while the API server sits in its data centre. There are a few steps to be had, which are simple, just the AI was acting cute, so I write it down.&lt;/p&gt;
+&lt;p&gt;&lt;img src="/blog/images/2026/CloudflareSPA.png" alt="Cloudflare hosted SPA"&gt;&lt;/p&gt;
+&lt;h2&gt;Workers &amp;amp; Pages&lt;/h2&gt;
+&lt;p&gt;We shall update our single page application whenever new contenet gets merged into &lt;code&gt;main&lt;/code&gt;. All calls to &lt;code&gt;/api/*&lt;/code&gt; need to get routed to the API server. These are the steps that wrok. Nota bene: if you want to push from your local machine, the steps are differen and a story for another time.&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;In Cloudflare head to `Build, Compute &amp;amp; AI, Workers &amp;amp; Pages&lt;/li&gt;
+ &lt;li&gt;Don't get distracted by the blue "Create application" button, you want to click above it and select &lt;code&gt;+ Add&lt;/code&gt; and then Pages (don't select "Worker")&lt;/li&gt;
+ &lt;li&gt;Select "Import an existing Git repository" and select your repo (You need the &lt;a href="https://developers.cloudflare.com/cloudflare-one/integrations/cloud-and-saas/github/"&gt;GitHub integration&lt;/a&gt; for that).&lt;/li&gt;
+ &lt;li&gt;configure your build settings, for a &lt;a href="https://vite.dev/guide/"&gt;viteJS&lt;/a&gt; applicationa, the build command is &lt;code&gt;npm run build&lt;/code&gt; and the output directory is &lt;code&gt;dist&lt;/code&gt;. Save it and you are good to go.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Next step is to configure "Custom domains", so &lt;code&gt;app.example.com&lt;/code&gt; points to your page. Follow the UI, it is almost automagic when Cloudflare is your DNS provider&lt;/p&gt;
+&lt;h2&gt;Redirecting &lt;code&gt;/api&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;We want loudflare to proxy it, not to &lt;code&gt;30x&lt;/code&gt; redirect. This will allow to harden the API (e.g. drop all request not coming from Cloudflare) later on. Search, with and without AI, suggested solutions revolving around files: &lt;code&gt;_routes.json&lt;/code&gt; or &lt;code&gt;_worker.js&lt;/code&gt; or elaborate wrangler setups. They all have in common: they didn't work.&lt;/p&gt;
+&lt;p&gt;What worked: create a folder &lt;code&gt;functions&lt;/code&gt; at the root of your repository. Inside add a file &lt;code&gt;[[path]].js&lt;/code&gt; - yes, that's two pairs of square brackets and th letters p a t h. It's the catch all for functions. Inside you add:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-js"&gt;export async function onRequest(context) {
+&amp;nbsp;&amp;nbsp;const { request } = context;
+&amp;nbsp;&amp;nbsp;const url = new URL(request.url);
+
+&amp;nbsp;&amp;nbsp;// Test endpoint
+&amp;nbsp;&amp;nbsp;if (url.pathname === '/helloworld') {
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;return new Response('Workers of the world unite!', {
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;headers: { 'Content-Type': 'text/plain' }
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;});
+&amp;nbsp;&amp;nbsp;}
+
+&amp;nbsp;&amp;nbsp;// Proxy API requests
+&amp;nbsp;&amp;nbsp;if (url.pathname.startsWith('/api/')) {
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;url.hostname = 'api.example.com';
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;url.port = '4443';
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;url.protocol = 'https:';
+
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;return fetch(url, request);
+&amp;nbsp;&amp;nbsp;}
+
+&amp;nbsp;&amp;nbsp;return context.next();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Hardening the setup is a story for another time.&lt;/p&gt;
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2026/01/running-your-spa-on-cloudflare.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>9d69e750-f62d-11f0-b02b-a7d7e8629bc5</guid>
+	<pubDate>20 January 2026</pubDate>
+
+</item>
 <item>
 	<title>Unless you have a Google size API problem use curl</title>
 	<description>&lt;p&gt;A few days ago &lt;a href="https://www.linkedin.com/posts/notessensei_api-curl-activity-7409921612931620864-uJXO"&gt;I posted on LinkedIn&lt;/a&gt;:&lt;/p&gt;
@@ -240,21 +286,6 @@ const updateStuff = async (event) =&amp;gt; {
 	<author>Stephan H. Wissel</author>
 	<guid>bfdb1860-5009-11f0-9a8e-691adff7d010</guid>
 	<pubDate>23 June 2025</pubDate>
-
-</item>
-<item>
-	<title>Fun with AI system prompts</title>
-	<description>&lt;p&gt;&lt;a href="https://www.google.com/search?q=ai+chatbots"&gt;AI Chatbots&lt;/a&gt; are a popular topic. As part of a session at &lt;a href="https://engage.ug/"&gt;Engage 2025&lt;/a&gt; I was looking for an easy to grasp example to understand the difference of user prompt and system prompt, the later typically invisible to the user. My goal was to make it abundantly clear how important the system prompt is.&lt;/p&gt;
-&lt;p&gt;I settled sending the same user prompt with vastly different system prompts. Here is what I got.&lt;/p&gt;
-&lt;h3&gt;Romeo at the balcony&lt;/h3&gt;
-&lt;p&gt;Mercutio?s mocking my love and he?s never been in love himself.&lt;/p&gt;
-&lt;p&gt;Wait. What?s that light coming from the window over there? It?s like the east, with Juliet as the morning sun! Rise, Juliet, beautiful sun, and kill the jealous moon who?s already fading and sad because you are far more beautiful than she is. Don?t swear off men like the virgin moon goddess Diana?the moon envies you anyway. Her virginal appearance is weak and pale and only fools want to emulate it. Get rid of it.&lt;/p&gt;
-&lt;p&gt;It?s my lady! Oh, it?s my love. Oh, if only she knew I love her. She?s talking but I can?t hear anything. What does it matter?&lt;/p&gt;
-&lt;p&gt;Her expression means something and I can answer that. No, I?m being too forward. She?s not talking to me. Oh, if two of the most beautiful stars had to leave heaven on important business, they?d ask her eyes to do the twinkling for them while they were gone! What if her eyes took their places in the sky and those stars became her eyes? Her beautiful face would outshine those stars in her head like daylight outshines lamps, while her eyes in the sky would be so bright at nighttime that birds would be convinced it was day. Look at how she leans her cheek on her hand. I wish I were a glove on her hand so I could touch her cheek!&lt;/p&gt;</description>
-	<link>2025/05/fun-with-ai-system-prompts.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>d4495700-365d-11f0-87fb-618e413f1645</guid>
-	<pubDate>07 May 2025</pubDate>
 
 </item>
 
