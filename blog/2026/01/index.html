@@ -132,26 +132,38 @@ ga('send', 'pageview');
 <p>We want loudflare to proxy it, not to <code>30x</code> redirect. This will allow to harden the API (e.g. drop all request not coming from Cloudflare) later on. Search, with and without AI, suggested solutions revolving around files: <code>_routes.json</code> or <code>_worker.js</code> or elaborate wrangler setups. They all have in common: they didn't work.</p>
 <p>What worked: create a folder <code>functions</code> at the root of your repository. Inside add a file <code>[[path]].js</code> - yes, that's two pairs of square brackets and th letters p a t h. It's the catch all for functions. Inside you add:</p>
 <pre><code class="language-js">export async function onRequest(context) {
-&nbsp;&nbsp;const { request } = context;
-&nbsp;&nbsp;const url = new URL(request.url);
+  const { request } = context;
+  const url = new URL(request.url); // Test endpoint
 
-&nbsp;&nbsp;// Test endpoint
-&nbsp;&nbsp;if (url.pathname === '/helloworld') {
-&nbsp;&nbsp;&nbsp;&nbsp;return new Response('Workers of the world unite!', {
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;headers: { 'Content-Type': 'text/plain' }
-&nbsp;&nbsp;&nbsp;&nbsp;});
-&nbsp;&nbsp;}
+  if (url.pathname === '/helloworld') {
+    return new Response('Workers of the world unite!', {
+      headers: { 'Content-Type': 'text/plain' }
+    });
+  } // Proxy API requests
 
-&nbsp;&nbsp;// Proxy API requests
-&nbsp;&nbsp;if (url.pathname.startsWith('/api/')) {
-&nbsp;&nbsp;&nbsp;&nbsp;url.hostname = 'api.example.com';
-&nbsp;&nbsp;&nbsp;&nbsp;url.port = '4443';
-&nbsp;&nbsp;&nbsp;&nbsp;url.protocol = 'https:';
+  if (url.pathname.startsWith('/api/')) {
+    url.hostname = 'api.example.com';
+    url.port = '4443';
+    url.protocol = 'https:';
 
-&nbsp;&nbsp;&nbsp;&nbsp;return fetch(url, request);
-&nbsp;&nbsp;}
+    return fetch(url, request);
+  }
 
-&nbsp;&nbsp;return context.next();
+  return context.next();
+}
+</code></pre>
+<h3>Update</h3>
+<p>Instead of creating <code>functions/[[path]].js</code>, create <code>function/api/[[path]].js</code> and simplify the function:</p>
+<pre><code class="language-js">export async function onRequest(context) {
+  const { request } = context;
+  const url = new URL(request.url);
+
+  url.hostname = 'api.example.com';
+  url.port = '4443';
+  url.protocol = 'https:';
+
+  return fetch(url, request);
+}
 </code></pre>
 <p>Hardening the setup is a story for another time.</p>
 <p>As usual YMMV</p></div>

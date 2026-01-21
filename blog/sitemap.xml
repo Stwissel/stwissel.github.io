@@ -6,7 +6,7 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Tue, 20 Jan 2026 19:59:34 +0000</pubdate>
+	<pubdate>Wed, 21 Jan 2026 05:15:59 +0000</pubdate>
 <item>
 	<title>Running your SPA on Cloudflare</title>
 	<description>&lt;p&gt;Your application is ready, you want to prepare for the incoming storm of users, so you separate your SPI server from your UI. To host the UI &lt;a href="https://www.cloudflare.com/"&gt;Cloudflare&lt;/a&gt; is chosen, while the API server sits in its data centre. There are a few steps to be had, which are simple, just the AI was acting cute, so I write it down.&lt;/p&gt;
@@ -24,26 +24,38 @@
 &lt;p&gt;We want loudflare to proxy it, not to &lt;code&gt;30x&lt;/code&gt; redirect. This will allow to harden the API (e.g. drop all request not coming from Cloudflare) later on. Search, with and without AI, suggested solutions revolving around files: &lt;code&gt;_routes.json&lt;/code&gt; or &lt;code&gt;_worker.js&lt;/code&gt; or elaborate wrangler setups. They all have in common: they didn't work.&lt;/p&gt;
 &lt;p&gt;What worked: create a folder &lt;code&gt;functions&lt;/code&gt; at the root of your repository. Inside add a file &lt;code&gt;[[path]].js&lt;/code&gt; - yes, that's two pairs of square brackets and th letters p a t h. It's the catch all for functions. Inside you add:&lt;/p&gt;
 &lt;pre&gt;&lt;code class="language-js"&gt;export async function onRequest(context) {
-&amp;nbsp;&amp;nbsp;const { request } = context;
-&amp;nbsp;&amp;nbsp;const url = new URL(request.url);
+  const { request } = context;
+  const url = new URL(request.url); // Test endpoint
 
-&amp;nbsp;&amp;nbsp;// Test endpoint
-&amp;nbsp;&amp;nbsp;if (url.pathname === '/helloworld') {
-&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;return new Response('Workers of the world unite!', {
-&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;headers: { 'Content-Type': 'text/plain' }
-&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;});
-&amp;nbsp;&amp;nbsp;}
+  if (url.pathname === '/helloworld') {
+    return new Response('Workers of the world unite!', {
+      headers: { 'Content-Type': 'text/plain' }
+    });
+  } // Proxy API requests
 
-&amp;nbsp;&amp;nbsp;// Proxy API requests
-&amp;nbsp;&amp;nbsp;if (url.pathname.startsWith('/api/')) {
-&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;url.hostname = 'api.example.com';
-&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;url.port = '4443';
-&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;url.protocol = 'https:';
+  if (url.pathname.startsWith('/api/')) {
+    url.hostname = 'api.example.com';
+    url.port = '4443';
+    url.protocol = 'https:';
 
-&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;return fetch(url, request);
-&amp;nbsp;&amp;nbsp;}
+    return fetch(url, request);
+  }
 
-&amp;nbsp;&amp;nbsp;return context.next();
+  return context.next();
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;Update&lt;/h3&gt;
+&lt;p&gt;Instead of creating &lt;code&gt;functions/[[path]].js&lt;/code&gt;, create &lt;code&gt;function/api/[[path]].js&lt;/code&gt; and simplify the function:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-js"&gt;export async function onRequest(context) {
+  const { request } = context;
+  const url = new URL(request.url);
+
+  url.hostname = 'api.example.com';
+  url.port = '4443';
+  url.protocol = 'https:';
+
+  return fetch(url, request);
+}
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Hardening the setup is a story for another time.&lt;/p&gt;
 &lt;p&gt;As usual YMMV&lt;/p&gt;</description>
