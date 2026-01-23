@@ -113,6 +113,9 @@ ga('send', 'pageview');
 					<li><a href="/blog/2025/12/unless-you-have-a-google-size-api-problem-use-curl.html"><i class="icon-hand-left"></i>Unless you have a Google size API problem use curl</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+					<span class="divider">|</span>
+					<li><a href="/blog/2026/01/cumulative-data-modeling-part1.html">Cumulative data modeling (Part 1)<i class="icon-hand-right"></i></a>
+					</li>
 				</ul>
 
 				<article class="well well-raised">
@@ -121,16 +124,23 @@ ga('send', 'pageview');
 					<div><p>Your application is ready, you want to prepare for the incoming storm of users, so you separate your SPI server from your UI. To host the UI <a href="https://www.cloudflare.com/">Cloudflare</a> is chosen, while the API server sits in its data centre. There are a few steps to be had, which are simple, just the AI was acting cute, so I write it down.</p>
 <p><img src="/blog/images/2026/CloudflareSPA.png" alt="Cloudflare hosted SPA"></p>
 <h2>Workers &amp; Pages</h2>
-<p>We shall update our single page application whenever new contenet gets merged into <code>main</code>. All calls to <code>/api/*</code> need to get routed to the API server. These are the steps that wrok. Nota bene: if you want to push from your local machine, the steps are differen and a story for another time.</p>
+<p>We shall update our single page application whenever new contenet gets merged into <code>main</code>. All calls to <code>/api/*</code> need to get routed to the API server. These are the steps that wrok. Nota bene: if you want to push from your local machine, the steps are different and a story for another time.</p>
 <ul>
- <li>In Cloudflare head to `Build, Compute &amp; AI, Workers &amp; Pages</li>
+ <li>In Cloudflare head to <code>Build</code>, <code>Compute &amp; AI</code>, <code>Workers &amp; Pages</code></li>
  <li>Don't get distracted by the blue "Create application" button, you want to click above it and select <code>+ Add</code> and then Pages (don't select "Worker")</li>
  <li>Select "Import an existing Git repository" and select your repo (You need the <a href="https://developers.cloudflare.com/cloudflare-one/integrations/cloud-and-saas/github/">GitHub integration</a> for that).</li>
  <li>configure your build settings, for a <a href="https://vite.dev/guide/">viteJS</a> applicationa, the build command is <code>npm run build</code> and the output directory is <code>dist</code>. Save it and you are good to go.</li>
 </ul>
 <p>Next step is to configure "Custom domains", so <code>app.example.com</code> points to your page. Follow the UI, it is almost automagic when Cloudflare is your DNS provider</p>
-<h2>Redirecting <code>/api</code></h2>
-<p>We want loudflare to proxy it, not to <code>30x</code> redirect. This will allow to harden the API (e.g. drop all request not coming from Cloudflare) later on. Search, with and without AI, suggested solutions revolving around files: <code>_routes.json</code> or <code>_worker.js</code> or elaborate wrangler setups. They all have in common: they didn't work.</p>
+<h2>Redirecting <code>/api</code> to the backend</h2>
+<p>We want Cloudflare to <strong>proxy</strong> it, not to <code>30x</code> redirect. A client wouldn't know that the request gets forwarded. This will allow to harden the API (e.g. drop all request not coming from Cloudflare) later on. Also you don't have to deal with <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">CORS</a>.</p>
+<p>Search, with and without AI, suggested solutions revolving around files:</p>
+<ul>
+ <li>create <code>_routes.json</code></li>
+ <li>code <code>_worker.js</code></li>
+ <li>use an elaborate wrangler setups.</li>
+</ul>
+<p>Those all have one thing in common: <strong>they didn't work</strong>.</p>
 <p>What worked: create a folder <code>functions</code> at the root of your repository. Inside add a file <code>[[path]].js</code> - yes, that's two pairs of square brackets and th letters p a t h. It's the catch all for functions. Inside you add:</p>
 <pre><code class="language-js">export async function onRequest(context) {
   const { request } = context;
@@ -154,7 +164,7 @@ ga('send', 'pageview');
 }
 </code></pre>
 <h3>Update</h3>
-<p>Instead of creating <code>functions/[[path]].js</code>, create <code>function/api/[[path]].js</code> and simplify the function:</p>
+<p>Instead of creating <code>functions/[[path]].js</code>, create <code>functions/api/[[path]].js</code> and simplify the function:</p>
 <pre><code class="language-js">export async function onRequest(context) {
   const { request } = context;
   const url = new URL(request.url);
@@ -201,6 +211,9 @@ categories:  <a href="/blog/categories/cloudflare.html">Cloudflare</a>  <a href=
 					<li><a href="/blog/2025/12/unless-you-have-a-google-size-api-problem-use-curl.html"><i class="icon-hand-left"></i>Unless you have a Google size API problem use curl</a>
 						<span class="divider">|</span></li>
 					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+					<span class="divider">|</span>
+					<li><a href="/blog/2026/01/cumulative-data-modeling-part1.html">Cumulative data modeling (Part 1)<i class="icon-hand-right"></i></a>
+					</li>
 				</ul>
 
 			</div>

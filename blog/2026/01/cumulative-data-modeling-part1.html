@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Cumulative data modeling (Part 1) - NotesSensei's Blog</title>
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-72033-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible"  content="chrome=1" />
+<meta http-equiv="Content-Language" content="en" />
+<meta rel="meta" link="application/rdf+xml" content="/foaf.rdf" />
+<meta property="og:title"     content="wissel.net - Cumulative data modeling (Part 1)" />
+<meta property="og:type"      content="blog" />
+<meta property="og:url"       content="https://wissel.net/blog/2026/01/cumulative-data-modeling-part1.html" />
+<meta property="og:image"     content="//www.wissel.net/blog/img/wisselnet.gif" />
+<meta property="og:site_name" content="wissel.net" />
+<meta name="viewport"         content="width=device-width, initial-scale=1.0" />
+<meta name="ROBOTS"           content="FOLLOW, NOIMAGEINDEX" />
+<meta name="DC.Title"         content="NotesSensei's Weblog - Cumulative data modeling (Part 1)" />
+<meta name="Author"           content="Stephan H. Wissel" />
+<meta name="ICBM"             content="1.2994, 103.8425" />
+<meta name="Copyright"        content="2002,2022 Stephan H. Wissel - Creative commons licence" />
+<meta name="twitter:site"     content="@notessensei" />
+<meta name="twitter:card"     content="summary" />
+<meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
+<meta name="description"
+	content="Cumulative data modeling (Part 1) - The going approach to model data is drawing your ER Diagram and map it to your persistence, be it normalized in a RDBMS or an entry in a NoSQL store. A slice of cake Walking through the use case of a cheese cake factory, slightly simplified. All process steps happen in batches, but batch sizes are n" />
+<meta name="Keywords"
+	content="CouchDB,Development,NoSQL,SQL," />
+<meta name="Abstract"
+	content="Cumulative data modeling (Part 1) - The going approach to model data is drawing your ER Diagram and map it to your persistence, be it normalized in a RDBMS or an entry in a NoSQL store. A slice of cake Walking through the use case of a cheese cake factory, slightly simplified. All process steps happen in batches, but batch sizes are n" />
+<!--[if lt IE 9]>
+		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/blogcodedisplay.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/shariff.complete.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/prism.css" />
+<link rel="stylesheet" type="text/css" href="/blog/css/admonition.css" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
+
+
+<link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="https://feeds.feedburner.com/Wisselnetfeed" />
+
+<meta name="Revisit-After" content="90 Days" />
+</head>
+<body class="line-numbers">
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<a class="btn btn-navbar" data-toggle="collapse"
+				data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+				class="icon-bar"></span> <span class="icon-bar"></span>
+			</a> <a class="brand" href="/">wissel.net</a>
+			<div class="nav-collapse">
+				<ul class="nav">
+					<li><a href="/index.html">Home</a></li>
+					<li class="active"><a href="/blog/">Blog</a></li>
+					<li><a href="/blog/series.html">Series</a></li>
+					<li><a href="/blog/downloads/">Downloads</a></li>
+					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
+					<li><a href="/blog/imprint.html">About / Imprint</a></li>
+					<li><a href="/mealplan.html">Food</a></li>
+				</ul>
+				<form action="//www.google.com/cse" id="cse-search-box"
+					class="navbar-search pull-right">
+					<div>
+						<input type="hidden" name="cx"
+							value="partner-pub-4562257798204150:muo14ionenw" /> <input
+							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
+							name="q" class="search-query span2" placeholder="Search" />
+						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+<div class="navbar-spacer"></div>
+
+	<div class="container">
+    		<br />
+		<header>
+			<div id="mainsmall"  class="hero-unit">
+				<h2>wissel.net</h2>
+				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+			</div>
+		</header>
+
+     
+    <ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2026/">2026</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2026/01/">January</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/couchdb.html">CouchDB</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/development.html">Development</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/nosql.html">NoSQL</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/sql.html">SQL</a>
+  </li>
+</ul>
+
+		<div class="row-fluid">
+			<div class="span12">
+				
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2026/01/running-your-spa-on-cloudflare.html"><i class="icon-hand-left"></i>Running your SPA on Cloudflare</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+				<article class="well well-raised">
+					<h1><small>Cumulative data modeling (Part 1)</small></h1>
+					<hr />
+					<div><p>The going approach to model data is drawing your <a href="https://mermaid.ai/open-source/syntax/classDiagram.html">ER Diagram</a> and map it to your persistence, be it <a href="https://www.geeksforgeeks.org/dbms/normal-forms-in-dbms/">normalized</a> in a <a href="https://en.wikipedia.org/wiki/Relational_database">RDBMS</a> or an entry in a <a href="https://en.wikipedia.org/wiki/NoSQL">NoSQL</a> store.</p>
+<h2>A slice of cake</h2>
+<p>Walking through the use case of a cheese cake factory, slightly simplified. All process steps happen in batches, but batch sizes are not synchronized. E.g. dough mixing produces 0.8 - 1.4 times the baking capacity.</p>
+<p><a href="/blog/images/2026/CheeseCakeFactory.jpg">!Cheesecake factory</a></p>
+<p>The corresponding data model would look like this:</p>
+<p><a href="/blog/images/2026/CheeseModel800.png">!Cheesecake data model</a></p>
+<p>Now imagine a customer wants to know if the slice is made with cheese from "happy cows", which is a trade certification some of the suppliers have. A simple SQL solves it:</p>
+<pre><code class="language-sql">SELECT
+    s.slice_id,
+    ROUND(
+        (SUM(CASE WHEN sup.HappyCowCertified = TRUE THEN mi.quantity_used ELSE 0 END) /
+         SUM(mi.quantity_used)) * 100,
+        2
+    ) AS happy_cow_percentage
+FROM Slices s
+JOIN Baked_Cakes bc ON s.cake_id = bc.cake_id
+JOIN Mix_Ingredients mi ON (
+    mi.mix_id = bc.dough_mix_id OR
+    mi.mix_id = bc.filling_mix_id OR
+    mi.mix_id = bc.topping_mix_id
+)
+JOIN Ingredients i ON mi.ingredient_id = i.ingredient_id
+JOIN Ingredient_Batches ib ON mi.batch_id = ib.batch_id
+JOIN Suppliers sup ON ib.supplier_id = sup.supplier_id
+WHERE s.slice_id = 'someSliceId'
+  AND i.name = 'Cream Cheese'
+GROUP BY s.slice_id;
+</code></pre>
+<p>Another day another challenge: a batch from a supplier was sub standard and you need to recall all slices made with it. SQL to the rescue again:</p>
+<pre><code class="language-sql">SELECT DISTINCT
+    s.slice_id,
+    s.storage_location
+FROM Slices s
+JOIN Baked_Cakes bc ON s.cake_id = bc.cake_id
+JOIN Mix_Ingredients mi ON (
+    mi.mix_id = bc.dough_mix_id OR
+    mi.mix_id = bc.filling_mix_id OR
+    mi.mix_id = bc.topping_mix_id
+)
+WHERE mi.batch_id = 'someBadBatchId'
+ORDER BY s.slice_id;
+</code></pre>
+<p>As long as as bakery control system has this baked in (pun intended) or you have your residential SQL jockey on speed dial, all is well (keep in mind: the real data model is way more complex), but there might be a better way, slightly unconventional. Stay tuned for <a href="#">part 2</a>.</p></div>
+					<hr />
+					<p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 23 January 2026
+<span class="divider">|</span>
+<a href="/blog/2026/01/cumulative-data-modeling-part1.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/couchdb.html">CouchDB</a>  <a href="/blog/categories/development.html">Development</a>  <a href="/blog/categories/nosql.html">NoSQL</a>  <a href="/blog/categories/sql.html">SQL</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2026/01/cumulative-data-modeling-part1.html";
+						</script>
+					</p>
+				</article>
+				<a name="comments"></a>
+				<div class="well well-raised" style="text-align : center">
+				<button class="btn btn-lg btn-info" data-toggle="collapse" data-target="#commentform_557c13d0-f837-11f0-aa29-0b135a78174a" type="button">
+		            Add your comment...&nbsp;&nbsp;<span class="glyphicon glyphicon-comment"></span>
+	            </button>
+	            </div>
+				<div id="commentform_557c13d0-f837-11f0-aa29-0b135a78174a"  class="collapse"></div>
+				<div class="well well-raised">
+					<h4>Comments</h4>
+					<ol id="commentList">
+						<li id="nocomments">
+							<h5>No comments yet, be the first to comment</h5>
+						</li>
+					</ol>
+				</div>
+				<ul class="breadcrumb pull-centre">
+					<li><a href="/blog/2026/01/running-your-spa-on-cloudflare.html"><i class="icon-hand-left"></i>Running your SPA on Cloudflare</a>
+						<span class="divider">|</span></li>
+					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
+				</ul>
+
+			</div>
+		</div>
+		<ul class="breadcrumb">
+  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2026/">2026</a> <span class="divider">/</span></li>
+  <li><a href="/blog/2026/01/">January</a></li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/couchdb.html">CouchDB</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/development.html">Development</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/nosql.html">NoSQL</a>
+  </li>
+  <li class="pull-right">
+    <span class="divider">|</span><a href="/blog/categories/sql.html">SQL</a>
+  </li>
+</ul>
+
+	</div>
+	<footer>
+		<div class="container">
+			<div class="row">
+				<div class="span2">
+					<h4>About Me</h4>
+					<p>
+						I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.
+						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
+					</p>
+					<a href="//stackoverflow.com/users/131021/stwissel">
+					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
+				</a>
+				</div>
+				<div class="span2">
+					<h4>Contact</h4>
+					<ul>
+						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
+						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
+						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
+						<li><a href="https://github.com/Stwissel">GitHub</a></li>
+						<li><a href="https://bitbucket.org/stwissel/">Bitbucket</a></li>
+						<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
+					</ul>
+				</div>
+				<div class="span8">
+					<h4>Disclaimer</h4>
+					<p>This site is in no way affiliated, endorsed, sanctioned,
+						supported, nor enlightened by my current or previous employers.
+						I may be an employee, but the opinions, theories, facts, etc.
+						presented here are my own and are in now way given in any official
+						capacity. In short, these are my words and this is my site, not
+						my current or former employers' - and don't even begin to think otherwise.</p>
+					<p>
+						<b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as
+						listed here: <a rel="license"
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
+							alt="Creative Commons License" style="border-width: 0"
+							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
+						Unless otherwise labeled by its originating author, the content
+						found on this site is made available under the terms of an <a
+							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
+							target="_blank"
+							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
+							Creative Commons License</a>, with the exception that no rights are
+						granted -- since they are not mine to grant -- in any logo,
+						graphic design, trademarks or trade names of any type. Code
+						samples and code downloads on this site are, unless otherwise
+						labeled, made available under an <a
+							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
+							2.0</a> license. Other license models are available on written
+						request and written confirmation.
+					</p>
+				</div>
+			</div>
+		</div>
+	</footer>
+
+	<script type="text/javascript">
+		var permaLink = "https://wissel.net/blog/2026/01/cumulative-data-modeling-part1.html";
+	</script>
+		<script type="text/javascript" src="/blog/js/jquery-3.6.0.min.js"></script>
+	<script type="text/javascript" src="/blog/js/bootstrap.js"></script>
+	<script type="text/javascript" src="/blog/js/blogmain.js"></script>
+    <script type="text/javascript" src="/blog/js2/prism.js"></script>
+	<script type="text/javascript" src="/blog/js2/admonition.js"></script>
+	<script src="//www.google-analytics.com/urchin.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		_uacct = "UA-72033-1";
+		urchinTracker();
+	</script>
+	<script type="text/javascript" src="//feeds.feedburner.com/~s/Wisselnet?i=https://wissel.net/blog" charset="utf-8"></script>
+
+		<script src="/blog/js2/mustache.js"></script>
+	<script src="/blog/js2/blogcomments.js"></script>
+	<script type="text/javascript" src="/blog/js2/Markdown.Converter.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Sanitizer.js"></script>
+    <script type="text/javascript" src="/blog/js2/Markdown.Editor.js"></script>
+	<script type="text/javascript" src="//www.google.com/recaptcha/api.js"></script>
+	<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+	<script type="text/javascript">
+		var onloadCallback = function() {
+    		renderComment("6LcBxUEUAAAAACzKM8YKb-RVVaIZ3MN6F1Z8FB_4", "557c13d0-f837-11f0-aa29-0b135a78174a");
+ 		};
+	</script>
+
+</body>
+</html>

@@ -6,22 +6,80 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 21 Jan 2026 05:15:59 +0000</pubdate>
+	<pubdate>Fri, 23 Jan 2026 12:06:01 +0000</pubdate>
+<item>
+	<title>Cumulative data modeling (Part 1)</title>
+	<description>&lt;p&gt;The going approach to model data is drawing your &lt;a href="https://mermaid.ai/open-source/syntax/classDiagram.html"&gt;ER Diagram&lt;/a&gt; and map it to your persistence, be it &lt;a href="https://www.geeksforgeeks.org/dbms/normal-forms-in-dbms/"&gt;normalized&lt;/a&gt; in a &lt;a href="https://en.wikipedia.org/wiki/Relational_database"&gt;RDBMS&lt;/a&gt; or an entry in a &lt;a href="https://en.wikipedia.org/wiki/NoSQL"&gt;NoSQL&lt;/a&gt; store.&lt;/p&gt;
+&lt;h2&gt;A slice of cake&lt;/h2&gt;
+&lt;p&gt;Walking through the use case of a cheese cake factory, slightly simplified. All process steps happen in batches, but batch sizes are not synchronized. E.g. dough mixing produces 0.8 - 1.4 times the baking capacity.&lt;/p&gt;
+&lt;p&gt;&lt;a href="/blog/images/2026/CheeseCakeFactory.jpg"&gt;!Cheesecake factory&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;The corresponding data model would look like this:&lt;/p&gt;
+&lt;p&gt;&lt;a href="/blog/images/2026/CheeseModel800.png"&gt;!Cheesecake data model&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Now imagine a customer wants to know if the slice is made with cheese from "happy cows", which is a trade certification some of the suppliers have. A simple SQL solves it:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-sql"&gt;SELECT
+    s.slice_id,
+    ROUND(
+        (SUM(CASE WHEN sup.HappyCowCertified = TRUE THEN mi.quantity_used ELSE 0 END) /
+         SUM(mi.quantity_used)) * 100,
+        2
+    ) AS happy_cow_percentage
+FROM Slices s
+JOIN Baked_Cakes bc ON s.cake_id = bc.cake_id
+JOIN Mix_Ingredients mi ON (
+    mi.mix_id = bc.dough_mix_id OR
+    mi.mix_id = bc.filling_mix_id OR
+    mi.mix_id = bc.topping_mix_id
+)
+JOIN Ingredients i ON mi.ingredient_id = i.ingredient_id
+JOIN Ingredient_Batches ib ON mi.batch_id = ib.batch_id
+JOIN Suppliers sup ON ib.supplier_id = sup.supplier_id
+WHERE s.slice_id = 'someSliceId'
+  AND i.name = 'Cream Cheese'
+GROUP BY s.slice_id;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Another day another challenge: a batch from a supplier was sub standard and you need to recall all slices made with it. SQL to the rescue again:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-sql"&gt;SELECT DISTINCT
+    s.slice_id,
+    s.storage_location
+FROM Slices s
+JOIN Baked_Cakes bc ON s.cake_id = bc.cake_id
+JOIN Mix_Ingredients mi ON (
+    mi.mix_id = bc.dough_mix_id OR
+    mi.mix_id = bc.filling_mix_id OR
+    mi.mix_id = bc.topping_mix_id
+)
+WHERE mi.batch_id = 'someBadBatchId'
+ORDER BY s.slice_id;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;As long as as bakery control system has this baked in (pun intended) or you have your residential SQL jockey on speed dial, all is well (keep in mind: the real data model is way more complex), but there might be a better way, slightly unconventional. Stay tuned for &lt;a href="#"&gt;part 2&lt;/a&gt;.&lt;/p&gt;</description>
+	<link>2026/01/cumulative-data-modeling-part1.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>557c13d0-f837-11f0-aa29-0b135a78174a</guid>
+	<pubDate>23 January 2026</pubDate>
+
+</item>
 <item>
 	<title>Running your SPA on Cloudflare</title>
 	<description>&lt;p&gt;Your application is ready, you want to prepare for the incoming storm of users, so you separate your SPI server from your UI. To host the UI &lt;a href="https://www.cloudflare.com/"&gt;Cloudflare&lt;/a&gt; is chosen, while the API server sits in its data centre. There are a few steps to be had, which are simple, just the AI was acting cute, so I write it down.&lt;/p&gt;
 &lt;p&gt;&lt;img src="/blog/images/2026/CloudflareSPA.png" alt="Cloudflare hosted SPA"&gt;&lt;/p&gt;
 &lt;h2&gt;Workers &amp;amp; Pages&lt;/h2&gt;
-&lt;p&gt;We shall update our single page application whenever new contenet gets merged into &lt;code&gt;main&lt;/code&gt;. All calls to &lt;code&gt;/api/*&lt;/code&gt; need to get routed to the API server. These are the steps that wrok. Nota bene: if you want to push from your local machine, the steps are differen and a story for another time.&lt;/p&gt;
+&lt;p&gt;We shall update our single page application whenever new contenet gets merged into &lt;code&gt;main&lt;/code&gt;. All calls to &lt;code&gt;/api/*&lt;/code&gt; need to get routed to the API server. These are the steps that wrok. Nota bene: if you want to push from your local machine, the steps are different and a story for another time.&lt;/p&gt;
 &lt;ul&gt;
- &lt;li&gt;In Cloudflare head to `Build, Compute &amp;amp; AI, Workers &amp;amp; Pages&lt;/li&gt;
+ &lt;li&gt;In Cloudflare head to &lt;code&gt;Build&lt;/code&gt;, &lt;code&gt;Compute &amp;amp; AI&lt;/code&gt;, &lt;code&gt;Workers &amp;amp; Pages&lt;/code&gt;&lt;/li&gt;
  &lt;li&gt;Don't get distracted by the blue "Create application" button, you want to click above it and select &lt;code&gt;+ Add&lt;/code&gt; and then Pages (don't select "Worker")&lt;/li&gt;
  &lt;li&gt;Select "Import an existing Git repository" and select your repo (You need the &lt;a href="https://developers.cloudflare.com/cloudflare-one/integrations/cloud-and-saas/github/"&gt;GitHub integration&lt;/a&gt; for that).&lt;/li&gt;
  &lt;li&gt;configure your build settings, for a &lt;a href="https://vite.dev/guide/"&gt;viteJS&lt;/a&gt; applicationa, the build command is &lt;code&gt;npm run build&lt;/code&gt; and the output directory is &lt;code&gt;dist&lt;/code&gt;. Save it and you are good to go.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Next step is to configure "Custom domains", so &lt;code&gt;app.example.com&lt;/code&gt; points to your page. Follow the UI, it is almost automagic when Cloudflare is your DNS provider&lt;/p&gt;
-&lt;h2&gt;Redirecting &lt;code&gt;/api&lt;/code&gt;&lt;/h2&gt;
-&lt;p&gt;We want loudflare to proxy it, not to &lt;code&gt;30x&lt;/code&gt; redirect. This will allow to harden the API (e.g. drop all request not coming from Cloudflare) later on. Search, with and without AI, suggested solutions revolving around files: &lt;code&gt;_routes.json&lt;/code&gt; or &lt;code&gt;_worker.js&lt;/code&gt; or elaborate wrangler setups. They all have in common: they didn't work.&lt;/p&gt;
+&lt;h2&gt;Redirecting &lt;code&gt;/api&lt;/code&gt; to the backend&lt;/h2&gt;
+&lt;p&gt;We want Cloudflare to &lt;strong&gt;proxy&lt;/strong&gt; it, not to &lt;code&gt;30x&lt;/code&gt; redirect. A client wouldn't know that the request gets forwarded. This will allow to harden the API (e.g. drop all request not coming from Cloudflare) later on. Also you don't have to deal with &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS"&gt;CORS&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Search, with and without AI, suggested solutions revolving around files:&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;create &lt;code&gt;_routes.json&lt;/code&gt;&lt;/li&gt;
+ &lt;li&gt;code &lt;code&gt;_worker.js&lt;/code&gt;&lt;/li&gt;
+ &lt;li&gt;use an elaborate wrangler setups.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Those all have one thing in common: &lt;strong&gt;they didn't work&lt;/strong&gt;.&lt;/p&gt;
 &lt;p&gt;What worked: create a folder &lt;code&gt;functions&lt;/code&gt; at the root of your repository. Inside add a file &lt;code&gt;[[path]].js&lt;/code&gt; - yes, that's two pairs of square brackets and th letters p a t h. It's the catch all for functions. Inside you add:&lt;/p&gt;
 &lt;pre&gt;&lt;code class="language-js"&gt;export async function onRequest(context) {
   const { request } = context;
@@ -45,7 +103,7 @@
 }
 &lt;/code&gt;&lt;/pre&gt;
 &lt;h3&gt;Update&lt;/h3&gt;
-&lt;p&gt;Instead of creating &lt;code&gt;functions/[[path]].js&lt;/code&gt;, create &lt;code&gt;function/api/[[path]].js&lt;/code&gt; and simplify the function:&lt;/p&gt;
+&lt;p&gt;Instead of creating &lt;code&gt;functions/[[path]].js&lt;/code&gt;, create &lt;code&gt;functions/api/[[path]].js&lt;/code&gt; and simplify the function:&lt;/p&gt;
 &lt;pre&gt;&lt;code class="language-js"&gt;export async function onRequest(context) {
   const { request } = context;
   const url = new URL(request.url);
@@ -282,22 +340,6 @@ const updateStuff = async (event) =&amp;gt; {
 	<author>Stephan H. Wissel</author>
 	<guid>e2912cf0-6148-11f0-b6bc-9dae663e3d57</guid>
 	<pubDate>07 July 2025</pubDate>
-
-</item>
-<item>
-	<title>HTML's template element in single page applications</title>
-	<description>&lt;p&gt;"&lt;em&gt;We need to use [insert-framework-of-the-day]!&lt;/em&gt;" is the typical answer when asking for a light web single page application (SPA).&lt;/p&gt;
-&lt;p&gt;It doesn't need to be that way, &lt;a href="https://paulswithers.github.io/"&gt;Paul&lt;/a&gt; and myself shared in a &lt;a href="https://github.com/paulswithers/super-procode-mode-openntf"&gt;recent webinar&lt;/a&gt;.&lt;/p&gt;
-&lt;h3&gt;Serving the long tail&lt;/h3&gt;
-&lt;p&gt;&lt;a href="https://www.wavemaker.com/long-tail-apps-shadow-it-problem/"&gt;Long Tail Apps&lt;/a&gt; tend to be outside of IT control, since they bypass the (usually heavy) standup of an IT development project.&lt;/p&gt;
-&lt;p&gt;That standup could be way lighter, when your application just consists of one html file, one css file, one js file, one manifest and (optionally) one or more image files as well as a &lt;a href="https://opensource.hcltechsw.com/Domino-rest-api/references/hostingstatic.html"&gt;definded point of deployment&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;The typical objection goes: "&lt;em&gt;But it is never one HTML file, I need a login, a list and a form in read and edit mode&lt;/em&gt;"&lt;/p&gt;
-&lt;h3&gt;template to the rescue&lt;/h3&gt;
-&lt;p&gt;The &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/template"&gt;&lt;code&gt;&amp;lt;template&amp;gt;&lt;/code&gt;&lt;/a&gt; element is part of the &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_components"&gt;WebComponents&lt;/a&gt; specification and it is useful in simple SPA applications.&lt;/p&gt;</description>
-	<link>2025/06/html-templates-spa.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>bfdb1860-5009-11f0-9a8e-691adff7d010</guid>
-	<pubDate>23 June 2025</pubDate>
 
 </item>
 
