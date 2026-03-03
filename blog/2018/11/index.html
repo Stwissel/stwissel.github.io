@@ -124,18 +124,20 @@ ga('send', 'pageview');
 <p><a href="https://uilicious.com/">Ui-licious</a> is a UI testing service that uses JavaScript as its scripting language. This makes an easy read and edit. A script that can set the missing OOO setting is short and simple (if you agree <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe">iFrames</a> are easy to handle). You can (almost) read it out aloud:</p>
 <pre><code class="language-javascript">// URL Provided by data object from the command line
 I.goTo(DATA.result.url);
-I.must.see("Chatter Settings");
+I.must.see('Chatter Settings');
 // To ensure we work on the iFrame we get the id
 let iframeId = UI.execute("return document.getElementsByTagName('iframe')[0].getAttribute('id')");
 // The iFrame loads slowly
 I.wait(10);
-UI.context("#" + iframeId, () =&gt; {
- I.see("Chatter is a corporate network that lets your users work together, talk to each other, and share information, all in real time.");
-    I.click("Edit");
-    I.must.see("Save");
-    I.select("Users can set Out of Office messages");
-    I.click("Save");
-})
+UI.context('#' + iframeId, () =&gt; {
+  I.see(
+    'Chatter is a corporate network that lets your users work together, talk to each other, and share information, all in real time.'
+  );
+  I.click('Edit');
+  I.must.see('Save');
+  I.select('Users can set Out of Office messages');
+  I.click('Save');
+});
 </code></pre>
 <p>The interesting piece in the above is <code>DATA.result.url</code> which is an JSON object that needs to be handed over to the Ui-licious. A small command script in tandem with SFDX does the trick. The beauty here: we directly can reuse the output of an sfdx command as input for the <code>uilicious-cli</code>.</p>
 <pre><code class="language-bash">sfdx force:org:open -r -p lightning/setup/CollaborationSettings/home --json &gt; local.json
@@ -214,9 +216,56 @@ categories:  <a href="/blog/categories/apex.html">Apex</a>  <a href="/blog/categ
  <li>create a <code>build.xml</code> file (see below)</li>
  <li>run the <code>fetchSrc.sh</code> shell command (see below)</li>
 </ul>
-<p>PackageBuilder will, when called with no instructions read ALL meta data and create one or more <code>package.xml</code> files. Once created you can use ANT to retrieve the data</p></div>
+<h2>PackageBuilder will, when called with no instructions read ALL meta data and create one or more <code>package.xml</code> files. Once created you can use ANT to retrieve the data</h2>
+<h4>build.properties</h4>
+<pre><code class="language-bash"># Parameters
+apiversion=44.0
+sf.username=user@domain.com
+sf.password=supersecret
+sf.serverurl=https://login.salesforce.com
+sf.maxPoll = 200
+</code></pre>
+<h4>build.xml</h4>
+<pre><code class="language-xml">&lt;project name="Source backup for Salesforce" default="test" basedir="." xmlns:sf="antlib:com.salesforce"&gt;
+
+    &lt;property file="build.properties"/&gt;
+    &lt;property environment="env"/&gt;
+
+    &lt;!-- Setting default value for username, password and session id properties to empty string
+         so unset values are treated as empty. Without this, ant expressions such as ${sf.username}
+         will be treated literally.
+    --&gt;
+    &lt;condition property="sf.username" value=""&gt; &lt;not&gt; &lt;isset property="sf.username"/&gt; &lt;/not&gt; &lt;/condition&gt;
+    &lt;condition property="sf.password" value=""&gt; &lt;not&gt; &lt;isset property="sf.password"/&gt; &lt;/not&gt; &lt;/condition&gt;
+    &lt;condition property="sf.sessionId" value=""&gt; &lt;not&gt; &lt;isset property="sf.sessionId"/&gt; &lt;/not&gt; &lt;/condition&gt;
+
+    &lt;taskdef resource="com/salesforce/antlib.xml" uri="antlib:com.salesforce"&gt;
+        &lt;classpath&gt;
+            &lt;pathelement location="ant-salesforce.jar" /&gt;
+        &lt;/classpath&gt;
+    &lt;/taskdef&gt;
+
+    &lt;!-- Retrieve an unpackaged set of metadata from your org --&gt;
+    &lt;!-- The file unpackaged/package.xml lists what is to be retrieved --&gt;
+    &lt;target name="retrieveSrc"&gt;
+      &lt;mkdir dir="src"/&gt;
+      &lt;!-- Retrieve the contents into another directory --&gt;
+      &lt;sf:retrieve username="${sf.username}" password="${sf.password}" sessionId="${sf.sessionId}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}" retrieveTarget="src" unpackaged="packages/package.xml" pollWaitMillis="30000" /&gt;
+    &lt;/target&gt;
+&lt;/project&gt;
+</code></pre>
+<h4>fetchSrc.sh</h4>
+<pre><code class="language-bash">#!/bin/bash
+java -jar PackageBuilder.jar -o build.properties -d packages
+ant retrieveSrc
+DATE=`date '+%Y-%m-%d %H:%M:%S'`
+git add --all
+git commit -m "incoming changes $DATE"
+git push origin master
+echo "Done with retrieval"
+</code></pre>
+<p>As usual YMMV</p></div>
 					<hr />
- <a href="/blog/2018/11/backing-up-salesforce-meta-data.html">Read more</a>
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 08 November 2018
@@ -251,9 +300,106 @@ categories:  <a href="/blog/categories/java.html">Java</a>  <a href="/blog/categ
  <li>Name of a section in a page layout</li>
 </ul>
 <p>I'll start with the first one and relegate the other two approaches to future posts.</p>
-<p>To make this work you will need a custom lightning component. Let's call it <code>MiniForm</code>. We will only need <code>MiniForm.cmp</code>, <code>MiniFormController.js</code> and <code>MiniForm.design</code>. No helper or Apex will be harmed</p></div>
+<h2>To make this work you will need a custom lightning component. Let's call it <code>MiniForm</code>. We will only need <code>MiniForm.cmp</code>, <code>MiniFormController.js</code> and <code>MiniForm.design</code>. No helper or Apex will be harmed</h2>
+<p>The component looks like this:</p>
+<pre><code class="language-xml">&lt;aura:component implements="flexipage:availableForRecordHome,force:hasRecordId"
+                access="global"&gt;
+    &lt;aura:attribute name="recordId"
+                    type="Id"
+                    default=""
+                    description="Account Record Id" /&gt;
+    &lt;aura:attribute name="objectType"
+                    type="String"
+                    default="Account"
+                    description="Sobject Name" /&gt;
+    &lt;aura:attribute name="fieldList"
+                    type="String"
+                    description="Fields to show" /&gt;
+    &lt;aura:attribute name="fieldListArray"
+                    type="String[]"
+                    default="Id,Name"
+                    access="private" /&gt;
+    &lt;aura:attribute name="columns"
+                    type="String"
+                    default="1"
+                    description="Column count one or two" /&gt;
+    &lt;aura:attribute name="layoutType"
+                    type="String"
+                    default="Full" /&gt;
+    &lt;aura:attribute name="formReady"
+                    type="Boolean"
+                    default="false"
+                    access="private" /&gt;
+    &lt;aura:handler name="init"
+                  action="{!c.doInit}"
+                  value="{!this}" /&gt;
+    &lt;lightning:card&gt;
+     &lt;aura:if isTrue="{!v.formReady}"&gt;
+        &lt;div class="slds-p-horizontal_small"&gt;
+            &lt;lightning:recordForm
+              aura:id="MiniForm"
+              recordId="{!v.recordId}"
+              objectApiName="{!v.objectType}"
+              fields="{!v.fieldListArray}"
+              columns="{!v.columns}"
+              mode="view" /&gt;
+        &lt;/div&gt;
+        &lt;/aura:if&gt;
+    &lt;/lightning:card&gt;
+&lt;/aura:component&gt;
+</code></pre>
+<p>There are a few caveats, I'll highlight below</p>
+<p>The design file will determine what is visible in the page designer. Currently that information is static, so the <a href="https://admin.salesforce.com/">Awesome Admin</a> needs to be extra careful not to mistype anything.</p>
+<pre><code class="language-xml">&lt;design:component label="Mini Form"&gt;
+    &lt;design:attribute name="layoutType"
+                      label="Fields from Layout"
+                      description="Should the fields from the full or compact layout be used"
+          default="Full"
+                      datasource="Empty,Full,Compact"/&gt;
+    &lt;design:attribute name="fieldList"
+                      label="additional Fields"
+                      description="Fields to be shown in addition to layout (if any)"
+                      default="Name,Id"/&gt;
+    &lt;design:attribute name="objectType"
+                      label="Object"
+                      description="Which object"
+                      default="Account"/&gt;
+     &lt;design:attribute name="columns"
+                       label="1/2 columns"
+                      description="one or two"
+                      default="1"
+                      datasource="1,2" /&gt;
+&lt;/design:component&gt;
+</code></pre>
+<p>The final piece it the <a href="https://developer.mozilla.org/bm/docs/Web/JavaScript">JavaScript</a> controller:</p>
+<pre><code class="language-javascript">({
+  doInit: function (component, event, helper) {
+    const layoutType = component.get('v.layoutType');
+    // Set the layout type if we have one
+    if (layoutType === 'Compact' || layoutType === 'Full') {
+      const miniForm = component.find('MiniForm');
+      miniForm.set('v.layoutType', layoutType);
+    }
+    const fieldList = component.get('v.fieldList').split(',');
+    component.set('v.fieldListArray', fieldList);
+    component.set('v.formReady', true);
+  }
+});
+</code></pre>
+<p>You can now use the component on a page layout. In addition to specify the fields, it allows to use the predefined main or compact layout. You also can embed it into your own components. You then would need to specify the attributes you need:</p>
+<p><code>&lt;c:MiniForm recordId="{!v.recordId}" objectType="Contact" layoutType="none" /&gt;</code></p>
+<p>This would show the Name and Id field in one column - based on the default settings.</p>
+<h3>Lessons learned</h3>
+<ul>
+ <li>Always use defaults in the component. This makes it easier when embedding. Specifying defaults in the design properties isn't enough</li>
+ <li><code>lightning:recordForm</code> is particular about the <code>layoutType</code> attribute. It can't be empty or anything else than <code>Compact</code> or <code>Full</code>. That's the reason why the attribute isn't in the markup but gets (eventually) added in the controller</li>
+ <li>The design definition doesn't allow for a String array. To mitigate that the <code>onInit</code> function splits the design provided String into an array. The array is private not to disturb that mechanism. You might consider adding a method that allows to change the values in code</li>
+ <li>Timing is everything. That's why the form is enclosed by an <code>aura:if</code> that will render only after the values have been set. While that doesn't seem a problem in an aura-less controller, it might bite you in heavy load pages, so better save than sorry</li>
+</ul>
+<p>A variation of this approach: instead of using a design time property in the page editor, supply the field names through a lookup into a custom meta data record. This would allow to alter the fields shown based on some lookup logic. However you would need an Apex controller for that.</p>
+<p>Next stop: instead of a field list supply a section name or a fieldset name</p>
+<p>As usual YMMV</p></div>
 					<hr />
- <a href="/blog/2018/11/lightning-mini-forms.html">Read more</a>
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 06 November 2018

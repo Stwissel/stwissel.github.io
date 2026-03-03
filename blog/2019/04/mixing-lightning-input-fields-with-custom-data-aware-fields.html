@@ -93,7 +93,7 @@ ga('send', 'pageview');
 			</div>
 		</header>
 
-     
+
     <ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2019/">2019</a> <span class="divider">/</span></li>
@@ -266,27 +266,25 @@ ga('send', 'pageview');
     }
 </code></pre>
 <p>One of the little stumbling blocks for the <code>listenDataChange</code> was that in a normal event handler function the <code>this</code> keyword binds to the event target. So <code>this.specialFieldMap</code> in the component would be unaccessible. The solution here is to use an <a href="https://hackernoon.com/getting-to-grips-with-es6-arrow-functions-ebfa62c5c5d6">ES6 arrow function</a> that doesn't rebind <code>this</code>. Once you make friends with ES6, there is no way back.</p>
-<pre><code class="language-js"> /* Capturing all changed values from our data control */
-    listenDataChange = event =&gt; {
-        let fieldInfo = event.detail;
-        this.specialFieldMap[fieldInfo.name] = fieldInfo.value;
-    };
+<pre><code class="language-js">/* Capturing all changed values from our data control */
+listenDataChange = (event) =&gt; {
+  let fieldInfo = event.detail;
+  this.specialFieldMap[fieldInfo.name] = fieldInfo.value;
+};
 </code></pre>
 <p>The syntax is something to get used to, especially when you have function that don't take input parameters and you see <code>let x = () =&gt; { return Math.random()}</code> - which just returns a random when you call <code>x()</code></p>
 <h3>Saving back</h3>
 <p>The final piece is saving data back to Salesforce. The <code>onsubmit</code> event provides access to the whole form and we can easily mix in the values we have collected from the fields' <code>valueChanged</code> event. The beauty: no special server code required. We operate in the context of the lightning data service.</p>
-<pre><code class="language-js">formSubmitHandler = event =&gt; {
-        event.preventDefault();
-        const fields = event.detail.fields;
-        for (let key in this.specialFieldMap) {
-            if (this.specialFieldMap.hasOwnProperty(key)) {
-                fields[key] = this.specialFieldMap[key];
-            }
-        }
-        this.template
-            .querySelector('lightning-record-edit-form')
-            .submit(fields);
-    };
+<pre><code class="language-js">formSubmitHandler = (event) =&gt; {
+  event.preventDefault();
+  const fields = event.detail.fields;
+  for (let key in this.specialFieldMap) {
+    if (this.specialFieldMap.hasOwnProperty(key)) {
+      fields[key] = this.specialFieldMap[key];
+    }
+  }
+  this.template.querySelector('lightning-record-edit-form').submit(fields);
+};
 </code></pre>
 <p>For good measure we indicate success and redirect to the record form:</p>
 <pre><code class="language-js">   formSuccessHandler(event) {

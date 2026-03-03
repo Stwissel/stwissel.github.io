@@ -93,7 +93,7 @@ ga('send', 'pageview');
 			</div>
 		</header>
 
-     
+
     <ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2020/">2020</a> <span class="divider">/</span></li>
@@ -156,10 +156,10 @@ server.websocketHandler(this::handlerWebsockets);
   }
 
   public void interceptorOutbound(final DeliveryContext&lt;JsonObject&gt; dcx) {
-    
-    JsonObject headers = new JsonObject();    
+
+    JsonObject headers = new JsonObject();
     headers.put("address", dcx.message().address());
-    
+
     dcx.message().headers().forEach(he -&gt; headers.put(he.getKey(), he.getValue()));
     // CleanupJson returns a JsonObject with sensitive information masked
     JsonObject message = this.cleanupJson(dcx.message().body());
@@ -179,78 +179,88 @@ server.websocketHandler(this::handlerWebsockets);
 <p>The final piece is a simple website talking to that socket (security code stripped out)</p>
 <pre><code class="language-html">&lt;!DOCTYPE html&gt;
 &lt;html&gt;
-&lt;head&gt;
-&lt;title&gt;EventBus monitor&lt;/title&gt;
-&lt;style type="text/css"&gt;
+  &lt;head&gt;
+    &lt;title&gt;EventBus monitor&lt;/title&gt;
+    &lt;style type="text/css"&gt;
 
-table {width : 100%}
-td.label {width: 30%; background-color: #DDDDFF}
-td.label2 {width: 30%; background-color: #FFDDDD}
-td {border-bottom : 1px solid gray; padding 2px;}
-.data {border-bottom : 2px solid black;}
-&lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
- &lt;h1&gt;Evenbus monitor&lt;/h1&gt;
- &lt;table&gt;
-    &lt;tr&gt;&lt;td class="label"&gt;EvenBus Header&lt;/td&gt;&lt;td&gt;That's in the header&lt;/td&gt;&lt;/tr&gt;
-    &lt;tr&gt;&lt;td class="label2"&gt;EvenBus Message&lt;/td&gt;&lt;td&gt;The message might contain headers from the API call&lt;/td&gt;&lt;/tr&gt;
- &lt;/table&gt;
- &lt;div id="content"&gt;&lt;/div&gt;
- &lt;hr /&gt;
- &lt;button onClick="closeSocket();" value="End this"&gt;End this&lt;/button&gt;
- [EOF]
- &lt;script type="text/javascript"&gt;
-  // Connect to Websocket
-  var socket;
-  var addr = (location.protocol == 'https' ? 'wss' : 'ws') +'://'+location.hostname+(location.port ? ':'+location.port: '')+"/eventbus";
-  if (window.WebSocket) {
-   socket = new WebSocket(addr);
-   socket.onmessage = function(event) {
-    var content = document.getElementById("content");
-                content.appendChild(renderIncoming(JSON.parse(event.data)));
-                window.scrollTo(0,document.body.scrollHeight);
-   }
-   socket.onopen = function(event) {
-    var content = document.getElementById("content");
-    var div = document.createElement('div');
-                div.innerHTML = "Web Socket opened!";
-                content.appendChild(div);
-   };
-   
-   socket.onclose = function(event) {
-    var content = document.getElementById("content");
-                var div = document.createElement('div');
-                div.innerHTML = "&lt;hr /&gt;Web Socket closed.";
-                content.appendChild(div);
-   };
-  } else {
-   alert("Your browser does not support Websockets!");
-   
-  }
-  
-  function renderIncoming(jsonSource) {
-            var headers = jsonSource.Headers;
-            var html = "&lt;table class=\"header\"&gt;";
-            for (hName in headers) {
-              html += "&lt;tr&gt;&lt;td class=\"label\"&gt;"+hName+"&lt;/td&gt;&lt;td&gt;"+headers[hName]+"&lt;/td&gt;&lt;/tr&gt;"; 
-            };
-            html += "&lt;/table&gt;&lt;table class=\"data\"&gt;";
-            var bodyData = jsonSource.Message;
-            for (bName in bodyData) {
-             html += "&lt;tr&gt;&lt;td class=\"label2\"&gt;"+bName+"&lt;/td&gt;&lt;td&gt;"+JSON.stringify(bodyData[bName],null,2)+"&lt;/td&gt;&lt;/tr&gt;";
-            }
-            html += "&lt;/table&gt;";
-            var div = document.createElement('div');
-            div.innerHTML = html;
-            return div;
-  }
-  
-  function closeSocket() {
-   socket.close();
-  }
- &lt;/script&gt;
-&lt;/body&gt;
+      table {width : 100%}
+      td.label {width: 30%; background-color: #DDDDFF}
+      td.label2 {width: 30%; background-color: #FFDDDD}
+      td {border-bottom : 1px solid gray; padding 2px;}
+      .data {border-bottom : 2px solid black;}
+    &lt;/style&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Evenbus monitor&lt;/h1&gt;
+    &lt;table&gt;
+      &lt;tr&gt;
+        &lt;td class="label"&gt;EvenBus Header&lt;/td&gt;
+        &lt;td&gt;That's in the header&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+        &lt;td class="label2"&gt;EvenBus Message&lt;/td&gt;
+        &lt;td&gt;The message might contain headers from the API call&lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;/table&gt;
+    &lt;div id="content"&gt;&lt;/div&gt;
+    &lt;hr /&gt;
+    &lt;button onClick="closeSocket();" value="End this"&gt;End this&lt;/button&gt;
+    [EOF]
+    &lt;script type="text/javascript"&gt;
+      // Connect to Websocket
+      var socket;
+      var addr =
+        (location.protocol == 'https' ? 'wss' : 'ws') +
+        '://' +
+        location.hostname +
+        (location.port ? ':' + location.port : '') +
+        '/eventbus';
+      if (window.WebSocket) {
+        socket = new WebSocket(addr);
+        socket.onmessage = function (event) {
+          var content = document.getElementById('content');
+          content.appendChild(renderIncoming(JSON.parse(event.data)));
+          window.scrollTo(0, document.body.scrollHeight);
+        };
+        socket.onopen = function (event) {
+          var content = document.getElementById('content');
+          var div = document.createElement('div');
+          div.innerHTML = 'Web Socket opened!';
+          content.appendChild(div);
+        };
+
+        socket.onclose = function (event) {
+          var content = document.getElementById('content');
+          var div = document.createElement('div');
+          div.innerHTML = '&lt;hr /&gt;Web Socket closed.';
+          content.appendChild(div);
+        };
+      } else {
+        alert('Your browser does not support Websockets!');
+      }
+
+      function renderIncoming(jsonSource) {
+        var headers = jsonSource.Headers;
+        var html = '&lt;table class="header"&gt;';
+        for (hName in headers) {
+          html += '&lt;tr&gt;&lt;td class="label"&gt;' + hName + '&lt;/td&gt;&lt;td&gt;' + headers[hName] + '&lt;/td&gt;&lt;/tr&gt;';
+        }
+        html += '&lt;/table&gt;&lt;table class="data"&gt;';
+        var bodyData = jsonSource.Message;
+        for (bName in bodyData) {
+          html += '&lt;tr&gt;&lt;td class="label2"&gt;' + bName + '&lt;/td&gt;&lt;td&gt;' + JSON.stringify(bodyData[bName], null, 2) + '&lt;/td&gt;&lt;/tr&gt;';
+        }
+        html += '&lt;/table&gt;';
+        var div = document.createElement('div');
+        div.innerHTML = html;
+        return div;
+      }
+
+      function closeSocket() {
+        socket.close();
+      }
+    &lt;/script&gt;
+  &lt;/body&gt;
 &lt;/html&gt;
 </code></pre>
 <p><strong>Important</strong>: make sure not to enable something like this in a production system without proper security!</p>

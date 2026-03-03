@@ -163,9 +163,48 @@ MapHelper getMapHelper(final JsonObject source, final Map.Entry&lt;String, Objec
     return result;
   }
 </code></pre>
-<p>Since each function will return some JSON, that needs to be merged together, we use a Java <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html">Collector</a> to accumulate the values</p></div>
+<h2>Since each function will return some JSON, that needs to be merged together, we use a Java <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html">Collector</a> to accumulate the values</h2>
+<p>The Collector interface provides the static function <code>Collector.of</code> that is suitable for our purpose:</p>
+<pre><code class="language-java">Collector&lt;MapHelper, JsonObject, JsonObject&gt; myCollector() {
+ return Collector.of(
+  JsonObject::new,
+  (internal, incoming) -&gt; internal.mergeIn(incoming.apply()),
+  (part1, part2) -&gt; part1.mergeIn(part2)
+ );
+}
+</code></pre>
+<p>Next stop are the additional functions for the <code>gdpr</code> and the <code>fullname</code> fields and the population of our <code>functionList</code> A few small functions will do.</p>
+<pre><code class="language-java">
+Function&lt;JsonObject, JsonObject&gt; gdpr() {
+ return in -&gt; in.getString("ToC").equals("accepted") &amp;&amp; !in.getString("Marketing").equals("unknown");
+}
+
+
+Function&lt;JsonObject, JsonObject&gt; fullname() {
+ return in -&gt; {
+  final String fullname = in.getString("FirstName")+" "+in.getString("LastName");
+  return new JsonObject().put("fullname", fullname);
+ }
+}
+
+
+void populateMapper() {
+ functionList.put("DoB", simple("DoB","birthday"));
+ functionList.put("gdpr", grpr());
+ functionList.put("LastName", fullname());
+}
+</code></pre>
+<p>With all this in place we now can setup the final function that excutes our actual mapping operation;</p>
+<pre><code class="language-java">JsonObject transform(final JsonObject incoming) {
+ populateMapper();
+ return incoming.stream()
+ .map(e -&gt; getMapHelper(incoming, e))
+ .collect(myCollector());
+}
+</code></pre>
+<p>What have you seen: usage of Java Streams, custom collector and functional interfaces to create clean mapping code. Be aware that you need better checks in your functions, omitted here for readability</p>
+<p>As usual YMMV</p></div>
 					<hr />
- <a href="/blog/2020/11/schema-mapping-with-java-functional-interfaces.html">Read more</a>
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 28 November 2020
@@ -207,9 +246,30 @@ categories:  <a href="/blog/categories/java.html">Java</a>
     return result;
   }
 </code></pre>
-<p>We all seen this type of code. In a functional and stream style this would look different. We have a little <a href="https://en.wikipedia.org/wiki/Duck_typing">duck typing</a> going on here. When a method looks like a functional interface, it can be used as this function. E.g. a method that takes one value and returns a boolean can be used as a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/Predicate.html">Predicate</a>, which comes in handy for filter operations. Another nifty syntax: you can address methods, both static and instance using the <code>::</code> (double colon) syntax. So when you could use a lambda <code>x -&gt; this.doSomething(x)</code> you can simply write <code>this::doSomething</code> and the compiler will sort it out (<code>System.out::println</code> anyone?)</p></div>
+<h2>We all seen this type of code. In a functional and stream style this would look different. We have a little <a href="https://en.wikipedia.org/wiki/Duck_typing">duck typing</a> going on here. When a method looks like a functional interface, it can be used as this function. E.g. a method that takes one value and returns a boolean can be used as a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/Predicate.html">Predicate</a>, which comes in handy for filter operations. Another nifty syntax: you can address methods, both static and instance using the <code>::</code> (double colon) syntax. So when you could use a lambda <code>x -&gt; this.doSomething(x)</code> you can simply write <code>this::doSomething</code> and the compiler will sort it out (<code>System.out::println</code> anyone?)</h2>
+<p>Rewriting our example turns out like this:</p>
+<pre><code class="language-java">List&lt;Dog&gt; getHeavyDogs(final List&lt;Mammal&gt; mammals) {
+    return mammals.stream()
+        .filter(Objects::nonNull)
+        .filter(Dog.class::isInstance)
+        .map(Dog.class::cast)
+        .filter(dog -&gt; dog.weight() &gt; 50)
+        .collect(Collectors.toList());
+  }
+</code></pre>
+<p>Much cleaner, and it's Java without curly brackets. You could even skip the line with <code>Objects::nonNull</code> since <code>class::isInstance</code> always returns false for null values. I kept it here to introduce <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Objects.html">Objects</a>, a neat helper class.</p>
+<p>Lets break it down:</p>
+<ul>
+ <li><code>mammals.stream()</code> provides a stream of mammal instances</li>
+ <li><code>.filter(Objects::nonNull)</code> uses a static method to clear out <code>null</code> values</li>
+ <li><code>.filter(Dog.class::isInstance)</code> only items that are Dog instances get through</li>
+ <li><code>.map(Dog.class::cast)</code> cast the <code>mammal</code> into a dog. You are not limited by casts, any function can be used</li>
+ <li><code>.filter(dog -&gt; dog.weight() &gt; 50)</code> filter out the heavy dogs</li>
+ <li><code>.collect(Collectors.toList());</code> put the result into a list</li>
+</ul>
+<p>The DominoJNX API makes heavy use of streams, but that's another story for another time. There's more to functional interfaces, streams and collectors (sums, groups, computations etc), so never stop learning!</p>
+<p>As usual YMMV</p></div>
 					<hr />
- <a href="/blog/2020/11/streams-and-functional-programming-in-java.html">Read more</a>
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 06 November 2020

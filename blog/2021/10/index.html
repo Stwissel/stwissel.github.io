@@ -198,21 +198,21 @@ categories:  <a href="/blog/categories/java.html">Java</a>
 					<div><p>I'm a confessing fan of <a href="http://couchdb.apache.org/">CouchDB</a>, <a href="https://en.wikipedia.org/wiki/Stream_(computing)">stream programming</a> and the <a href="https://www.npmjs.com/package/nano">official CouchDB NodeJS library</a>. Nano supports returning data as <a href="https://nodejs.org/api/stream.html">NodeJS Stream</a>, so you can <a href="https://www.codemag.com/article/1803071/Getting-Started-with-Node-Streams">pipe it away</a>. Most examples use file streams or <a href="https://nodejs.org/api/process.html#process_process_stdout"><code>process.stdout</code></a>, while my goal was to process individual documents that are part of the stream</p>
 <h3>You can't walk into the same stream a second time</h3>
 <p>This old Buddhist saying holds true for NodeJS streams too. So any processing needs to happen in the chain of the stream. Let's start with the simple example of reading all documents from a couchDB:</p>
-<pre><code class="language-javascript">const Nano = require("nano");
+<pre><code class="language-javascript">const Nano = require('nano');
 const nano = Nano(couchDBURL);
 nano.listAsStream({ include_docs: true }).pipe(process.stdout);
 </code></pre>
 <p>This little snippet will read out all documents in your couchDB. You need to supply the <code>couchDBURL</code> value, e.g. <code>http://localhost:5984/test</code>. On a closer look, we see that the data returned arrives in continious buffers that don't match JSON document boundaries, so processing one document after the other needs extra work.</p>
 <p>A <a href="https://strongloop.com/strongblog/practical-examples-of-the-new-node-js-streams-api/">blog entry</a> in the StrongLoop blog provides the first clue what to do. To process CouchDB stream data we need both a <a href="https://nodejs.org/api/stream.html#stream_class_stream_transform">Transform stream</a> to chop incoming data into line by line and a <a href="https://nodejs.org/api/stream.html#stream_implementing_a_writable_stream">writable stream</a> for our results.</p>
 <p>Our code, finally will look like this:</p>
-<pre><code class="language-javascript">const Nano = require("nano");
-const { Writable, Transform } = require("stream");
+<pre><code class="language-javascript">const Nano = require('nano');
+const { Writable, Transform } = require('stream');
 
 const streamOneDb = (couchDBURL, resultCallback) =&gt; {
   const nano = Nano(couchDBURL);
   nano
     .listAsStream({ include_docs: true })
-    .on("error", (e) =&gt; console.error("error", e))
+    .on('error', (e) =&gt; console.error('error', e))
     .pipe(lineSplitter())
     .pipe(jsonMaker())
     .pipe(documentWriter(resultCallback));

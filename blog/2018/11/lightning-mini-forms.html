@@ -93,7 +93,7 @@ ga('send', 'pageview');
 			</div>
 		</header>
 
-     
+
     <ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2018/">2018</a> <span class="divider">/</span></li>
@@ -137,27 +137,28 @@ ga('send', 'pageview');
  <li>Name of a section in a page layout</li>
 </ul>
 <p>I'll start with the first one and relegate the other two approaches to future posts.</p>
-<p>To make this work you will need a custom lightning component. Let's call it <code>MiniForm</code>. We will only need <code>MiniForm.cmp</code>, <code>MiniFormController.js</code> and <code>MiniForm.design</code>. No helper or Apex will be harmed</p><p>The component looks like this:</p>
-<pre><code class="language-xml">&lt;aura:component implements="flexipage:availableForRecordHome,force:hasRecordId" 
+<h2>To make this work you will need a custom lightning component. Let's call it <code>MiniForm</code>. We will only need <code>MiniForm.cmp</code>, <code>MiniFormController.js</code> and <code>MiniForm.design</code>. No helper or Apex will be harmed</h2>
+<p>The component looks like this:</p>
+<pre><code class="language-xml">&lt;aura:component implements="flexipage:availableForRecordHome,force:hasRecordId"
                 access="global"&gt;
     &lt;aura:attribute name="recordId"
-                    type="Id" 
-                    default="" 
+                    type="Id"
+                    default=""
                     description="Account Record Id" /&gt;
-    &lt;aura:attribute name="objectType" 
-                    type="String" 
-                    default="Account" 
+    &lt;aura:attribute name="objectType"
+                    type="String"
+                    default="Account"
                     description="Sobject Name" /&gt;
-    &lt;aura:attribute name="fieldList" 
-                    type="String" 
+    &lt;aura:attribute name="fieldList"
+                    type="String"
                     description="Fields to show" /&gt;
     &lt;aura:attribute name="fieldListArray"
-                    type="String[]" 
+                    type="String[]"
                     default="Id,Name"
                     access="private" /&gt;
-    &lt;aura:attribute name="columns" 
-                    type="String" 
-                    default="1" 
+    &lt;aura:attribute name="columns"
+                    type="String"
+                    default="1"
                     description="Column count one or two" /&gt;
     &lt;aura:attribute name="layoutType"
                     type="String"
@@ -165,9 +166,9 @@ ga('send', 'pageview');
     &lt;aura:attribute name="formReady"
                     type="Boolean"
                     default="false"
-                    access="private" /&gt;                
+                    access="private" /&gt;
     &lt;aura:handler name="init"
-                  action="{!c.doInit}" 
+                  action="{!c.doInit}"
                   value="{!this}" /&gt;
     &lt;lightning:card&gt;
      &lt;aura:if isTrue="{!v.formReady}"&gt;
@@ -175,9 +176,9 @@ ga('send', 'pageview');
             &lt;lightning:recordForm
               aura:id="MiniForm"
               recordId="{!v.recordId}"
-              objectApiName="{!v.objectType}" 
-              fields="{!v.fieldListArray}" 
-              columns="{!v.columns}" 
+              objectApiName="{!v.objectType}"
+              fields="{!v.fieldListArray}"
+              columns="{!v.columns}"
               mode="view" /&gt;
         &lt;/div&gt;
         &lt;/aura:if&gt;
@@ -209,18 +210,18 @@ ga('send', 'pageview');
 </code></pre>
 <p>The final piece it the <a href="https://developer.mozilla.org/bm/docs/Web/JavaScript">JavaScript</a> controller:</p>
 <pre><code class="language-javascript">({
-    doInit : function(component, event, helper) {
-        const layoutType = component.get('v.layoutType');
-        // Set the layout type if we have one
-        if (layoutType === 'Compact' || layoutType === 'Full') {
-            const miniForm = component.find('MiniForm');
-            miniForm.set('v.layoutType', layoutType);
-        }
-        const fieldList = component.get('v.fieldList').split(',');
-        component.set('v.fieldListArray', fieldList);
-        component.set('v.formReady', true);
+  doInit: function (component, event, helper) {
+    const layoutType = component.get('v.layoutType');
+    // Set the layout type if we have one
+    if (layoutType === 'Compact' || layoutType === 'Full') {
+      const miniForm = component.find('MiniForm');
+      miniForm.set('v.layoutType', layoutType);
     }
-})
+    const fieldList = component.get('v.fieldList').split(',');
+    component.set('v.fieldListArray', fieldList);
+    component.set('v.formReady', true);
+  }
+});
 </code></pre>
 <p>You can now use the component on a page layout. In addition to specify the fields, it allows to use the predefined main or compact layout. You also can embed it into your own components. You then would need to specify the attributes you need:</p>
 <p><code>&lt;c:MiniForm recordId="{!v.recordId}" objectType="Contact" layoutType="none" /&gt;</code></p>

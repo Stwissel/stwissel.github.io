@@ -93,7 +93,7 @@ ga('send', 'pageview');
 			</div>
 		</header>
 
-     
+
     <ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2019/">2019</a> <span class="divider">/</span></li>
@@ -188,7 +188,7 @@ ga('send', 'pageview');
 </code></pre>
 <p>The CSS is more or less the same</p>
 <pre><code class="language-css">.pillSize {
-    width: 100%;
+  width: 100%;
 }
 </code></pre>
 <p>The JavaScript is proper <a href="https://es6.io/">ES6</a>. It already contains some code for my "Next Stop"</p>
@@ -197,117 +197,115 @@ import fetchLookUpValues from '@salesforce/apex/CustomLookUpController.fetchLook
 import fetchExtendedLookUpValues from '@salesforce/apex/CustomLookUpController.fetchExtendedLookUpValues';
 
 export default class UxQuickLookup extends LightningElement {
-    @api objectApiName;
-    @api iconName = 'standard:account';
-    @api label = 'Lookup';
-    @api fields = null;
+  @api objectApiName;
+  @api iconName = 'standard:account';
+  @api label = 'Lookup';
+  @api fields = null;
 
-    @track resultClass;
-    @track selectedRecord = null;
-    @track results = null;
-    @track message = null;
-    @track showSpinner = false;
-    @track lastSearchValue;
+  @track resultClass;
+  @track selectedRecord = null;
+  @track results = null;
+  @track message = null;
+  @track showSpinner = false;
+  @track lastSearchValue;
 
-    constructor() {
-        super();
-        this.switchResult(false);
+  constructor() {
+    super();
+    this.switchResult(false);
+  }
+
+  handleSearchTerm(event) {
+    let searchValue = event.detail;
+    if (searchValue) {
+      this.switchResult(true);
+      this.message = 'searching...';
+      this.showSpinner = true;
+      let searchParams = {
+        searchKeyWord: searchValue,
+        objectName: this.objectApiName
+      };
+      if (this.fields) {
+        this.addFieldsToParam(searchParams);
+        fetchExtendedLookUpValues(searchParams)
+          .then((result) =&gt; this.setResult(result))
+          .catch((error) =&gt; this.handleError(error));
+      } else {
+        fetchLookUpValues(searchParams)
+          .then((result) =&gt; this.setResult(result))
+          .catch((error) =&gt; this.handleError(error));
+      }
+    } else {
+      this.switchResult(false);
+      this.message = null;
+      this.showSpinner = false;
+      this.results = null;
     }
+    this.lastSearchValue = searchValue;
+  }
 
-    handleSearchTerm(event) {
-        let searchValue = event.detail;
-        if (searchValue) {
-            this.switchResult(true);
-            this.message = 'searching...';
-            this.showSpinner = true;
-            let searchParams = {
-                searchKeyWord: searchValue,
-                objectName: this.objectApiName
-            };
-            if (this.fields) {
-                this.addFieldsToParam(searchParams);
-                fetchExtendedLookUpValues(searchParams)
-                    .then(result =&gt; this.setResult(result))
-                    .catch(error =&gt; this.handleError(error));
-            } else {
-                fetchLookUpValues(searchParams)
-                    .then(result =&gt; this.setResult(result))
-                    .catch(error =&gt; this.handleError(error));
-            }
-        } else {
-            this.switchResult(false);
-            this.message = null;
-            this.showSpinner = false;
-            this.results = null;
-        }
-        this.lastSearchValue = searchValue;
-    }
+  /* Ensure we always have Name and Id in the query */
+  addFieldsToParam(searchParam) {
+    let allFields = this.fields.split(',');
+    allFields.push('Id');
+    allFields.push('Name');
+    let cleanFields = this.dedupeArray(allFields).join(',');
+    searchParam.fieldsToQuery = cleanFields;
+  }
 
-    /* Ensure we always have Name and Id in the query */
-    addFieldsToParam(searchParam) {
-        let allFields = this.fields.split(',');
-        allFields.push('Id');
-        allFields.push('Name');
-        let cleanFields = this.dedupeArray(allFields).join(',');
-        searchParam.fieldsToQuery = cleanFields;
-    }
+  dedupeArray(incoming) {
+    var uniqEs6 = (arrArg) =&gt; {
+      return arrArg.filter((elem, pos, arr) =&gt; {
+        return arr.indexOf(elem) === pos;
+      });
+    };
+    return uniqEs6(incoming);
+  }
 
-    dedupeArray(incoming) {
-        var uniqEs6 = arrArg =&gt; {
-            return arrArg.filter((elem, pos, arr) =&gt; {
-                return arr.indexOf(elem) === pos;
-            });
-        };
-        return uniqEs6(incoming);
+  setResult(newValues) {
+    this.showSpinner = false;
+    if (newValues &amp;&amp; newValues.length &gt; 0) {
+      this.message = null;
+      this.results = newValues;
+    } else {
+      this.message = 'no results found';
     }
+  }
 
-    setResult(newValues) {
-        this.showSpinner = false;
-        if (newValues &amp;&amp; newValues.length &gt; 0) {
-            this.message = null;
-            this.results = newValues;
-        } else {
-            this.message = 'no results found';
-        }
-    }
+  /* Shows and hides the result area */
+  switchResult(on) {
+    this.resultClass = on ? 'slds-form-element slds-lookup slds-is-open' : 'slds-form-element slds-lookup slds-is-close';
+  }
 
-    /* Shows and hides the result area */
-    switchResult(on) {
-        this.resultClass = on
-            ? 'slds-form-element slds-lookup slds-is-open'
-            : 'slds-form-element slds-lookup slds-is-close';
-    }
+  handlePillRemove() {
+    this.selectedRecord = null;
+    let payload = {
+      detail: {
+        canceled: true,
+        recordId: null
+      }
+    };
+    let selected = new CustomEvent('selection', payload);
+    this.dispatchEvent(selected);
+    // Restore last results
+    this.switchResult(this.lastSearchValue &amp;&amp; this.results);
+  }
 
-    handlePillRemove() {
-        this.selectedRecord = null;
-        let payload = {
-            detail: {
-                canceled: true,
-                recordId: null
-            }
-        };
-        let selected = new CustomEvent('selection', payload);
-        this.dispatchEvent(selected);
-        // Restore last results
-        this.switchResult(this.lastSearchValue &amp;&amp; this.results);
-    }
+  handleError(error) {
+    this.showSpinner = false;
+    this.message = "Sorry didn't work!";
+    let errorDispatch = new CustomEvent('failure', { detail: error });
+    this.dispatchEvent(errorDispatch);
+  }
 
-    handleError(error) {
-        this.showSpinner = false;
-        this.message = "Sorry didn't work!";
-        let errorDispatch = new CustomEvent('failure', { detail: error });
-        this.dispatchEvent(errorDispatch);
-    }
-
-    handleRecordSelect(event) {
-        let record = event.detail;
-        this.selectedRecord = record;
-        let selectionDispatch = new CustomEvent('recordselected', {
-            detail: record
-        });
-        this.dispatchEvent(selectionDispatch);
-        this.switchResult(false);
-    }
+  handleRecordSelect(event) {
+    let record = event.detail;
+    this.selectedRecord = record;
+    let selectionDispatch = new CustomEvent('recordselected', {
+      detail: record
+    });
+    this.dispatchEvent(selectionDispatch);
+    this.switchResult(false);
+  }
 }
 </code></pre>
 <p>What you don't see here are <code>c-ux-quick-lookup-result</code> and <code>c-ux-debounced-input</code>. To check those, head over to the <a href="https://github.com/Stwissel/lwcaura">repository</a>, have a look, take a clone and deploy it with <code>sfdx force:source:deploy -p experiments/experiment5</code> into a sandbox. Add the component to a lightning page and have a look.</p>

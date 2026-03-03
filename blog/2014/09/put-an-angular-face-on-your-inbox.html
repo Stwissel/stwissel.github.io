@@ -93,7 +93,7 @@ ga('send', 'pageview');
 			</div>
 		</header>
 
-     
+
     <ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2014/">2014</a> <span class="divider">/</span></li>
@@ -225,50 +225,50 @@ ga('send', 'pageview');
    .directive('timeLineStart', timeStartAccess)
    .directive('timeLineEnd', ['$compile',timeEndAccess])
    .directive('timeLine', timeAccess);
-   
-  function dayMessages($http) {
-   var self = this;
-   self.messageCount = 0;
-   $http.get('days.json').then(function(response) {
-    self.days = response.data.messages;
-    self.messagecount = response.data.messagecount;
-    console.log("Data fetched");
-   }, function(errResponse) {
-    console.error('Error while fetching menu data!');
-   });
-  }
-  
-  function timeStartAccess() {
-   return {
-    replace : false,
-    transclude: true,
-    scope : true,
-    template : "&lt;span class='bg-red'&gt;{{day.date}}&lt;/span&gt;"
-   };
-  }
-  
-  function timeEndAccess($compile) {
+
+function dayMessages($http) {
+var self = this;
+self.messageCount = 0;
+$http.get('days.json').then(function(response) {
+self.days = response.data.messages;
+self.messagecount = response.data.messagecount;
+console.log("Data fetched");
+}, function(errResponse) {
+console.error('Error while fetching menu data!');
+});
+}
+
+function timeStartAccess() {
+return {
+replace : false,
+transclude: true,
+scope : true,
+template : "&lt;span class='bg-red'&gt;{{day.date}}&lt;/span&gt;"
+};
+}
+
+function timeEndAccess($compile) {
    return {
     transclude: true,
     scope : {event : '=',
           day : '=' },
     template : "&lt;!-- messages from {{day.date}} --&gt;",
     link : function timeLink($scope, $element, $attrs) {
-      var newHTML = "&lt;li event='event' time-line ng-repeat='event in day.events'&gt;&lt;/li&gt;";  
+      var newHTML = "&lt;li event='event' time-line ng-repeat='event in day.events'&gt;&lt;/li&gt;";
       var linkingFunction = $compile(newHTML);
       var elem = linkingFunction($scope);
-      $element.after(elem);  
-    }
-   };
-  }
-  
-  function timeAccess() {
-   return {
-    replace : false,
-    scope : {event : '='},
-    templateUrl : "demotimeline.html"
-   };
-  }
+$element.after(elem);
+}
+};
+}
+
+function timeAccess() {
+return {
+replace : false,
+scope : {event : '='},
+templateUrl : "demotimeline.html"
+};
+}
 </code></pre>
 <br>
  The interestin part is the <code>link</code> function in the timeEndAccess function. Since we have an outer loop over the date creating one li element per date, instead of one per message for that date, the function replaces that with a loop over the messages for that day. Seems to work quite nicely. The template contains Angular code, so it needs to compile, that's what <code>$compile</code> does for us. You can try for yourself, to run the Demo: 

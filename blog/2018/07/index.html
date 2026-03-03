@@ -233,9 +233,58 @@ categories:  <a href="/blog/categories/lightning.html">Lightning</a>  <a href="/
     "LOGIN_URL" : "https://login.salesforce.com/"
 }
 </code></pre>
-<p>Providing the Login URL allows to reuse postman collections between Sandboxes, Developer Orgs or Production Orgs without the need to actually edit the postman entries. Next on the menu: getting a token</p></div>
+<h2>Providing the Login URL allows to reuse postman collections between Sandboxes, Developer Orgs or Production Orgs without the need to actually edit the postman entries. Next on the menu: getting a token</h2>
+<h3>Getting a token</h3>
+<p>Your Postman URL will look like this: <code>{{LOGIN_URL}}/services/oauth2/token</code>. Depending on the environment you will use production or Sandbox. The request ist an unauthenticated <code>POST</code> with a single header of <code>Content-Type:application/x-www-form-urlencoded</code> The body you post looks like this:</p>
+<pre><code class="language-bash">grant_type:password
+client_id:{{CLIENT_ID}}
+client_secret:{{CLIENT_SECRET}}
+password:{{PASSWORD}}
+username:{{USER_ID}}
+</code></pre>
+<p>PostMan replaces anything inside <code>{{ .... }}</code> with values from your environment. This approach allows you to share your Postman collections without disclosing what should be private. A successful response will look like this:</p>
+<pre><code class="language-javascript">{
+    "access_token": "some long string that you need in your authorization header",
+    "instance_url": "https://yourdomain.my.salesforce.com",
+    "id": "https://login.salesforce.com/id/somestring/anotherstring",
+    "token_type": "Bearer",
+    "issued_at": "1530761889707",
+    "signature": "theThirdStringCheckSum"
+}
+</code></pre>
+<p>All future call need go to the instance URL with the access token as bearer authorization. To make that easy we use PostMan's test script to capture that values into the environment:</p>
+<pre><code class="language-javascript">pm.test('Status code is 200', function () {
+  pm.response.to.have.status(200);
+});
+
+var jsonData = pm.response.json();
+
+pm.test('Has a bearer token', function () {
+  pm.expect(jsonData.token_type).to.eql('Bearer');
+});
+
+// Save the bearer
+pm.environment.set('Bearer', jsonData.access_token);
+pm.environment.set('Instance', jsonData.instance_url);
+</code></pre>
+<h3>Getting the API version</h3>
+<p>Our next stop is figuring out the current API version (<code>43.0</code> at the point of writing). To do this we send a <code>GET</code> request to<br><code>{{Instance}}/services/data</code> with a header of <code>Authorization:Bearer {{Bearer}}</code>. This call will return an JSON array with available API versions from 20.0 - 43.0 (at time of writing). Again we use the testing capability to capture the latest version:</p>
+<pre><code class="language-javascript">pm.test('Response time is less than 200ms', function () {
+  pm.expect(pm.response.responseTime).to.be.below(200);
+});
+
+pm.test('Status code is 200', function () {
+  pm.response.to.have.status(200);
+});
+
+var jsonData = pm.response.json();
+var maxElements = jsonData.length - 1;
+pm.environment.set('service_url', jsonData[maxElements].url);
+</code></pre>
+<p>Now we are ready to call more of the rest API. For example to get the list of all API endpoints you would send a <code>GET</code> request to <code>{{Instance}}{{service_url}}</code> with the familiar header of <code>Authorization:Bearer {{Bearer}}</code>.</p>
+<p>Now you have all components in place to create more API calls and tests</p>
+<p>As usual YMMV</p></div>
 					<hr />
- <a href="/blog/2018/07/postman-and-the-salesforce-rest-api.html">Read more</a>
 					<p>
 						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
 Stephan H Wissel</a> on 06 July 2018

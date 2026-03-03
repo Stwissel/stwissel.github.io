@@ -93,7 +93,7 @@ ga('send', 'pageview');
 			</div>
 		</header>
 
-     
+
     <ul class="breadcrumb">
   <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
   <li><a href="/blog/2018/">2018</a> <span class="divider">/</span></li>
@@ -128,28 +128,30 @@ ga('send', 'pageview');
 <h3>The challenge</h3>
 <p>A prime use case for a data table is to show results returned via <code>@AuraEnabled</code> from a <a href="https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/">SOQL</a> query. Ideally relationship identity fields should turn into links and data from relationship queries (something like <code>MyCustomObj__r.Color</code>) should be usable in the table as well.</p>
 <p>The tricky part: Relationship fields are returned (IMHO properly) as JSON objects. Datatable can't deal with object values for their columns. A returned value might look like this (deliberately using a generic example):</p>
-<pre><code class="language-javascript">[{
-  Id: 'payloadid',
-  Color__: 'Blue',
-  Stuff__r: {
-    Id: 'ToyId',
-    Name: 'Teddy',
-    Price__c: 34.5,
-    Shape__r: {
-      Size__c: 'XL',
-      Geometry__c: 'round'
-    }
-  },
-  Dance__c: 'Tango'
-}];
+<pre><code class="language-javascript">[
+  {
+    Id: 'payloadid',
+    Color__: 'Blue',
+    Stuff__r: {
+      Id: 'ToyId',
+      Name: 'Teddy',
+      Price__c: 34.5,
+      Shape__r: {
+        Size__c: 'XL',
+        Geometry__c: 'round'
+      }
+    },
+    Dance__c: 'Tango'
+  }
+];
 </code></pre><h3>Solution Part 1</h3>
 <p><a href="https://www.linkedin.com/in/abhishek-mohanty-56904914b/">Abhishek</a> had an idea (see also <a href="/blog/2018/08/adding-labels-to-lightning-datatable.html">Part 2</a>) and we put our heads together. To be able to use such a structure in a data table, we need to flatten it out, so instead of having <code>Stuff__r.Shape__r.Size__c</code> we want a flat value <code>Stuff__r_Shape__r_Size__c</code> with simples values (String, Number, Date, boolean). This can be achieved entertaining a few lines of JavaScript running against the JSON returned from your backend query:</p>
 <pre><code class="language-javascript">const theResponse = response.getReturnValue();
-theResponse.forEach(row =&gt; {
+theResponse.forEach((row) =&gt; {
   for (const col in row) {
     const curCol = row[col];
     if (typeof curCol === 'object') {
-      const newVal = curCol.Id ? ('/' + curCol.Id) : null;
+      const newVal = curCol.Id ? '/' + curCol.Id : null;
       flattenStructure(row, col + '_', curCol);
       if (newVal === null) {
         delete row[col];
