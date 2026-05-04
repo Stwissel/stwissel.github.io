@@ -6,7 +6,34 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Mon, 13 Apr 2026 09:42:01 +0000</pubdate>
+	<pubdate>Mon, 04 May 2026 16:57:33 +0000</pubdate>
+<item>
+	<title>Cumulative data modeling (Part 2)</title>
+	<description>&lt;p&gt;Continuing from &lt;a href="/blog/2026/01/cumulative-data-modeling-part1.html"&gt;Part 1&lt;/a&gt;: What if there is an alternative to a normalized &lt;a href="https://en.wikipedia.org/wiki/Relational_database"&gt;RDBMS&lt;/a&gt; storage approach, that better fits the process flow?&lt;/p&gt;
+&lt;h2&gt;The routing slip data model&lt;/h2&gt;
+&lt;p&gt;Instead of looking at the physical entities (Suppliers, Ingredients, Cakes, Mixes, Slices etc.), look at the process steps and treat the process steps as our physical entities that store participating data.&lt;/p&gt;
+&lt;p&gt;&lt;img src="/blog/images/2026/CheeseCakeFactory2.jpg" alt="Cheesecake factory"&gt;&lt;/p&gt;
+&lt;p&gt;The main difference to normalization is to treat data as process local. 1kg flour in the mixing state is a different datapoint from 1kg four in storage silo 3. Routing slips provide the transition. Key difference: Routing slips are &lt;strong&gt;accumulative&lt;/strong&gt;. So the routing slip in the package process contains all the routing slip data of previous process steps. From a database perspective that is a deliberate data duplication, raising blood pressure for data architects.&lt;/p&gt;
+&lt;p&gt;So why would you design in such a manner? The main advantage is self containment and transmissability. Any routing slip documents the pedigree/genesis of the physical product. A routing slip can be transmitted without the needs to run extraction code, so the process holds when execution gets split across independent entities. Since text storage is small (one &lt;code&gt;cutecats.pptx&lt;/code&gt; is probably bigger than years of data), "not saving space" is an acceptable tradeoff. Another though: business documents tend to be self contained, or have you seen an invoice that lists a customerId, bot not the customer name or address?&lt;/p&gt;
+&lt;p&gt;Unsurprisingly such a data model is not relational, but document centric, so you are looking at &lt;a href="https://www.mongodb.com/"&gt;MongoDB&lt;/a&gt;, &lt;a href="https://couchdb.apache.org/"&gt;CouchDB&lt;/a&gt; or any of the &lt;a href="https://en.wikipedia.org/wiki/Multi-model_database"&gt;multi-model databases&lt;/a&gt;. Your data type would be JSON (while I could make, being old enough, a convincing case for &lt;a href="https://en.wikipedia.org/wiki/XML"&gt;XML&lt;/a&gt;, &lt;a href="https://www.w3.org/TR/xslt-30/"&gt;XSLT&lt;/a&gt; and &lt;a href="https://www.almabetter.com/bytes/cheat-sheet/xpath"&gt;XPath&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;so how would the queries from &lt;a href="/blog/2026/01/cumulative-data-modeling-part1.html"&gt;part 1&lt;/a&gt; look like? For simplicity I describe it in SQL blended with json path like syntax.&lt;/p&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;strong&gt;a customer wants to know if the slice is made with cheese from "happy cows", which is a trade certification some of the suppliers have&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre&gt;&lt;code class="language-sql"&gt;SELECT slice_id, SUM(ingredients.cheese[happycow]) FROM slice_bucket['SomeSliceId']
+&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;
+ &lt;li&gt;&lt;strong&gt;a batch from a supplier was sub standard and you need to recall all slices made with it.&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre&gt;&lt;code class="language-sql"&gt;SELECT slice_id FROM slice_bucket WHERE supplier.batch_id = `someBadBatchId`
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;You get the idea. As usual YMMV!&lt;/p&gt;</description>
+	<link>2026/05/cumulative-data-modeling-part-2.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>679478c0-47cc-11f1-81c8-3f31675eb608</guid>
+	<pubDate>04 May 2026</pubDate>
+
+</item>
 <item>
 	<title>Standards are Standards until they are not</title>
 	<description>&lt;p&gt;In my junior developer days, literally last century, a senior developer enlightened me: "&lt;em&gt;An open standard is only complete once its wording allows all participants to faithfully implement it to be absolutely incompatible to each other&lt;/em&gt;"&lt;/p&gt;
@@ -137,7 +164,7 @@ JOIN Mix_Ingredients mi ON (
 WHERE mi.batch_id = 'someBadBatchId'
 ORDER BY s.slice_id;
 &lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;As long as as bakery control system has this baked in (pun intended) or you have your residential SQL jockey on speed dial, all is well (keep in mind: the real data model is way more complex), but there might be a better way, slightly unconventional. Stay tuned for &lt;a href="#"&gt;part 2&lt;/a&gt;.&lt;/p&gt;</description>
+&lt;p&gt;As long as as bakery control system has this baked in (pun intended) or you have your residential SQL jockey on speed dial, all is well (keep in mind: the real data model is way more complex), but there might be a better way, slightly unconventional. Continue reading &lt;a href="/blog/2026/05/cumulative-data-modeling-part2.html"&gt;part 2&lt;/a&gt;.&lt;/p&gt;</description>
 	<link>2026/01/cumulative-data-modeling-part1.html</link>
 	<author>Stephan H. Wissel</author>
 	<guid>557c13d0-f837-11f0-aa29-0b135a78174a</guid>
@@ -354,26 +381,6 @@ const updateStuff = async (event) =&amp;gt; {
 	<author>Stephan H. Wissel</author>
 	<guid>bbfd4e00-9a70-11f0-8765-1774fedaa2ba</guid>
 	<pubDate>26 September 2025</pubDate>
-
-</item>
-<item>
-	<title>Authentication with PKCE and vanilla JavaScript</title>
-	<description>&lt;p&gt;Finally you got rid of user management in your application since your organisation has standardized on an &lt;a href="https://www.cloudflare.com/en-gb/learning/access-management/what-is-an-identity-provider/"&gt;IdP&lt;/a&gt;. There are plenty to choose from. I usually develop using a &lt;a href="/blog/2024/10/onetime-idp-with-keycloak.html"&gt;Keycloak&lt;/a&gt; IdP before I test it with the target IdP (and yes: Azure Entrada tries to be different).&lt;/p&gt;
-&lt;p&gt;So it's time to adjust your &lt;a href="https://developer.mozilla.org/en-US/docs/Glossary/SPA"&gt;SPA&lt;/a&gt; to use the IdP. The admins tell you, you need to use &lt;a href="https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow-with-pkce"&gt;PKCE&lt;/a&gt;, part of the &lt;a href="https://openid.net/developers/how-connect-works/"&gt;OIDC&lt;/a&gt; specification&lt;/p&gt;
-&lt;h3&gt;Where is the fun in ready made?&lt;/h3&gt;
-&lt;p&gt;A &lt;a href="https://www.npmjs.com/search?q=OIDC&amp;amp;sortBy=downloads_monthly"&gt;quick search on npmjs&lt;/a&gt; shows, the topic is popular and AWS takes the crown. But for deeper understanding, let's roll our own.&lt;/p&gt;
-&lt;h3&gt;Prerequisites&lt;/h3&gt;
-&lt;p&gt;There are just four items you need. The first three are provided by your IdP admins, the forth one you have to provide to them.&lt;/p&gt;
-&lt;ul&gt;
- &lt;li&gt;The URL of your IdP, the full path where &lt;code&gt;.well-known&lt;/code&gt; can be found. That's usually the root, but does differ for Entrada or Keycloak&lt;/li&gt;
- &lt;li&gt;The issuer. That typically is the URL, except for Entrada&lt;/li&gt;
- &lt;li&gt;The clientId. A String, usually opaque&lt;/li&gt;
- &lt;li&gt;The callback urls. Pick those wisely. Typically you want three: &lt;code&gt;http://localhost:3000/myApp&lt;/code&gt;, &lt;code&gt;https://localhost:8443/myApp&lt;/code&gt; and &lt;code&gt;https://final.place.com/myApp&lt;/code&gt; The first two enable you to test your application locally with both http and https&lt;/li&gt;
-&lt;/ul&gt;</description>
-	<link>2025/09/authentication-with-pkce-and-vanilla-javascript.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>d41aa310-8734-11f0-8a15-a76556d24dc9</guid>
-	<pubDate>01 September 2025</pubDate>
 
 </item>
 
