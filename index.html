@@ -99,6 +99,73 @@ ga('send', 'pageview');
 	<div class="row-fluid">
 			<div class="span9">
 				<article class="well well-raised">
+					<h1><small><a href="/blog/2026/08/signing-your-git-commits.html">Signing your git commits</a></small></h1>
+					<a href="/blog/2026/08/signing-your-git-commits.prompt" title="View AI image prompt">
+						<img src="/blog/2026/08/signing-your-git-commits.webp" alt="Hero image for Signing your git commits" class="hero-image" />
+					</a>
+					<hr />
+					<div><p>Code pedigree is more important than ever with the ever increasing rate of supply chain attacks. Setting up code signing are a few steps, recorded here for reference.</p>
+<h2>Choice of key formats</h2>
+<p>While you could pick an <code>ssh</code> or <code>x509</code> key, I shall stick to <code>gpg</code> and the <code>Ed25519</code> algorythm.</p>
+<h3>Act 1 - get macOS ready</h3>
+<p>When you followed <a href="blog/2025/08/installing-a-macos-developer-workstation.html">earlier advice</a> you are good to go. If not, install <a href="https://brew.sh/">Homebrew</a> and dependencies</p>
+<pre><code class="language-bash">brew install gh gpg pinentry-mac
+
+# setup pinentry
+mkdir -p ~/.gnupg
+chmod 700 ~/.gnupg
+echo "pinentry-program $(brew --prefix)/bin/pinentry-mac" &gt;&gt; ~/.gnupg/gpg-agent.conf
+gpgconf --kill gpg-agent
+</code></pre>
+<h3>Act 2 - create the key</h3>
+<p>This creates a signing key that lasts for 2 years. Make sure to get the eMail right. After creation we extract the key id.</p>
+<pre><code class="language-bash">gpg --batch --quick-generate-key "John Doe &lt;john.doe@example.com&gt;" ed25519 sign
+TARGET_EMAIL="john.doe@example.com"
+GPG_KEY_ID=$(gpg --list-secret-keys --with-colons "$TARGET_EMAIL" 2&gt;/dev/null \
+             | awk -F: '$1=="sec" {print $5; exit}')
+echo Your key id is $GPG_KEY_ID
+</code></pre>
+<p>You also can do that manually running <code>gpg --list-secret-keys --keyid-format=long</code> and look for the string after the <code>/</code> in the line starting with <code>sec</code>.</p>
+<h3>Act 3 - configure your local git</h3>
+<p>Make sure to get the eMail right</p>
+<pre><code class="language-bash">git config --global user.name "John Doe"
+git config --global user.email "$TARGET_EMAIL"
+git config --global user.signingkey "$GPG_KEY_ID"
+git config --global commit.gpgsign true
+git config --global tag.gpgsign true
+git config --global pull.rebase true
+
+</code></pre>
+<h3>Act 4 - Let github know</h3>
+<p>Display the public key:</p>
+<pre><code class="language-bash">gpg --armor --export $GPG_KEY_ID
+</code></pre>
+<p>Go to your <a href="https://github.com/settings/keys">Github key settings</a>, click on "<strong>New GPG key</strong>" and paste it</p>
+<h3>Act 5 - overwrite for individual repos (optional)</h3>
+<pre><code class="language-bash">git config user.name "John Doe"
+git config user.email "$TARGET_EMAIL"
+git config user.signingkey "$GPG_KEY_ID"
+git config commit.gpgsign true
+git config tag.gpgsign true
+git config pull.rebase true
+</code></pre>
+<p>For adventurous souls there is a <a href="https://gist.github.com/Stwissel/1186dae6832f438a0d533e5770cbcced">setup script</a> available to automate this. Use at your own risk.</p>
+<p>As usual YMMV</p></div>
+					<hr />
+					<p><p>
+						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
+Stephan H Wissel</a> on 06 August 2026
+<span class="divider">|</span>
+<a href="/blog/2026/08/signing-your-git-commits.html#comments">Comments (0)</a>
+<span class="divider">|</span>
+categories:  <a href="/blog/categories/development.html">Development</a>  <a href="/blog/categories/github.html">Github</a>  <a href="/blog/categories/macos.html">macOS</a> 
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2026/08/signing-your-git-commits.html";
+						</script>
+					</p></p>
+				</article>
+				<article class="well well-raised">
 					<h1><small><a href="/blog/2026/07/welcome-http-query.html">welcome http query</a></small></h1>
 					<a href="/blog/2026/07/welcome-http-query.prompt" title="View AI image prompt">
 						<img src="/blog/2026/07/welcome-http-query.webp" alt="Hero image for welcome http query" class="hero-image" />
@@ -599,85 +666,6 @@ categories:  <a href="/blog/categories/cloudflare.html">Cloudflare</a>  <a href=
 						</script>
 					</p></p>
 				</article>
-				<article class="well well-raised">
-					<h1><small><a href="/blog/2025/12/unless-you-have-a-google-size-api-problem-use-curl.html">Unless you have a Google size API problem use curl</a></small></h1>
-					<a href="/blog/2025/12/unless-you-have-a-google-size-api-problem-use-curl.prompt" title="View AI image prompt">
-						<img src="/blog/2025/12/unless-you-have-a-google-size-api-problem-use-curl.webp" alt="Hero image for Unless you have a Google size API problem use curl" class="hero-image" />
-					</a>
-					<hr />
-					<div><p>A few days ago <a href="https://www.linkedin.com/posts/notessensei_api-curl-activity-7409921612931620864-uJXO">I posted on LinkedIn</a>:</p>
-<p>"<em>Unless you have a Google/Meta/Antropic size <a href="https://en.wikipedia.org/wiki/API">API</a> problem, I have a simple rule/insight:<br>
-   Don’t create an api you can’t interact with using <a href="https://curl.se/">curl</a></em>".</p>
-<p>I've been asked to elaborate.</p>
-<h3>The tool and the task</h3>
-<p>Firstly a remark about the tool, <a href="https://curl.se/">curl</a>. It is an incredibly powerful tool with super flexible use cases. Just look at the list of supported protocols: DICT, FILE, FTP, FTPS, GOPHER, GOPHERS, HTTP, HTTPS, IMAP, IMAPS, LDAP, LDAPS, MQTT, POP3, POP3S, RTMP, RTMPS, RTSP, SCP, SFTP, SMB, SMBS, SMTP, SMTPS, TELNET, TFTP, WS, WSS.</p>
-<p>Understanding, even mastering it, is a must have for any developer (or admin for that matter).Want to fetch data unencumbered by <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">CORS</a> or <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP">CSP</a> - curl is your friend.</p>
-<p>You can read the sentence above also this way: <strong><em>Don't design an API if you. haven't mastered curl</em></strong></p>
-<p>Picking an API architecture is a big decision and there are quite many to pick from:</p>
-<p>Here's the markdown source code:</p>
-<table>
- <thead>
-  <tr>
-   <th><strong>Architecture</strong></th>
-   <th><strong>Description</strong></th>
-  </tr>
- </thead>
- <tbody>
-  <tr>
-   <td><strong><a href="https://en.wikipedia.org/wiki/Representational_state_transfer">REST</a></strong></td>
-   <td>Uses HTTP methods to access and change resources through URLs. Robust <a href="https://www.openapis.org/">well supported</a> architecture with mature tooling. Easy to discoverm used for Web services, mobile apps or public APIs. Not suitable for real-time bidirectional communication or data transfer minimalism. Typically uses JSON payloads, previously XML, but will cater any data. Complex queries need to be handled in application logic. Really needs <a href="https://httpwg.org/http-extensions/draft-ietf-httpbis-safe-method-w-body.html">HTTP QUERY</a></td>
-  </tr>
-  <tr>
-   <td><strong><a href="https://en.wikipedia.org/wiki/Remote_procedure_call">RPC</a></strong></td>
-   <td>While REST is resource oriented, RPC is <a href="https://www.geeksforgeeks.org/system-design/difference-between-rest-api-and-rpc-api/">action oriented</a> and is not limited to the HTTP(s) protocol. Typically you have a single endpoint where the posted payload determines the action. Examples are <a href="https://en.wikipedia.org/wiki/SOAP">SOAP</a>, <a href="https://en.wikipedia.org/wiki/JSON_Meta_Application_Protocol">JMAP</a>, <a href="https://en.wikipedia.org/wiki/Common_Object_Request_Broker_Architecture">CORBA</a> or propriarty protcols like in use with <a href="https://react.dev/reference/rsc/server-components">React Server Components</a></td>
-  </tr>
-  <tr>
-   <td><strong><a href="https://graphql.org/">GraphQL</a></strong></td>
-   <td>Client requests exactly the data it needs using a query language, used in apps needing flexible data fetching, reducing over-fetching. Since the Query is clientside complexity is shifted to the client and security can be a nightmare. Sucks for caching or file uploads. <a href="https://developer.microsoft.com/en-us/graph/graph-explorer">Microsoft is a fan</a></td>
-  </tr>
-  <tr>
-   <td><strong><a href="https://en.wikipedia.org/wiki/SOAP">SOAP</a></strong> (Simple Object Access Protocol)</td>
-   <td>XML-based protocol with strict standards and built-in error handling. Unparalled accurate through <a href="https://en.wikipedia.org/wiki/Web_Services_Description_Language">WSDL</a> definitions. Works well between unrelated parties, e.g. <a href="https://groups.oasis-open.org/communities/tc-community-home2?CommunityKey=eb27e05e-9bf5-4821-b1ed-018dc7d3f258">ebXML</a>, heavy protocol, not popular in web applications anymore (despite giving <a href="https://en.wikipedia.org/wiki/Ajax_(programming)">AJAX</a> its name)</td>
-  </tr>
-  <tr>
-   <td><strong><a href="https://grpc.io/">gRPC</a></strong> (Google Remote Procedure Call)</td>
-   <td>High-performance framework using <a href="https://en.wikipedia.org/wiki/Protocol_Buffers">Protocol Buffers</a>. The data definitions are not transfered, like in XML or JSON, so data transfer is minimized, can transfer bucket loads of data. When you run trillions of requests, like Google, every bit counts. Severe limitation on discoverability, language support and tooling. Best used server to server</td>
-  </tr>
-  <tr>
-   <td><strong><a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API">WebSocket</a></strong></td>
-   <td>Two-way communication channel over a single TCP connection used for Chat apps, live updates, real-time gaming, scaling is not for the faint of heart</td>
-  </tr>
-  <tr>
-   <td><strong><a href="https://en.wikipedia.org/wiki/Webhook">Webhook</a></strong></td>
-   <td>Server sends automatic HTTP callbacks when events occur. Basically two way REST. Elegant and hard to test unless you can control the callback destination. Popular for payment notifications, automated workflows, CI/CD pipelines. Has special needs to make it traceable, no guaranteed delivery or real-time two-way communication</td>
-  </tr>
-  <tr>
-   <td><strong><a href="https://en.wikipedia.org/wiki/Message_queue">MQ</a></strong> (Message Queue) or <strong><a href="https://mqtt.org/">MQTT</a></strong> (Message Queuing Telemetry Transport)</td>
-   <td>Publish/subscribe messaging protocols, MQTT is suitable for low-bandwidth networks. Asynchronus processing of requests for loosely coupled systems. Very flexible but its store and forward principles require careful planning, especially around security and replay (keyword <a href="https://en.wikipedia.org/wiki/Idempotence">Idempotency</a>)</td>
-  </tr>
-  <tr>
-   <td><strong><a href="https://kafka.apache.org/">Kafka</a></strong></td>
-   <td>Distributed streaming platform that handles high-volume data streams. In laymen's terms: a queue like MQ, with added transformation capabilities, persisten queue storage, suitable for really big volumes of data (just ask <a href="https://www.uber.com/en-PH/blog/kafka-tiered-storage/">Uber</a> about it). Fun to use, not fun to run (strongly advise <a href="https://www.google.com/search?q=hosted+kafka">hosted Kafka</a>). Kafka is the big gun, it can solve your problem, in a lot of case like a shipping container can deliver a single pizza</td>
-  </tr>
- </tbody>
-</table>
-<p>Looking at the options (I'm sure there are more), you can see which ones can be covered by curl: REST, some RPC (when HTTP or SMTP based), GraphQL, SOAP, WebSocket, Webhooks (only to initialize). Eventually Kafka, when its http interface is active, but that's just http based RPC.</p>
-<p>Compare the "Command Line Pain"™ when using curl to model a request (or process the result with <a href="https://jqlang.org/">jq</a>). This gives you a data point you can add to your considerations which API to implement. It shouldn't be the only one: complexity, environment, data volumes, security etc. are equally important. The curl exercise helps to keep an eye on the tendency to overengineer.</p>
-<p>As usual YMMV</p></div>
-					<hr />
-					<p><p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 31 December 2025
-<span class="divider">|</span>
-<a href="/blog/2025/12/unless-you-have-a-google-size-api-problem-use-curl.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/api.html">API</a>  <a href="/blog/categories/webdevelopment.html">WebDevelopment</a> 
-
-						<script type="text/javascript">
-							var permaLink = "https://wissel.net/blog/2025/12/unless-you-have-a-google-size-api-problem-use-curl.html";
-						</script>
-					</p></p>
-				</article>
 				<ul class="breadcrumb pull-centre">
 					<li><a href="/blog/all.html" title="That's a loooong list!">Older entries<i class="icon-hand-right"></i></a>
 					</li>
@@ -768,7 +756,7 @@ categories:  <a href="/blog/categories/api.html">API</a>  <a href="/blog/categor
 						<li ><a href="/blog/categories/drapi.html">DRAPI</a></li>
 						<li ><a href="/blog/categories/dxlmagic.html">DXLMagic</a></li>
 						<li ><a href="/blog/categories/elearning.html">eLearning</a></li>
-						<li ><a href="/blog/categories/github.html">GitHub</a></li>
+						<li ><a href="/blog/categories/github.html">Github</a></li>
 						<li ><a href="/blog/categories/gonephisching.html">Gone Phisching</a></li>
 						<li ><a href="/blog/categories/graalvm.html">GraalVM</a></li>
 						<li ><a href="/blog/categories/grpc.html">gRPC</a></li>
@@ -792,7 +780,6 @@ categories:  <a href="/blog/categories/api.html">API</a>  <a href="/blog/categor
 						<li ><a href="/blog/categories/lotus.html">Lotus</a></li>
 						<li ><a href="/blog/categories/lotusnotes.html">Lotus Notes</a></li>
 						<li ><a href="/blog/categories/lotusphere.html">Lotusphere</a></li>
-						<li ><a href="/blog/categories/mac.html">Mac</a></li>
 						<li ><a href="/blog/categories/macos.html">macOS</a></li>
 						<li ><a href="/blog/categories/maven.html">Maven</a></li>
 						<li ><a href="/blog/categories/mobile.html">Mobile</a></li>

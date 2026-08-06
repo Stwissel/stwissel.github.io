@@ -6,7 +6,62 @@
 	<description>Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included: Salesforce, Lotus Notes and Domino, IBM Websphere, NodeJS, JavaScript,  J2EE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins</description>
 	<language>en,de</language>
 	<copyright>(C) 2003 - 2021 Stephan H. Wissel, All rights reserved</copyright>
-	<pubdate>Wed, 22 Jul 2026 14:07:10 +0000</pubdate>
+	<pubdate>Thu, 06 Aug 2026 03:07:43 +0000</pubdate>
+<item>
+	<title>Signing your git commits</title>
+	<description>&lt;p&gt;Code pedigree is more important than ever with the ever increasing rate of supply chain attacks. Setting up code signing are a few steps, recorded here for reference.&lt;/p&gt;
+&lt;h2&gt;Choice of key formats&lt;/h2&gt;
+&lt;p&gt;While you could pick an &lt;code&gt;ssh&lt;/code&gt; or &lt;code&gt;x509&lt;/code&gt; key, I shall stick to &lt;code&gt;gpg&lt;/code&gt; and the &lt;code&gt;Ed25519&lt;/code&gt; algorythm.&lt;/p&gt;
+&lt;h3&gt;Act 1 - get macOS ready&lt;/h3&gt;
+&lt;p&gt;When you followed &lt;a href="blog/2025/08/installing-a-macos-developer-workstation.html"&gt;earlier advice&lt;/a&gt; you are good to go. If not, install &lt;a href="https://brew.sh/"&gt;Homebrew&lt;/a&gt; and dependencies&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-bash"&gt;brew install gh gpg pinentry-mac
+
+# setup pinentry
+mkdir -p ~/.gnupg
+chmod 700 ~/.gnupg
+echo "pinentry-program $(brew --prefix)/bin/pinentry-mac" &amp;gt;&amp;gt; ~/.gnupg/gpg-agent.conf
+gpgconf --kill gpg-agent
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;Act 2 - create the key&lt;/h3&gt;
+&lt;p&gt;This creates a signing key that lasts for 2 years. Make sure to get the eMail right. After creation we extract the key id.&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-bash"&gt;gpg --batch --quick-generate-key "John Doe &amp;lt;john.doe@example.com&amp;gt;" ed25519 sign
+TARGET_EMAIL="john.doe@example.com"
+GPG_KEY_ID=$(gpg --list-secret-keys --with-colons "$TARGET_EMAIL" 2&amp;gt;/dev/null \
+             | awk -F: '$1=="sec" {print $5; exit}')
+echo Your key id is $GPG_KEY_ID
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;You also can do that manually running &lt;code&gt;gpg --list-secret-keys --keyid-format=long&lt;/code&gt; and look for the string after the &lt;code&gt;/&lt;/code&gt; in the line starting with &lt;code&gt;sec&lt;/code&gt;.&lt;/p&gt;
+&lt;h3&gt;Act 3 - configure your local git&lt;/h3&gt;
+&lt;p&gt;Make sure to get the eMail right&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-bash"&gt;git config --global user.name "John Doe"
+git config --global user.email "$TARGET_EMAIL"
+git config --global user.signingkey "$GPG_KEY_ID"
+git config --global commit.gpgsign true
+git config --global tag.gpgsign true
+git config --global pull.rebase true
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;Act 4 - Let github know&lt;/h3&gt;
+&lt;p&gt;Display the public key:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="language-bash"&gt;gpg --armor --export $GPG_KEY_ID
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Go to your &lt;a href="https://github.com/settings/keys"&gt;Github key settings&lt;/a&gt;, click on "&lt;strong&gt;New GPG key&lt;/strong&gt;" and paste it&lt;/p&gt;
+&lt;h3&gt;Act 5 - overwrite for individual repos (optional)&lt;/h3&gt;
+&lt;pre&gt;&lt;code class="language-bash"&gt;git config user.name "John Doe"
+git config user.email "$TARGET_EMAIL"
+git config user.signingkey "$GPG_KEY_ID"
+git config commit.gpgsign true
+git config tag.gpgsign true
+git config pull.rebase true
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;For adventurous souls there is a &lt;a href="https://gist.github.com/Stwissel/1186dae6832f438a0d533e5770cbcced"&gt;setup script&lt;/a&gt; available to automate this. Use at your own risk.&lt;/p&gt;
+&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
+	<link>2026/08/signing-your-git-commits.html</link>
+	<author>Stephan H. Wissel</author>
+	<guid>4c48f1f0-9131-11f1-bf74-5f1da76d7425</guid>
+	<pubDate>06 August 2026</pubDate>
+
+</item>
 <item>
 	<title>welcome http query</title>
 	<description>&lt;p&gt;In 2026, after a 16 years pause, HTTP gained a new keyword &lt;a href="https://datatracker.ietf.org/doc/html/rfc10008"&gt;QUERY&lt;/a&gt;. Much &lt;a href="https://www.theregister.com/devops/2026/07/13/http-gets-a-query-method-so-complex-searches-can-stop-pretending-to-be-post/5270192"&gt;has been said&lt;/a&gt; and &lt;a href="https://www.reddit.com/r/webdev/comments/1ummfyr/rfc_10008_is_official_the_http_query_method_is/?rdt=34595"&gt;said&lt;/a&gt; about the &lt;code&gt;GET&lt;/code&gt; with a body. But why did it take so long?&lt;/p&gt;
@@ -396,73 +451,6 @@ ORDER BY s.slice_id;
 	<author>Stephan H. Wissel</author>
 	<guid>9d69e750-f62d-11f0-b02b-a7d7e8629bc5</guid>
 	<pubDate>20 January 2026</pubDate>
-
-</item>
-<item>
-	<title>Unless you have a Google size API problem use curl</title>
-	<description>&lt;p&gt;A few days ago &lt;a href="https://www.linkedin.com/posts/notessensei_api-curl-activity-7409921612931620864-uJXO"&gt;I posted on LinkedIn&lt;/a&gt;:&lt;/p&gt;
-&lt;p&gt;"&lt;em&gt;Unless you have a Google/Meta/Antropic size &lt;a href="https://en.wikipedia.org/wiki/API"&gt;API&lt;/a&gt; problem, I have a simple rule/insight:&lt;br&gt;
-   Don?t create an api you can?t interact with using &lt;a href="https://curl.se/"&gt;curl&lt;/a&gt;&lt;/em&gt;".&lt;/p&gt;
-&lt;p&gt;I've been asked to elaborate.&lt;/p&gt;
-&lt;h3&gt;The tool and the task&lt;/h3&gt;
-&lt;p&gt;Firstly a remark about the tool, &lt;a href="https://curl.se/"&gt;curl&lt;/a&gt;. It is an incredibly powerful tool with super flexible use cases. Just look at the list of supported protocols: DICT, FILE, FTP, FTPS, GOPHER, GOPHERS, HTTP, HTTPS, IMAP, IMAPS, LDAP, LDAPS, MQTT, POP3, POP3S, RTMP, RTMPS, RTSP, SCP, SFTP, SMB, SMBS, SMTP, SMTPS, TELNET, TFTP, WS, WSS.&lt;/p&gt;
-&lt;p&gt;Understanding, even mastering it, is a must have for any developer (or admin for that matter).Want to fetch data unencumbered by &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS"&gt;CORS&lt;/a&gt; or &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP"&gt;CSP&lt;/a&gt; - curl is your friend.&lt;/p&gt;
-&lt;p&gt;You can read the sentence above also this way: &lt;strong&gt;&lt;em&gt;Don't design an API if you. haven't mastered curl&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;Picking an API architecture is a big decision and there are quite many to pick from:&lt;/p&gt;
-&lt;p&gt;Here's the markdown source code:&lt;/p&gt;
-&lt;table&gt;
- &lt;thead&gt;
-  &lt;tr&gt;
-   &lt;th&gt;&lt;strong&gt;Architecture&lt;/strong&gt;&lt;/th&gt;
-   &lt;th&gt;&lt;strong&gt;Description&lt;/strong&gt;&lt;/th&gt;
-  &lt;/tr&gt;
- &lt;/thead&gt;
- &lt;tbody&gt;
-  &lt;tr&gt;
-   &lt;td&gt;&lt;strong&gt;&lt;a href="https://en.wikipedia.org/wiki/Representational_state_transfer"&gt;REST&lt;/a&gt;&lt;/strong&gt;&lt;/td&gt;
-   &lt;td&gt;Uses HTTP methods to access and change resources through URLs. Robust &lt;a href="https://www.openapis.org/"&gt;well supported&lt;/a&gt; architecture with mature tooling. Easy to discoverm used for Web services, mobile apps or public APIs. Not suitable for real-time bidirectional communication or data transfer minimalism. Typically uses JSON payloads, previously XML, but will cater any data. Complex queries need to be handled in application logic. Really needs &lt;a href="https://httpwg.org/http-extensions/draft-ietf-httpbis-safe-method-w-body.html"&gt;HTTP QUERY&lt;/a&gt;&lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td&gt;&lt;strong&gt;&lt;a href="https://en.wikipedia.org/wiki/Remote_procedure_call"&gt;RPC&lt;/a&gt;&lt;/strong&gt;&lt;/td&gt;
-   &lt;td&gt;While REST is resource oriented, RPC is &lt;a href="https://www.geeksforgeeks.org/system-design/difference-between-rest-api-and-rpc-api/"&gt;action oriented&lt;/a&gt; and is not limited to the HTTP(s) protocol. Typically you have a single endpoint where the posted payload determines the action. Examples are &lt;a href="https://en.wikipedia.org/wiki/SOAP"&gt;SOAP&lt;/a&gt;, &lt;a href="https://en.wikipedia.org/wiki/JSON_Meta_Application_Protocol"&gt;JMAP&lt;/a&gt;, &lt;a href="https://en.wikipedia.org/wiki/Common_Object_Request_Broker_Architecture"&gt;CORBA&lt;/a&gt; or propriarty protcols like in use with &lt;a href="https://react.dev/reference/rsc/server-components"&gt;React Server Components&lt;/a&gt;&lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td&gt;&lt;strong&gt;&lt;a href="https://graphql.org/"&gt;GraphQL&lt;/a&gt;&lt;/strong&gt;&lt;/td&gt;
-   &lt;td&gt;Client requests exactly the data it needs using a query language, used in apps needing flexible data fetching, reducing over-fetching. Since the Query is clientside complexity is shifted to the client and security can be a nightmare. Sucks for caching or file uploads. &lt;a href="https://developer.microsoft.com/en-us/graph/graph-explorer"&gt;Microsoft is a fan&lt;/a&gt;&lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td&gt;&lt;strong&gt;&lt;a href="https://en.wikipedia.org/wiki/SOAP"&gt;SOAP&lt;/a&gt;&lt;/strong&gt; (Simple Object Access Protocol)&lt;/td&gt;
-   &lt;td&gt;XML-based protocol with strict standards and built-in error handling. Unparalled accurate through &lt;a href="https://en.wikipedia.org/wiki/Web_Services_Description_Language"&gt;WSDL&lt;/a&gt; definitions. Works well between unrelated parties, e.g. &lt;a href="https://groups.oasis-open.org/communities/tc-community-home2?CommunityKey=eb27e05e-9bf5-4821-b1ed-018dc7d3f258"&gt;ebXML&lt;/a&gt;, heavy protocol, not popular in web applications anymore (despite giving &lt;a href="https://en.wikipedia.org/wiki/Ajax_(programming)"&gt;AJAX&lt;/a&gt; its name)&lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td&gt;&lt;strong&gt;&lt;a href="https://grpc.io/"&gt;gRPC&lt;/a&gt;&lt;/strong&gt; (Google Remote Procedure Call)&lt;/td&gt;
-   &lt;td&gt;High-performance framework using &lt;a href="https://en.wikipedia.org/wiki/Protocol_Buffers"&gt;Protocol Buffers&lt;/a&gt;. The data definitions are not transfered, like in XML or JSON, so data transfer is minimized, can transfer bucket loads of data. When you run trillions of requests, like Google, every bit counts. Severe limitation on discoverability, language support and tooling. Best used server to server&lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td&gt;&lt;strong&gt;&lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API"&gt;WebSocket&lt;/a&gt;&lt;/strong&gt;&lt;/td&gt;
-   &lt;td&gt;Two-way communication channel over a single TCP connection used for Chat apps, live updates, real-time gaming, scaling is not for the faint of heart&lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td&gt;&lt;strong&gt;&lt;a href="https://en.wikipedia.org/wiki/Webhook"&gt;Webhook&lt;/a&gt;&lt;/strong&gt;&lt;/td&gt;
-   &lt;td&gt;Server sends automatic HTTP callbacks when events occur. Basically two way REST. Elegant and hard to test unless you can control the callback destination. Popular for payment notifications, automated workflows, CI/CD pipelines. Has special needs to make it traceable, no guaranteed delivery or real-time two-way communication&lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td&gt;&lt;strong&gt;&lt;a href="https://en.wikipedia.org/wiki/Message_queue"&gt;MQ&lt;/a&gt;&lt;/strong&gt; (Message Queue) or &lt;strong&gt;&lt;a href="https://mqtt.org/"&gt;MQTT&lt;/a&gt;&lt;/strong&gt; (Message Queuing Telemetry Transport)&lt;/td&gt;
-   &lt;td&gt;Publish/subscribe messaging protocols, MQTT is suitable for low-bandwidth networks. Asynchronus processing of requests for loosely coupled systems. Very flexible but its store and forward principles require careful planning, especially around security and replay (keyword &lt;a href="https://en.wikipedia.org/wiki/Idempotence"&gt;Idempotency&lt;/a&gt;)&lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td&gt;&lt;strong&gt;&lt;a href="https://kafka.apache.org/"&gt;Kafka&lt;/a&gt;&lt;/strong&gt;&lt;/td&gt;
-   &lt;td&gt;Distributed streaming platform that handles high-volume data streams. In laymen's terms: a queue like MQ, with added transformation capabilities, persisten queue storage, suitable for really big volumes of data (just ask &lt;a href="https://www.uber.com/en-PH/blog/kafka-tiered-storage/"&gt;Uber&lt;/a&gt; about it). Fun to use, not fun to run (strongly advise &lt;a href="https://www.google.com/search?q=hosted+kafka"&gt;hosted Kafka&lt;/a&gt;). Kafka is the big gun, it can solve your problem, in a lot of case like a shipping container can deliver a single pizza&lt;/td&gt;
-  &lt;/tr&gt;
- &lt;/tbody&gt;
-&lt;/table&gt;
-&lt;p&gt;Looking at the options (I'm sure there are more), you can see which ones can be covered by curl: REST, some RPC (when HTTP or SMTP based), GraphQL, SOAP, WebSocket, Webhooks (only to initialize). Eventually Kafka, when its http interface is active, but that's just http based RPC.&lt;/p&gt;
-&lt;p&gt;Compare the "Command Line Pain"? when using curl to model a request (or process the result with &lt;a href="https://jqlang.org/"&gt;jq&lt;/a&gt;). This gives you a data point you can add to your considerations which API to implement. It shouldn't be the only one: complexity, environment, data volumes, security etc. are equally important. The curl exercise helps to keep an eye on the tendency to overengineer.&lt;/p&gt;
-&lt;p&gt;As usual YMMV&lt;/p&gt;</description>
-	<link>2025/12/unless-you-have-a-google-size-api-problem-use-curl.html</link>
-	<author>Stephan H. Wissel</author>
-	<guid>ed2a6eb0-e618-11f0-8cc7-f32b674a3c60</guid>
-	<pubDate>31 December 2025</pubDate>
 
 </item>
 
