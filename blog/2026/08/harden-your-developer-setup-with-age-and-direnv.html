@@ -27,11 +27,11 @@ ga('send', 'pageview');
 <meta name="twitter:card"     content="summary" />
 <meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
 <meta name="description"
-	content="Harden your developer setup with age and direnv - Credential stealing is rampant, so some diligence in guarding API keys, passphrases and secrets is warranted. Stop wondering if it could happen to you, but prepare for when it might happen. Here is how one arrow in your defense portfolio. Limit the blast radius When an attacker sneaks by your 2FA us" />
+	content="Harden your developer setup with age and direnv - Credential stealing is rampant, so some diligence in guarding API keys, passphrases and secrets is warranted. Stop wondering if it could happen to you, but prepare for when it might happen. Here is one arrow in your defense portfolio. Limit the blast radius When an attacker sneaks by your 2FA using " />
 <meta name="Keywords"
 	content="Development,GitHub,macOS," />
 <meta name="Abstract"
-	content="Harden your developer setup with age and direnv - Credential stealing is rampant, so some diligence in guarding API keys, passphrases and secrets is warranted. Stop wondering if it could happen to you, but prepare for when it might happen. Here is how one arrow in your defense portfolio. Limit the blast radius When an attacker sneaks by your 2FA us" />
+	content="Harden your developer setup with age and direnv - Credential stealing is rampant, so some diligence in guarding API keys, passphrases and secrets is warranted. Stop wondering if it could happen to you, but prepare for when it might happen. Here is one arrow in your defense portfolio. Limit the blast radius When an attacker sneaks by your 2FA using " />
 <!--[if lt IE 9]>
 		<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
 <![endif]-->
@@ -132,7 +132,7 @@ ga('send', 'pageview');
 					</a>
 					<hr />
 					<div><p>Credential stealing <a href="https://www.google.com/search?q=credential+stealing+news">is rampant</a>, so some diligence in guarding API keys, passphrases and secrets is warranted.</p>
-<p>Stop wondering <strong>if</strong> it could happen to you, but prepare for <strong>when</strong> it might happen. Here is how one arrow in your defense portfolio.</p>
+<p>Stop wondering <strong>if</strong> it could happen to you, but prepare for <strong>when</strong> it might happen. Here is one arrow in your defense portfolio.</p>
 <h2>Limit the blast radius</h2>
 <p>When an attacker sneaks by your <a href="https://en.wikipedia.org/wiki/Multi-factor_authentication">2FA</a> using e.g a <a href="https://en.wikipedia.org/wiki/Supply_chain_attack">supply chain attack</a> your next line of defense is "How much can they see?"</p>
 <ul>
@@ -146,7 +146,17 @@ ga('send', 'pageview');
  <li><a href="https://support.apple.com/en-gb/guide/keychain-access/welcome/mac">macOS keychain</a>: holds the AGE key(s), (Other operating systems is another story for another time).</li>
  <li><a href="https://age-encryption.org/v1">age</a> "Actually good encryption": to encrypt your secrets and <code>.env</code> variables.</li>
  <li><a href="https://direnv.net/">direnv</a>: Loads and unloads environment variables depending on the current directory.</li>
-</ul><h2>Step by step</h2>
+</ul><svg xmlns="http://www.w3.org/2000/svg" class="adm-hidden">
+ <symbol id="adm-note">
+  <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+   <g fill="currentColor">
+    <path d="m15.4 5h4.5v2.7h-4.5z" transform="matrix(-.7071 -.7071 .7071 -.7071 25.7188 23.288)" />
+    <path d="m13.9 7 3.1 3.1-9.5 9.6-3.5.3.3-3.5z" />
+   </g>
+  </svg>
+ </symbol>
+</svg>
+<h2>Step by step</h2>
 <p>I'm presuming you have <a href="https://brew.sh/">Homebrew</a> installed. YOu might want to check my <a href="/blog/2025/08/installing-a-macos-developer-workstation.html">macOS setup</a> for this.</p>
 <h3>Step 0 - installation and layout</h3>
 <pre><code class="language-bash">brew install age direnv
@@ -201,7 +211,16 @@ ga('send', 'pageview');
   </tr>
  </tbody>
 </table>
-<p>Note the <code>recipients.txt</code> for projects with more than one developer.</p>
+<div class="adm-block adm-note">
+ <div class="adm-heading">
+  <svg class="adm-icon">
+   <use xlink:href="#adm-note" />
+  </svg><span>Corporate</span>
+ </div>
+ <div class="adm-body">
+  <p>the <code>recipients.txt</code> is needed for projects with more than one developer.</p>
+ </div>
+</div>
 <h3>Step 1 - Personal identity (once)</h3>
 <p>You will generate your personal age key(s) and add them to the macOS keychain. I create two keys, one for personal and one for corporate use.</p>
 <pre><code class="language-bash"># Make keys
@@ -221,9 +240,8 @@ rm ~/.config/age/corporate_key.txt
 <pre><code class="language-bash">export AGE_PERSONAL_PUBLIC=age1qr8xa48c38xwlv8jhtcallv2vy4nz5kg5928svtjl7nhxu6s5dusaq8ypz
 export AGE_CORPORATE_PUBLIC=age1eh3arwjahag7hpg5salc7rzwwq5eagrqmvl3ck9jf6r3pn59vvvslvdlcr
 </code></pre>
-<p>!!! Warning Local only</p>
-<pre><code>The keychain entry does not sync with iCloud
-</code></pre>
+<p>!!! Warning Local only<br>
+  The keychain entry does not sync with iCloud</p>
 <h3>Step 2 - helper (once)</h3>
 <p>Create the file <code>~/.config/direnv/direnvrc</code></p>
 <pre><code class="language-bash">load_age_personal() {
@@ -311,7 +329,7 @@ cd ~/Code &amp;&amp; direnv allow
 <h3>Step 4b - corporate projects</h3>
 <p>Create <code>.envrc</code> in your project root:</p>
 <pre><code class="language-bash">source_up
-[[ -f .env.age ]] &amp;&amp; load_age .env.age
+[[ -f .env.age ]] &amp;&amp; load_age_corporate .env.age
 </code></pre>
 <p>Add <code>recipients.txt</code> file with all participants' public keys line by line. Then encrypt to all:</p>
 <pre><code class="language-bash">cat &lt;&lt;'EOF' | age -e -R recipients.txt -o .env.age
