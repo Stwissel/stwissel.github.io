@@ -2,9 +2,9 @@
  * Comment form for wissel.net.
  *
  * Talks to the blog-comments Cloudflare Worker and gates submission behind a
- * Cloudflare Turnstile challenge. Replaces the prior script-tag-library +
- * reCAPTCHA version; Markdown.Editor and mustache.js have no such dependency,
- * so nothing else needs it.
+ * Cloudflare Turnstile challenge. Replaces the jQuery + reCAPTCHA version;
+ * Markdown.Editor and mustache.js are jQuery-free, so nothing else on the
+ * page needs it.
  */
 /* global Mustache, Markdown, turnstile */
 
@@ -117,7 +117,7 @@ function addComment(form, siteKey, parentId) {
     webSite: byId("webSite").value,
     Body: byId("wmd-input").value,
     parentId: parentId,
-    turnstileToken: turnstile.getResponse(turnstileWidgetId)
+    turnstileToken: turnstileWidgetId !== null ? turnstile.getResponse(turnstileWidgetId) : ""
   };
 
   fetch(COMMENT_ENDPOINT, {
