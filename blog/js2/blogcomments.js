@@ -1,120 +1,155 @@
-var destinationURL = "https://wissel.net/blogcomments";
+/**
+ * Comment form for wissel.net.
+ *
+ * Talks to the blog-comments Cloudflare Worker and gates submission behind a
+ * Cloudflare Turnstile challenge. Replaces the prior script-tag-library +
+ * reCAPTCHA version; Markdown.Editor and mustache.js have no such dependency,
+ * so nothing else needs it.
+ */
+/* global Mustache, Markdown, turnstile */
 
-function getCommentForm(recaptchaid, parentId) {
-  var params = {};
-  params.recaptchaid = recaptchaid;
-  params.parentId = parentId;
-  var result = {};
-  $.ajax({
-    url: "/blog/js2/comment.mustache",
-    dataType: "text",
-    success: function (template) {
-      result = Mustache.render(template, params);
-    },
-    async: false
-  });
-  return result;
+/**
+ * /why: wissel.net, notessensei.com and their www forms are all served by the
+ * same Worker, so a relative URL is same-origin for every one of them. Only the
+ * stwissel.github.io fallback, served by GitHub Pages, is cross-origin. Branching
+ * on the fallback rather than listing the aliases means a future alias needs no
+ * change here.
+ */
+var COMMENT_ENDPOINT = location.hostname.endsWith(".github.io")
+  ? "https://wissel.net/blogcomments"
+  : "/blogcomments";
+
+var TEMPLATE_URL = "/blog/js2/comment.mustache";
+
+var turnstileWidgetId = null;
+
+function byId(id) {
+  return document.getElementById(id);
 }
 
-function addComment(form, recaptchaid, parentId) {
-  $("#commentsubmit").hide();
-  $("#commentcontrol").hide();
-  $("#captchadiv").hide();
-  $("#alertContainer").html("One moment please, submitting comment...").show();
+function setVisible(id, visible) {
+  var element = byId(id);
+  if (element) {
+    element.style.display = visible ? "" : "none";
+  }
+}
 
-  // Wait a moment before submission
-  window.setTimeout(function () {
-    var postData = {};
-    postData.Commentor = this.Commentor.value;
-    postData.eMail = this.Email.value;
-    postData.webSite = this.webSite.value;
-    postData.Body = this["wmd-input"].value;
-    postData.parentId = parentId;
-    try {
-      postData.captcha = grecaptcha.getResponse();
-    } catch (e) {
-      console.log(e);
-    }
+function showAlert(text, isError) {
+  var container = byId("alertContainer");
+  if (!container) {
+    return;
+  }
+  container.textContent = "";
+  var pre = document.createElement("pre");
+  pre.textContent = text;
+  container.appendChild(pre);
+  container.classList.toggle("alert-error", Boolean(isError));
+  container.style.display = "";
+}
 
-    $.postJSON({
-      url: destinationURL,
-      data: postData,
-      success: function (result) {
-        $("#alertContainer")
-          .html("<pre>" + result.message + "</pre>")
-          .addClass("alert-error")
-          .delay(5000)
-          .hide(200, function () {
-            resetComment(recaptchaid, parentId, true);
-          });
-      },
-      error: function (err) {
-        var realError = err.responseText
-          ? err.responseText
-          : "Something went wrong";
-        var displayStuff = realError.message
-          ? realError.message
-          : JSON.stringify(realError);
-        $("#alertContainer")
-          .html("<pre>" + displayStuff + "</pre>")
-          .addClass("alert-error")
-          .delay(5000)
-          .hide(200, function () {
-            resetComment(recaptchaid, parentId, false);
-          });
+/** Renders the form, wires the markdown editor, and mounts the Turnstile widget. */
+function renderComment(siteKey, parentId) {
+  var host = byId("commentform_" + parentId);
+  if (!host) {
+    return Promise.resolve();
+  }
+
+  return fetch(TEMPLATE_URL, { cache: "no-cache" })
+    .then(function (response) {
+      if (!response.ok) {
+        throw new Error("comment form template unavailable");
       }
+      return response.text();
+    })
+    .then(function (template) {
+      host.innerHTML = Mustache.render(template, {
+        sitekey: siteKey,
+        parentId: parentId
+      });
+
+      // Hidden until Turnstile reports a solved challenge.
+      setVisible("commentsubmit", false);
+
+      var editor = new Markdown.Editor(Markdown.getSanitizingConverter());
+      editor.run();
+
+      turnstileWidgetId = turnstile.render("#captchadiv", {
+        sitekey: siteKey,
+        theme: "auto",
+        callback: function () {
+          setVisible("commentsubmit", true);
+        },
+        "expired-callback": function () {
+          setVisible("commentsubmit", false);
+        },
+        "error-callback": function () {
+          setVisible("commentsubmit", false);
+          showAlert("The challenge could not load. Please reload the page.", true);
+        }
+      });
+    })
+    .catch(function (error) {
+      showAlert("The comment form could not be loaded: " + error.message, true);
     });
-  }, 2000);
+}
+
+/** Restores the form so a failed submission can be corrected and retried. */
+function resetCommentForm() {
+  setVisible("commentcontrol", true);
+  setVisible("captchadiv", true);
+  setVisible("commentsubmit", false);
+  if (turnstileWidgetId !== null) {
+    // Tokens are single-use: a retry needs a fresh challenge.
+    turnstile.reset(turnstileWidgetId);
+  }
+}
+
+/** Called from the form's onSubmit. Always returns false — submission is via fetch. */
+function addComment(form, siteKey, parentId) {
+  setVisible("commentsubmit", false);
+  setVisible("commentcontrol", false);
+  setVisible("captchadiv", false);
+  showAlert("One moment please, submitting comment...", false);
+
+  var payload = {
+    Commentor: byId("Commentor").value,
+    eMail: byId("Email").value,
+    webSite: byId("webSite").value,
+    Body: byId("wmd-input").value,
+    parentId: parentId,
+    turnstileToken: turnstile.getResponse(turnstileWidgetId)
+  };
+
+  fetch(COMMENT_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+    .then(function (response) {
+      return response
+        .json()
+        .catch(function () {
+          return { message: "Something went wrong, we are sooo sorry" };
+        })
+        .then(function (result) {
+          return { ok: response.ok, message: result.message };
+        });
+    })
+    .then(function (result) {
+      showAlert(result.message, !result.ok);
+      if (result.ok) {
+        // Give the reader time to read the confirmation, then offer a fresh form.
+        window.setTimeout(function () {
+          renderComment(siteKey, parentId);
+        }, 5000);
+      } else {
+        resetCommentForm();
+      }
+    })
+    .catch(function (error) {
+      showAlert("Something went wrong: " + error.message, true);
+      resetCommentForm();
+    });
+
   return false;
 }
-
-function resetComment(recaptchaid, parentId, hasSuccess) {
-  if (!hasSuccess) {
-    // It didn't work!
-    $("#alertContainer").show();
-    $("#commentsubmit").show();
-    $("#commentcontrol").show();
-    $("#captchadiv").show();
-  } else {
-    renderComment(recaptchaid, parentId);
-  }
-}
-
-function renderComment(recaptchaid, parentId) {
-  var fid = "#commentform_" + parentId;
-  var form = getCommentForm(recaptchaid, parentId);
-  $(fid).empty().append(form);
-  $("#commentsubmit").hide();
-  if (grecaptcha) {
-    var theDiv = document.getElementById("captchadiv");
-    $(theDiv).empty();
-    grecaptcha.render(theDiv, {
-      sitekey: recaptchaid,
-      callback: goodCaptcha,
-      theme: "light"
-    });
-  }
-
-  // Markdown
-  var converter1 = Markdown.getSanitizingConverter();
-  var editor1 = new Markdown.Editor(converter1);
-  editor1.run();
-}
-
-function goodCaptcha(token) {
-  $("#commentsubmit").show();
-}
-
-jQuery.extend({
-  postJSON: function (params) {
-    return jQuery.ajax(
-      jQuery.extend(params, {
-        type: "POST",
-        data: JSON.stringify(params.data),
-        dataType: "json",
-        contentType: "application/json",
-        processData: false
-      })
-    );
-  }
-});
