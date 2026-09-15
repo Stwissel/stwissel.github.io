@@ -7,32 +7,20 @@
  * matches Caddy: .html served directly, directories served from index.html.
  */
 
-const ORIGIN = 'https://origin.wissel.net';
-
-/** Paths that must reach the comments container rather than static assets. */
-function isProxied(pathname) {
+/**
+ * Paths owned by the blog-comments Worker rather than the asset store.
+ *
+ * /why: the whole /.well-known/ prefix travels together. The comment Worker
+ * serves webfinger plus the two static files the retired Java container held,
+ * so narrowing this to /.well-known/webfinger would 404 the Azure
+ * application-ownership proof.
+ */
+function isComments(pathname) {
   return (
     pathname === '/blogcomments' ||
     pathname.startsWith('/blogcomments/') ||
     pathname.startsWith('/.well-known/')
   );
-}
-
-/** Forward a request to the Caddy origin, preserving method, body and query. */
-function proxy(request, url) {
-  const target = new URL(url.pathname + url.search, ORIGIN);
-  const headers = new Headers(request.headers);
-  const clientIp = request.headers.get('CF-Connecting-IP');
-  if (clientIp) {
-    headers.set('X-Real-IP', clientIp);
-  }
-  headers.delete('Host');
-
-  const init = { method: request.method, headers, redirect: 'manual' };
-  if (request.method !== 'GET' && request.method !== 'HEAD') {
-    init.body = request.body;
-  }
-  return fetch(new Request(target, init));
 }
 
 /** Fetch one asset path from the assets binding. */
@@ -44,8 +32,8 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (isProxied(url.pathname)) {
-      return proxy(request, url);
+    if (isComments(url.pathname)) {
+      return env.COMMENTS.fetch(request);
     }
 
     // Directory URLs: "/blog/" -> "/blog/index.html"
