@@ -258,6 +258,16 @@ load_age_corporate() {
   watch_file "$1"
   eval "$(age -d -i &lt;(security find-generic-password -s age-corporate -w) "$1")"
 }
+
+load_age() {
+  if [[ -f .env.age ]]; then
+     if [[ -f participants.txt ]]; then
+        load_age_corporate .env.age
+     else
+        load_age_personal .env.age
+     fi
+  fi
+}
 </code></pre>
 <p>Create the file <code>~/bin/editenv.sh</code> (or somewhere on your <code>$PATH</code>). It allows you comfortably updating encrypted env files</p>
 <pre><code class="language-bash">#!/bin/bash
@@ -329,13 +339,7 @@ cd ~/Code &amp;&amp; direnv allow
 <h3>Step 4 - projects</h3>
 <p>Create <code>.envrc</code> in your project root:</p>
 <pre><code class="language-bash">source_up
-if [[ -f .env.age ]]; then
-  if [[ -f participants.txt ]]; then
-    load_age_corporate .env.age
-  else
-    load_age_personal .env.age
-  fi
-fi
+load_age
 
 </code></pre>
 <h3>Step 5 - corporate projects</h3>
@@ -345,6 +349,10 @@ export DO_KEY="team-specific..."
 EOF
 </code></pre>
 <p>Use the helper script <code>editenv</code> to comfortably edit the encrypted environment.</p>
+<h3>Step 6 - allow execution</h3>
+<p>You need to approve, after any change to <code>.envrc</code> that you are ok with the new file</p>
+<pre><code class="language-bash">direnv allow
+</code></pre>
 <h2>Next up</h2>
 <p>integration into <a href="/blog/2026/08/using-age-in-github-actions.html">Github actions</a>, Yubikey and SSH</p>
 <p>As usual YMMV</p></div>
