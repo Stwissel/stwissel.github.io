@@ -326,16 +326,19 @@ EOF
 printf 'load_age_personal ~/Code/.env.age\n' &gt; ~/Code/.envrc
 cd ~/Code &amp;&amp; direnv allow
 </code></pre>
-<h3>Step 4a - personal projects</h3>
+<h3>Step 4 - projects</h3>
 <p>Create <code>.envrc</code> in your project root:</p>
 <pre><code class="language-bash">source_up
-[[ -f .env.age ]] &amp;&amp; load_age_personal .env.age
+if [[ -f .env.age ]]; then
+  if [[ -f participants.txt ]]; then
+    load_age_corporate .env.age
+  else
+    load_age_personal .env.age
+  fi
+fi
+
 </code></pre>
-<h3>Step 4b - corporate projects</h3>
-<p>Create <code>.envrc</code> in your project root:</p>
-<pre><code class="language-bash">source_up
-[[ -f .env.age ]] &amp;&amp; load_age_corporate .env.age
-</code></pre>
+<h3>Step 5 - corporate projects</h3>
 <p>Add <code>recipients.txt</code> file with all participants' public keys line by line. Then encrypt to all:</p>
 <pre><code class="language-bash">cat &lt;&lt;'EOF' | age -e -R recipients.txt -o .env.age
 export DO_KEY="team-specific..."
