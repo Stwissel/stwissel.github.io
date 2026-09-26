@@ -1,5 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="wa-theme-default wa-palette-default wa-light wa-cloak">
+<script>
+/* Appearance: system by default, overridable to light or dark, remembered in a
+   cookie.
+
+   /why inline and first: Web Awesome switches theme on a class, not a media
+   query, so the class must be on <html> before the first paint or the page
+   flashes light and then turns dark. This is the one script on the site that
+   cannot be deferred, and the cookie has to be read synchronously here.
+
+   /why a cookie rather than localStorage: it is sent with the request, so if
+   this ever becomes server-rendered the preference is already available before
+   a byte of HTML is written. Nothing is stored until a reader actually chooses:
+   "system" deletes the cookie rather than recording a third value, so the
+   majority who never touch the control carry no state at all. */
+(function () {
+	var NAME = "appearance";
+	var MODES = ["system", "light", "dark"];
+	var ICONS = { system: "circle-half-stroke", light: "sun", dark: "moon" };
+	var media = window.matchMedia("(prefers-color-scheme: dark)");
+	var mode = (document.cookie.match(/(?:^|;\s*)appearance=(light|dark)(?:;|$)/) || [])[1] || "system";
+
+	function apply() {
+		var dark = mode === "dark" || (mode === "system" && media.matches);
+		var c = document.documentElement.classList;
+		c.toggle("wa-dark", dark);
+		c.toggle("wa-light", !dark);
+	}
+	function remember() {
+		document.cookie = mode === "system"
+			? NAME + "=; Max-Age=0; Path=/; SameSite=Lax"
+			: NAME + "=" + mode + "; Max-Age=31536000; Path=/; SameSite=Lax";
+	}
+	apply();
+	/* Only follow the OS while the reader has not overridden it. */
+	media.addEventListener("change", function () { if (mode === "system") { apply(); } });
+
+	document.addEventListener("DOMContentLoaded", function () {
+		var btn = document.getElementById("appearance-toggle");
+		if (!btn) { return; }
+		var icon = document.getElementById("appearance-icon");
+		function sync() {
+			icon.setAttribute("name", ICONS[mode]);
+			btn.setAttribute("aria-label", "Appearance: " + mode + ". Activate to change.");
+			btn.setAttribute("title", "Appearance: " + mode);
+		}
+		sync();
+		btn.addEventListener("click", function () {
+			mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+			remember();
+			apply();
+			sync();
+		});
+	});
+})();
+</script>
 <head>
 <title>NotesSensei's Blog - by year: Year 2008</title>
 <meta name="robots" content="index,follow" />
@@ -17,1681 +72,1257 @@
 <meta name="description"
 	content="Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included:  Salesforce, IBM, JEE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins" />
 
-<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.14.0/styles/webawesome.css" />
+<script type="module" src="https://ka-f.webawesome.com/webawesome@3.14.0/webawesome.loader.js"></script>
+<link rel="stylesheet" type="text/css" href="/blog/style/palette.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/site.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/admonition.css" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
-
 
 <link rel="alternate" type="application/rss+xml" title="wissel.net RSS feed" href="https://wissel.net/blog/stories.rss" />
 
 
 </head>
 <body>
-	<div class="navbar navbar-inverse navbar-fixed-top">
-		<div class="navbar-inner">
-			<button class="btn btn-navbar" type="button" data-nav-toggle aria-expanded="false"
-			        aria-controls="main-nav" aria-label="Toggle navigation">
-				<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
-			</button>
-			<a class="brand" href="/">wissel.net</a>
-			<div class="nav-collapse" id="main-nav">
-				<ul class="nav">
-					<li><a href="/index.html">Home</a></li>
-					<li><a href="/blog/">Blog</a></li>
-					<li><a href="/blog/series.html">Series</a></li>
-					<li><a href="/blog/downloads/">Downloads</a></li>
-					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
-					<li><a href="/blog/imprint.html">About / Imprint</a></li>
-					<li><a href="/mealplan.html">Food</a></li>
-				</ul>
-				<form action="//www.google.com/cse" id="cse-search-box"
-					class="navbar-search pull-right">
-					<div>
-						<input type="hidden" name="cx"
-							value="partner-pub-4562257798204150:muo14ionenw" /> <input
-							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
-							name="q" class="search-query span2" placeholder="Search" />
-						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
-					</div>
-				</form>
-			</div>
+<wa-page disable-sticky="subheader aside">
+	<header slot="header" class="site-header">
+	<div class="site-header-inner wa-split">
+		<a class="site-brand" href="/">wissel.net</a>
+		<div class="site-header-end wa-cluster wa-gap-m">
+		<nav class="header-nav wa-cluster wa-gap-l" aria-label="Main">
+			<a href="/index.html">Home</a>
+			<a href="/blog/">Blog</a>
+			<a href="/blog/series.html">Series</a>
+			<a href="/blog/downloads/">Downloads</a>
+			<a href="https://stwissel.github.io/presentations/">Presentations</a>
+			<a href="/blog/imprint.html">About</a>
+			<a href="/mealplan.html">Food</a>
+		</nav>
+		
+		<form class="header-search site-search" action="https://www.google.com/cse" role="search">
+			<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+			<input type="hidden" name="ie" value="UTF-8" />
+			<input type="search" name="q" aria-label="Search this site" placeholder="Search" />
+		</form>
+		
+		<wa-button id="appearance-toggle" appearance="plain" class="site-theme-toggle"
+		           aria-label="Appearance: system. Activate to change." title="Appearance: system">
+			<wa-icon id="appearance-icon" name="circle-half-stroke" label=""></wa-icon>
+		</wa-button>
+		<wa-button data-toggle-nav appearance="plain" class="wa-mobile-only site-nav-toggle" aria-label="Open menu">
+			<wa-icon name="bars" label="Menu"></wa-icon>
+		</wa-button>
 		</div>
 	</div>
-<div class="navbar-spacer"></div>
+</header>
+<nav slot="navigation" class="wa-stack wa-gap-2xs" aria-label="Main">
+	<a href="/index.html" data-drawer="close">Home</a>
+	<a href="/blog/" data-drawer="close">Blog</a>
+	<a href="/blog/series.html" data-drawer="close">Series</a>
+	<a href="/blog/downloads/" data-drawer="close">Downloads</a>
+	<a href="https://stwissel.github.io/presentations/" data-drawer="close">Presentations</a>
+	<a href="/blog/imprint.html" data-drawer="close">About</a>
+	<a href="/mealplan.html" data-drawer="close">Food</a>
+	<form class="site-search" action="https://www.google.com/cse" role="search">
+		<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+		<input type="hidden" name="ie" value="UTF-8" />
+		<wa-input type="search" name="q" size="s" placeholder="Search" label="Search this site" with-label></wa-input>
+	</form>
+</nav>
 
-	<div class="container">
-			<br />
-		<header>
-			<div id="main" class="hero-unit">
-				<h1 id="jumbotron">wissel.net
-				</h1>
-				<p class="lead">Usability - Productivity - Business - The web -
-					Singapore &amp; Twins</p>
-			</div>
-		</header>
+	<div slot="subheader" class="site-hero site-hero-large">
+	<div class="site-hero-inner">
+		<h1>wissel.net</h1>
+		<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+	</div>
+</div>
 
-			<div class="row-fluid">
-			<div class="span9">
-								<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2007/12/index.html"><i class="icon-hand-left"></i>By Date: December 2007</a>
-						<span class="divider">|</span></li>
-					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2008/01/index.html">By Date: January 2008<i class="icon-hand-right"></i></a>
-					</li>
-				</ul>
+	<main>
+								<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2007/12/index.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> By Date: December 2007</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	<a href="/blog/2008/01/index.html" rel="next">By Date: January 2008 <wa-icon name="arrow-right"></wa-icon></a>
+</nav>
 
-				<div class="well well-raised">
-					<h1>Year 2008</h1>
-				</div>
-				<div class="well">
+				<h1 class="page-title">Year 2008</h1>
+				<wa-card>
 					<h1>
 						<a href="12">December</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/my-blog-in-50-words.html">My Blog in 50 words</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 24 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/my-blog-in-50-words.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+					</h2>
+				</wa-card>
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/my-blog-in-50-words.html">My Blog in 50 words</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 24 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/xpages-workskops-coming-up.html">XPages Workskops coming up.</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 23 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/xpages-workskops-coming-up.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a>  <a href="/blog/categories/xpages.html">XPages</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/xpages-workskops-coming-up.html">XPages Workskops coming up.</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 23 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/12/xpages-workskops-coming-up.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a><a class="meta-category" href="/blog/categories/xpages.html">XPages</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/ideajam-running-within-lotus-connections-20.html">IdeaJam running within Lotus Connections 2.0</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 23 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/ideajam-running-within-lotus-connections-20.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/ideajam-running-within-lotus-connections-20.html">IdeaJam running within Lotus Connections 2.0</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 23 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/12/ideajam-running-within-lotus-connections-20.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/lotus-notes-85-requires-the-dcom-server-process-launcher-service.html">Lotus Notes 8.5 requires the DCOM Server Process Launcher Service</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 22 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/lotus-notes-85-requires-the-dcom-server-process-launcher-service.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/lotus-notes-85-requires-the-dcom-server-process-launcher-service.html">Lotus Notes 8.5 requires the DCOM Server Process Launcher Service</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 22 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/12/lotus-notes-85-requires-the-dcom-server-process-launcher-service.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/i-want-one-part-vi.html">I want one - Part VI</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 21 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/i-want-one-part-vi.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/i-want-one-part-vi.html">I want one - Part VI</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 21 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/12/i-want-one-part-vi.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/i-want-one-part-v.html">I want one - Part V</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 20 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/i-want-one-part-v.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/i-want-one-part-v.html">I want one - Part V</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 20 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/xagents-web-agents-xpages-style.html">XAgents - Web Agents XPages style</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 19 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/xagents-web-agents-xpages-style.html#comments">Comments (19)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>  <a href="/blog/categories/xpages.html">XPages</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/xagents-web-agents-xpages-style.html">XAgents - Web Agents XPages style</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 19 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/12/xagents-web-agents-xpages-style.html#comments">25 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a><a class="meta-category" href="/blog/categories/xpages.html">XPages</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/the-real-impact-of-xpages.html">The "real" impact of XPages</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 18 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/the-real-impact-of-xpages.html#comments">Comments (4)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/the-real-impact-of-xpages.html">The "real" impact of XPages</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 18 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/12/the-real-impact-of-xpages.html#comments">4 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/i-want-one-part-iv.html">I want one - Part IV</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 17 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/i-want-one-part-iv.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/i-want-one-part-iv.html">I want one - Part IV</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 17 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/ubuntu-810-sun-java-6-and-firefox-30x.html">Ubuntu 8.10, Sun Java 6 and Firefox 3.0.x</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 17 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/ubuntu-810-sun-java-6-and-firefox-30x.html#comments">Comments (3)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/linux.html">Linux</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/ubuntu-810-sun-java-6-and-firefox-30x.html">Ubuntu 8.10, Sun Java 6 and Firefox 3.0.x</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 17 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/12/ubuntu-810-sun-java-6-and-firefox-30x.html#comments">3 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/linux.html">Linux</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/i-want-one-part-iii.html">I want one - Part III</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 16 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/i-want-one-part-iii.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/i-want-one-part-iii.html">I want one - Part III</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 16 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/i-want-one-part-ii.html">I want one - Part II</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 10 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/i-want-one-part-ii.html#comments">Comments (4)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/i-want-one-part-ii.html">I want one - Part II</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 10 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/12/i-want-one-part-ii.html#comments">4 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/testing-notes-client-applications.html">Testing Notes Client applications</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 09 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/testing-notes-client-applications.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a>  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/testing-notes-client-applications.html">Testing Notes Client applications</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 09 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a><a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/checkout-bluehouse.html">Checkout Bluehouse</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 09 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/checkout-bluehouse.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmlotus.html">IBM - Lotus</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/checkout-bluehouse.html">Checkout Bluehouse</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 09 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmlotus.html">IBM - Lotus</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/estimating-notes-projects.html">Estimating Notes projects</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 07 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/estimating-notes-projects.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a>  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>  <a href="/blog/categories/sywtbadd.html">SYWTBADD</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/estimating-notes-projects.html">Estimating Notes projects</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 07 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/12/estimating-notes-projects.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a><a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a><a class="meta-category" href="/blog/categories/sywtbadd.html">SYWTBADD</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/happy-hari-raya-time-to-switch-to-linux.html">Happy Hari Raya - Time to Switch to Linux?</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 07 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/happy-hari-raya-time-to-switch-to-linux.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/linux.html">Linux</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/happy-hari-raya-time-to-switch-to-linux.html">Happy Hari Raya - Time to Switch to Linux?</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 07 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/12/happy-hari-raya-time-to-switch-to-linux.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/linux.html">Linux</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/i-want-one.html">I want one</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 07 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/i-want-one.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/i-want-one.html">I want one</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 07 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/12/i-want-one.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/notes-application-statistics.html">Notes Application Statistics</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 05 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/notes-application-statistics.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/notes-application-statistics.html">Notes Application Statistics</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 05 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/12/notes-application-statistics.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/12/avoid-keyword-lookups-in-read-mode.html">Avoid Keyword Lookups in Read Mode</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 03 December 2008
-<span class="divider">|</span>
-<a href="/blog/2008/12/avoid-keyword-lookups-in-read-mode.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/12/avoid-keyword-lookups-in-read-mode.html">Avoid Keyword Lookups in Read Mode</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 03 December 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/12/avoid-keyword-lookups-in-read-mode.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
- 				<div class="well">
+ 				<wa-card>
 					<h1>
 						<a href="11">November</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/11/what-type-is-that-blog.html">What type is that blog?</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 24 November 2008
-<span class="divider">|</span>
-<a href="/blog/2008/11/what-type-is-that-blog.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+					</h2>
+				</wa-card>
+				<article class="entry-card">
+					<h2><a href="/blog/2008/11/what-type-is-that-blog.html">What type is that blog?</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 24 November 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/11/what-type-is-that-blog.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/11/capturing-software-requirements.html">Capturing Software Requirements</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 23 November 2008
-<span class="divider">|</span>
-<a href="/blog/2008/11/capturing-software-requirements.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/sywtbadd.html">SYWTBADD</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/11/capturing-software-requirements.html">Capturing Software Requirements</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 23 November 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/sywtbadd.html">SYWTBADD</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/11/advanced-decs-usage.html">Advanced DECS usage</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 21 November 2008
-<span class="divider">|</span>
-<a href="/blog/2008/11/advanced-decs-usage.html#comments">Comments (7)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/11/advanced-decs-usage.html">Advanced DECS usage</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 21 November 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/11/advanced-decs-usage.html#comments">7 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/11/practical-magic-with-dxl.html">Practical Magic with DXL</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 19 November 2008
-<span class="divider">|</span>
-<a href="/blog/2008/11/practical-magic-with-dxl.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/lotusphere.html">Lotusphere</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/11/practical-magic-with-dxl.html">Practical Magic with DXL</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 19 November 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/11/practical-magic-with-dxl.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/lotusphere.html">Lotusphere</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/11/use-swimm-lanes-to-document-system-components.html">Use Swimm Lanes to Document System Components</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 19 November 2008
-<span class="divider">|</span>
-<a href="/blog/2008/11/use-swimm-lanes-to-document-system-components.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/software.html">Software</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/11/use-swimm-lanes-to-document-system-components.html">Use Swimm Lanes to Document System Components</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 19 November 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/11/use-swimm-lanes-to-document-system-components.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/software.html">Software</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/11/applicatio-sine-qua-non.html">applicatio sine qua non*</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 16 November 2008
-<span class="divider">|</span>
-<a href="/blog/2008/11/applicatio-sine-qua-non.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/11/applicatio-sine-qua-non.html">applicatio sine qua non*</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 16 November 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/11/lotus-notes-applications-and-other-email-systems.html">Lotus Notes Applications and other eMail Systems</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 16 November 2008
-<span class="divider">|</span>
-<a href="/blog/2008/11/lotus-notes-applications-and-other-email-systems.html#comments">Comments (6)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/11/lotus-notes-applications-and-other-email-systems.html">Lotus Notes Applications and other eMail Systems</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 16 November 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/11/lotus-notes-applications-and-other-email-systems.html#comments">6 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/11/supporting-notes-users-in-bandwidth-challenged-environment.html">Supporting Notes Users in Bandwidth Challenged Environment</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 13 November 2008
-<span class="divider">|</span>
-<a href="/blog/2008/11/supporting-notes-users-in-bandwidth-challenged-environment.html#comments">Comments (3)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/11/supporting-notes-users-in-bandwidth-challenged-environment.html">Supporting Notes Users in Bandwidth Challenged Environment</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 13 November 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/11/supporting-notes-users-in-bandwidth-challenged-environment.html#comments">3 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/11/40-students-in-the-class-room.html">40 students in the class room</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 12 November 2008
-<span class="divider">|</span>
-<a href="/blog/2008/11/40-students-in-the-class-room.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/twins.html">Twins</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/11/40-students-in-the-class-room.html">40 students in the class room</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 12 November 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/11/40-students-in-the-class-room.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/twins.html">Twins</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/11/estimating-efforts-for-web-enablement.html">Estimating efforts for web enablement</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 10 November 2008
-<span class="divider">|</span>
-<a href="/blog/2008/11/estimating-efforts-for-web-enablement.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/11/estimating-efforts-for-web-enablement.html">Estimating efforts for web enablement</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 10 November 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/11/estimating-efforts-for-web-enablement.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/11/documenting-project-progress.html">Documenting Project Progress</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 10 November 2008
-<span class="divider">|</span>
-<a href="/blog/2008/11/documenting-project-progress.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/sywtbadd.html">SYWTBADD</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/11/documenting-project-progress.html">Documenting Project Progress</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 10 November 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/sywtbadd.html">SYWTBADD</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/11/domino-server-and-domino-system-template-versions.html">Domino Server and Domino System Template Versions</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 07 November 2008
-<span class="divider">|</span>
-<a href="/blog/2008/11/domino-server-and-domino-system-template-versions.html#comments">Comments (4)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/11/domino-server-and-domino-system-template-versions.html">Domino Server and Domino System Template Versions</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 07 November 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/11/domino-server-and-domino-system-template-versions.html#comments">4 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/11/domino-85-whats-in-the-box.html">Domino 8.5, what's in the box?</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 02 November 2008
-<span class="divider">|</span>
-<a href="/blog/2008/11/domino-85-whats-in-the-box.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/11/domino-85-whats-in-the-box.html">Domino 8.5, what's in the box?</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 02 November 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/11/domino-85-whats-in-the-box.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/11/the-shadow-of-things-to-come.html">The shadow of things to come</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 02 November 2008
-<span class="divider">|</span>
-<a href="/blog/2008/11/the-shadow-of-things-to-come.html#comments">Comments (7)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/11/the-shadow-of-things-to-come.html">The shadow of things to come</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 02 November 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/11/the-shadow-of-things-to-come.html#comments">7 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
- 				<div class="well">
+ 				<wa-card>
 					<h1>
 						<a href="10">October</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/10/domino-web-development-zen-style.html">Domino Web Development ZEN style</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 22 October 2008
-<span class="divider">|</span>
-<a href="/blog/2008/10/domino-web-development-zen-style.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/lotusphere.html">Lotusphere</a> 
+					</h2>
+				</wa-card>
+				<article class="entry-card">
+					<h2><a href="/blog/2008/10/domino-web-development-zen-style.html">Domino Web Development ZEN style</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 22 October 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/10/domino-web-development-zen-style.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/lotusphere.html">Lotusphere</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/10/xpages-architecture-from-a-web-perspective.html">XPages architecture from a web perspective</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 21 October 2008
-<span class="divider">|</span>
-<a href="/blog/2008/10/xpages-architecture-from-a-web-perspective.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/xpages.html">XPages</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/10/xpages-architecture-from-a-web-perspective.html">XPages architecture from a web perspective</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 21 October 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/10/xpages-architecture-from-a-web-perspective.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/xpages.html">XPages</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/10/running-xpages-in-a-r7/r80-environment.html">Running xPages in a R7/R8.0 environment</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 21 October 2008
-<span class="divider">|</span>
-<a href="/blog/2008/10/running-xpages-in-a-r7/r80-environment.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/10/running-xpages-in-a-r7/r80-environment.html">Running xPages in a R7/R8.0 environment</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 21 October 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/10/running-xpages-in-a-r7/r80-environment.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/10/access-protected-notes-documents-rdbms-style.html">Access protected Notes documents - RDBMS style</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 15 October 2008
-<span class="divider">|</span>
-<a href="/blog/2008/10/access-protected-notes-documents-rdbms-style.html#comments">Comments (3)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/10/access-protected-notes-documents-rdbms-style.html">Access protected Notes documents - RDBMS style</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 15 October 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/10/access-protected-notes-documents-rdbms-style.html#comments">3 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/10/the-multi-faced-nature-of-the-nsf.html">The multi-faced nature of the NSF</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 14 October 2008
-<span class="divider">|</span>
-<a href="/blog/2008/10/the-multi-faced-nature-of-the-nsf.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>  <a href="/blog/categories/xpages.html">XPages</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/10/the-multi-faced-nature-of-the-nsf.html">The multi-faced nature of the NSF</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 14 October 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/10/the-multi-faced-nature-of-the-nsf.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a><a class="meta-category" href="/blog/categories/xpages.html">XPages</a>
 
 				</article>
- 				<div class="well">
+ 				<wa-card>
 					<h1>
 						<a href="09">September</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/09/follow-the-leader-put-linux-on-your-server.html">Follow the Leader - Put Linux on your server!</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 30 September 2008
-<span class="divider">|</span>
-<a href="/blog/2008/09/follow-the-leader-put-linux-on-your-server.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/linux.html">Linux</a> 
+					</h2>
+				</wa-card>
+				<article class="entry-card">
+					<h2><a href="/blog/2008/09/follow-the-leader-put-linux-on-your-server.html">Follow the Leader - Put Linux on your server!</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 30 September 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/09/follow-the-leader-put-linux-on-your-server.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/linux.html">Linux</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/09/freddie-fannie-and-an-old-blog-entry.html">Freddie, Fannie and an old blog entry.</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 15 September 2008
-<span class="divider">|</span>
-<a href="/blog/2008/09/freddie-fannie-and-an-old-blog-entry.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/09/freddie-fannie-and-an-old-blog-entry.html">Freddie, Fannie and an old blog entry.</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 15 September 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/09/freddie-fannie-and-an-old-blog-entry.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/09/fields-in-forms-matrix.html">Fields in Forms Matrix</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 15 September 2008
-<span class="divider">|</span>
-<a href="/blog/2008/09/fields-in-forms-matrix.html#comments">Comments (3)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/09/fields-in-forms-matrix.html">Fields in Forms Matrix</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 15 September 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/09/fields-in-forms-matrix.html#comments">3 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/09/vote-for-my-topic-inherting-notes-applications.html">Vote for my topic: Inherting Notes applications</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 12 September 2008
-<span class="divider">|</span>
-<a href="/blog/2008/09/vote-for-my-topic-inherting-notes-applications.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/lotusphere.html">Lotusphere</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/09/vote-for-my-topic-inherting-notes-applications.html">Vote for my topic: Inherting Notes applications</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 12 September 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/09/vote-for-my-topic-inherting-notes-applications.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/lotusphere.html">Lotusphere</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/09/sametime-offline-chat-and-other-server-examples.html">Sametime offline chat and other server examples</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 10 September 2008
-<span class="divider">|</span>
-<a href="/blog/2008/09/sametime-offline-chat-and-other-server-examples.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/sametime.html">Sametime</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/09/sametime-offline-chat-and-other-server-examples.html">Sametime offline chat and other server examples</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 10 September 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/09/sametime-offline-chat-and-other-server-examples.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/sametime.html">Sametime</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/09/adding-a-quickr-place-to-your-connectors-through-a-link.html">Adding a Quickr place to your connectors through a link</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 05 September 2008
-<span class="divider">|</span>
-<a href="/blog/2008/09/adding-a-quickr-place-to-your-connectors-through-a-link.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmlotus.html">IBM - Lotus</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/09/adding-a-quickr-place-to-your-connectors-through-a-link.html">Adding a Quickr place to your connectors through a link</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 05 September 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/09/adding-a-quickr-place-to-your-connectors-through-a-link.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmlotus.html">IBM - Lotus</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/09/xpages-overview.html">xPages Overview</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 02 September 2008
-<span class="divider">|</span>
-<a href="/blog/2008/09/xpages-overview.html#comments">Comments (3)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/09/xpages-overview.html">xPages Overview</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 02 September 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/09/xpages-overview.html#comments">3 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
- 				<div class="well">
+ 				<wa-card>
 					<h1>
 						<a href="08">August</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/09/generate-xpages-from-your-views.html">Generate xPages from your views</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 31 August 2008
-<span class="divider">|</span>
-<a href="/blog/2008/09/generate-xpages-from-your-views.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+					</h2>
+				</wa-card>
+				<article class="entry-card">
+					<h2><a href="/blog/2008/09/generate-xpages-from-your-views.html">Generate xPages from your views</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 31 August 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/08/lotusphere-09-heating-up.html">Lotusphere 09 heating up.</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 29 August 2008
-<span class="divider">|</span>
-<a href="/blog/2008/08/lotusphere-09-heating-up.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/lotusphere.html">Lotusphere</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/08/lotusphere-09-heating-up.html">Lotusphere 09 heating up.</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 29 August 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/lotusphere.html">Lotusphere</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/08/how-much-bandwidth-does-sametime-need.html">How much bandwidth does Sametime need?</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 25 August 2008
-<span class="divider">|</span>
-<a href="/blog/2008/08/how-much-bandwidth-does-sametime-need.html#comments">Comments (3)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/08/how-much-bandwidth-does-sametime-need.html">How much bandwidth does Sametime need?</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 25 August 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/08/how-much-bandwidth-does-sametime-need.html#comments">3 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/08/on-islamic-banking-and-knowledge-management.html">On Islamic Banking and Knowledge Management</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 22 August 2008
-<span class="divider">|</span>
-<a href="/blog/2008/08/on-islamic-banking-and-knowledge-management.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/intercultural.html">Intercultural</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/08/on-islamic-banking-and-knowledge-management.html">On Islamic Banking and Knowledge Management</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 22 August 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/08/on-islamic-banking-and-knowledge-management.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/intercultural.html">Intercultural</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/08/office-in-the-air.html">Office in the Air</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 22 August 2008
-<span class="divider">|</span>
-<a href="/blog/2008/08/office-in-the-air.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/travel.html">Travel</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/08/office-in-the-air.html">Office in the Air</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 22 August 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/08/office-in-the-air.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/travel.html">Travel</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/08/where-to-install-lotus-notes-and-what-to-do-when-upgrading.html">Where to install Lotus Notes - and what to do when upgrading?</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 22 August 2008
-<span class="divider">|</span>
-<a href="/blog/2008/08/where-to-install-lotus-notes-and-what-to-do-when-upgrading.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/08/where-to-install-lotus-notes-and-what-to-do-when-upgrading.html">Where to install Lotus Notes - and what to do when upgrading?</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 22 August 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/08/where-to-install-lotus-notes-and-what-to-do-when-upgrading.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/08/bedtime-stories.html">Bedtime stories</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 14 August 2008
-<span class="divider">|</span>
-<a href="/blog/2008/08/bedtime-stories.html#comments">Comments (3)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/twins.html">Twins</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/08/bedtime-stories.html">Bedtime stories</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 14 August 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/08/bedtime-stories.html#comments">3 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/twins.html">Twins</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/08/coming-soon.html">Coming Soon</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 06 August 2008
-<span class="divider">|</span>
-<a href="/blog/2008/08/coming-soon.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/08/coming-soon.html">Coming Soon</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 06 August 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/08/coming-soon.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/08/spreading-the-love.html">Spreading the love</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 01 August 2008
-<span class="divider">|</span>
-<a href="/blog/2008/08/spreading-the-love.html#comments">Comments (3)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmlotus.html">IBM - Lotus</a>  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/08/spreading-the-love.html">Spreading the love</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 01 August 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/08/spreading-the-love.html#comments">3 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmlotus.html">IBM - Lotus</a><a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
- 				<div class="well">
+ 				<wa-card>
 					<h1>
 						<a href="07">July</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/07/connecting-sametime-to-msn.html">Connecting Sametime to MSN</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 29 July 2008
-<span class="divider">|</span>
-<a href="/blog/2008/07/connecting-sametime-to-msn.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+					</h2>
+				</wa-card>
+				<article class="entry-card">
+					<h2><a href="/blog/2008/07/connecting-sametime-to-msn.html">Connecting Sametime to MSN</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 29 July 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/07/connecting-sametime-to-msn.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/07/explaining-the-human-condition-to-an-eight-year-old.html">Explaining the human condition to an eight year old</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 25 July 2008
-<span class="divider">|</span>
-<a href="/blog/2008/07/explaining-the-human-condition-to-an-eight-year-old.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a>  <a href="/blog/categories/twins.html">Twins</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/07/explaining-the-human-condition-to-an-eight-year-old.html">Explaining the human condition to an eight year old</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 25 July 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/07/explaining-the-human-condition-to-an-eight-year-old.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a><a class="meta-category" href="/blog/categories/twins.html">Twins</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/07/reinstalling-windows-stuff.html">Reinstalling Windows stuff</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 14 July 2008
-<span class="divider">|</span>
-<a href="/blog/2008/07/reinstalling-windows-stuff.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/technology.html">Technology</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/07/reinstalling-windows-stuff.html">Reinstalling Windows stuff</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 14 July 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/technology.html">Technology</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/07/mobileme-hosed-my-mac.html">MobileMe hosed my Mac</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 14 July 2008
-<span class="divider">|</span>
-<a href="/blog/2008/07/mobileme-hosed-my-mac.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/macos.html">macOS</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/07/mobileme-hosed-my-mac.html">MobileMe hosed my Mac</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 14 July 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/07/mobileme-hosed-my-mac.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/macos.html">macOS</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/07/gtd-jam.html">GTD Jam</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 10 July 2008
-<span class="divider">|</span>
-<a href="/blog/2008/07/gtd-jam.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/gtd.html">GTD</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/07/gtd-jam.html">GTD Jam</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 10 July 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/07/gtd-jam.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/gtd.html">GTD</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/07/domino-and-ediscovery.html">Domino and eDiscovery</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 09 July 2008
-<span class="divider">|</span>
-<a href="/blog/2008/07/domino-and-ediscovery.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/07/domino-and-ediscovery.html">Domino and eDiscovery</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 09 July 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/07/the-lotus-wikis-are-here.html">The Lotus WIKIs are here</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 07 July 2008
-<span class="divider">|</span>
-<a href="/blog/2008/07/the-lotus-wikis-are-here.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/07/the-lotus-wikis-are-here.html">The Lotus WIKIs are here</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 07 July 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/07/the-lotus-wikis-are-here.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/07/welcome-to-a-new-linux-blogger.html">Welcome to a new Linux Blogger</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 07 July 2008
-<span class="divider">|</span>
-<a href="/blog/2008/07/welcome-to-a-new-linux-blogger.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/linux.html">Linux</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/07/welcome-to-a-new-linux-blogger.html">Welcome to a new Linux Blogger</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 07 July 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/linux.html">Linux</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/07/what-superhero-are-you.html">What Superhero are you?</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 04 July 2008
-<span class="divider">|</span>
-<a href="/blog/2008/07/what-superhero-are-you.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/07/what-superhero-are-you.html">What Superhero are you?</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 04 July 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
- 				<div class="well">
+ 				<wa-card>
 					<h1>
 						<a href="06">June</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/06/what-reptile-are-you.html">What Reptile Are You?</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 29 June 2008
-<span class="divider">|</span>
-<a href="/blog/2008/06/what-reptile-are-you.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+					</h2>
+				</wa-card>
+				<article class="entry-card">
+					<h2><a href="/blog/2008/06/what-reptile-are-you.html">What Reptile Are You?</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 29 June 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/06/what-reptile-are-you.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/06/a-stroll-along-shanghais-nanjing-road.html">A stroll along Shanghai's Nanjing road</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 28 June 2008
-<span class="divider">|</span>
-<a href="/blog/2008/06/a-stroll-along-shanghais-nanjing-road.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/travel.html">Travel</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/06/a-stroll-along-shanghais-nanjing-road.html">A stroll along Shanghai's Nanjing road</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 28 June 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/travel.html">Travel</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/06/nur-fliegen-ist-sch-oumlner-only-flying-beats-that.html">Nur Fliegen ist schöner (Only flying beats that)</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 28 June 2008
-<span class="divider">|</span>
-<a href="/blog/2008/06/nur-fliegen-ist-sch-oumlner-only-flying-beats-that.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/travel.html">Travel</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/06/nur-fliegen-ist-sch-oumlner-only-flying-beats-that.html">Nur Fliegen ist schöner (Only flying beats that)</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 28 June 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/travel.html">Travel</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/06/procrastinator-professional-and-eproductivity.html">Procrastinator Professional and (e)Productivity</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 27 June 2008
-<span class="divider">|</span>
-<a href="/blog/2008/06/procrastinator-professional-and-eproductivity.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/gtd.html">GTD</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/06/procrastinator-professional-and-eproductivity.html">Procrastinator Professional and (e)Productivity</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 27 June 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/gtd.html">GTD</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/06/bargaining-power.html">Bargaining Power</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 27 June 2008
-<span class="divider">|</span>
-<a href="/blog/2008/06/bargaining-power.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/06/bargaining-power.html">Bargaining Power</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 27 June 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/06/who-uses-lotus-notes-and-domino.html">Who uses Lotus Notes and Domino</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 25 June 2008
-<span class="divider">|</span>
-<a href="/blog/2008/06/who-uses-lotus-notes-and-domino.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmlotus.html">IBM - Lotus</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/06/who-uses-lotus-notes-and-domino.html">Who uses Lotus Notes and Domino</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 25 June 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/06/who-uses-lotus-notes-and-domino.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmlotus.html">IBM - Lotus</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/06/excel-to-notes-or-quickr.html">Excel to Notes or Quickr?</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 25 June 2008
-<span class="divider">|</span>
-<a href="/blog/2008/06/excel-to-notes-or-quickr.html#comments">Comments (5)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/06/excel-to-notes-or-quickr.html">Excel to Notes or Quickr?</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 25 June 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/06/excel-to-notes-or-quickr.html#comments">5 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/06/securing-your-cxos-mail-file.html">Securing your CxO's mail file</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 23 June 2008
-<span class="divider">|</span>
-<a href="/blog/2008/06/securing-your-cxos-mail-file.html#comments">Comments (6)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/06/securing-your-cxos-mail-file.html">Securing your CxO's mail file</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 23 June 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/06/securing-your-cxos-mail-file.html#comments">6 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/06/off-the-grid.html">Off the grid</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 14 June 2008
-<span class="divider">|</span>
-<a href="/blog/2008/06/off-the-grid.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/06/off-the-grid.html">Off the grid</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 14 June 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/06/off-the-grid.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/06/500.html">500</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 12 June 2008
-<span class="divider">|</span>
-<a href="/blog/2008/06/500.html#comments">Comments (5)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/blog.html">Blog</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/06/500.html">500</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 12 June 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/06/500.html#comments">5 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/blog.html">Blog</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/06/domino-does-sync-with-the-iphone.html">Domino does sync with the iPhone!</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 11 June 2008
-<span class="divider">|</span>
-<a href="/blog/2008/06/domino-does-sync-with-the-iphone.html#comments">Comments (3)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/06/domino-does-sync-with-the-iphone.html">Domino does sync with the iPhone!</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 11 June 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/06/domino-does-sync-with-the-iphone.html#comments">3 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
- 				<div class="well">
+ 				<wa-card>
 					<h1>
 						<a href="05">May</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/05/you-never-actually-.html">You never actually ...</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 28 May 2008
-<span class="divider">|</span>
-<a href="/blog/2008/05/you-never-actually-.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/software.html">Software</a> 
+					</h2>
+				</wa-card>
+				<article class="entry-card">
+					<h2><a href="/blog/2008/05/you-never-actually-.html">You never actually ...</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 28 May 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/software.html">Software</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/05/patent-trolls-reach-singapore.html">Patent Trolls reach Singapore</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 27 May 2008
-<span class="divider">|</span>
-<a href="/blog/2008/05/patent-trolls-reach-singapore.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/business.html">Business</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/05/patent-trolls-reach-singapore.html">Patent Trolls reach Singapore</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 27 May 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/business.html">Business</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/05/i-want-one.html">I want one!</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 27 May 2008
-<span class="divider">|</span>
-<a href="/blog/2008/05/i-want-one.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/05/i-want-one.html">I want one!</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 27 May 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/05/is-anybody-using-ws-domains.html">Is anybody using .ws domains?</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 26 May 2008
-<span class="divider">|</span>
-<a href="/blog/2008/05/is-anybody-using-ws-domains.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/business.html">Business</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/05/is-anybody-using-ws-domains.html">Is anybody using .ws domains?</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 26 May 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/05/is-anybody-using-ws-domains.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/business.html">Business</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/05/is-that-the-motorbike-of-the-future.html">Is that the motorbike of the future?</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 24 May 2008
-<span class="divider">|</span>
-<a href="/blog/2008/05/is-that-the-motorbike-of-the-future.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/05/is-that-the-motorbike-of-the-future.html">Is that the motorbike of the future?</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 24 May 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/05/is-that-the-motorbike-of-the-future.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/05/not-save-for-the-workplace.html">Not save for the workplace?</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 24 May 2008
-<span class="divider">|</span>
-<a href="/blog/2008/05/not-save-for-the-workplace.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/05/not-save-for-the-workplace.html">Not save for the workplace?</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 24 May 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/05/not-save-for-the-workplace.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/05/when-service-sucks-but-people-go-the-extra-mile.html">When service sucks but people go the extra mile</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 16 May 2008
-<span class="divider">|</span>
-<a href="/blog/2008/05/when-service-sucks-but-people-go-the-extra-mile.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/travel.html">Travel</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/05/when-service-sucks-but-people-go-the-extra-mile.html">When service sucks but people go the extra mile</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 16 May 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/travel.html">Travel</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/05/culture-snippets.html">Culture Snippets.</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 16 May 2008
-<span class="divider">|</span>
-<a href="/blog/2008/05/culture-snippets.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/intercultural.html">Intercultural</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/05/culture-snippets.html">Culture Snippets.</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 16 May 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/05/culture-snippets.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/intercultural.html">Intercultural</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/05/knowledge-management-and-social-software.html">Knowledge Management and Social Software</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 15 May 2008
-<span class="divider">|</span>
-<a href="/blog/2008/05/knowledge-management-and-social-software.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmlotus.html">IBM - Lotus</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/05/knowledge-management-and-social-software.html">Knowledge Management and Social Software</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 15 May 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmlotus.html">IBM - Lotus</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/05/features-and-requests-so-you-want-to-be-a-domino-developer-part-1.html">Features and Requests (So you want to be a Domino developer - Part 1)</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 04 May 2008
-<span class="divider">|</span>
-<a href="/blog/2008/05/features-and-requests-so-you-want-to-be-a-domino-developer-part-1.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/sywtbadd.html">SYWTBADD</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/05/features-and-requests-so-you-want-to-be-a-domino-developer-part-1.html">Features and Requests (So you want to be a Domino developer - Part 1)</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 04 May 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/05/features-and-requests-so-you-want-to-be-a-domino-developer-part-1.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/sywtbadd.html">SYWTBADD</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/05/brunei-ict-career-day.html">Brunei ICT Career Day</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 03 May 2008
-<span class="divider">|</span>
-<a href="/blog/2008/05/brunei-ict-career-day.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmlotus.html">IBM - Lotus</a>  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/05/brunei-ict-career-day.html">Brunei ICT Career Day</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 03 May 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/05/brunei-ict-career-day.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmlotus.html">IBM - Lotus</a><a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/05/the-shape-of-things-to-come.html">The shape of things to come</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 02 May 2008
-<span class="divider">|</span>
-<a href="/blog/2008/05/the-shape-of-things-to-come.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/05/the-shape-of-things-to-come.html">The shape of things to come</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 02 May 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
- 				<div class="well">
+ 				<wa-card>
 					<h1>
 						<a href="04">April</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/04/so-you-want-to-be-a-domino-developer.html">So you want to be a Domino developer?</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 29 April 2008
-<span class="divider">|</span>
-<a href="/blog/2008/04/so-you-want-to-be-a-domino-developer.html#comments">Comments (8)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+					</h2>
+				</wa-card>
+				<article class="entry-card">
+					<h2><a href="/blog/2008/04/so-you-want-to-be-a-domino-developer.html">So you want to be a Domino developer?</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 29 April 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/04/so-you-want-to-be-a-domino-developer.html#comments">8 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/04/shenzhen-impressions.html">Shenzhen Impressions</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 26 April 2008
-<span class="divider">|</span>
-<a href="/blog/2008/04/shenzhen-impressions.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/travel.html">Travel</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/04/shenzhen-impressions.html">Shenzhen Impressions</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 26 April 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/04/shenzhen-impressions.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/travel.html">Travel</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/04/notes-and-dominos-most-wanted.html">Notes and Domino's most wanted</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 18 April 2008
-<span class="divider">|</span>
-<a href="/blog/2008/04/notes-and-dominos-most-wanted.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/04/notes-and-dominos-most-wanted.html">Notes and Domino's most wanted</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 18 April 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/04/creating-sql-statements-from-form-definitions.html">Creating SQL Statements from form definitions</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 10 April 2008
-<span class="divider">|</span>
-<a href="/blog/2008/04/creating-sql-statements-from-form-definitions.html#comments">Comments (7)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/blog.html">Blog</a>  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/04/creating-sql-statements-from-form-definitions.html">Creating SQL Statements from form definitions</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 10 April 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/04/creating-sql-statements-from-form-definitions.html#comments">7 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/blog.html">Blog</a><a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/04/how-i-got-started-with-lotus-notes.html">How I got started with Lotus Notes</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 07 April 2008
-<span class="divider">|</span>
-<a href="/blog/2008/04/how-i-got-started-with-lotus-notes.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/04/how-i-got-started-with-lotus-notes.html">How I got started with Lotus Notes</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 07 April 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/04/how-i-got-started-with-lotus-notes.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/04/view-selection-formulas.html">View Selection Formulas</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 04 April 2008
-<span class="divider">|</span>
-<a href="/blog/2008/04/view-selection-formulas.html#comments">Comments (5)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/04/view-selection-formulas.html">View Selection Formulas</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 04 April 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/04/view-selection-formulas.html#comments">5 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/04/on-ooxml-and-iso.html">On OOXML and ISO</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 02 April 2008
-<span class="divider">|</span>
-<a href="/blog/2008/04/on-ooxml-and-iso.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/software.html">Software</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/04/on-ooxml-and-iso.html">On OOXML and ISO</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 02 April 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/software.html">Software</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/04/domino-next++.html">Domino next++</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 01 April 2008
-<span class="divider">|</span>
-<a href="/blog/2008/04/domino-next++.html#comments">Comments (5)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/04/domino-next++.html">Domino next++</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 01 April 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/04/domino-next++.html#comments">5 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
- 				<div class="well">
+ 				<wa-card>
 					<h1>
 						<a href="03">March</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/03/domino-design-code-injection-part-2.html">Domino Design Code Injection - Part 2</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 21 March 2008
-<span class="divider">|</span>
-<a href="/blog/2008/03/domino-design-code-injection-part-2.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+					</h2>
+				</wa-card>
+				<article class="entry-card">
+					<h2><a href="/blog/2008/03/domino-design-code-injection-part-2.html">Domino Design Code Injection - Part 2</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 21 March 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/03/domino-design-code-injection.html">Domino Design Code Injection</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 21 March 2008
-<span class="divider">|</span>
-<a href="/blog/2008/03/domino-design-code-injection.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/03/domino-design-code-injection.html">Domino Design Code Injection</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 21 March 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/03/domino-design-code-injection.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/03/countries-revisited.html">Countries (re)visited</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 18 March 2008
-<span class="divider">|</span>
-<a href="/blog/2008/03/countries-revisited.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/travel.html">Travel</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/03/countries-revisited.html">Countries (re)visited</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 18 March 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/03/countries-revisited.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/travel.html">Travel</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/03/lotusphere-comes-to-you-hong-kong.html">Lotusphere Comes To You Hong Kong</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 04 March 2008
-<span class="divider">|</span>
-<a href="/blog/2008/03/lotusphere-comes-to-you-hong-kong.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/03/lotusphere-comes-to-you-hong-kong.html">Lotusphere Comes To You Hong Kong</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 04 March 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/03/lotusphere-comes-to-you-hong-kong.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
- 				<div class="well">
+ 				<wa-card>
 					<h1>
 						<a href="02">February</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/02/reply-to-all-redux.html">Reply-To-All Redux</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 05 February 2008
-<span class="divider">|</span>
-<a href="/blog/2008/02/reply-to-all-redux.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibm.html">IBM</a>  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+					</h2>
+				</wa-card>
+				<article class="entry-card">
+					<h2><a href="/blog/2008/02/reply-to-all-redux.html">Reply-To-All Redux</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 05 February 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibm.html">IBM</a><a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/02/climate-change-and-the-rule-of-reason.html">Climate Change and the rule of reason</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 04 February 2008
-<span class="divider">|</span>
-<a href="/blog/2008/02/climate-change-and-the-rule-of-reason.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/02/climate-change-and-the-rule-of-reason.html">Climate Change and the rule of reason</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 04 February 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/02/climate-change-and-the-rule-of-reason.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 				</article>
- 				<div class="well">
+ 				<wa-card>
 					<h1>
 						<a href="01">January</a>
-					</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/01/vote-for-dxl.html">Vote for DXL!</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 29 January 2008
-<span class="divider">|</span>
-<a href="/blog/2008/01/vote-for-dxl.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+					</h2>
+				</wa-card>
+				<article class="entry-card">
+					<h2><a href="/blog/2008/01/vote-for-dxl.html">Vote for DXL!</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 29 January 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/01/vote-for-dxl.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/01/the-making-of-a-download-script.html">The making of a download script</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 28 January 2008
-<span class="divider">|</span>
-<a href="/blog/2008/01/the-making-of-a-download-script.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/lotusphere.html">Lotusphere</a>  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/01/the-making-of-a-download-script.html">The making of a download script</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 28 January 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/01/the-making-of-a-download-script.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/lotusphere.html">Lotusphere</a><a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/01/lotussphere-presentation-batch-download.html">Lotussphere Presentation Batch Download</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 28 January 2008
-<span class="divider">|</span>
-<a href="/blog/2008/01/lotussphere-presentation-batch-download.html#comments">Comments (14)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/lotusphere.html">Lotusphere</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/01/lotussphere-presentation-batch-download.html">Lotussphere Presentation Batch Download</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 28 January 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/01/lotussphere-presentation-batch-download.html#comments">20 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/lotusphere.html">Lotusphere</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/01/what-happens-if-your-cellphone-is-on-during-a-flight.html">What happens if your cellphone is on during a flight?</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 26 January 2008
-<span class="divider">|</span>
-<a href="/blog/2008/01/what-happens-if-your-cellphone-is-on-during-a-flight.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/travel.html">Travel</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/01/what-happens-if-your-cellphone-is-on-during-a-flight.html">What happens if your cellphone is on during a flight?</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 26 January 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/01/what-happens-if-your-cellphone-is-on-during-a-flight.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/travel.html">Travel</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/01/from-individual-actions-larger-patterns-emerge.html">From Individual Actions Larger Patterns Emerge</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 21 January 2008
-<span class="divider">|</span>
-<a href="/blog/2008/01/from-individual-actions-larger-patterns-emerge.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/lotusphere.html">Lotusphere</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/01/from-individual-actions-larger-patterns-emerge.html">From Individual Actions Larger Patterns Emerge</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 21 January 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/lotusphere.html">Lotusphere</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/01/joy-of-travel.html">Joy of travel</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 19 January 2008
-<span class="divider">|</span>
-<a href="/blog/2008/01/joy-of-travel.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/lotusphere.html">Lotusphere</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/01/joy-of-travel.html">Joy of travel</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 19 January 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/01/joy-of-travel.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/lotusphere.html">Lotusphere</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/01/off-to-the-sphere.html">Off to the 'sphere</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 17 January 2008
-<span class="divider">|</span>
-<a href="/blog/2008/01/off-to-the-sphere.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/lotusphere.html">Lotusphere</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/01/off-to-the-sphere.html">Off to the 'sphere</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 17 January 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/01/off-to-the-sphere.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/lotusphere.html">Lotusphere</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/01/mio-box-upgrades.html">MIO Box Upgrades</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 12 January 2008
-<span class="divider">|</span>
-<a href="/blog/2008/01/mio-box-upgrades.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/buyingbroadband.html">Buying Broadband</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/01/mio-box-upgrades.html">MIO Box Upgrades</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 12 January 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/buyingbroadband.html">Buying Broadband</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/01/playing-with-blogsphere-skins.html">Playing with BlogSphere Skins</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 11 January 2008
-<span class="divider">|</span>
-<a href="/blog/2008/01/playing-with-blogsphere-skins.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/01/playing-with-blogsphere-skins.html">Playing with BlogSphere Skins</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 11 January 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/01/skills-lake-wobegon-and-dunning-kruger.html">Skills, Lake Wobegon and Dunning-Kruger</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 02 January 2008
-<span class="divider">|</span>
-<a href="/blog/2008/01/skills-lake-wobegon-and-dunning-kruger.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/business.html">Business</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/01/skills-lake-wobegon-and-dunning-kruger.html">Skills, Lake Wobegon and Dunning-Kruger</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 02 January 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/01/skills-lake-wobegon-and-dunning-kruger.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/business.html">Business</a>
 
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2008/01/javaviews-in-your-own-applications.html">JavaViews in your own applications</a></small>
-					</h1>
-					Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 01 January 2008
-<span class="divider">|</span>
-<a href="/blog/2008/01/javaviews-in-your-own-applications.html#comments">Comments (4)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+				<article class="entry-card">
+					<h2><a href="/blog/2008/01/javaviews-in-your-own-applications.html">JavaViews in your own applications</a></h2>
+					Posted by <span rel="author">Stephan H Wissel</span> on 01 January 2008
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2008/01/javaviews-in-your-own-applications.html#comments">4 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 				</article>
- 				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2007/12/index.html"><i class="icon-hand-left"></i>By Date: December 2007</a>
-						<span class="divider">|</span></li>
-					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2008/01/index.html">By Date: January 2008<i class="icon-hand-right"></i></a>
-					</li>
-				</ul>
+ 				<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2007/12/index.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> By Date: December 2007</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	<a href="/blog/2008/01/index.html" rel="next">By Date: January 2008 <wa-icon name="arrow-right"></wa-icon></a>
+</nav>
 
 
-			</div>
-			<div class="span3">
-			    <aside id="sidebar_spreadshirt" class="well">
-	<h5>Shop</h5>
-	<a href="https://notessensei.myspreadshop.com/not+my+circus+not+my+monkeys-A61e1903cc8668379f1573899?productType=812&sellable=wQz9l23aJJcROmVm4nLX-812-7&appearance=2" title="Notessensei's Spreadshop"><img width="300" src="https://image.spreadshirtmedia.com/image-server/v1/products/T812A2PA4267PT17X58Y49D1043393171W23114H22690/views/1,width=650,height=650,appearanceId=2/sometimes-things-go-over-board-and-you-ask-yourself-whos-circus-is-that-not-yours.jpg" /></a>
-</aside>
-
-				<aside id="sidebar_reference" class="well">
-					<h5>Reference</h5>
-					<ol style="list-style-type: upper-roman; padding-left: 30px;">
-						<li><a style="display: inline;"
-							href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-1.html">Use
-								XSL:FO rendering (Domino)</a></li>
-						<li><a target="_blank" href="https://wissel.net/blog/imprint.html">old references (IBM)</a></li>
-					</ol>
-				</aside>
-
-				<aside id="sidebar_categoriesArchive" class="well">
-					<ul class="nav nav-list">
-						<li class="nav-header">Categories</li>
-						<li ><a href="/blog/categories/afterhours.html">After hours</a></li>
-						<li ><a href="/blog/categories/agile.html">Agile</a></li>
-						<li ><a href="/blog/categories/ai.html">AI</a></li>
-						<li ><a href="/blog/categories/apex.html">Apex</a></li>
-						<li ><a href="/blog/categories/api.html">API</a></li>
-						<li ><a href="/blog/categories/blog.html">Blog</a></li>
-						<li ><a href="/blog/categories/bluemix.html">Bluemix</a></li>
-						<li ><a href="/blog/categories/buddhakids.html">Buddhakids</a></li>
-						<li ><a href="/blog/categories/business.html">Business</a></li>
-						<li ><a href="/blog/categories/buyingbroadband.html">Buying Broadband</a></li>
-						<li ><a href="/blog/categories/caldav.html">calDAV</a></li>
-						<li ><a href="/blog/categories/cloudcomputing.html">Cloud Computing</a></li>
-						<li ><a href="/blog/categories/cloudflare.html">Cloudflare</a></li>
-						<li ><a href="/blog/categories/container.html">Container</a></li>
-						<li ><a href="/blog/categories/continuousintegration.html">Continuous integration</a></li>
-						<li ><a href="/blog/categories/couchdb.html">CouchDB</a></li>
-						<li ><a href="/blog/categories/coursera.html">Coursera</a></li>
-						<li ><a href="/blog/categories/curl.html">Curl</a></li>
-						<li ><a href="/blog/categories/cycling.html">Cycling</a></li>
-						<li ><a href="/blog/categories/development.html">Development</a></li>
-						<li ><a href="/blog/categories/docker.html">Docker</a></li>
-						<li ><a href="/blog/categories/domino.html">Domino</a></li>
-						<li ><a href="/blog/categories/drapi.html">DRAPI</a></li>
-						<li ><a href="/blog/categories/dxlmagic.html">DXLMagic</a></li>
-						<li ><a href="/blog/categories/elearning.html">eLearning</a></li>
-						<li ><a href="/blog/categories/github.html">GitHub</a></li>
-						<li ><a href="/blog/categories/gonephisching.html">Gone Phisching</a></li>
-						<li ><a href="/blog/categories/graalvm.html">GraalVM</a></li>
-						<li ><a href="/blog/categories/grpc.html">gRPC</a></li>
-						<li ><a href="/blog/categories/gtd.html">GTD</a></li>
-						<li ><a href="/blog/categories/hclnotes.html">HCL Notes</a></li>
-						<li ><a href="/blog/categories/heroku.html">Heroku</a></li>
-						<li ><a href="/blog/categories/https.html">HTTP(S)</a></li>
-						<li ><a href="/blog/categories/ibm.html">IBM</a></li>
-						<li ><a href="/blog/categories/ibmlotus.html">IBM - Lotus</a></li>
-						<li ><a href="/blog/categories/ibmnotes.html">IBM Notes</a></li>
-						<li ><a href="/blog/categories/identitymanagement.html">Identity Management</a></li>
-						<li ><a href="/blog/categories/intercultural.html">Intercultural</a></li>
-						<li ><a href="/blog/categories/java.html">Java</a></li>
-						<li ><a href="/blog/categories/javascript.html">JavaScript</a></li>
-						<li ><a href="/blog/categories/junit.html">jUnit</a></li>
-						<li ><a href="/blog/categories/jwt.html">JWT</a></li>
-						<li ><a href="/blog/categories/k8s.html">K8S</a></li>
-						<li ><a href="/blog/categories/learning.html">Learning</a></li>
-						<li ><a href="/blog/categories/lightning.html">Lightning</a></li>
-						<li ><a href="/blog/categories/linux.html">Linux</a></li>
-						<li ><a href="/blog/categories/lotus.html">Lotus</a></li>
-						<li ><a href="/blog/categories/lotusnotes.html">Lotus Notes</a></li>
-						<li ><a href="/blog/categories/lotusphere.html">Lotusphere</a></li>
-						<li ><a href="/blog/categories/macos.html">macOS</a></li>
-						<li ><a href="/blog/categories/maven.html">Maven</a></li>
-						<li ><a href="/blog/categories/mobile.html">Mobile</a></li>
-						<li ><a href="/blog/categories/networking.html">Networking</a></li>
-						<li ><a href="/blog/categories/nginx.html">nginx</a></li>
-						<li ><a href="/blog/categories/nodejs.html">NodeJS</a></li>
-						<li ><a href="/blog/categories/nodered.html">NodeRED</a></li>
-						<li ><a href="/blog/categories/nokia.html">Nokia</a></li>
-						<li ><a href="/blog/categories/nosql.html">NoSQL</a></li>
-						<li ><a href="/blog/categories/omnisophie.html">Omnisophie</a></li>
-						<li ><a href="/blog/categories/openapi.html">OpenAPI</a></li>
-						<li ><a href="/blog/categories/opensource.html">OpenSource</a></li>
-						<li ><a href="/blog/categories/pmd.html">PMD</a></li>
-						<li ><a href="/blog/categories/protocols.html">Protocols</a></li>
-						<li ><a href="/blog/categories/quarkus.html">Quarkus</a></li>
-						<li ><a href="/blog/categories/reactive.html">Reactive</a></li>
-						<li ><a href="/blog/categories/rust.html">Rust</a></li>
-						<li ><a href="/blog/categories/salesforce.html">Salesforce</a></li>
-						<li ><a href="/blog/categories/sametime.html">Sametime</a></li>
-						<li ><a href="/blog/categories/sfdx.html">SFDX</a></li>
-						<li ><a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a></li>
-						<li ><a href="/blog/categories/singapore.html">Singapore</a></li>
-						<li ><a href="/blog/categories/socialbusiness.html">SocialBusiness</a></li>
-						<li ><a href="/blog/categories/software.html">Software</a></li>
-						<li ><a href="/blog/categories/sql.html">SQL</a></li>
-						<li ><a href="/blog/categories/sywtbadd.html">SYWTBADD</a></li>
-						<li ><a href="/blog/categories/tdd.html">TDD</a></li>
-						<li ><a href="/blog/categories/technology.html">Technology</a></li>
-						<li ><a href="/blog/categories/travel.html">Travel</a></li>
-						<li ><a href="/blog/categories/twins.html">Twins</a></li>
-						<li ><a href="/blog/categories/typescript.html">TypeScript</a></li>
-						<li ><a href="/blog/categories/umsys.html">UMsys</a></li>
-						<li ><a href="/blog/categories/unittesting.html">UnitTesting</a></li>
-						<li ><a href="/blog/categories/vertx.html">vert.x</a></li>
-						<li ><a href="/blog/categories/webcomponents.html">WebComponents</a></li>
-						<li ><a href="/blog/categories/webdevelopment.html">WebDevelopment</a></li>
-						<li ><a href="/blog/categories/workflow.html">Workflow</a></li>
-						<li ><a href="/blog/categories/writingchinese.html">Writing Chinese</a></li>
-						<li ><a href="/blog/categories/xml.html">XML</a></li>
-						<li ><a href="/blog/categories/xpages.html">XPages</a></li>
-						<li class="nav-header">Archives</li>
-						<li ><a href="/blog/2002/">2002</a></li>
-						<li ><a href="/blog/2003/">2003</a></li>
-						<li ><a href="/blog/2004/">2004</a></li>
-						<li ><a href="/blog/2005/">2005</a></li>
-						<li ><a href="/blog/2006/">2006</a></li>
-						<li ><a href="/blog/2007/">2007</a></li>
-						<li  class="active"><a href="/blog/2008/">2008</a></li>
-						<li ><a href="/blog/2009/">2009</a></li>
-						<li ><a href="/blog/2010/">2010</a></li>
-						<li ><a href="/blog/2011/">2011</a></li>
-						<li ><a href="/blog/2012/">2012</a></li>
-						<li ><a href="/blog/2013/">2013</a></li>
-						<li ><a href="/blog/2014/">2014</a></li>
-						<li ><a href="/blog/2015/">2015</a></li>
-						<li ><a href="/blog/2016/">2016</a></li>
-						<li ><a href="/blog/2017/">2017</a></li>
-						<li ><a href="/blog/2018/">2018</a></li>
-						<li ><a href="/blog/2019/">2019</a></li>
-						<li ><a href="/blog/2020/">2020</a></li>
-						<li ><a href="/blog/2021/">2021</a></li>
-						<li ><a href="/blog/2022/">2022</a></li>
-						<li ><a href="/blog/2023/">2023</a></li>
-						<li ><a href="/blog/2024/">2024</a></li>
-						<li ><a href="/blog/2025/">2025</a></li>
-						<li ><a href="/blog/2026/">2026</a></li>
-						<li ><a href="/blog/all.html" title="That's a long list!">Complete archive</a></li>
-					</ul>
-				</aside>
-
-			</div>
-		</div>
 		
 
-	</div>
-		<footer>
-		<div class="container">
-			<div class="row">
-				<div class="span2">
-					<h4>About Me</h4>
-					<p>
-						I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.
-						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
-					</p>
-					<a href="//stackoverflow.com/users/131021/stwissel">
-					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
-				</a>
-				</div>
-				<div class="span2">
-					<h4>Contact</h4>
-					<ul>
-						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
-						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
-						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
-						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
-						<li><a href="https://github.com/Stwissel">GitHub</a></li>
-						<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
-					</ul>
-				</div>
-				<div class="span8">
-					<h4>Disclaimer</h4>
-					<p>This site is in no way affiliated, endorsed, sanctioned,
-						supported, nor enlightened by my current or previous employers.
-						I may be an employee, but the opinions, theories, facts, etc.
-						presented here are my own and are in now way given in any official
-						capacity. In short, these are my words and this is my site, not
-						my current or former employers' - and don't even begin to think otherwise.</p>
-					<p>
-						<b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as
-						listed here: <a rel="license"
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
-							alt="Creative Commons License" style="border-width: 0"
-							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
-						Unless otherwise labeled by its originating author, the content
-						found on this site is made available under the terms of an <a
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
-							target="_blank"
-							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
-							Creative Commons License</a>, with the exception that no rights are
-						granted -- since they are not mine to grant -- in any logo,
-						graphic design, trademarks or trade names of any type. Code
-						samples and code downloads on this site are, unless otherwise
-						labeled, made available under an <a
-							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
-							2.0</a> license. Other license models are available on written
-						request and written confirmation.
-					</p>
-				</div>
-			</div>
-		</div>
-	</footer>
+	</main>
+	<aside slot="aside">
+	<wa-card class="sidebar-module" with-header appearance="filled-outlined">
+	<h2 slot="header">Categories</h2>
+	<ul class="sidebar-list">
+		<li><a href="/blog/categories/afterhours.html">After hours</a> <span class="sidebar-count">228</span></li>
+		<li><a href="/blog/categories/agile.html">Agile</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/ai.html">AI</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/apex.html">Apex</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/blog.html">Blog</a> <span class="sidebar-count">11</span></li>
+		<li><a href="/blog/categories/bluemix.html">Bluemix</a> <span class="sidebar-count">13</span></li>
+		<li><a href="/blog/categories/buddhakids.html">Buddhakids</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/business.html">Business</a> <span class="sidebar-count">71</span></li>
+		<li><a href="/blog/categories/buyingbroadband.html">Buying Broadband</a> <span class="sidebar-count">29</span></li>
+		<li><a href="/blog/categories/caldav.html">calDAV</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/cloudcomputing.html">Cloud Computing</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/cloudflare.html">Cloudflare</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/container.html">Container</a> <span class="sidebar-count">9</span></li>
+		<li><a href="/blog/categories/continuousintegration.html">Continuous integration</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/couchdb.html">CouchDB</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/coursera.html">Coursera</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/curl.html">Curl</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/cycling.html">Cycling</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/development.html">Development</a> <span class="sidebar-count">13</span></li>
+		<li><a href="/blog/categories/docker.html">Docker</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/domino.html">Domino</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/drapi.html">DRAPI</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/dxlmagic.html">DXLMagic</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/elearning.html">eLearning</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/github.html">GitHub</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/gonephisching.html">Gone Phisching</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/graalvm.html">GraalVM</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/gtd.html">GTD</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/hclnotes.html">HCL Notes</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/heroku.html">Heroku</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/https.html">HTTP(S)</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/ibm.html">IBM</a> <span class="sidebar-count">19</span></li>
+		<li><a href="/blog/categories/ibmlotus.html">IBM - Lotus</a> <span class="sidebar-count">42</span></li>
+		<li><a href="/blog/categories/ibmnotes.html">IBM Notes</a> <span class="sidebar-count">161</span></li>
+		<li><a href="/blog/categories/identitymanagement.html">Identity Management</a> <span class="sidebar-count">9</span></li>
+		<li><a href="/blog/categories/intercultural.html">Intercultural</a> <span class="sidebar-count">16</span></li>
+		<li><a href="/blog/categories/java.html">Java</a> <span class="sidebar-count">55</span></li>
+		<li><a href="/blog/categories/javascript.html">JavaScript</a> <span class="sidebar-count">20</span></li>
+		<li><a href="/blog/categories/jwt.html">JWT</a> <span class="sidebar-count">11</span></li>
+		<li><a href="/blog/categories/k8s.html">K8S</a> <span class="sidebar-count">6</span></li>
+		<li><a href="/blog/categories/learning.html">Learning</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/lightning.html">Lightning</a> <span class="sidebar-count">16</span></li>
+		<li><a href="/blog/categories/linux.html">Linux</a> <span class="sidebar-count">25</span></li>
+		<li><a href="/blog/categories/lotus.html">Lotus</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/lotusnotes.html">Lotus Notes</a> <span class="sidebar-count">115</span></li>
+		<li><a href="/blog/categories/lotusphere.html">Lotusphere</a> <span class="sidebar-count">54</span></li>
+		<li><a href="/blog/categories/macos.html">macOS</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/maven.html">Maven</a> <span class="sidebar-count">21</span></li>
+		<li><a href="/blog/categories/mobile.html">Mobile</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/networking.html">Networking</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/nginx.html">nginx</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/nodejs.html">NodeJS</a> <span class="sidebar-count">6</span></li>
+		<li><a href="/blog/categories/nodered.html">NodeRED</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/nokia.html">Nokia</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/nosql.html">NoSQL</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/omnisophie.html">Omnisophie</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/openapi.html">OpenAPI</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/opensource.html">OpenSource</a> <span class="sidebar-count">6</span></li>
+		<li><a href="/blog/categories/pmd.html">PMD</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/protocols.html">Protocols</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/quarkus.html">Quarkus</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/reactive.html">Reactive</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/rust.html">Rust</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/salesforce.html">Salesforce</a> <span class="sidebar-count">51</span></li>
+		<li><a href="/blog/categories/sametime.html">Sametime</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/sfdx.html">SFDX</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> <span class="sidebar-count">189</span></li>
+		<li><a href="/blog/categories/singapore.html">Singapore</a> <span class="sidebar-count">84</span></li>
+		<li><a href="/blog/categories/socialbusiness.html">SocialBusiness</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/software.html">Software</a> <span class="sidebar-count">211</span></li>
+		<li><a href="/blog/categories/sql.html">SQL</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/sywtbadd.html">SYWTBADD</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/tdd.html">TDD</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/technology.html">Technology</a> <span class="sidebar-count">35</span></li>
+		<li><a href="/blog/categories/travel.html">Travel</a> <span class="sidebar-count">24</span></li>
+		<li><a href="/blog/categories/twins.html">Twins</a> <span class="sidebar-count">28</span></li>
+		<li><a href="/blog/categories/typescript.html">TypeScript</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/umsys.html">UMsys</a> <span class="sidebar-count">6</span></li>
+		<li><a href="/blog/categories/unittesting.html">UnitTesting</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/vertx.html">vert.x</a> <span class="sidebar-count">18</span></li>
+		<li><a href="/blog/categories/webcomponents.html">WebComponents</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/webdevelopment.html">WebDevelopment</a> <span class="sidebar-count">52</span></li>
+		<li><a href="/blog/categories/workflow.html">Workflow</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/writingchinese.html">Writing Chinese</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/xml.html">XML</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/xpages.html">XPages</a> <span class="sidebar-count">116</span></li>
+	</ul>
+</wa-card>
 
+	<wa-card class="sidebar-module" with-header appearance="filled-outlined">
+	<h2 slot="header">Archive</h2>
+	<ul class="sidebar-list">
+		<li><a href="/blog/2002/">2002</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/2003/">2003</a> <span class="sidebar-count">19</span></li>
+		<li><a href="/blog/2004/">2004</a> <span class="sidebar-count">75</span></li>
+		<li><a href="/blog/2005/">2005</a> <span class="sidebar-count">123</span></li>
+		<li><a href="/blog/2006/">2006</a> <span class="sidebar-count">130</span></li>
+		<li><a href="/blog/2007/">2007</a> <span class="sidebar-count">101</span></li>
+		<li aria-current="page"><a href="/blog/2008/">2008</a> <span class="sidebar-count">111</span></li>
+		<li><a href="/blog/2009/">2009</a> <span class="sidebar-count">168</span></li>
+		<li><a href="/blog/2010/">2010</a> <span class="sidebar-count">151</span></li>
+		<li><a href="/blog/2011/">2011</a> <span class="sidebar-count">137</span></li>
+		<li><a href="/blog/2012/">2012</a> <span class="sidebar-count">71</span></li>
+		<li><a href="/blog/2013/">2013</a> <span class="sidebar-count">51</span></li>
+		<li><a href="/blog/2014/">2014</a> <span class="sidebar-count">66</span></li>
+		<li><a href="/blog/2015/">2015</a> <span class="sidebar-count">28</span></li>
+		<li><a href="/blog/2016/">2016</a> <span class="sidebar-count">14</span></li>
+		<li><a href="/blog/2017/">2017</a> <span class="sidebar-count">22</span></li>
+		<li><a href="/blog/2018/">2018</a> <span class="sidebar-count">28</span></li>
+		<li><a href="/blog/2019/">2019</a> <span class="sidebar-count">31</span></li>
+		<li><a href="/blog/2020/">2020</a> <span class="sidebar-count">19</span></li>
+		<li><a href="/blog/2021/">2021</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/2022/">2022</a> <span class="sidebar-count">13</span></li>
+		<li><a href="/blog/2023/">2023</a> <span class="sidebar-count">19</span></li>
+		<li><a href="/blog/2024/">2024</a> <span class="sidebar-count">12</span></li>
+		<li><a href="/blog/2025/">2025</a> <span class="sidebar-count">12</span></li>
+		<li><a href="/blog/2026/">2026</a> <span class="sidebar-count">16</span></li>
+	</ul>
+	<a slot="footer" href="/blog/all.html" title="Every post, one page">Complete archive</a>
+</wa-card>
+
+</aside>
+
+	<footer slot="footer" class="site-footer">
+	<div class="site-footer-inner wa-grid">
+		<section>
+			<h2>About me</h2>
+			<p>I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.</p>
+			<a href="https://stackoverflow.com/users/131021/stwissel">
+				<img src="https://stackoverflow.com/users/flair/131021.png" width="208" height="58"
+				     alt="Stack Overflow profile for stwissel" loading="lazy" />
+			</a>
+		</section>
+
+		<section>
+			<h2>Contact</h2>
+			<ul class="footer-links">
+				<li><a rel="me" href="https://chaos.social/@stw">Mastodon</a></li>
+				<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+				<li><a href="https://notessensei.myspreadshop.com">Spreadshirt shop</a></li>
+				<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers</a></li>
+				<li><a href="https://github.com/Stwissel">GitHub</a></li>
+				<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
+			</ul>
+		</section>
+
+		<section class="footer-disclaimer">
+			<h2>Disclaimer</h2>
+			<p>This site is in no way affiliated, endorsed, sanctioned, supported, nor
+				enlightened by my current or previous employers. I may be an employee, but the
+				opinions, theories, facts, etc. presented here are my own and are in no way
+				given in any official capacity. In short, these are my words and this is my
+				site, not my current or former employers' &ndash; and don't even begin to think
+				otherwise.</p>
+			<p><b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as listed
+				here: <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/3.0/">Creative
+				Commons Attribution/NonCommercial/ShareAlike</a>, with the exception that no
+				rights are granted &ndash; since they are not mine to grant &ndash; in any logo,
+				graphic design, trademark or trade name of any type. Code samples and downloads
+				are, unless otherwise labeled, made available under an
+				<a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0</a>
+				license. Other license models are available on written request and written
+				confirmation.</p>
+		</section>
+	</div>
+</footer>
+
+</wa-page>
 		<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/";
 	</script>
@@ -1700,39 +1331,21 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 <script>
 (function () {
   "use strict";
-  /*
-   * Navbar: Bootstrap 2's collapse plugin, minus Bootstrap and jQuery.
-   *
-   * /why inline height, not just the "in" class: bootstrap-responsive.css
-   * pins `.nav-collapse{height:0;overflow:hidden}` unconditionally (the
-   * element never carries the generic "collapse" class), so there is no
-   * `.nav-collapse.in{height:auto}` rule to win a specificity fight -- the
-   * real collapse.js plugin got around this the same way, by writing a
-   * pixel height directly to the element's style, which always outranks an
-   * external stylesheet rule without !important. Toggling the class alone
-   * leaves the menu at height:0 and invisible.
-   */
-  var navToggle = document.querySelector("[data-nav-toggle]");
-  if (navToggle) {
-    navToggle.addEventListener("click", function () {
-      var nav = document.getElementById("main-nav");
-      if (!nav) return;
-      var open = nav.classList.toggle("in");
-      nav.style.height = open ? "auto" : "";
-      navToggle.setAttribute("aria-expanded", String(open));
-    });
-  }
-  /* Comment form reveal. */
+    /* The comment editor is fetched on the first click of the reveal button.
+     /why a click and not a disclosure's show event: the form is injected into
+     the DOM only when this fires, and that is deliberate -- a spam bot that
+     never clicks never sees a form. A disclosure would also fire on
+     programmatic opening, on keyboard activation, and when the browser expands
+     it for find-in-page, each of which puts the form in the DOM without anyone
+     choosing to comment. A click is the narrowest trigger that still works. */
   var commentToggle = document.querySelector("[data-comment-toggle]");
   if (commentToggle) {
     commentToggle.addEventListener("click", function () {
-      var target = document.getElementById(commentToggle.getAttribute("data-comment-toggle"));
-      if (!target) return;
-      var open = target.classList.toggle("in");
-      commentToggle.setAttribute("aria-expanded", String(open));
-      if (open) window.dispatchEvent(new Event("blog:comments-requested"));
-    });
+      window.dispatchEvent(new Event("blog:comments-requested"));
+      commentToggle.remove();
+    }, { once: true });
   }
+
   /* Tier 3: content-derived needs, asked of the rendered DOM.
      /why: month indexes and the front page inherit code blocks from the
      excerpts they render, so page type alone cannot answer this. */

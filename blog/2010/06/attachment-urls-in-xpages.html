@@ -1,5 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="wa-theme-default wa-palette-default wa-light wa-cloak">
+<script>
+/* Appearance: system by default, overridable to light or dark, remembered in a
+   cookie.
+
+   /why inline and first: Web Awesome switches theme on a class, not a media
+   query, so the class must be on <html> before the first paint or the page
+   flashes light and then turns dark. This is the one script on the site that
+   cannot be deferred, and the cookie has to be read synchronously here.
+
+   /why a cookie rather than localStorage: it is sent with the request, so if
+   this ever becomes server-rendered the preference is already available before
+   a byte of HTML is written. Nothing is stored until a reader actually chooses:
+   "system" deletes the cookie rather than recording a third value, so the
+   majority who never touch the control carry no state at all. */
+(function () {
+	var NAME = "appearance";
+	var MODES = ["system", "light", "dark"];
+	var ICONS = { system: "circle-half-stroke", light: "sun", dark: "moon" };
+	var media = window.matchMedia("(prefers-color-scheme: dark)");
+	var mode = (document.cookie.match(/(?:^|;\s*)appearance=(light|dark)(?:;|$)/) || [])[1] || "system";
+
+	function apply() {
+		var dark = mode === "dark" || (mode === "system" && media.matches);
+		var c = document.documentElement.classList;
+		c.toggle("wa-dark", dark);
+		c.toggle("wa-light", !dark);
+	}
+	function remember() {
+		document.cookie = mode === "system"
+			? NAME + "=; Max-Age=0; Path=/; SameSite=Lax"
+			: NAME + "=" + mode + "; Max-Age=31536000; Path=/; SameSite=Lax";
+	}
+	apply();
+	/* Only follow the OS while the reader has not overridden it. */
+	media.addEventListener("change", function () { if (mode === "system") { apply(); } });
+
+	document.addEventListener("DOMContentLoaded", function () {
+		var btn = document.getElementById("appearance-toggle");
+		if (!btn) { return; }
+		var icon = document.getElementById("appearance-icon");
+		function sync() {
+			icon.setAttribute("name", ICONS[mode]);
+			btn.setAttribute("aria-label", "Appearance: " + mode + ". Activate to change.");
+			btn.setAttribute("title", "Appearance: " + mode);
+		}
+		sync();
+		btn.addEventListener("click", function () {
+			mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+			remember();
+			apply();
+			sync();
+		});
+	});
+})();
+</script>
 <head>
 <title>Attachment URLs in XPages - NotesSensei's Blog</title>
 <meta name="robots" content="index,follow" />
@@ -17,15 +72,13 @@
 <meta name="description"
 	content="Attachment URLs in XPages - In classic Domino applications directly addressing attachments is well known and simple. Your URL has the format: http(s)://[yourserver]/[application.nsf]/[viewname|0]/[UNID| ViewKey]/$File/[AttachmentName]?Open While this will continue to work on the Domino server for the forseeable future you want" />
 
-<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.14.0/styles/webawesome.css" />
+<script type="module" src="https://ka-f.webawesome.com/webawesome@3.14.0/webawesome.loader.js"></script>
+<link rel="stylesheet" type="text/css" href="/blog/style/palette.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/site.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/admonition.css" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
-
 
 <link rel="alternate" type="application/rss+xml" title="wissel.net RSS feed" href="https://wissel.net/blog/stories.rss" />
 
@@ -43,72 +96,80 @@
 </script>
 </head>
 <body>
-	<div class="navbar navbar-inverse navbar-fixed-top">
-		<div class="navbar-inner">
-			<button class="btn btn-navbar" type="button" data-nav-toggle aria-expanded="false"
-			        aria-controls="main-nav" aria-label="Toggle navigation">
-				<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
-			</button>
-			<a class="brand" href="/">wissel.net</a>
-			<div class="nav-collapse" id="main-nav">
-				<ul class="nav">
-					<li><a href="/index.html">Home</a></li>
-					<li class="active"><a href="/blog/">Blog</a></li>
-					<li><a href="/blog/series.html">Series</a></li>
-					<li><a href="/blog/downloads/">Downloads</a></li>
-					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
-					<li><a href="/blog/imprint.html">About / Imprint</a></li>
-					<li><a href="/mealplan.html">Food</a></li>
-				</ul>
-				<form action="//www.google.com/cse" id="cse-search-box"
-					class="navbar-search pull-right">
-					<div>
-						<input type="hidden" name="cx"
-							value="partner-pub-4562257798204150:muo14ionenw" /> <input
-							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
-							name="q" class="search-query span2" placeholder="Search" />
-						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
-					</div>
-				</form>
-			</div>
+<wa-page disable-sticky="subheader aside">
+	<header slot="header" class="site-header">
+	<div class="site-header-inner wa-split">
+		<a class="site-brand" href="/">wissel.net</a>
+		<div class="site-header-end wa-cluster wa-gap-m">
+		<nav class="header-nav wa-cluster wa-gap-l" aria-label="Main">
+			<a href="/index.html">Home</a>
+			<a href="/blog/" aria-current="page">Blog</a>
+			<a href="/blog/series.html">Series</a>
+			<a href="/blog/downloads/">Downloads</a>
+			<a href="https://stwissel.github.io/presentations/">Presentations</a>
+			<a href="/blog/imprint.html">About</a>
+			<a href="/mealplan.html">Food</a>
+		</nav>
+		
+		<form class="header-search site-search" action="https://www.google.com/cse" role="search">
+			<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+			<input type="hidden" name="ie" value="UTF-8" />
+			<input type="search" name="q" aria-label="Search this site" placeholder="Search" />
+		</form>
+		
+		<wa-button id="appearance-toggle" appearance="plain" class="site-theme-toggle"
+		           aria-label="Appearance: system. Activate to change." title="Appearance: system">
+			<wa-icon id="appearance-icon" name="circle-half-stroke" label=""></wa-icon>
+		</wa-button>
+		<wa-button data-toggle-nav appearance="plain" class="wa-mobile-only site-nav-toggle" aria-label="Open menu">
+			<wa-icon name="bars" label="Menu"></wa-icon>
+		</wa-button>
 		</div>
 	</div>
-<div class="navbar-spacer"></div>
+</header>
+<nav slot="navigation" class="wa-stack wa-gap-2xs" aria-label="Main">
+	<a href="/index.html" data-drawer="close">Home</a>
+	<a href="/blog/" data-drawer="close">Blog</a>
+	<a href="/blog/series.html" data-drawer="close">Series</a>
+	<a href="/blog/downloads/" data-drawer="close">Downloads</a>
+	<a href="https://stwissel.github.io/presentations/" data-drawer="close">Presentations</a>
+	<a href="/blog/imprint.html" data-drawer="close">About</a>
+	<a href="/mealplan.html" data-drawer="close">Food</a>
+	<form class="site-search" action="https://www.google.com/cse" role="search">
+		<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+		<input type="hidden" name="ie" value="UTF-8" />
+		<wa-input type="search" name="q" size="s" placeholder="Search" label="Search this site" with-label></wa-input>
+	</form>
+</nav>
 
-	<div class="container">
-	    		<br />
-		<header>
-			<div id="mainsmall"  class="hero-unit">
-				<h2>wissel.net</h2>
-				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
-			</div>
-		</header>
+	    <div slot="subheader" class="site-hero site-hero-small">
+	<div class="site-hero-inner">
+		<h2>wissel.net</h2>
+		<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+	</div>
+</div>
 
-    <ul class="breadcrumb">
-  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2010/">2010</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2010/06/">June</a></li>
-  <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/xpages.html">XPages</a>
-  </li>
-	<li class="pull-right">
-	<span class="divider">|</span><a href="/blog/d6plinks/SHWL-86QKNM" title="originally published at /blog/d6plinks/SHWL-86QKNM">SHWL-86QKNM</a>
-	</li>
-</ul>
+	<main>
+								<div class="entry-meta-row wa-cluster">
+	<wa-breadcrumb>
+		<wa-breadcrumb-item href="/blog/">Blog</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2010/">2010</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2010/06/">June</wa-breadcrumb-item>
+	</wa-breadcrumb>
+	<div class="entry-tags wa-cluster">
+		<a class="entry-tag" href="/blog/categories/xpages.html">XPages</a>
+		<a class="entry-tag entry-tag-legacy" href="/blog/d6plinks/SHWL-86QKNM" title="originally published at /blog/d6plinks/SHWL-86QKNM">SHWL-86QKNM</a>
+	</div>
+</div>
 
-			<div class="row-fluid">
-			<div class="span12">
-								
-				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2010/06/virtues-of-document-databases.html"><i class="icon-hand-left"></i>Virtues of Document Databases</a>
-						<span class="divider">|</span></li>
-					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2010/06/theres-a-storm-coming-harry.html">There's a storm coming, Harry<i class="icon-hand-right"></i></a>
-					</li>
-				</ul>
+				
+				<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2010/06/virtues-of-document-databases.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> Virtues of Document Databases</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	<a href="/blog/2010/06/theres-a-storm-coming-harry.html" rel="next">There's a storm coming, Harry <wa-icon name="arrow-right"></wa-icon></a>
+</nav>
 
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h1><small>Attachment URLs in XPages</small></h1>
 										<a href="/blog/2010/06/attachment-urls-in-xpages.prompt" title="View AI image prompt">
 						<img src="/blog/2010/06/attachment-urls-in-xpages.webp" alt="Hero image for Attachment URLs in XPages" class="hero-image"
@@ -229,46 +290,48 @@
 </div> As usual YMMV</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 24 June 2010
-<span class="divider">|</span>
-<a href="/blog/2010/06/attachment-urls-in-xpages.html#comments">Comments (1a)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/xpages.html">XPages</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 24 June 2010
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2010/06/attachment-urls-in-xpages.html#comments">26 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/xpages.html">XPages</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2010/06/attachment-urls-in-xpages.html";
 						</script>
 					</p>
 				</article>
-				<a name="comments"></a>
-				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-info" type="button"
-				        data-comment-toggle="commentform_9E354123ED1CC0214825774C0052B430" aria-expanded="false">
-		            Add your comment...&nbsp;&nbsp;<i class="icon-comment"></i>
-	            </button>
-	            </div>
-				<div id="commentform_9E354123ED1CC0214825774C0052B430"  class="collapse"></div>
-				<div class="well well-raised">
-					<h4>Comments</h4>
-					<ol id="commentList">
-						<li>
-							posted by <b>Peter Presnell</b> on <i>Friday 25 June 2010 AD</i>:<br /> 
+<a name="comments"></a>
+<div class="comment-reveal">
+	<wa-button variant="brand" data-comment-toggle="commentform_9E354123ED1CC0214825774C0052B430">
+		Add your comment&hellip;
+	</wa-button>
+	<div id="commentform_9E354123ED1CC0214825774C0052B430"></div>
+</div>
+<wa-card class="comment-list" with-header appearance="filled-outlined">
+	<h4 slot="header">Comments</h4>
+	<ol id="commentList">
+		<li>
+			
+			posted by <b>Peter Presnell</b> on <i>Friday 25 June 2010 AD</i>:<br /> 
   Thx for taking the time to point this out Stephan. I don't recall my XPage Kindergarten teacher ever covering this!
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Glen Mitchell</b> on <i>Saturday 26 June 2010 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Glen Mitchell</b> on <i>Saturday 26 June 2010 AD</i>:<br /> 
   That's cool, if only there was a way to get the Notes client to open a file automatically, rather than only asking to save it.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Fredrik Sjöström</b> on <i>Saturday 26 June 2010 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Fredrik Sjöström</b> on <i>Saturday 26 June 2010 AD</i>:<br /> 
   Great post, Stephan!
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Mark Leusink</b> on <i>Monday 30 August 2010 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Mark Leusink</b> on <i>Monday 30 August 2010 AD</i>:<br /> 
   Note that with the XPage syntax for attachments, the server adds a Content-Disposition header that will force the browser to offer the user the choice of directly opening or saving the attachment. 
   <br /> 
   <br />In the classic format the server doesn't add the header which causes the attachment to be &quot;launched&quot;: if you have Adobe Reader installed and click a link to a PDF, the PDF will be shown directly in the browser window (in IE) 
@@ -277,14 +340,16 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
   <br /> 
   <br />Mark
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>ljubisa</b> on <i>Wednesday 15 February 2012 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>ljubisa</b> on <i>Wednesday 15 February 2012 AD</i>:<br /> 
   Excuse me for this dumb question, but how do i make use of this in my project?
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Stephan H. Wissel</b> on <i>Wednesday 15 February 2012 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Stephan H. Wissel</b> on <i>Wednesday 15 February 2012 AD</i>:<br /> 
   Stuff it into a SSJS lib and call it from your XPage where you e.g. use a view or a repeat control to compute the content. Like this: 
   <div class="xml"> 
    <span class="sc3"><span class="re1">&lt;?xml</span> <span class="re0">version</span>=<span class="st0">&quot;1.0&quot;</span> <span class="re0">encoding</span>=<span class="st0">&quot;UTF-8&quot;</span><span class="re2">?&gt;</span></span> 
@@ -352,72 +417,83 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
   </div> You need to tweak the function if you expect more than one attachment in a document. The trick is the column &quot;AttachmentNames&quot; in the view is computed as 
   <code>@AttachmentNames</code>
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>ljubisa</b> on <i>Thursday 16 February 2012 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>ljubisa</b> on <i>Thursday 16 February 2012 AD</i>:<br /> 
   Why, thank you good sir! :)
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Ian</b> on <i>Monday 26 March 2012 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Ian</b> on <i>Monday 26 March 2012 AD</i>:<br /> 
   Many thanks.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Randal Oulton</b> on <i>Tuesday 04 September 2012 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Randal Oulton</b> on <i>Tuesday 04 September 2012 AD</i>:<br /> 
   Geez, they couldn't if they'd tried have picked a syntax that Google's gonna hate more for page ranking scores, could they? I suppose they didn't even *think* of that.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 04 September 2012 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Stephan H. Wissel</b> on <i>Tuesday 04 September 2012 AD</i>:<br /> 
   @Randal: the web sites configuration documents are your friends. You can mask the URL to something leaner easily 
   <br /> 
   <img alt="Emoticon biggrin.gif" src="/blog/images/emoticons/biggrin.gif" border="0" />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Frank van der Linden</b> on <i>Friday 21 September 2012 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Frank van der Linden</b> on <i>Friday 21 September 2012 AD</i>:<br /> 
   Thanks for the functions. Saves me lots of time. 
   <br />I transformed the SSJS functions to Java methods in my JSFUtil class, so I can use it in my beans to calculate the attachment url's
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Ryan Buening</b> on <i>Friday 02 November 2012 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Ryan Buening</b> on <i>Friday 02 November 2012 AD</i>:<br /> 
   Thanks for this, Stephan.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Arne Menting</b> on <i>Friday 09 November 2012 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Arne Menting</b> on <i>Friday 09 November 2012 AD</i>:<br /> 
   Thanks, that nudged me in the right direction. If you want to open an attachment in another database you should pay attention which database is which, and that you can be local, and have to specify the current app as the starting point: 
   <br /> 
   <br />http(s)://127.0.0.1:[theRandomXPINCPort]/xsp/[currentServer]!![yourCurrentApplication.nsf] /xsp/.ibmmodres/domino/OpenAttachment/[yourTargetServer]!![yourTargetapplication.nsf]/[UNID]/$File/[AttachmentName]?Open
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Randal Oulton</b> on <i>Friday 30 November 2012 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Randal Oulton</b> on <i>Friday 30 November 2012 AD</i>:<br /> 
   &quot;@Randal: the web sites configuration documents are your friends. You can mask the URL to something leaner easily&quot; 
   <br /> 
   <br />Oh I get that, believe me I know substitutions and redirections up the whazoo and all their failings. I'm just saying, someone at the very start shoulda thunk and went, this is so not gonna fly with anyone who cares about SEO (which would be everyone lol.) 
   <br /> 
   <br />SEO and look is what people care about now on websites, SEO and look. If you can't sell that, you ain't gonna be programing a website in *any* language.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Rakesh Lakshmanan</b> on <i>Thursday 17 January 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Rakesh Lakshmanan</b> on <i>Thursday 17 January 2013 AD</i>:<br /> 
   Hi, 
   <br /> 
   <br />I have tried the above method its opening the attachment URL but its not prompting for the attachment download.I am using IE8.I enabled alllow the pop-up still not working 
   <img alt="Emoticon sad.gif" src="/blog/images/emoticons/sad.gif" border="0" /> .. any idea why its not working..??
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Stephan H. Wissel</b> on <i>Thursday 17 January 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Stephan H. Wissel</b> on <i>Thursday 17 January 2013 AD</i>:<br /> 
   @Rakesh, 
   <br />post that question on stackoverflow, include your sample. Test with wget or curl to exclude a network issue. Make sure that you state the error message you get. If the download contol works, this works in all cases when done correctly.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Rakesh Lakshmanan</b> on <i>Friday 18 January 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Rakesh Lakshmanan</b> on <i>Friday 18 January 2013 AD</i>:<br /> 
   @Stephan, 
   <br />Thanks for the reply.my code sample is: 
   <br /> 
@@ -428,9 +504,10 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
   <br /> 
   <br />I can download the attachment from notes client not from browser..
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Stephan H. Wissel</b> on <i>Friday 18 January 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Stephan H. Wissel</b> on <i>Friday 18 January 2013 AD</i>:<br /> 
   @Rakesh: This is not Stackoverflow. Also who produces popups, distributes popups or makes popups available to others shall be punished with the requirement to code for IE6 in HTML5. 
   <img alt="Emoticon biggrin.gif" src="/blog/images/emoticons/biggrin.gif" border="0" /> 
   <br /> 
@@ -441,9 +518,10 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
   <br /> 
   <br />Also the link generated can't be from your formula since it doesn't contain the /0/ and it isn't XPages related - see article.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>andy</b> on <i>Thursday 31 January 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>andy</b> on <i>Thursday 31 January 2013 AD</i>:<br /> 
   I've got it to work when I hard code the UNID, but I don't know how to get the UNID in a Repeat Control? My Collection name is: reportData. 
   <br /> 
   <br />How to I get the backend doc unid where the attachment is saved? 
@@ -458,16 +536,18 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
   <br /> 
   <br />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Stephan H. Wissel</b> on <i>Thursday 31 January 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Stephan H. Wissel</b> on <i>Thursday 31 January 2013 AD</i>:<br /> 
   @Andy: there are nice books about PHP, go and have fun. Just explain the logic to me: you have a problem with a technology, failed to RTFM to find the getUniversalId() function, state that you hate the technology and still expect an expert (who probably became an expert since he likes the technology) to bail you out? 
   <br /> 
   <img alt="Emoticon angry.gif" src="/blog/images/emoticons/angry.gif" border="0" />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>andy</b> on <i>Friday 01 February 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>andy</b> on <i>Friday 01 February 2013 AD</i>:<br /> 
   I have a repeat control that displays response documents. That's working. There is one attachment per response document that has been created by an agent. There's no file upload control involved. I want to display a link called 'Open' for each response, and I want to give users the option of opening/saving the attachment when they click on it. 
   <br /> 
   <br />I got this working by hard coding a UNID in the Client side OnClick event of the link Control. 
@@ -479,16 +559,18 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
   <br />I have the above urls in a column in a view, but I just can't get it to work? I doubt getUniversalId() works in client side? 
   <img alt="Emoticon huh.gif" src="/blog/images/emoticons/huh.gif" border="0" />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>andy</b> on <i>Friday 01 February 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>andy</b> on <i>Friday 01 February 2013 AD</i>:<br /> 
   I have a repeat control that displays response documents. That's working. There is one attachment per response document that has been created by an agent. There's no file upload control involved. I want to display a link called 'Open' for each response, and I want to give users the option of opening/saving the attachment when they click on it.&lt;br /&gt;&lt;br /&gt;I got this working by hard coding a UNID in the Client side OnClick event of the link Control.&lt;br /&gt;&lt;br /&gt;var url = &quot;{ &lt;a href=&quot;{ 
   <a href="https://nicor6.nicor.org.uk/ADONALD/AdHocReports.nsf/xsp/.ibmmodres/domino/OpenAttachment/ADONALD/AdHocReports.nsf/5C9B006D4B9BAEB980257AFD0059F57C/$File/buttons.jpg?Open" ;""="" rel="nofollow" target="blank">Link</a> } rel=&quot;nofollow&quot; target =&quot;blank&quot;&gt;Link&lt;/a&gt; }&lt;br /&gt;return location.href = url;&lt;br /&gt;&lt;br /&gt;I have the above urls in a column in a view, but I just can't get it to work? I doubt getUniversalId() works in client side? 
   <img alt="Emoticon huh.gif" src="/blog/images/emoticons/huh.gif" border="0" />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Jairo</b> on <i>Thursday 11 July 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Jairo</b> on <i>Thursday 11 July 2013 AD</i>:<br /> 
   found this very short code to get the same link for the attachment: 
   <br /> 
   <br />doc.getAttachmentList(&quot;fieldName&quot;).get(0).getHref() 
@@ -501,113 +583,100 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
   <a href="http://stackoverflow.com/questions/9291779/getting-attachments-from-document" rel="nofollow" target="blank">Link</a> } , answer by Grant Lindsay 
   <br />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Bill Fox</b> on <i>Saturday 27 September 2014 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Bill Fox</b> on <i>Saturday 27 September 2014 AD</i>:<br /> 
   I have a situation where the database where the code is run from is different than the database where the data resides. In your example I believe the first reference is to the DB where the code is run and the second refers to the database where the data resides. I copied the link for the save and it looks like this: 
   <br />{ 
   <a href="http://192.168.2.251/Client%20Apps/LGI/XPages/LGIApprovalMaster.nsf/xsp/.ibmmodres/domino/OpenAttachment/Client%20Apps/LGI/XPages/LGIContracts-Leases.nsf/212802D96DAB345987257D5B00523922/Attachments/GST%20Calculation.ods" rel="nofollow" target="blank">Link</a> } 
   <br /> 
   <br />So I suspect that I will need to modify your code to cover where the code and the data reside in different DBs. I have not got this working yet but believe that is why the database is stated twice.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>alan harris</b> on <i>Wednesday 14 October 2015 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>alan harris</b> on <i>Wednesday 14 October 2015 AD</i>:<br /> 
   truly exceptional. no need for the dumba$$ download control EVER again. 
   <img alt="Emoticon biggrin.gif" src="/blog/images/emoticons/biggrin.gif" border="0" />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Patrick Kwinten</b> on <i>Tuesday 06 September 2016 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Patrick Kwinten</b> on <i>Tuesday 06 September 2016 AD</i>:<br /> 
   how do calculate the path in java classes?
  
-							<hr style="clear : both" />
-						</li> 					</ol>
-				</div>
+		</li>
+	</ol>
+</wa-card>
 
-				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2010/06/virtues-of-document-databases.html"><i class="icon-hand-left"></i>Virtues of Document Databases</a>
-						<span class="divider">|</span></li>
-					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2010/06/theres-a-storm-coming-harry.html">There's a storm coming, Harry<i class="icon-hand-right"></i></a>
-					</li>
-				</ul>
+				<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2010/06/virtues-of-document-databases.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> Virtues of Document Databases</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	<a href="/blog/2010/06/theres-a-storm-coming-harry.html" rel="next">There's a storm coming, Harry <wa-icon name="arrow-right"></wa-icon></a>
+</nav>
 
 
-			</div>
-		</div>
-				<ul class="breadcrumb">
-  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2010/">2010</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2010/06/">June</a></li>
-  <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/xpages.html">XPages</a>
-  </li>
-	<li class="pull-right">
-	<span class="divider">|</span><a href="/blog/d6plinks/SHWL-86QKNM" title="originally published at /blog/d6plinks/SHWL-86QKNM">SHWL-86QKNM</a>
-	</li>
-</ul>
-
-
+				<div class="entry-meta-row wa-cluster">
+	<wa-breadcrumb>
+		<wa-breadcrumb-item href="/blog/">Blog</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2010/">2010</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2010/06/">June</wa-breadcrumb-item>
+	</wa-breadcrumb>
+	<div class="entry-tags wa-cluster">
+		<a class="entry-tag" href="/blog/categories/xpages.html">XPages</a>
+		<a class="entry-tag entry-tag-legacy" href="/blog/d6plinks/SHWL-86QKNM" title="originally published at /blog/d6plinks/SHWL-86QKNM">SHWL-86QKNM</a>
 	</div>
-		<footer>
-		<div class="container">
-			<div class="row">
-				<div class="span2">
-					<h4>About Me</h4>
-					<p>
-						I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.
-						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
-					</p>
-					<a href="//stackoverflow.com/users/131021/stwissel">
-					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
-				</a>
-				</div>
-				<div class="span2">
-					<h4>Contact</h4>
-					<ul>
-						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
-						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
-						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
-						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
-						<li><a href="https://github.com/Stwissel">GitHub</a></li>
-						<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
-					</ul>
-				</div>
-				<div class="span8">
-					<h4>Disclaimer</h4>
-					<p>This site is in no way affiliated, endorsed, sanctioned,
-						supported, nor enlightened by my current or previous employers.
-						I may be an employee, but the opinions, theories, facts, etc.
-						presented here are my own and are in now way given in any official
-						capacity. In short, these are my words and this is my site, not
-						my current or former employers' - and don't even begin to think otherwise.</p>
-					<p>
-						<b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as
-						listed here: <a rel="license"
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
-							alt="Creative Commons License" style="border-width: 0"
-							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
-						Unless otherwise labeled by its originating author, the content
-						found on this site is made available under the terms of an <a
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
-							target="_blank"
-							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
-							Creative Commons License</a>, with the exception that no rights are
-						granted -- since they are not mine to grant -- in any logo,
-						graphic design, trademarks or trade names of any type. Code
-						samples and code downloads on this site are, unless otherwise
-						labeled, made available under an <a
-							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
-							2.0</a> license. Other license models are available on written
-						request and written confirmation.
-					</p>
-				</div>
-			</div>
-		</div>
-	</footer>
+</div>
 
+
+	</main>
+	
+	<footer slot="footer" class="site-footer">
+	<div class="site-footer-inner wa-grid">
+		<section>
+			<h2>About me</h2>
+			<p>I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.</p>
+			<a href="https://stackoverflow.com/users/131021/stwissel">
+				<img src="https://stackoverflow.com/users/flair/131021.png" width="208" height="58"
+				     alt="Stack Overflow profile for stwissel" loading="lazy" />
+			</a>
+		</section>
+
+		<section>
+			<h2>Contact</h2>
+			<ul class="footer-links">
+				<li><a rel="me" href="https://chaos.social/@stw">Mastodon</a></li>
+				<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+				<li><a href="https://notessensei.myspreadshop.com">Spreadshirt shop</a></li>
+				<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers</a></li>
+				<li><a href="https://github.com/Stwissel">GitHub</a></li>
+				<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
+			</ul>
+		</section>
+
+		<section class="footer-disclaimer">
+			<h2>Disclaimer</h2>
+			<p>This site is in no way affiliated, endorsed, sanctioned, supported, nor
+				enlightened by my current or previous employers. I may be an employee, but the
+				opinions, theories, facts, etc. presented here are my own and are in no way
+				given in any official capacity. In short, these are my words and this is my
+				site, not my current or former employers' &ndash; and don't even begin to think
+				otherwise.</p>
+			<p><b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as listed
+				here: <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/3.0/">Creative
+				Commons Attribution/NonCommercial/ShareAlike</a>, with the exception that no
+				rights are granted &ndash; since they are not mine to grant &ndash; in any logo,
+				graphic design, trademark or trade name of any type. Code samples and downloads
+				are, unless otherwise labeled, made available under an
+				<a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0</a>
+				license. Other license models are available on written request and written
+				confirmation.</p>
+		</section>
+	</div>
+</footer>
+
+</wa-page>
 		<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2010/06/attachment-urls-in-xpages.html";
 	</script>
@@ -619,6 +688,20 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
 	  var loaded = false;
 	  /* /why: the editor stack is ~157 KB that most readers never open.
 	     It is fetched on the first click of the reveal button instead. */
+	  /* /why markdown.css is loaded here and not in head_styles: it styles the
+	     wmd editor -- .wmd-button-bar, .wmd-input, .wmd-preview -- which exists
+	     only once this form is injected. An audit of the rendered pages called
+	     the file dead because no static page contains that markup, and deleting
+	     it left the editor toolbar as bare bullets and the preview unstyled.
+	     It is not dead, it is late: it belongs with the code that creates the
+	     markup it styles, so it costs nothing on the pages that never open a
+	     comment form. */
+	  function loadCss(href) {
+	    var l = document.createElement("link");
+	    l.rel = "stylesheet";
+	    l.href = href;
+	    document.head.appendChild(l);
+	  }
 	  var SCRIPTS = [
 	    "/blog/js2/mustache.js",
 	    "/blog/js2/Markdown.Converter.js",
@@ -647,6 +730,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
 	  window.addEventListener("blog:comments-requested", function () {
 	    if (loaded) return;
 	    loaded = true;
+	    loadCss("/blog/style/markdown.css");
 	    loadSequential(SCRIPTS, function () { renderComment(SITE_KEY, PARENT_ID); });
 	  });
 	})();
@@ -656,39 +740,21 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
 <script>
 (function () {
   "use strict";
-  /*
-   * Navbar: Bootstrap 2's collapse plugin, minus Bootstrap and jQuery.
-   *
-   * /why inline height, not just the "in" class: bootstrap-responsive.css
-   * pins `.nav-collapse{height:0;overflow:hidden}` unconditionally (the
-   * element never carries the generic "collapse" class), so there is no
-   * `.nav-collapse.in{height:auto}` rule to win a specificity fight -- the
-   * real collapse.js plugin got around this the same way, by writing a
-   * pixel height directly to the element's style, which always outranks an
-   * external stylesheet rule without !important. Toggling the class alone
-   * leaves the menu at height:0 and invisible.
-   */
-  var navToggle = document.querySelector("[data-nav-toggle]");
-  if (navToggle) {
-    navToggle.addEventListener("click", function () {
-      var nav = document.getElementById("main-nav");
-      if (!nav) return;
-      var open = nav.classList.toggle("in");
-      nav.style.height = open ? "auto" : "";
-      navToggle.setAttribute("aria-expanded", String(open));
-    });
-  }
-  /* Comment form reveal. */
+    /* The comment editor is fetched on the first click of the reveal button.
+     /why a click and not a disclosure's show event: the form is injected into
+     the DOM only when this fires, and that is deliberate -- a spam bot that
+     never clicks never sees a form. A disclosure would also fire on
+     programmatic opening, on keyboard activation, and when the browser expands
+     it for find-in-page, each of which puts the form in the DOM without anyone
+     choosing to comment. A click is the narrowest trigger that still works. */
   var commentToggle = document.querySelector("[data-comment-toggle]");
   if (commentToggle) {
     commentToggle.addEventListener("click", function () {
-      var target = document.getElementById(commentToggle.getAttribute("data-comment-toggle"));
-      if (!target) return;
-      var open = target.classList.toggle("in");
-      commentToggle.setAttribute("aria-expanded", String(open));
-      if (open) window.dispatchEvent(new Event("blog:comments-requested"));
-    });
+      window.dispatchEvent(new Event("blog:comments-requested"));
+      commentToggle.remove();
+    }, { once: true });
   }
+
   /* Tier 3: content-derived needs, asked of the rendered DOM.
      /why: month indexes and the front page inherit code blocks from the
      excerpts they render, so page type alone cannot answer this. */

@@ -1,5 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="wa-theme-default wa-palette-default wa-light wa-cloak">
+<script>
+/* Appearance: system by default, overridable to light or dark, remembered in a
+   cookie.
+
+   /why inline and first: Web Awesome switches theme on a class, not a media
+   query, so the class must be on <html> before the first paint or the page
+   flashes light and then turns dark. This is the one script on the site that
+   cannot be deferred, and the cookie has to be read synchronously here.
+
+   /why a cookie rather than localStorage: it is sent with the request, so if
+   this ever becomes server-rendered the preference is already available before
+   a byte of HTML is written. Nothing is stored until a reader actually chooses:
+   "system" deletes the cookie rather than recording a third value, so the
+   majority who never touch the control carry no state at all. */
+(function () {
+	var NAME = "appearance";
+	var MODES = ["system", "light", "dark"];
+	var ICONS = { system: "circle-half-stroke", light: "sun", dark: "moon" };
+	var media = window.matchMedia("(prefers-color-scheme: dark)");
+	var mode = (document.cookie.match(/(?:^|;\s*)appearance=(light|dark)(?:;|$)/) || [])[1] || "system";
+
+	function apply() {
+		var dark = mode === "dark" || (mode === "system" && media.matches);
+		var c = document.documentElement.classList;
+		c.toggle("wa-dark", dark);
+		c.toggle("wa-light", !dark);
+	}
+	function remember() {
+		document.cookie = mode === "system"
+			? NAME + "=; Max-Age=0; Path=/; SameSite=Lax"
+			: NAME + "=" + mode + "; Max-Age=31536000; Path=/; SameSite=Lax";
+	}
+	apply();
+	/* Only follow the OS while the reader has not overridden it. */
+	media.addEventListener("change", function () { if (mode === "system") { apply(); } });
+
+	document.addEventListener("DOMContentLoaded", function () {
+		var btn = document.getElementById("appearance-toggle");
+		if (!btn) { return; }
+		var icon = document.getElementById("appearance-icon");
+		function sync() {
+			icon.setAttribute("name", ICONS[mode]);
+			btn.setAttribute("aria-label", "Appearance: " + mode + ". Activate to change.");
+			btn.setAttribute("title", "Appearance: " + mode);
+		}
+		sync();
+		btn.addEventListener("click", function () {
+			mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+			remember();
+			apply();
+			sync();
+		});
+	});
+})();
+</script>
 <head>
 <title>Java security in XPages - NotesSensei's Blog</title>
 <meta name="robots" content="index,follow" />
@@ -17,15 +72,13 @@
 <meta name="description"
 	content="Java security in XPages - Once you push the boundaries of XPages (which are very elastic) you sooner or later will run into Java security. The Java security settings live in the file [notes program]/jvm/lib/security/java.policy. The text file (don&#39;t edit it in Symphony, use gEdit or Notepad) defines a series of grant codebas" />
 
-<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.14.0/styles/webawesome.css" />
+<script type="module" src="https://ka-f.webawesome.com/webawesome@3.14.0/webawesome.loader.js"></script>
+<link rel="stylesheet" type="text/css" href="/blog/style/palette.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/site.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/admonition.css" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
-
 
 <link rel="alternate" type="application/rss+xml" title="wissel.net RSS feed" href="https://wissel.net/blog/stories.rss" />
 
@@ -43,72 +96,80 @@
 </script>
 </head>
 <body>
-	<div class="navbar navbar-inverse navbar-fixed-top">
-		<div class="navbar-inner">
-			<button class="btn btn-navbar" type="button" data-nav-toggle aria-expanded="false"
-			        aria-controls="main-nav" aria-label="Toggle navigation">
-				<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
-			</button>
-			<a class="brand" href="/">wissel.net</a>
-			<div class="nav-collapse" id="main-nav">
-				<ul class="nav">
-					<li><a href="/index.html">Home</a></li>
-					<li class="active"><a href="/blog/">Blog</a></li>
-					<li><a href="/blog/series.html">Series</a></li>
-					<li><a href="/blog/downloads/">Downloads</a></li>
-					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
-					<li><a href="/blog/imprint.html">About / Imprint</a></li>
-					<li><a href="/mealplan.html">Food</a></li>
-				</ul>
-				<form action="//www.google.com/cse" id="cse-search-box"
-					class="navbar-search pull-right">
-					<div>
-						<input type="hidden" name="cx"
-							value="partner-pub-4562257798204150:muo14ionenw" /> <input
-							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
-							name="q" class="search-query span2" placeholder="Search" />
-						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
-					</div>
-				</form>
-			</div>
+<wa-page disable-sticky="subheader aside">
+	<header slot="header" class="site-header">
+	<div class="site-header-inner wa-split">
+		<a class="site-brand" href="/">wissel.net</a>
+		<div class="site-header-end wa-cluster wa-gap-m">
+		<nav class="header-nav wa-cluster wa-gap-l" aria-label="Main">
+			<a href="/index.html">Home</a>
+			<a href="/blog/" aria-current="page">Blog</a>
+			<a href="/blog/series.html">Series</a>
+			<a href="/blog/downloads/">Downloads</a>
+			<a href="https://stwissel.github.io/presentations/">Presentations</a>
+			<a href="/blog/imprint.html">About</a>
+			<a href="/mealplan.html">Food</a>
+		</nav>
+		
+		<form class="header-search site-search" action="https://www.google.com/cse" role="search">
+			<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+			<input type="hidden" name="ie" value="UTF-8" />
+			<input type="search" name="q" aria-label="Search this site" placeholder="Search" />
+		</form>
+		
+		<wa-button id="appearance-toggle" appearance="plain" class="site-theme-toggle"
+		           aria-label="Appearance: system. Activate to change." title="Appearance: system">
+			<wa-icon id="appearance-icon" name="circle-half-stroke" label=""></wa-icon>
+		</wa-button>
+		<wa-button data-toggle-nav appearance="plain" class="wa-mobile-only site-nav-toggle" aria-label="Open menu">
+			<wa-icon name="bars" label="Menu"></wa-icon>
+		</wa-button>
 		</div>
 	</div>
-<div class="navbar-spacer"></div>
+</header>
+<nav slot="navigation" class="wa-stack wa-gap-2xs" aria-label="Main">
+	<a href="/index.html" data-drawer="close">Home</a>
+	<a href="/blog/" data-drawer="close">Blog</a>
+	<a href="/blog/series.html" data-drawer="close">Series</a>
+	<a href="/blog/downloads/" data-drawer="close">Downloads</a>
+	<a href="https://stwissel.github.io/presentations/" data-drawer="close">Presentations</a>
+	<a href="/blog/imprint.html" data-drawer="close">About</a>
+	<a href="/mealplan.html" data-drawer="close">Food</a>
+	<form class="site-search" action="https://www.google.com/cse" role="search">
+		<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+		<input type="hidden" name="ie" value="UTF-8" />
+		<wa-input type="search" name="q" size="s" placeholder="Search" label="Search this site" with-label></wa-input>
+	</form>
+</nav>
 
-	<div class="container">
-	    		<br />
-		<header>
-			<div id="mainsmall"  class="hero-unit">
-				<h2>wissel.net</h2>
-				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
-			</div>
-		</header>
+	    <div slot="subheader" class="site-hero site-hero-small">
+	<div class="site-hero-inner">
+		<h2>wissel.net</h2>
+		<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+	</div>
+</div>
 
-    <ul class="breadcrumb">
-  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2011/">2011</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2011/07/">July</a></li>
-  <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/xpages.html">XPages</a>
-  </li>
-	<li class="pull-right">
-	<span class="divider">|</span><a href="/blog/d6plinks/SHWL-8JYAT5" title="originally published at /blog/d6plinks/SHWL-8JYAT5">SHWL-8JYAT5</a>
-	</li>
-</ul>
+	<main>
+								<div class="entry-meta-row wa-cluster">
+	<wa-breadcrumb>
+		<wa-breadcrumb-item href="/blog/">Blog</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2011/">2011</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2011/07/">July</wa-breadcrumb-item>
+	</wa-breadcrumb>
+	<div class="entry-tags wa-cluster">
+		<a class="entry-tag" href="/blog/categories/xpages.html">XPages</a>
+		<a class="entry-tag entry-tag-legacy" href="/blog/d6plinks/SHWL-8JYAT5" title="originally published at /blog/d6plinks/SHWL-8JYAT5">SHWL-8JYAT5</a>
+	</div>
+</div>
 
-			<div class="row-fluid">
-			<div class="span12">
-								
-				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2011/07/coming-soon-to-an-xpage-near-you.html"><i class="icon-hand-left"></i>Coming soon to an XPage near you</a>
-						<span class="divider">|</span></li>
-					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2011/07/more-on-spreadsheets-in-xpages.html">More on spreadsheets in XPages<i class="icon-hand-right"></i></a>
-					</li>
-				</ul>
+				
+				<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2011/07/coming-soon-to-an-xpage-near-you.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> Coming soon to an XPage near you</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	<a href="/blog/2011/07/more-on-spreadsheets-in-xpages.html" rel="next">More on spreadsheets in XPages <wa-icon name="arrow-right"></wa-icon></a>
+</nav>
 
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h1><small>Java security in XPages</small></h1>
 										<a href="/blog/2011/07/java-security-in-xpages.prompt" title="View AI image prompt">
 						<img src="/blog/2011/07/java-security-in-xpages.webp" alt="Hero image for Java security in XPages" class="hero-image"
@@ -127,31 +188,30 @@
 <br><a href="http://blog.sequill.com/">Jim</a> clarifies: you only need to change <b>yourdatabase.nsf</b>, the other parts are static, directory separators are / regardless of platform, the location is relative to the data directory and the whole codeBase value <b>must be lower case</b> (regardless of your file names). Of course you can limit the permission to what you actually need. Finding out what that is when you use ready baked libraries can be a little tedious and warrants its own future post.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 21 July 2011
-<span class="divider">|</span>
-<a href="/blog/2011/07/java-security-in-xpages.html#comments">Comments (e)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/xpages.html">XPages</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 21 July 2011
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2011/07/java-security-in-xpages.html#comments">14 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/xpages.html">XPages</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2011/07/java-security-in-xpages.html";
 						</script>
 					</p>
 				</article>
-				<a name="comments"></a>
-				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-info" type="button"
-				        data-comment-toggle="commentform_0956BEC120B214E6482578D400292C83" aria-expanded="false">
-		            Add your comment...&nbsp;&nbsp;<i class="icon-comment"></i>
-	            </button>
-	            </div>
-				<div id="commentform_0956BEC120B214E6482578D400292C83"  class="collapse"></div>
-				<div class="well well-raised">
-					<h4>Comments</h4>
-					<ol id="commentList">
-						<li>
-							posted by <b>Nathan T. Freeman</b> on <i>Thursday 21 July 2011 AD</i>:<br /> 
+<a name="comments"></a>
+<div class="comment-reveal">
+	<wa-button variant="brand" data-comment-toggle="commentform_0956BEC120B214E6482578D400292C83">
+		Add your comment&hellip;
+	</wa-button>
+	<div id="commentform_0956BEC120B214E6482578D400292C83"></div>
+</div>
+<wa-card class="comment-list" with-header appearance="filled-outlined">
+	<h4 slot="header">Comments</h4>
+	<ol id="commentList">
+		<li>
+			
+			posted by <b>Nathan T. Freeman</b> on <i>Thursday 21 July 2011 AD</i>:<br /> 
   java.policy-based security management... 
   <br /> 
   <br />WORST 
@@ -174,27 +234,30 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
   <br /> 
   <br />It's just stupid.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Erik Brooks</b> on <i>Thursday 21 July 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Erik Brooks</b> on <i>Thursday 21 July 2011 AD</i>:<br /> 
   @1 - Agreed. All this does is scare new-to-Java Notes/Domino devs. 
   <br /> 
   <br />&quot;IBM gave me a toggle in the IDE to let my agent work with system files, etc.... but for Java I have to edit a text file? Wow, that must be REALLY dangerous. And unsupported, I'm sure.&quot; 
   <br /> 
   <br />The fact that the Java security settings are blown away when you upgrade server versions or install a FP is also a total PITA.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Simon O&#39;Doherty</b> on <i>Thursday 21 July 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Simon O&#39;Doherty</b> on <i>Thursday 21 July 2011 AD</i>:<br /> 
   The Java code execution is normally controlled by the ACL and execution rights/server document. 
   <br /> 
   <br />Some stuff needs to go back to java.policy but not everything (I think taking screen shots of the servers desktop would be one as an example). 
   <br /> 
   <br />Agree with Nathen though. I am of the belief that you should never allow any developer the ability to write code directly to your production server. Admin should always hold those keys.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Stephan H. Wissel</b> on <i>Friday 22 July 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Stephan H. Wissel</b> on <i>Friday 22 July 2011 AD</i>:<br /> 
   Ah... Nathan, you took the No-No bait 
   <img alt="Emoticon smile.gif" src="/blog/images/emoticons/smile.gif" border="0" /> The general idea would be that NSF based Java code can't do network things that your average browser JS can do since it comes from the server (whatever impact that has in a security architecture). Once you deploy your application that needs to do more you sit down with your 
   <a href="http://www.pmooney.net/">Notes Admin</a>, walk through what the code is doing and faithfully the 
@@ -205,16 +268,18 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
   <a href="http://www.openntf.org/internal/home.nsf/project.xsp?action=openDocument&amp;name=Plugins%20Deployment%20for%20Domino">Plug-in deployer</a> that doesn't need an admin edit any file. Sidesteps the issue. But with a few lines there we could solve the policy settings too 
   <img alt="Emoticon biggrin.gif" src="/blog/images/emoticons/biggrin.gif" border="0" />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Nathan T. Freeman</b> on <i>Friday 22 July 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Nathan T. Freeman</b> on <i>Friday 22 July 2011 AD</i>:<br /> 
   @Simon, LOTS of stuff goes back to the java.policy. All network socket access, for example. Or access to the Java Loggers. Or anything involving Class Loaders. 
   <br /> 
   <br />@Stephan, I might be interested in discussing the issue with a NotesAdmin, if any of them besides Andrew Pollack actually knew what the java.policies represent. 99.99% of Domino administrators are MESSAGING administrators that have no idea what an application server is supposed to do. (Hence the reason they think it's risky to deploy the OpenNTF Extension Library, for example.)
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Karsten Lehmann</b> on <i>Friday 22 July 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Karsten Lehmann</b> on <i>Friday 22 July 2011 AD</i>:<br /> 
   Because of the Java security restriction (and of course software architecture reasons), we are not putting much code in NSF databases, but develop Eclipse plugins instead. There we can use AccessController.doPrivileged() calls to execute code with full rights and don't need to mess around with the java.policy file that btw is stored in the program directory of Notes/Domino, so I guess it would not be that easy to modify the file on a server from LotusScript because of file system access restrictions (applications should not be able to modify the content of program/system folders). 
   <br /> 
   <br />In one of our customer projects, we don't have ANY design element besides a single forwarding XPage and Notes views in the database, because the complete UI and application logic is coming from plugins (the UI is Ext.js based anyway and uses REST services to load/store data, so all the JSF stuff from XPages would produce more problems than it solves). 
@@ -230,25 +295,28 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
   <br /> 
   <br />We are working on such a solution, but need to clarify with IBM's Expeditor development, if our code would work in all cases.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Chris Hudson</b> on <i>Friday 22 July 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Chris Hudson</b> on <i>Friday 22 July 2011 AD</i>:<br /> 
   I resent the implication that 99.99% of administrators have no clue about what an application server is. 
   <br /> 
   <br />I could be just as inflammatory by stating that 99.99% of application developers have no clue about security and are all cowboys. But I know that's not true. 
   <br /> 
   <br />So long as an application developer can show me that he/she has thought about the security implications of their application and have documented the access requirements of their code I am quite happy to give them the access they need. If they just ask for carte blanche access because 'you know, my code might need it and I had that access on my local PC, so I know it works, then they are going to get a no from me because they have not gone to any effort to even think about security.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Nabor</b> on <i>Tuesday 02 April 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Nabor</b> on <i>Tuesday 02 April 2013 AD</i>:<br /> 
   I tried the above grant on our Domino 9 Server but it seems not to work. 
   <br />My Java Class in the Domino Database only works if I grant AllPermissions on the global grant block. 
   <br />Any Ideas?
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 02 April 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Stephan H. Wissel</b> on <i>Tuesday 02 April 2013 AD</i>:<br /> 
   @Nabor: one million reasons... Is your nsf name lowercase? Is the path correct? No .dir file involved? Database signed properly? If in doubt: Open a PMR! 
   <br /> 
   <br />@Chris: the cowboy remark works as a compliment 
@@ -256,125 +324,114 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
   <br /> 
   <img alt="Emoticon biggrin.gif" src="/blog/images/emoticons/biggrin.gif" border="0" /> stw
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Fred</b> on <i>Wednesday 22 May 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Fred</b> on <i>Wednesday 22 May 2013 AD</i>:<br /> 
   Same for me.. it works on the global grant block, but as soon as i want to narrow it down to a DB, it doesn't.. 
   <br /> 
   <br />no .dir file involved 
   <br />all signed with server id 
   <br />database spelled correctly (all lower)
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Franz</b> on <i>Tuesday 11 June 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Franz</b> on <i>Tuesday 11 June 2013 AD</i>:<br /> 
   Does anyone know about a notation that will allow a Java agent to run? The above only seems to work for XPages.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Fanz</b> on <i>Tuesday 11 June 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Fanz</b> on <i>Tuesday 11 June 2013 AD</i>:<br /> 
   Stephan, thanks a bunch for the quick response. I feared as much, but I guess it never hurts to ask.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Stephan H Wissel</b> on <i>Tuesday 11 June 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Stephan H Wissel</b> on <i>Tuesday 11 June 2013 AD</i>:<br /> 
   @Franz: Java agent security is governed by 2 elements: your (server or client) ECL and the Java policies (found in java.policies and java.pol. For a Java agent, if adjusting the ECL isn't sufficient, you have to deploy the code as JAR into jvm/lib/ext. You can use a LotusScript agent for that. The agents are not database aware on a JVM level, so your policy edits need to be class based, not location based. 
   <br /> 
   <br />In short: No
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Dexter Madronio</b> on <i>Thursday 15 May 2014 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Dexter Madronio</b> on <i>Thursday 15 May 2014 AD</i>:<br /> 
   @Stephan, I was having a look at your Plugin Deployer and I just wanted to validate with you that it doesn't have the capability to make changes to the trusted java folder (jvm/lib/security), right? Is that something you might be adding later on? Thanks for helping us non Java devs 
   <img alt="Emoticon smile.gif" src="/blog/images/emoticons/smile.gif" border="0" /> .
  
-							<hr style="clear : both" />
-						</li> 					</ol>
-				</div>
+		</li>
+	</ol>
+</wa-card>
 
-				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2011/07/coming-soon-to-an-xpage-near-you.html"><i class="icon-hand-left"></i>Coming soon to an XPage near you</a>
-						<span class="divider">|</span></li>
-					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2011/07/more-on-spreadsheets-in-xpages.html">More on spreadsheets in XPages<i class="icon-hand-right"></i></a>
-					</li>
-				</ul>
+				<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2011/07/coming-soon-to-an-xpage-near-you.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> Coming soon to an XPage near you</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	<a href="/blog/2011/07/more-on-spreadsheets-in-xpages.html" rel="next">More on spreadsheets in XPages <wa-icon name="arrow-right"></wa-icon></a>
+</nav>
 
 
-			</div>
-		</div>
-				<ul class="breadcrumb">
-  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2011/">2011</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2011/07/">July</a></li>
-  <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/xpages.html">XPages</a>
-  </li>
-	<li class="pull-right">
-	<span class="divider">|</span><a href="/blog/d6plinks/SHWL-8JYAT5" title="originally published at /blog/d6plinks/SHWL-8JYAT5">SHWL-8JYAT5</a>
-	</li>
-</ul>
-
-
+				<div class="entry-meta-row wa-cluster">
+	<wa-breadcrumb>
+		<wa-breadcrumb-item href="/blog/">Blog</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2011/">2011</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2011/07/">July</wa-breadcrumb-item>
+	</wa-breadcrumb>
+	<div class="entry-tags wa-cluster">
+		<a class="entry-tag" href="/blog/categories/xpages.html">XPages</a>
+		<a class="entry-tag entry-tag-legacy" href="/blog/d6plinks/SHWL-8JYAT5" title="originally published at /blog/d6plinks/SHWL-8JYAT5">SHWL-8JYAT5</a>
 	</div>
-		<footer>
-		<div class="container">
-			<div class="row">
-				<div class="span2">
-					<h4>About Me</h4>
-					<p>
-						I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.
-						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
-					</p>
-					<a href="//stackoverflow.com/users/131021/stwissel">
-					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
-				</a>
-				</div>
-				<div class="span2">
-					<h4>Contact</h4>
-					<ul>
-						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
-						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
-						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
-						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
-						<li><a href="https://github.com/Stwissel">GitHub</a></li>
-						<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
-					</ul>
-				</div>
-				<div class="span8">
-					<h4>Disclaimer</h4>
-					<p>This site is in no way affiliated, endorsed, sanctioned,
-						supported, nor enlightened by my current or previous employers.
-						I may be an employee, but the opinions, theories, facts, etc.
-						presented here are my own and are in now way given in any official
-						capacity. In short, these are my words and this is my site, not
-						my current or former employers' - and don't even begin to think otherwise.</p>
-					<p>
-						<b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as
-						listed here: <a rel="license"
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
-							alt="Creative Commons License" style="border-width: 0"
-							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
-						Unless otherwise labeled by its originating author, the content
-						found on this site is made available under the terms of an <a
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
-							target="_blank"
-							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
-							Creative Commons License</a>, with the exception that no rights are
-						granted -- since they are not mine to grant -- in any logo,
-						graphic design, trademarks or trade names of any type. Code
-						samples and code downloads on this site are, unless otherwise
-						labeled, made available under an <a
-							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
-							2.0</a> license. Other license models are available on written
-						request and written confirmation.
-					</p>
-				</div>
-			</div>
-		</div>
-	</footer>
+</div>
 
+
+	</main>
+	
+	<footer slot="footer" class="site-footer">
+	<div class="site-footer-inner wa-grid">
+		<section>
+			<h2>About me</h2>
+			<p>I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.</p>
+			<a href="https://stackoverflow.com/users/131021/stwissel">
+				<img src="https://stackoverflow.com/users/flair/131021.png" width="208" height="58"
+				     alt="Stack Overflow profile for stwissel" loading="lazy" />
+			</a>
+		</section>
+
+		<section>
+			<h2>Contact</h2>
+			<ul class="footer-links">
+				<li><a rel="me" href="https://chaos.social/@stw">Mastodon</a></li>
+				<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+				<li><a href="https://notessensei.myspreadshop.com">Spreadshirt shop</a></li>
+				<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers</a></li>
+				<li><a href="https://github.com/Stwissel">GitHub</a></li>
+				<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
+			</ul>
+		</section>
+
+		<section class="footer-disclaimer">
+			<h2>Disclaimer</h2>
+			<p>This site is in no way affiliated, endorsed, sanctioned, supported, nor
+				enlightened by my current or previous employers. I may be an employee, but the
+				opinions, theories, facts, etc. presented here are my own and are in no way
+				given in any official capacity. In short, these are my words and this is my
+				site, not my current or former employers' &ndash; and don't even begin to think
+				otherwise.</p>
+			<p><b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as listed
+				here: <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/3.0/">Creative
+				Commons Attribution/NonCommercial/ShareAlike</a>, with the exception that no
+				rights are granted &ndash; since they are not mine to grant &ndash; in any logo,
+				graphic design, trademark or trade name of any type. Code samples and downloads
+				are, unless otherwise labeled, made available under an
+				<a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0</a>
+				license. Other license models are available on written request and written
+				confirmation.</p>
+		</section>
+	</div>
+</footer>
+
+</wa-page>
 		<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2011/07/java-security-in-xpages.html";
 	</script>
@@ -386,6 +443,20 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
 	  var loaded = false;
 	  /* /why: the editor stack is ~157 KB that most readers never open.
 	     It is fetched on the first click of the reveal button instead. */
+	  /* /why markdown.css is loaded here and not in head_styles: it styles the
+	     wmd editor -- .wmd-button-bar, .wmd-input, .wmd-preview -- which exists
+	     only once this form is injected. An audit of the rendered pages called
+	     the file dead because no static page contains that markup, and deleting
+	     it left the editor toolbar as bare bullets and the preview unstyled.
+	     It is not dead, it is late: it belongs with the code that creates the
+	     markup it styles, so it costs nothing on the pages that never open a
+	     comment form. */
+	  function loadCss(href) {
+	    var l = document.createElement("link");
+	    l.rel = "stylesheet";
+	    l.href = href;
+	    document.head.appendChild(l);
+	  }
 	  var SCRIPTS = [
 	    "/blog/js2/mustache.js",
 	    "/blog/js2/Markdown.Converter.js",
@@ -414,6 +485,7 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
 	  window.addEventListener("blog:comments-requested", function () {
 	    if (loaded) return;
 	    loaded = true;
+	    loadCss("/blog/style/markdown.css");
 	    loadSequential(SCRIPTS, function () { renderComment(SITE_KEY, PARENT_ID); });
 	  });
 	})();
@@ -423,39 +495,21 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
 <script>
 (function () {
   "use strict";
-  /*
-   * Navbar: Bootstrap 2's collapse plugin, minus Bootstrap and jQuery.
-   *
-   * /why inline height, not just the "in" class: bootstrap-responsive.css
-   * pins `.nav-collapse{height:0;overflow:hidden}` unconditionally (the
-   * element never carries the generic "collapse" class), so there is no
-   * `.nav-collapse.in{height:auto}` rule to win a specificity fight -- the
-   * real collapse.js plugin got around this the same way, by writing a
-   * pixel height directly to the element's style, which always outranks an
-   * external stylesheet rule without !important. Toggling the class alone
-   * leaves the menu at height:0 and invisible.
-   */
-  var navToggle = document.querySelector("[data-nav-toggle]");
-  if (navToggle) {
-    navToggle.addEventListener("click", function () {
-      var nav = document.getElementById("main-nav");
-      if (!nav) return;
-      var open = nav.classList.toggle("in");
-      nav.style.height = open ? "auto" : "";
-      navToggle.setAttribute("aria-expanded", String(open));
-    });
-  }
-  /* Comment form reveal. */
+    /* The comment editor is fetched on the first click of the reveal button.
+     /why a click and not a disclosure's show event: the form is injected into
+     the DOM only when this fires, and that is deliberate -- a spam bot that
+     never clicks never sees a form. A disclosure would also fire on
+     programmatic opening, on keyboard activation, and when the browser expands
+     it for find-in-page, each of which puts the form in the DOM without anyone
+     choosing to comment. A click is the narrowest trigger that still works. */
   var commentToggle = document.querySelector("[data-comment-toggle]");
   if (commentToggle) {
     commentToggle.addEventListener("click", function () {
-      var target = document.getElementById(commentToggle.getAttribute("data-comment-toggle"));
-      if (!target) return;
-      var open = target.classList.toggle("in");
-      commentToggle.setAttribute("aria-expanded", String(open));
-      if (open) window.dispatchEvent(new Event("blog:comments-requested"));
-    });
+      window.dispatchEvent(new Event("blog:comments-requested"));
+      commentToggle.remove();
+    }, { once: true });
   }
+
   /* Tier 3: content-derived needs, asked of the rendered DOM.
      /why: month indexes and the front page inherit code blocks from the
      excerpts they render, so page type alone cannot answer this. */

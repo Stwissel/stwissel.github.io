@@ -1,5 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="wa-theme-default wa-palette-default wa-light wa-cloak">
+<script>
+/* Appearance: system by default, overridable to light or dark, remembered in a
+   cookie.
+
+   /why inline and first: Web Awesome switches theme on a class, not a media
+   query, so the class must be on <html> before the first paint or the page
+   flashes light and then turns dark. This is the one script on the site that
+   cannot be deferred, and the cookie has to be read synchronously here.
+
+   /why a cookie rather than localStorage: it is sent with the request, so if
+   this ever becomes server-rendered the preference is already available before
+   a byte of HTML is written. Nothing is stored until a reader actually chooses:
+   "system" deletes the cookie rather than recording a third value, so the
+   majority who never touch the control carry no state at all. */
+(function () {
+	var NAME = "appearance";
+	var MODES = ["system", "light", "dark"];
+	var ICONS = { system: "circle-half-stroke", light: "sun", dark: "moon" };
+	var media = window.matchMedia("(prefers-color-scheme: dark)");
+	var mode = (document.cookie.match(/(?:^|;\s*)appearance=(light|dark)(?:;|$)/) || [])[1] || "system";
+
+	function apply() {
+		var dark = mode === "dark" || (mode === "system" && media.matches);
+		var c = document.documentElement.classList;
+		c.toggle("wa-dark", dark);
+		c.toggle("wa-light", !dark);
+	}
+	function remember() {
+		document.cookie = mode === "system"
+			? NAME + "=; Max-Age=0; Path=/; SameSite=Lax"
+			: NAME + "=" + mode + "; Max-Age=31536000; Path=/; SameSite=Lax";
+	}
+	apply();
+	/* Only follow the OS while the reader has not overridden it. */
+	media.addEventListener("change", function () { if (mode === "system") { apply(); } });
+
+	document.addEventListener("DOMContentLoaded", function () {
+		var btn = document.getElementById("appearance-toggle");
+		if (!btn) { return; }
+		var icon = document.getElementById("appearance-icon");
+		function sync() {
+			icon.setAttribute("name", ICONS[mode]);
+			btn.setAttribute("aria-label", "Appearance: " + mode + ". Activate to change.");
+			btn.setAttribute("title", "Appearance: " + mode);
+		}
+		sync();
+		btn.addEventListener("click", function () {
+			mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+			remember();
+			apply();
+			sync();
+		});
+	});
+})();
+</script>
 <head>
 <title>What are the strongest aspects of Lotus Domino? - NotesSensei's Blog</title>
 <meta name="robots" content="index,follow" />
@@ -17,15 +72,13 @@
 <meta name="description"
 	content="What are the strongest aspects of Lotus Domino? - I was asked recently to sum up the strongest points about Lotus Domino. This is what I came up with: Lotus Domino is an integrated communication platform, that features email, instant messaging, collaboration and an application development platform. Its strongest points are self-containment, robustn" />
 
-<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.14.0/styles/webawesome.css" />
+<script type="module" src="https://ka-f.webawesome.com/webawesome@3.14.0/webawesome.loader.js"></script>
+<link rel="stylesheet" type="text/css" href="/blog/style/palette.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/site.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/admonition.css" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
-
 
 <link rel="alternate" type="application/rss+xml" title="wissel.net RSS feed" href="https://wissel.net/blog/stories.rss" />
 
@@ -43,72 +96,80 @@
 </script>
 </head>
 <body>
-	<div class="navbar navbar-inverse navbar-fixed-top">
-		<div class="navbar-inner">
-			<button class="btn btn-navbar" type="button" data-nav-toggle aria-expanded="false"
-			        aria-controls="main-nav" aria-label="Toggle navigation">
-				<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
-			</button>
-			<a class="brand" href="/">wissel.net</a>
-			<div class="nav-collapse" id="main-nav">
-				<ul class="nav">
-					<li><a href="/index.html">Home</a></li>
-					<li class="active"><a href="/blog/">Blog</a></li>
-					<li><a href="/blog/series.html">Series</a></li>
-					<li><a href="/blog/downloads/">Downloads</a></li>
-					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
-					<li><a href="/blog/imprint.html">About / Imprint</a></li>
-					<li><a href="/mealplan.html">Food</a></li>
-				</ul>
-				<form action="//www.google.com/cse" id="cse-search-box"
-					class="navbar-search pull-right">
-					<div>
-						<input type="hidden" name="cx"
-							value="partner-pub-4562257798204150:muo14ionenw" /> <input
-							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
-							name="q" class="search-query span2" placeholder="Search" />
-						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
-					</div>
-				</form>
-			</div>
+<wa-page disable-sticky="subheader aside">
+	<header slot="header" class="site-header">
+	<div class="site-header-inner wa-split">
+		<a class="site-brand" href="/">wissel.net</a>
+		<div class="site-header-end wa-cluster wa-gap-m">
+		<nav class="header-nav wa-cluster wa-gap-l" aria-label="Main">
+			<a href="/index.html">Home</a>
+			<a href="/blog/" aria-current="page">Blog</a>
+			<a href="/blog/series.html">Series</a>
+			<a href="/blog/downloads/">Downloads</a>
+			<a href="https://stwissel.github.io/presentations/">Presentations</a>
+			<a href="/blog/imprint.html">About</a>
+			<a href="/mealplan.html">Food</a>
+		</nav>
+		
+		<form class="header-search site-search" action="https://www.google.com/cse" role="search">
+			<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+			<input type="hidden" name="ie" value="UTF-8" />
+			<input type="search" name="q" aria-label="Search this site" placeholder="Search" />
+		</form>
+		
+		<wa-button id="appearance-toggle" appearance="plain" class="site-theme-toggle"
+		           aria-label="Appearance: system. Activate to change." title="Appearance: system">
+			<wa-icon id="appearance-icon" name="circle-half-stroke" label=""></wa-icon>
+		</wa-button>
+		<wa-button data-toggle-nav appearance="plain" class="wa-mobile-only site-nav-toggle" aria-label="Open menu">
+			<wa-icon name="bars" label="Menu"></wa-icon>
+		</wa-button>
 		</div>
 	</div>
-<div class="navbar-spacer"></div>
+</header>
+<nav slot="navigation" class="wa-stack wa-gap-2xs" aria-label="Main">
+	<a href="/index.html" data-drawer="close">Home</a>
+	<a href="/blog/" data-drawer="close">Blog</a>
+	<a href="/blog/series.html" data-drawer="close">Series</a>
+	<a href="/blog/downloads/" data-drawer="close">Downloads</a>
+	<a href="https://stwissel.github.io/presentations/" data-drawer="close">Presentations</a>
+	<a href="/blog/imprint.html" data-drawer="close">About</a>
+	<a href="/mealplan.html" data-drawer="close">Food</a>
+	<form class="site-search" action="https://www.google.com/cse" role="search">
+		<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+		<input type="hidden" name="ie" value="UTF-8" />
+		<wa-input type="search" name="q" size="s" placeholder="Search" label="Search this site" with-label></wa-input>
+	</form>
+</nav>
 
-	<div class="container">
-	    		<br />
-		<header>
-			<div id="mainsmall"  class="hero-unit">
-				<h2>wissel.net</h2>
-				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
-			</div>
-		</header>
+	    <div slot="subheader" class="site-hero site-hero-small">
+	<div class="site-hero-inner">
+		<h2>wissel.net</h2>
+		<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+	</div>
+</div>
 
-    <ul class="breadcrumb">
-  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2006/">2006</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2006/03/">March</a></li>
-  <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
-  </li>
-	<li class="pull-right">
-	<span class="divider">|</span><a href="/blog/d6plinks/SHWL-6MHCLB" title="originally published at /blog/d6plinks/SHWL-6MHCLB">SHWL-6MHCLB</a>
-	</li>
-</ul>
+	<main>
+								<div class="entry-meta-row wa-cluster">
+	<wa-breadcrumb>
+		<wa-breadcrumb-item href="/blog/">Blog</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2006/">2006</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2006/03/">March</wa-breadcrumb-item>
+	</wa-breadcrumb>
+	<div class="entry-tags wa-cluster">
+		<a class="entry-tag" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
+		<a class="entry-tag entry-tag-legacy" href="/blog/d6plinks/SHWL-6MHCLB" title="originally published at /blog/d6plinks/SHWL-6MHCLB">SHWL-6MHCLB</a>
+	</div>
+</div>
 
-			<div class="row-fluid">
-			<div class="span12">
-								
-				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2006/02/reality-god-and-the-universe.html"><i class="icon-hand-left"></i>Reality God and the Universe</a>
-						<span class="divider">|</span></li>
-					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2006/03/to-the-gentlemen-who-use-storyopenform-on-my-blog.html">To the gentlemen (?) who use story?OpenForm on my blog<i class="icon-hand-right"></i></a>
-					</li>
-				</ul>
+				
+				<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2006/02/reality-god-and-the-universe.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> Reality God and the Universe</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	<a href="/blog/2006/03/to-the-gentlemen-who-use-storyopenform-on-my-blog.html" rel="next">To the gentlemen (?) who use story?OpenForm on my blog <wa-icon name="arrow-right"></wa-icon></a>
+</nav>
 
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h1><small>What are the strongest aspects of Lotus Domino?</small></h1>
 										<a href="/blog/2006/03/what-are-the-strongest-aspects-of-lotus-domino.prompt" title="View AI image prompt">
 						<img src="/blog/2006/03/what-are-the-strongest-aspects-of-lotus-domino.webp" alt="Hero image for What are the strongest aspects of Lotus Domino?" class="hero-image"
@@ -134,31 +195,30 @@ Lotus Domino is an integrated communication platform, that features email, insta
 <br><b>Low cost of ownership and IBM's commitment</b>: a well configured Domino platform takes advantage of the policy based administration, that minimizes administrative efforts through a set of comprehensive rules. In the latest release IBM also added a comprehensive domain monitoring capability. All this frees up valuable time for administrators to manage their environment more proactive. IBM is the single vendor with the most detailed roadmap for it's messaging platform. The current version Domino 7 has been released a few month ago, nevertheless IBM has outlined plans for Domino version 8 and 9. This assures users of the Domino platform, that they are not in for any rip and replace upgrade any time soon.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 02 March 2006
-<span class="divider">|</span>
-<a href="/blog/2006/03/what-are-the-strongest-aspects-of-lotus-domino.html#comments">Comments (14)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 02 March 2006
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2006/03/what-are-the-strongest-aspects-of-lotus-domino.html#comments">20 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2006/03/what-are-the-strongest-aspects-of-lotus-domino.html";
 						</script>
 					</p>
 				</article>
-				<a name="comments"></a>
-				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-info" type="button"
-				        data-comment-toggle="commentform_5EDF18BA37D330A64825712500318CF2" aria-expanded="false">
-		            Add your comment...&nbsp;&nbsp;<i class="icon-comment"></i>
-	            </button>
-	            </div>
-				<div id="commentform_5EDF18BA37D330A64825712500318CF2"  class="collapse"></div>
-				<div class="well well-raised">
-					<h4>Comments</h4>
-					<ol id="commentList">
-						<li>
-							posted by <b>Stephan H. Wissel</b> on <i>Saturday 04 March 2006 AD</i>:<br /> 
+<a name="comments"></a>
+<div class="comment-reveal">
+	<wa-button variant="brand" data-comment-toggle="commentform_5EDF18BA37D330A64825712500318CF2">
+		Add your comment&hellip;
+	</wa-button>
+	<div id="commentform_5EDF18BA37D330A64825712500318CF2"></div>
+</div>
+<wa-card class="comment-list" with-header appearance="filled-outlined">
+	<h4 slot="header">Comments</h4>
+	<ol id="commentList">
+		<li>
+			
+			posted by <b>Stephan H. Wissel</b> on <i>Saturday 04 March 2006 AD</i>:<br /> 
   Well, then Oracle is cursed too 
   <img src="/blog/images/emoticons/wink.gif" border="0" alt="Emoticon wink.gif" /> 
   <br />You have even more languages you can access it. Including PHP, Python, Eiffel, Haskel and others. As said before (see: 
@@ -166,25 +226,29 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
   <br /> 
   <img src="/blog/images/emoticons/smile.gif" border="0" alt="Emoticon smile.gif" /> stw
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Alan Lepofsky</b> on <i>Monday 06 March 2006 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Alan Lepofsky</b> on <i>Monday 06 March 2006 AD</i>:<br /> 
   Bravo!!! Really well summarized, may it reach the ears of all the collaboration purchasing decision makers out there. 
   <img src="/blog/images/emoticons/biggrin.gif" border="0" alt="Emoticon biggrin.gif" />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>David Bailey</b> on <i>Monday 06 March 2006 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>David Bailey</b> on <i>Monday 06 March 2006 AD</i>:<br /> 
   Thanks, Stephan. This is a great summary.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Ragnar Schierholz</b> on <i>Tuesday 07 March 2006 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Ragnar Schierholz</b> on <i>Tuesday 07 March 2006 AD</i>:<br /> 
   Hm, how come &quot;Low TCO&quot; and &quot;IBM's commitment&quot; are merged into one?
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Hynek Kobelka</b> on <i>Tuesday 07 March 2006 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Hynek Kobelka</b> on <i>Tuesday 07 March 2006 AD</i>:<br /> 
   Hi, nice list. 
   <br />But you should add 
   <b>Replication</b>. 
@@ -194,29 +258,33 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
   <br />Bye Hynek 
   <br />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Asheet Makhija</b> on <i>Tuesday 28 March 2006 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Asheet Makhija</b> on <i>Tuesday 28 March 2006 AD</i>:<br /> 
   A good succinct summary! I think strong collab platform needs a larger mention. Domino is much more than just a mail platform. 
   <img src="/blog/images/emoticons/cool.gif" border="0" alt="Emoticon cool.gif" />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>... but what about the Pitfalls?</b> on <i>Wednesday 29 March 2006 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>... but what about the Pitfalls?</b> on <i>Wednesday 29 March 2006 AD</i>:<br /> 
   Very good summary of the strenghts. But when mentioning the positive aspects of Notes/Domino, you should also keep eyes on the 'minor issues' Notes/Domino still has: Still no native support for mobile Devices or a very scary application administration for tons of smallest apps, etc. 
   <br />I'm still a Notes/Domino enthusiast, who's just trying to see things with no &quot;pink painted eyeglasses&quot;. 
   <br />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Stephan H. Wissel</b> on <i>Sunday 23 April 2006 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Stephan H. Wissel</b> on <i>Sunday 23 April 2006 AD</i>:<br /> 
   @10 -- Check the title! It says: What are the strongest points. It doesn't say: Balanced account of Domino pro and con. 
   <br /> 
   <img src="/blog/images/emoticons/smile.gif" border="0" alt="Emoticon smile.gif" /> stw
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Tony Austin</b> on <i>Friday 03 November 2006 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Tony Austin</b> on <i>Friday 03 November 2006 AD</i>:<br /> 
   Good post, Stephan! 
   <br /> 
   <br />Unfortunately you only said: &quot;Domino is available on multiple platforms from Windows, Linux, Unix to z/OS.&quot; You should add the AS/400 (oops, sorry. I meant the &quot;iSeries&quot; -- oops again, I meant the &quot;System i&quot;). 
@@ -225,158 +293,153 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
   <b>this, the best Domino platform of all,</b> isn't mentioned! 
   <img src="/blog/images/emoticons/rolleyes.gif" border="0" alt="Emoticon rolleyes.gif" />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>eyeglasses online</b> on <i>Wednesday 17 March 2010 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>eyeglasses online</b> on <i>Wednesday 17 March 2010 AD</i>:<br /> 
   good article 
   <img alt="Emoticon tongue.gif" src="/blog/images/emoticons/tongue.gif" border="0" /> 
   <img alt="Emoticon tongue.gif" src="/blog/images/emoticons/tongue.gif" border="0" />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Sunny lin</b> on <i>Thursday 25 March 2010 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Sunny lin</b> on <i>Thursday 25 March 2010 AD</i>:<br /> 
   Thank you, it is so helpful to me
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Toni</b> on <i>Tuesday 08 June 2010 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Toni</b> on <i>Tuesday 08 June 2010 AD</i>:<br /> 
   thanks alot. good written
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Adriano</b> on <i>Friday 15 October 2010 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Adriano</b> on <i>Friday 15 October 2010 AD</i>:<br /> 
   Thanks, Stephan. This is a great summary. 
   <img alt="Emoticon wink.gif" src="/blog/images/emoticons/wink.gif" border="0" />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Gucci Outlet</b> on <i>Thursday 01 September 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Gucci Outlet</b> on <i>Thursday 01 September 2011 AD</i>:<br /> 
   &lt;a href=&quot;{ 
   <a href="http://www.usguccistore.com/" &gt;gucci"="" rel="nofollow" target="blank">Link</a> } Outlet&lt;/a&gt; 
   <br />[url={ 
   <a href="http://www.usguccistore.com/]Gucci" rel="nofollow" target="blank">Link</a> } Store[/url]
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>ipad 3</b> on <i>Friday 02 September 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>ipad 3</b> on <i>Friday 02 September 2011 AD</i>:<br /> 
   Thanks for sharing this great information. I really enjoyed reading about this,and I'm going to let other people know about this as well. 
   <br />&lt;a href =&quot;{ 
   <a href="http://ipad3dev.com/" &gt;ipad"="" rel="nofollow" target="blank">Link</a> } 3&lt;/a&gt; 
   <br />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>mobil apps</b> on <i>Saturday 29 October 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>mobil apps</b> on <i>Saturday 29 October 2011 AD</i>:<br /> 
   Thanks, Stephan. This is a great summary.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>iPhone 4s cases</b> on <i>Tuesday 24 April 2012 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>iPhone 4s cases</b> on <i>Tuesday 24 April 2012 AD</i>:<br /> 
   There are many platforms have came into the market because very talented programmers. And I have been reading about this platform for the first time and it is very well summarized which I have got new information
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>galaxy note 2 cases</b> on <i>Wednesday 16 January 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>galaxy note 2 cases</b> on <i>Wednesday 16 January 2013 AD</i>:<br /> 
   Really fantastic article regarding the project. I just really love it. Thanks for making a wonderful share!
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Appsta</b> on <i>Tuesday 25 June 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Appsta</b> on <i>Tuesday 25 June 2013 AD</i>:<br /> 
   Good summary about this platform. I got new information from your post. I want to give thanks to the developers who created this platform ans also wigh for good luck.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>robert bob lalas</b> on <i>Wednesday 21 August 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>robert bob lalas</b> on <i>Wednesday 21 August 2013 AD</i>:<br /> 
   Stephan very informative article you discuss it very well. 
   <img alt="Emoticon biggrin.gif" src="/blog/images/emoticons/biggrin.gif" border="0" />
  
-							<hr style="clear : both" />
-						</li> 					</ol>
-				</div>
+		</li>
+	</ol>
+</wa-card>
 
-				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2006/02/reality-god-and-the-universe.html"><i class="icon-hand-left"></i>Reality God and the Universe</a>
-						<span class="divider">|</span></li>
-					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2006/03/to-the-gentlemen-who-use-storyopenform-on-my-blog.html">To the gentlemen (?) who use story?OpenForm on my blog<i class="icon-hand-right"></i></a>
-					</li>
-				</ul>
+				<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2006/02/reality-god-and-the-universe.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> Reality God and the Universe</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	<a href="/blog/2006/03/to-the-gentlemen-who-use-storyopenform-on-my-blog.html" rel="next">To the gentlemen (?) who use story?OpenForm on my blog <wa-icon name="arrow-right"></wa-icon></a>
+</nav>
 
 
-			</div>
-		</div>
-				<ul class="breadcrumb">
-  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2006/">2006</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2006/03/">March</a></li>
-  <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
-  </li>
-	<li class="pull-right">
-	<span class="divider">|</span><a href="/blog/d6plinks/SHWL-6MHCLB" title="originally published at /blog/d6plinks/SHWL-6MHCLB">SHWL-6MHCLB</a>
-	</li>
-</ul>
-
-
+				<div class="entry-meta-row wa-cluster">
+	<wa-breadcrumb>
+		<wa-breadcrumb-item href="/blog/">Blog</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2006/">2006</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2006/03/">March</wa-breadcrumb-item>
+	</wa-breadcrumb>
+	<div class="entry-tags wa-cluster">
+		<a class="entry-tag" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
+		<a class="entry-tag entry-tag-legacy" href="/blog/d6plinks/SHWL-6MHCLB" title="originally published at /blog/d6plinks/SHWL-6MHCLB">SHWL-6MHCLB</a>
 	</div>
-		<footer>
-		<div class="container">
-			<div class="row">
-				<div class="span2">
-					<h4>About Me</h4>
-					<p>
-						I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.
-						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
-					</p>
-					<a href="//stackoverflow.com/users/131021/stwissel">
-					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
-				</a>
-				</div>
-				<div class="span2">
-					<h4>Contact</h4>
-					<ul>
-						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
-						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
-						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
-						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
-						<li><a href="https://github.com/Stwissel">GitHub</a></li>
-						<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
-					</ul>
-				</div>
-				<div class="span8">
-					<h4>Disclaimer</h4>
-					<p>This site is in no way affiliated, endorsed, sanctioned,
-						supported, nor enlightened by my current or previous employers.
-						I may be an employee, but the opinions, theories, facts, etc.
-						presented here are my own and are in now way given in any official
-						capacity. In short, these are my words and this is my site, not
-						my current or former employers' - and don't even begin to think otherwise.</p>
-					<p>
-						<b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as
-						listed here: <a rel="license"
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
-							alt="Creative Commons License" style="border-width: 0"
-							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
-						Unless otherwise labeled by its originating author, the content
-						found on this site is made available under the terms of an <a
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
-							target="_blank"
-							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
-							Creative Commons License</a>, with the exception that no rights are
-						granted -- since they are not mine to grant -- in any logo,
-						graphic design, trademarks or trade names of any type. Code
-						samples and code downloads on this site are, unless otherwise
-						labeled, made available under an <a
-							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
-							2.0</a> license. Other license models are available on written
-						request and written confirmation.
-					</p>
-				</div>
-			</div>
-		</div>
-	</footer>
+</div>
 
+
+	</main>
+	
+	<footer slot="footer" class="site-footer">
+	<div class="site-footer-inner wa-grid">
+		<section>
+			<h2>About me</h2>
+			<p>I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.</p>
+			<a href="https://stackoverflow.com/users/131021/stwissel">
+				<img src="https://stackoverflow.com/users/flair/131021.png" width="208" height="58"
+				     alt="Stack Overflow profile for stwissel" loading="lazy" />
+			</a>
+		</section>
+
+		<section>
+			<h2>Contact</h2>
+			<ul class="footer-links">
+				<li><a rel="me" href="https://chaos.social/@stw">Mastodon</a></li>
+				<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+				<li><a href="https://notessensei.myspreadshop.com">Spreadshirt shop</a></li>
+				<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers</a></li>
+				<li><a href="https://github.com/Stwissel">GitHub</a></li>
+				<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
+			</ul>
+		</section>
+
+		<section class="footer-disclaimer">
+			<h2>Disclaimer</h2>
+			<p>This site is in no way affiliated, endorsed, sanctioned, supported, nor
+				enlightened by my current or previous employers. I may be an employee, but the
+				opinions, theories, facts, etc. presented here are my own and are in no way
+				given in any official capacity. In short, these are my words and this is my
+				site, not my current or former employers' &ndash; and don't even begin to think
+				otherwise.</p>
+			<p><b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as listed
+				here: <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/3.0/">Creative
+				Commons Attribution/NonCommercial/ShareAlike</a>, with the exception that no
+				rights are granted &ndash; since they are not mine to grant &ndash; in any logo,
+				graphic design, trademark or trade name of any type. Code samples and downloads
+				are, unless otherwise labeled, made available under an
+				<a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0</a>
+				license. Other license models are available on written request and written
+				confirmation.</p>
+		</section>
+	</div>
+</footer>
+
+</wa-page>
 		<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2006/03/what-are-the-strongest-aspects-of-lotus-domino.html";
 	</script>
@@ -388,6 +451,20 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 	  var loaded = false;
 	  /* /why: the editor stack is ~157 KB that most readers never open.
 	     It is fetched on the first click of the reveal button instead. */
+	  /* /why markdown.css is loaded here and not in head_styles: it styles the
+	     wmd editor -- .wmd-button-bar, .wmd-input, .wmd-preview -- which exists
+	     only once this form is injected. An audit of the rendered pages called
+	     the file dead because no static page contains that markup, and deleting
+	     it left the editor toolbar as bare bullets and the preview unstyled.
+	     It is not dead, it is late: it belongs with the code that creates the
+	     markup it styles, so it costs nothing on the pages that never open a
+	     comment form. */
+	  function loadCss(href) {
+	    var l = document.createElement("link");
+	    l.rel = "stylesheet";
+	    l.href = href;
+	    document.head.appendChild(l);
+	  }
 	  var SCRIPTS = [
 	    "/blog/js2/mustache.js",
 	    "/blog/js2/Markdown.Converter.js",
@@ -416,6 +493,7 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 	  window.addEventListener("blog:comments-requested", function () {
 	    if (loaded) return;
 	    loaded = true;
+	    loadCss("/blog/style/markdown.css");
 	    loadSequential(SCRIPTS, function () { renderComment(SITE_KEY, PARENT_ID); });
 	  });
 	})();
@@ -425,39 +503,21 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 <script>
 (function () {
   "use strict";
-  /*
-   * Navbar: Bootstrap 2's collapse plugin, minus Bootstrap and jQuery.
-   *
-   * /why inline height, not just the "in" class: bootstrap-responsive.css
-   * pins `.nav-collapse{height:0;overflow:hidden}` unconditionally (the
-   * element never carries the generic "collapse" class), so there is no
-   * `.nav-collapse.in{height:auto}` rule to win a specificity fight -- the
-   * real collapse.js plugin got around this the same way, by writing a
-   * pixel height directly to the element's style, which always outranks an
-   * external stylesheet rule without !important. Toggling the class alone
-   * leaves the menu at height:0 and invisible.
-   */
-  var navToggle = document.querySelector("[data-nav-toggle]");
-  if (navToggle) {
-    navToggle.addEventListener("click", function () {
-      var nav = document.getElementById("main-nav");
-      if (!nav) return;
-      var open = nav.classList.toggle("in");
-      nav.style.height = open ? "auto" : "";
-      navToggle.setAttribute("aria-expanded", String(open));
-    });
-  }
-  /* Comment form reveal. */
+    /* The comment editor is fetched on the first click of the reveal button.
+     /why a click and not a disclosure's show event: the form is injected into
+     the DOM only when this fires, and that is deliberate -- a spam bot that
+     never clicks never sees a form. A disclosure would also fire on
+     programmatic opening, on keyboard activation, and when the browser expands
+     it for find-in-page, each of which puts the form in the DOM without anyone
+     choosing to comment. A click is the narrowest trigger that still works. */
   var commentToggle = document.querySelector("[data-comment-toggle]");
   if (commentToggle) {
     commentToggle.addEventListener("click", function () {
-      var target = document.getElementById(commentToggle.getAttribute("data-comment-toggle"));
-      if (!target) return;
-      var open = target.classList.toggle("in");
-      commentToggle.setAttribute("aria-expanded", String(open));
-      if (open) window.dispatchEvent(new Event("blog:comments-requested"));
-    });
+      window.dispatchEvent(new Event("blog:comments-requested"));
+      commentToggle.remove();
+    }, { once: true });
   }
+
   /* Tier 3: content-derived needs, asked of the rendered DOM.
      /why: month indexes and the front page inherit code blocks from the
      excerpts they render, so page type alone cannot answer this. */

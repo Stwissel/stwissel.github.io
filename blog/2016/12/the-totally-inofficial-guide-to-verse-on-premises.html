@@ -1,5 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="wa-theme-default wa-palette-default wa-light wa-cloak">
+<script>
+/* Appearance: system by default, overridable to light or dark, remembered in a
+   cookie.
+
+   /why inline and first: Web Awesome switches theme on a class, not a media
+   query, so the class must be on <html> before the first paint or the page
+   flashes light and then turns dark. This is the one script on the site that
+   cannot be deferred, and the cookie has to be read synchronously here.
+
+   /why a cookie rather than localStorage: it is sent with the request, so if
+   this ever becomes server-rendered the preference is already available before
+   a byte of HTML is written. Nothing is stored until a reader actually chooses:
+   "system" deletes the cookie rather than recording a third value, so the
+   majority who never touch the control carry no state at all. */
+(function () {
+	var NAME = "appearance";
+	var MODES = ["system", "light", "dark"];
+	var ICONS = { system: "circle-half-stroke", light: "sun", dark: "moon" };
+	var media = window.matchMedia("(prefers-color-scheme: dark)");
+	var mode = (document.cookie.match(/(?:^|;\s*)appearance=(light|dark)(?:;|$)/) || [])[1] || "system";
+
+	function apply() {
+		var dark = mode === "dark" || (mode === "system" && media.matches);
+		var c = document.documentElement.classList;
+		c.toggle("wa-dark", dark);
+		c.toggle("wa-light", !dark);
+	}
+	function remember() {
+		document.cookie = mode === "system"
+			? NAME + "=; Max-Age=0; Path=/; SameSite=Lax"
+			: NAME + "=" + mode + "; Max-Age=31536000; Path=/; SameSite=Lax";
+	}
+	apply();
+	/* Only follow the OS while the reader has not overridden it. */
+	media.addEventListener("change", function () { if (mode === "system") { apply(); } });
+
+	document.addEventListener("DOMContentLoaded", function () {
+		var btn = document.getElementById("appearance-toggle");
+		if (!btn) { return; }
+		var icon = document.getElementById("appearance-icon");
+		function sync() {
+			icon.setAttribute("name", ICONS[mode]);
+			btn.setAttribute("aria-label", "Appearance: " + mode + ". Activate to change.");
+			btn.setAttribute("title", "Appearance: " + mode);
+		}
+		sync();
+		btn.addEventListener("click", function () {
+			mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+			remember();
+			apply();
+			sync();
+		});
+	});
+})();
+</script>
 <head>
 <title>The totally inofficial guide to Verse on Premises - NotesSensei's Blog</title>
 <meta name="robots" content="index,follow" />
@@ -17,15 +72,13 @@
 <meta name="description"
 	content="The totally inofficial guide to Verse on Premises - Now that CNGD8ML is upon us, it is story time. Read about the why, who, what and what to watch out for. To successfully deploy Verse, make sure to carefully read and implement the installation instructions. The availability of Verse makes Domino the most versatile eMail platform around, offering you" />
 
-<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.14.0/styles/webawesome.css" />
+<script type="module" src="https://ka-f.webawesome.com/webawesome@3.14.0/webawesome.loader.js"></script>
+<link rel="stylesheet" type="text/css" href="/blog/style/palette.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/site.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/admonition.css" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
-
 
 <link rel="alternate" type="application/rss+xml" title="wissel.net RSS feed" href="https://wissel.net/blog/stories.rss" />
 
@@ -43,72 +96,80 @@
 </script>
 </head>
 <body>
-	<div class="navbar navbar-inverse navbar-fixed-top">
-		<div class="navbar-inner">
-			<button class="btn btn-navbar" type="button" data-nav-toggle aria-expanded="false"
-			        aria-controls="main-nav" aria-label="Toggle navigation">
-				<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
-			</button>
-			<a class="brand" href="/">wissel.net</a>
-			<div class="nav-collapse" id="main-nav">
-				<ul class="nav">
-					<li><a href="/index.html">Home</a></li>
-					<li class="active"><a href="/blog/">Blog</a></li>
-					<li><a href="/blog/series.html">Series</a></li>
-					<li><a href="/blog/downloads/">Downloads</a></li>
-					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
-					<li><a href="/blog/imprint.html">About / Imprint</a></li>
-					<li><a href="/mealplan.html">Food</a></li>
-				</ul>
-				<form action="//www.google.com/cse" id="cse-search-box"
-					class="navbar-search pull-right">
-					<div>
-						<input type="hidden" name="cx"
-							value="partner-pub-4562257798204150:muo14ionenw" /> <input
-							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
-							name="q" class="search-query span2" placeholder="Search" />
-						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
-					</div>
-				</form>
-			</div>
+<wa-page disable-sticky="subheader aside">
+	<header slot="header" class="site-header">
+	<div class="site-header-inner wa-split">
+		<a class="site-brand" href="/">wissel.net</a>
+		<div class="site-header-end wa-cluster wa-gap-m">
+		<nav class="header-nav wa-cluster wa-gap-l" aria-label="Main">
+			<a href="/index.html">Home</a>
+			<a href="/blog/" aria-current="page">Blog</a>
+			<a href="/blog/series.html">Series</a>
+			<a href="/blog/downloads/">Downloads</a>
+			<a href="https://stwissel.github.io/presentations/">Presentations</a>
+			<a href="/blog/imprint.html">About</a>
+			<a href="/mealplan.html">Food</a>
+		</nav>
+		
+		<form class="header-search site-search" action="https://www.google.com/cse" role="search">
+			<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+			<input type="hidden" name="ie" value="UTF-8" />
+			<input type="search" name="q" aria-label="Search this site" placeholder="Search" />
+		</form>
+		
+		<wa-button id="appearance-toggle" appearance="plain" class="site-theme-toggle"
+		           aria-label="Appearance: system. Activate to change." title="Appearance: system">
+			<wa-icon id="appearance-icon" name="circle-half-stroke" label=""></wa-icon>
+		</wa-button>
+		<wa-button data-toggle-nav appearance="plain" class="wa-mobile-only site-nav-toggle" aria-label="Open menu">
+			<wa-icon name="bars" label="Menu"></wa-icon>
+		</wa-button>
 		</div>
 	</div>
-<div class="navbar-spacer"></div>
+</header>
+<nav slot="navigation" class="wa-stack wa-gap-2xs" aria-label="Main">
+	<a href="/index.html" data-drawer="close">Home</a>
+	<a href="/blog/" data-drawer="close">Blog</a>
+	<a href="/blog/series.html" data-drawer="close">Series</a>
+	<a href="/blog/downloads/" data-drawer="close">Downloads</a>
+	<a href="https://stwissel.github.io/presentations/" data-drawer="close">Presentations</a>
+	<a href="/blog/imprint.html" data-drawer="close">About</a>
+	<a href="/mealplan.html" data-drawer="close">Food</a>
+	<form class="site-search" action="https://www.google.com/cse" role="search">
+		<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+		<input type="hidden" name="ie" value="UTF-8" />
+		<wa-input type="search" name="q" size="s" placeholder="Search" label="Search this site" with-label></wa-input>
+	</form>
+</nav>
 
-	<div class="container">
-	    		<br />
-		<header>
-			<div id="mainsmall"  class="hero-unit">
-				<h2>wissel.net</h2>
-				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
-			</div>
-		</header>
+	    <div slot="subheader" class="site-hero site-hero-small">
+	<div class="site-hero-inner">
+		<h2>wissel.net</h2>
+		<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+	</div>
+</div>
 
-    <ul class="breadcrumb">
-  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2016/">2016</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2016/12/">December</a></li>
-  <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/ibmnotes.html">IBM Notes</a>
-  </li>
-	<li class="pull-right">
-	<span class="divider">|</span><a href="/blog/d6plinks/SHWL-AH22CV" title="originally published at /blog/d6plinks/SHWL-AH22CV">SHWL-AH22CV</a>
-	</li>
-</ul>
+	<main>
+								<div class="entry-meta-row wa-cluster">
+	<wa-breadcrumb>
+		<wa-breadcrumb-item href="/blog/">Blog</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2016/">2016</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2016/12/">December</wa-breadcrumb-item>
+	</wa-breadcrumb>
+	<div class="entry-tags wa-cluster">
+		<a class="entry-tag" href="/blog/categories/ibmnotes.html">IBM Notes</a>
+		<a class="entry-tag entry-tag-legacy" href="/blog/d6plinks/SHWL-AH22CV" title="originally published at /blog/d6plinks/SHWL-AH22CV">SHWL-AH22CV</a>
+	</div>
+</div>
 
-			<div class="row-fluid">
-			<div class="span12">
-								
-				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2016/09/domino-meets-rxjava.html"><i class="icon-hand-left"></i>Domino meets RXJava</a>
-						<span class="divider">|</span></li>
-					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2017/01/lessons-from-project-orangebox.html">Lessons from Project OrangeBox<i class="icon-hand-right"></i></a>
-					</li>
-				</ul>
+				
+				<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2016/09/domino-meets-rxjava.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> Domino meets RXJava</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	<a href="/blog/2017/01/lessons-from-project-orangebox.html" rel="next">Lessons from Project OrangeBox <wa-icon name="arrow-right"></wa-icon></a>
+</nav>
 
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h1><small>The totally inofficial guide to Verse on Premises</small></h1>
 										<a href="/blog/2016/12/the-totally-inofficial-guide-to-verse-on-premises.prompt" title="View AI image prompt">
 						<img src="/blog/2016/12/the-totally-inofficial-guide-to-verse-on-premises.webp" alt="Hero image for The totally inofficial guide to Verse on Premises" class="hero-image"
@@ -193,43 +254,44 @@
 </ul> As usual YMMV</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 30 December 2016
-<span class="divider">|</span>
-<a href="/blog/2016/12/the-totally-inofficial-guide-to-verse-on-premises.html#comments">Comments (10)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 30 December 2016
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2016/12/the-totally-inofficial-guide-to-verse-on-premises.html#comments">16 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2016/12/the-totally-inofficial-guide-to-verse-on-premises.html";
 						</script>
 					</p>
 				</article>
-				<a name="comments"></a>
-				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-info" type="button"
-				        data-comment-toggle="commentform_C11DBB777E01D4AB4825809600019630" aria-expanded="false">
-		            Add your comment...&nbsp;&nbsp;<i class="icon-comment"></i>
-	            </button>
-	            </div>
-				<div id="commentform_C11DBB777E01D4AB4825809600019630"  class="collapse"></div>
-				<div class="well well-raised">
-					<h4>Comments</h4>
-					<ol id="commentList">
-						<li>
-							posted by <b>Lars Berntrop-Bos</b> on <i>Monday 02 January 2017 AD</i>:<br /> 
+<a name="comments"></a>
+<div class="comment-reveal">
+	<wa-button variant="brand" data-comment-toggle="commentform_C11DBB777E01D4AB4825809600019630">
+		Add your comment&hellip;
+	</wa-button>
+	<div id="commentform_C11DBB777E01D4AB4825809600019630"></div>
+</div>
+<wa-card class="comment-list" with-header appearance="filled-outlined">
+	<h4 slot="header">Comments</h4>
+	<ol id="commentList">
+		<li>
+			
+			posted by <b>Lars Berntrop-Bos</b> on <i>Monday 02 January 2017 AD</i>:<br /> 
   Wow, great stuff! Thanks for all the hard work on getting this out the door, and many thanks for sharing all the isider info. That helps us implement this a lot easier! 
   <br /> 
   <br />Cheers and kudos to the Project OrangeBox team!
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Chris Whisonant</b> on <i>Wednesday 04 January 2017 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Chris Whisonant</b> on <i>Wednesday 04 January 2017 AD</i>:<br /> 
   Thanks for the information. I especially like the information at the end about the additional options for Admins. Thanks also for all of the hard work on this project to you and the rest of the IBM team members.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Chris Whisonant</b> on <i>Wednesday 04 January 2017 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Chris Whisonant</b> on <i>Wednesday 04 January 2017 AD</i>:<br /> 
   I've been trying to get the admin URLs to work but have run into some issues. 
   <br /> 
   <br />If I go to /pob/api/search/info I get the following in the browser: 
@@ -247,22 +309,25 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
   <br /> 
   <br />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Paul Withers</b> on <i>Wednesday 04 January 2017 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Paul Withers</b> on <i>Wednesday 04 January 2017 AD</i>:<br /> 
   Thanks for the efforts of you and the team (especially including Jim). The benefits and lessons learned for all developers are welcome. I hope there will be further enhancements in future versions, especially leveraging non-IBM code.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Carsten Lührmann</b> on <i>Wednesday 04 January 2017 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Carsten Lührmann</b> on <i>Wednesday 04 January 2017 AD</i>:<br /> 
   Great article, thanks for sharing some insight into IBMs development and the technology behind the scenes. 
   <br /> 
   <br />„[...] Jim Cooper, C expert in the core Domino team, provided code updates (also included in the upcoming FP8), that dramatically improve read performance for any document [...]“ 
   <br />Sounds great to me. However, maybe IBM should also deal with the Domino time creep issue (modifying documents at a rate greater than the time stamp resolution may lead to modification dates creeping into the future), this would make these performance gains even more useful.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Chris Whisonant</b> on <i>Wednesday 04 January 2017 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Chris Whisonant</b> on <i>Wednesday 04 January 2017 AD</i>:<br /> 
   Stephan, thank you for the response. 
   <br /> 
   <br />I decided to create a mail.box (we have mail1.box and mail2.box) and that has stopped us from getting the &quot;Database %1 has not been opened yet.&quot; error message. However, from the browser we get the same error at https: //server.com/pob/api/search/info that I posted above about authorization. The only thing we get now in the error-log-0.xml on the server is the following. 
@@ -289,19 +354,22 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
   <br /> 
   <br />&quot;You need to be admin, but you aren't&quot;
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Stephan H. Wissel</b> on <i>Wednesday 04 January 2017 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Stephan H. Wissel</b> on <i>Wednesday 04 January 2017 AD</i>:<br /> 
   Chris: You need to have a look into the log to see what was happening. The Java API that we use to determine group membership only works in the context of a database, so I use mail.box (Which usually works even when you have more than one mailbox). So what's in the log?
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Chris Whisonant</b> on <i>Thursday 05 January 2017 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Chris Whisonant</b> on <i>Thursday 05 January 2017 AD</i>:<br /> 
   Just an update after Stephan and I chatted further about my issue. We decided to try deleting the existing mail1.box, mail2.box, and mail.box files and starting the server back configured to only use a single mail.box. After doing this, the search metrics started to work in the browser. Thanks, Stephan, again.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Tony Byrne</b> on <i>Tuesday 10 January 2017 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Tony Byrne</b> on <i>Tuesday 10 January 2017 AD</i>:<br /> 
   Hi Stephan, 
   <br /> 
   <br />It looks good but my folders don't work, they give an error saying, 'Something went wrong. We are having trouble displaying your messages.' The console shows... 
@@ -312,22 +380,25 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
   <br />Any help would be appreciated. 
   <br />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Stephan H. Wissel</b> on <i>Tuesday 10 January 2017 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Stephan H. Wissel</b> on <i>Tuesday 10 January 2017 AD</i>:<br /> 
   Tony, 
   <br />the article mentions all you need: 
   <br />- read your log 
   <br />- the PMR system is your friend
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Chris Whisonant</b> on <i>Wednesday 11 January 2017 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Chris Whisonant</b> on <i>Wednesday 11 January 2017 AD</i>:<br /> 
   I do have another question about the technology. When you mentioned that the core changes will &quot;dramatically improve read performance for any document - a big bonus for all Domino based applications&quot; do you mean &quot;Domino&quot; as in only HTTP client reads or Notes client reads also?
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Tihomir Pantovic</b> on <i>Thursday 19 January 2017 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Tihomir Pantovic</b> on <i>Thursday 19 January 2017 AD</i>:<br /> 
   Just put IF2 for 9.0.1FP7 and it looks like it broke something... 
   <br /> 
   <br />Might be some regional settings stuff, I'll try to discover later today. 
@@ -335,30 +406,34 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
   <br />&quot;Something went wrong. We are having trouble displaying your messages.&quot; in UI and on console: 
   <br />19.01.2017 09:55:10 - Formula Error [/mail/vuser1.nsf/0/13B772902415FFB2C12580A8006612B0/?OpenDocument&amp;sq=1&amp;Form=l_JSVars&amp;PresetFields=s_HandleAttachmentNames;1,s_HandleMime;1,s_HandleStoredForm;1,s_OpenUI;1,s_HideImages;0,s_HideRemoteImage;1,s_MIMEInIframe;0,s_CDInIframe;0,s_ForceUseInLineHtml;1,s_AppSupportsFormList;memo%7Cappointment%7Creply%7Cnotice%7Cpersonal%20stationery%7C,l_GetBodyEE;1,HTMLOptions;RowAtATimeTa and 30 more bytes] CN=User1 LastName1/O=Domain
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Tihomir Pantovic</b> on <i>Friday 20 January 2017 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Tihomir Pantovic</b> on <i>Friday 20 January 2017 AD</i>:<br /> 
   Submitted PMR, looks like FP7 bug with Non-US regional settings: 
   <br /> 
   <br />{ 
   <a href="https://tixomir.wordpress.com/2017/01/19/ibm-domino-9-0-1-fp2-if2-regression-testing-anyone-formula-error/" rel="nofollow" target="blank">Link</a> }
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Andrew Magerman</b> on <i>Friday 20 January 2017 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Andrew Magerman</b> on <i>Friday 20 January 2017 AD</i>:<br /> 
   <p>I like the design decisions you made. Looks nice and clean, and won't bite you, hopefully. Last time I was this impressed by a Domino design decision was for DAOS, and before that, the new @Formula Engine that Damien Katz wrote.</p> 
   <p>Happy that some of the improvements done for Verse serendipitously also improve the performance of the Domino Server. </p>
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Tihomir Pantovic</b> on <i>Saturday 21 January 2017 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Tihomir Pantovic</b> on <i>Saturday 21 January 2017 AD</i>:<br /> 
   Update #3 (last one, i promise 
   <img alt="Emoticon biggrin.gif" src="/blog/images/emoticons/biggrin.gif" border="0" /> ) 
   <br />IF3 for iNotes solves this issue.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Daniel Reimann</b> on <i>Wednesday 08 February 2017 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Daniel Reimann</b> on <i>Wednesday 08 February 2017 AD</i>:<br /> 
   Regarding Tony Byrne's issue above (Comment #9): I had the exact same problem although I definitely followed all instructions. This here solved it for me and I would have never come to that solution myself. Kudos to Yingle Jia! 
   <br /> 
   <br />{ 
@@ -366,93 +441,77 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
   <br /> 
   <br />It's the setting &quot;Make this site accessible to web search site crawlers&quot; that has to be DISABLED for folders to work in Verse On Premises altogether.
  
-							<hr style="clear : both" />
-						</li> 					</ol>
-				</div>
+		</li>
+	</ol>
+</wa-card>
 
-				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2016/09/domino-meets-rxjava.html"><i class="icon-hand-left"></i>Domino meets RXJava</a>
-						<span class="divider">|</span></li>
-					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2017/01/lessons-from-project-orangebox.html">Lessons from Project OrangeBox<i class="icon-hand-right"></i></a>
-					</li>
-				</ul>
+				<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2016/09/domino-meets-rxjava.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> Domino meets RXJava</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	<a href="/blog/2017/01/lessons-from-project-orangebox.html" rel="next">Lessons from Project OrangeBox <wa-icon name="arrow-right"></wa-icon></a>
+</nav>
 
 
-			</div>
-		</div>
-				<ul class="breadcrumb">
-  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2016/">2016</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2016/12/">December</a></li>
-  <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/ibmnotes.html">IBM Notes</a>
-  </li>
-	<li class="pull-right">
-	<span class="divider">|</span><a href="/blog/d6plinks/SHWL-AH22CV" title="originally published at /blog/d6plinks/SHWL-AH22CV">SHWL-AH22CV</a>
-	</li>
-</ul>
-
-
+				<div class="entry-meta-row wa-cluster">
+	<wa-breadcrumb>
+		<wa-breadcrumb-item href="/blog/">Blog</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2016/">2016</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2016/12/">December</wa-breadcrumb-item>
+	</wa-breadcrumb>
+	<div class="entry-tags wa-cluster">
+		<a class="entry-tag" href="/blog/categories/ibmnotes.html">IBM Notes</a>
+		<a class="entry-tag entry-tag-legacy" href="/blog/d6plinks/SHWL-AH22CV" title="originally published at /blog/d6plinks/SHWL-AH22CV">SHWL-AH22CV</a>
 	</div>
-		<footer>
-		<div class="container">
-			<div class="row">
-				<div class="span2">
-					<h4>About Me</h4>
-					<p>
-						I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.
-						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
-					</p>
-					<a href="//stackoverflow.com/users/131021/stwissel">
-					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
-				</a>
-				</div>
-				<div class="span2">
-					<h4>Contact</h4>
-					<ul>
-						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
-						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
-						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
-						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
-						<li><a href="https://github.com/Stwissel">GitHub</a></li>
-						<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
-					</ul>
-				</div>
-				<div class="span8">
-					<h4>Disclaimer</h4>
-					<p>This site is in no way affiliated, endorsed, sanctioned,
-						supported, nor enlightened by my current or previous employers.
-						I may be an employee, but the opinions, theories, facts, etc.
-						presented here are my own and are in now way given in any official
-						capacity. In short, these are my words and this is my site, not
-						my current or former employers' - and don't even begin to think otherwise.</p>
-					<p>
-						<b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as
-						listed here: <a rel="license"
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
-							alt="Creative Commons License" style="border-width: 0"
-							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
-						Unless otherwise labeled by its originating author, the content
-						found on this site is made available under the terms of an <a
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
-							target="_blank"
-							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
-							Creative Commons License</a>, with the exception that no rights are
-						granted -- since they are not mine to grant -- in any logo,
-						graphic design, trademarks or trade names of any type. Code
-						samples and code downloads on this site are, unless otherwise
-						labeled, made available under an <a
-							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
-							2.0</a> license. Other license models are available on written
-						request and written confirmation.
-					</p>
-				</div>
-			</div>
-		</div>
-	</footer>
+</div>
 
+
+	</main>
+	
+	<footer slot="footer" class="site-footer">
+	<div class="site-footer-inner wa-grid">
+		<section>
+			<h2>About me</h2>
+			<p>I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.</p>
+			<a href="https://stackoverflow.com/users/131021/stwissel">
+				<img src="https://stackoverflow.com/users/flair/131021.png" width="208" height="58"
+				     alt="Stack Overflow profile for stwissel" loading="lazy" />
+			</a>
+		</section>
+
+		<section>
+			<h2>Contact</h2>
+			<ul class="footer-links">
+				<li><a rel="me" href="https://chaos.social/@stw">Mastodon</a></li>
+				<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+				<li><a href="https://notessensei.myspreadshop.com">Spreadshirt shop</a></li>
+				<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers</a></li>
+				<li><a href="https://github.com/Stwissel">GitHub</a></li>
+				<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
+			</ul>
+		</section>
+
+		<section class="footer-disclaimer">
+			<h2>Disclaimer</h2>
+			<p>This site is in no way affiliated, endorsed, sanctioned, supported, nor
+				enlightened by my current or previous employers. I may be an employee, but the
+				opinions, theories, facts, etc. presented here are my own and are in no way
+				given in any official capacity. In short, these are my words and this is my
+				site, not my current or former employers' &ndash; and don't even begin to think
+				otherwise.</p>
+			<p><b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as listed
+				here: <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/3.0/">Creative
+				Commons Attribution/NonCommercial/ShareAlike</a>, with the exception that no
+				rights are granted &ndash; since they are not mine to grant &ndash; in any logo,
+				graphic design, trademark or trade name of any type. Code samples and downloads
+				are, unless otherwise labeled, made available under an
+				<a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0</a>
+				license. Other license models are available on written request and written
+				confirmation.</p>
+		</section>
+	</div>
+</footer>
+
+</wa-page>
 		<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2016/12/the-totally-inofficial-guide-to-verse-on-premises.html";
 	</script>
@@ -464,6 +523,20 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
 	  var loaded = false;
 	  /* /why: the editor stack is ~157 KB that most readers never open.
 	     It is fetched on the first click of the reveal button instead. */
+	  /* /why markdown.css is loaded here and not in head_styles: it styles the
+	     wmd editor -- .wmd-button-bar, .wmd-input, .wmd-preview -- which exists
+	     only once this form is injected. An audit of the rendered pages called
+	     the file dead because no static page contains that markup, and deleting
+	     it left the editor toolbar as bare bullets and the preview unstyled.
+	     It is not dead, it is late: it belongs with the code that creates the
+	     markup it styles, so it costs nothing on the pages that never open a
+	     comment form. */
+	  function loadCss(href) {
+	    var l = document.createElement("link");
+	    l.rel = "stylesheet";
+	    l.href = href;
+	    document.head.appendChild(l);
+	  }
 	  var SCRIPTS = [
 	    "/blog/js2/mustache.js",
 	    "/blog/js2/Markdown.Converter.js",
@@ -492,6 +565,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
 	  window.addEventListener("blog:comments-requested", function () {
 	    if (loaded) return;
 	    loaded = true;
+	    loadCss("/blog/style/markdown.css");
 	    loadSequential(SCRIPTS, function () { renderComment(SITE_KEY, PARENT_ID); });
 	  });
 	})();
@@ -501,39 +575,21 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>
 <script>
 (function () {
   "use strict";
-  /*
-   * Navbar: Bootstrap 2's collapse plugin, minus Bootstrap and jQuery.
-   *
-   * /why inline height, not just the "in" class: bootstrap-responsive.css
-   * pins `.nav-collapse{height:0;overflow:hidden}` unconditionally (the
-   * element never carries the generic "collapse" class), so there is no
-   * `.nav-collapse.in{height:auto}` rule to win a specificity fight -- the
-   * real collapse.js plugin got around this the same way, by writing a
-   * pixel height directly to the element's style, which always outranks an
-   * external stylesheet rule without !important. Toggling the class alone
-   * leaves the menu at height:0 and invisible.
-   */
-  var navToggle = document.querySelector("[data-nav-toggle]");
-  if (navToggle) {
-    navToggle.addEventListener("click", function () {
-      var nav = document.getElementById("main-nav");
-      if (!nav) return;
-      var open = nav.classList.toggle("in");
-      nav.style.height = open ? "auto" : "";
-      navToggle.setAttribute("aria-expanded", String(open));
-    });
-  }
-  /* Comment form reveal. */
+    /* The comment editor is fetched on the first click of the reveal button.
+     /why a click and not a disclosure's show event: the form is injected into
+     the DOM only when this fires, and that is deliberate -- a spam bot that
+     never clicks never sees a form. A disclosure would also fire on
+     programmatic opening, on keyboard activation, and when the browser expands
+     it for find-in-page, each of which puts the form in the DOM without anyone
+     choosing to comment. A click is the narrowest trigger that still works. */
   var commentToggle = document.querySelector("[data-comment-toggle]");
   if (commentToggle) {
     commentToggle.addEventListener("click", function () {
-      var target = document.getElementById(commentToggle.getAttribute("data-comment-toggle"));
-      if (!target) return;
-      var open = target.classList.toggle("in");
-      commentToggle.setAttribute("aria-expanded", String(open));
-      if (open) window.dispatchEvent(new Event("blog:comments-requested"));
-    });
+      window.dispatchEvent(new Event("blog:comments-requested"));
+      commentToggle.remove();
+    }, { once: true });
   }
+
   /* Tier 3: content-derived needs, asked of the rendered DOM.
      /why: month indexes and the front page inherit code blocks from the
      excerpts they render, so page type alone cannot answer this. */

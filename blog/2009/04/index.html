@@ -1,5 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="wa-theme-default wa-palette-default wa-light wa-cloak">
+<script>
+/* Appearance: system by default, overridable to light or dark, remembered in a
+   cookie.
+
+   /why inline and first: Web Awesome switches theme on a class, not a media
+   query, so the class must be on <html> before the first paint or the page
+   flashes light and then turns dark. This is the one script on the site that
+   cannot be deferred, and the cookie has to be read synchronously here.
+
+   /why a cookie rather than localStorage: it is sent with the request, so if
+   this ever becomes server-rendered the preference is already available before
+   a byte of HTML is written. Nothing is stored until a reader actually chooses:
+   "system" deletes the cookie rather than recording a third value, so the
+   majority who never touch the control carry no state at all. */
+(function () {
+	var NAME = "appearance";
+	var MODES = ["system", "light", "dark"];
+	var ICONS = { system: "circle-half-stroke", light: "sun", dark: "moon" };
+	var media = window.matchMedia("(prefers-color-scheme: dark)");
+	var mode = (document.cookie.match(/(?:^|;\s*)appearance=(light|dark)(?:;|$)/) || [])[1] || "system";
+
+	function apply() {
+		var dark = mode === "dark" || (mode === "system" && media.matches);
+		var c = document.documentElement.classList;
+		c.toggle("wa-dark", dark);
+		c.toggle("wa-light", !dark);
+	}
+	function remember() {
+		document.cookie = mode === "system"
+			? NAME + "=; Max-Age=0; Path=/; SameSite=Lax"
+			: NAME + "=" + mode + "; Max-Age=31536000; Path=/; SameSite=Lax";
+	}
+	apply();
+	/* Only follow the OS while the reader has not overridden it. */
+	media.addEventListener("change", function () { if (mode === "system") { apply(); } });
+
+	document.addEventListener("DOMContentLoaded", function () {
+		var btn = document.getElementById("appearance-toggle");
+		if (!btn) { return; }
+		var icon = document.getElementById("appearance-icon");
+		function sync() {
+			icon.setAttribute("name", ICONS[mode]);
+			btn.setAttribute("aria-label", "Appearance: " + mode + ". Activate to change.");
+			btn.setAttribute("title", "Appearance: " + mode);
+		}
+		sync();
+		btn.addEventListener("click", function () {
+			mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+			remember();
+			apply();
+			sync();
+		});
+	});
+})();
+</script>
 <head>
 <title>NotesSensei's Blog by month: By Date: April 2009</title>
 <meta name="robots" content="index,follow" />
@@ -17,82 +72,82 @@
 <meta name="description"
 	content="Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included:  Salesforce, IBM, JEE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins" />
 
-<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.14.0/styles/webawesome.css" />
+<script type="module" src="https://ka-f.webawesome.com/webawesome@3.14.0/webawesome.loader.js"></script>
+<link rel="stylesheet" type="text/css" href="/blog/style/palette.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/site.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/admonition.css" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
-
 
 <link rel="alternate" type="application/rss+xml" title="wissel.net RSS feed" href="https://wissel.net/blog/stories.rss" />
 
 
 </head>
 <body>
-	<div class="navbar navbar-inverse navbar-fixed-top">
-		<div class="navbar-inner">
-			<button class="btn btn-navbar" type="button" data-nav-toggle aria-expanded="false"
-			        aria-controls="main-nav" aria-label="Toggle navigation">
-				<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
-			</button>
-			<a class="brand" href="/">wissel.net</a>
-			<div class="nav-collapse" id="main-nav">
-				<ul class="nav">
-					<li><a href="/index.html">Home</a></li>
-					<li><a href="/blog/">Blog</a></li>
-					<li><a href="/blog/series.html">Series</a></li>
-					<li><a href="/blog/downloads/">Downloads</a></li>
-					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
-					<li><a href="/blog/imprint.html">About / Imprint</a></li>
-					<li><a href="/mealplan.html">Food</a></li>
-				</ul>
-				<form action="//www.google.com/cse" id="cse-search-box"
-					class="navbar-search pull-right">
-					<div>
-						<input type="hidden" name="cx"
-							value="partner-pub-4562257798204150:muo14ionenw" /> <input
-							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
-							name="q" class="search-query span2" placeholder="Search" />
-						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
-					</div>
-				</form>
-			</div>
+<wa-page disable-sticky="subheader aside">
+	<header slot="header" class="site-header">
+	<div class="site-header-inner wa-split">
+		<a class="site-brand" href="/">wissel.net</a>
+		<div class="site-header-end wa-cluster wa-gap-m">
+		<nav class="header-nav wa-cluster wa-gap-l" aria-label="Main">
+			<a href="/index.html">Home</a>
+			<a href="/blog/">Blog</a>
+			<a href="/blog/series.html">Series</a>
+			<a href="/blog/downloads/">Downloads</a>
+			<a href="https://stwissel.github.io/presentations/">Presentations</a>
+			<a href="/blog/imprint.html">About</a>
+			<a href="/mealplan.html">Food</a>
+		</nav>
+		
+		<form class="header-search site-search" action="https://www.google.com/cse" role="search">
+			<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+			<input type="hidden" name="ie" value="UTF-8" />
+			<input type="search" name="q" aria-label="Search this site" placeholder="Search" />
+		</form>
+		
+		<wa-button id="appearance-toggle" appearance="plain" class="site-theme-toggle"
+		           aria-label="Appearance: system. Activate to change." title="Appearance: system">
+			<wa-icon id="appearance-icon" name="circle-half-stroke" label=""></wa-icon>
+		</wa-button>
+		<wa-button data-toggle-nav appearance="plain" class="wa-mobile-only site-nav-toggle" aria-label="Open menu">
+			<wa-icon name="bars" label="Menu"></wa-icon>
+		</wa-button>
 		</div>
 	</div>
-<div class="navbar-spacer"></div>
+</header>
+<nav slot="navigation" class="wa-stack wa-gap-2xs" aria-label="Main">
+	<a href="/index.html" data-drawer="close">Home</a>
+	<a href="/blog/" data-drawer="close">Blog</a>
+	<a href="/blog/series.html" data-drawer="close">Series</a>
+	<a href="/blog/downloads/" data-drawer="close">Downloads</a>
+	<a href="https://stwissel.github.io/presentations/" data-drawer="close">Presentations</a>
+	<a href="/blog/imprint.html" data-drawer="close">About</a>
+	<a href="/mealplan.html" data-drawer="close">Food</a>
+	<form class="site-search" action="https://www.google.com/cse" role="search">
+		<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+		<input type="hidden" name="ie" value="UTF-8" />
+		<wa-input type="search" name="q" size="s" placeholder="Search" label="Search this site" with-label></wa-input>
+	</form>
+</nav>
 
-	<div class="container">
-			<br />
-		<header>
-			<div id="main" class="hero-unit">
-				<h1 id="jumbotron">wissel.net
-				</h1>
-				<p class="lead">Usability - Productivity - Business - The web -
-					Singapore &amp; Twins</p>
-			</div>
-		</header>
+	<div slot="subheader" class="site-hero site-hero-large">
+	<div class="site-hero-inner">
+		<h1>wissel.net</h1>
+		<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+	</div>
+</div>
 
-			<div class="row-fluid">
-			<div class="span9">
-								<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2009/03/index.html"><i class="icon-hand-left"></i>By Date: March 2009</a>
-						<span class="divider">|</span></li>
-					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2009/05/index.html">By Date: May 2009<i class="icon-hand-right"></i></a>
-					</li>
-				</ul>
+	<main>
+								<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2009/03/index.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> By Date: March 2009</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	<a href="/blog/2009/05/index.html" rel="next">By Date: May 2009 <wa-icon name="arrow-right"></wa-icon></a>
+</nav>
 
-				<div class="well well-raised">
-					<h1>By Date: April 2009</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/when-customer-service-sucks-star-alliance.html">When customer service sucks - Star Alliance</a></small>
-					</h1>
+				<h1 class="page-title">By Date: April 2009</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/when-customer-service-sucks-star-alliance.html">When customer service sucks - Star Alliance</a></h2>
 										<a href="/blog/2009/04/when-customer-service-sucks-star-alliance.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/when-customer-service-sucks-star-alliance.webp" alt="Hero image for When customer service sucks - Star Alliance" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -102,22 +157,19 @@
 					<div>I travel a lot. I use a <a href="http://www.singaporeair.com/">world class airline</a>, but are still member of <a href="http://www.miles-and-more.com/">Miles and More</a> (The Lufthansa program). No problem one would think, since they are both members of <a href="http://www.staralliance.com/">Star Alliance</a>. The main reason I haven't switched is that I would loose my status and since IBMers fly coach couldn't seek refuge in the lounge. So far so good. Miles/Point crediting works reasonable well and booking a reward flight works if you can plan 6-9 month ahead. However when it comes to requesting an upgrade on a Star Alliance member airline (for me: pay with Mile-and-More for a Singapore Airlines flight) the process breaks down. On the Lufthansa website there is a description how it works and a <b>dead</b> link that redirects without explanation to a completely different page. On the Star Alliance web site there is nothing, nor on the SIA website. A complaint via the online form only triggered the automated reply "We are looking into it". Seems the airlines happily issue miles and points, but loath to make redemption easy. _Sigh_ night flight in embryo position coming up.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 30 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/when-customer-service-sucks-star-alliance.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/travel.html">Travel</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 30 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2009/04/when-customer-service-sucks-star-alliance.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/travel.html">Travel</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/when-customer-service-sucks-star-alliance.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/i-want-one-2009-part-1.html">I want one - 2009 Part 1</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/i-want-one-2009-part-1.html">I want one - 2009 Part 1</a></h2>
 										<a href="/blog/2009/04/i-want-one-2009-part-1.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/i-want-one-2009-part-1.webp" alt="Hero image for I want one - 2009 Part 1" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -129,22 +181,17 @@ categories:  <a href="/blog/categories/travel.html">Travel</a>
  It is just 8 month to Christmas. The thing is called <a href="http://www.core77.com/blog/object_culture/core77_exclusive_more_shots_of_kyoceras_eos_and_nxt_concept_phones_13209.asp">Kyocera EOS</a> and is the <a href="http://www.core77.com/blog/object_culture/kyoceras_flexible_folding_phone_concept_13184.asp">current hype</a>.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 24 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/i-want-one-2009-part-1.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 24 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/i-want-one-2009-part-1.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/domino-servers-and-anti-virus.html">Domino Servers and Anti-Virus</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/domino-servers-and-anti-virus.html">Domino Servers and Anti-Virus</a></h2>
 										<a href="/blog/2009/04/domino-servers-and-anti-virus.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/domino-servers-and-anti-virus.webp" alt="Hero image for Domino Servers and Anti-Virus" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -154,22 +201,19 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>
 					<div>You have build your <a href="/blog/2009/04/building-a-high-performance-domino-server.html" title="Building a high performance Domino Server">High performance Domino Server</a> but it doesn't perform. Besides running a <a href="http://www.suse.com/">proper OS</a>, you need to ensure the right anti-virus configuration. All big Anti-virus vendors have plug-ins that intercept documents before they saved into a database and checked for integrity. So you are save (as far as you can say that). However when using the scanners default configuration the NSF are scanned again when you want to access them. And this is a bad idea. Pointless and an I/O killer. So go check: Does the Virus On-Access-Scanner leave your Notes databases alone (_.NSF/_.NTF in the notes data directory)? Excluding the various tmp locations and the transaction log is also a good idea. Works wonders on performance.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 24 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/domino-servers-and-anti-virus.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>  <a href="/blog/categories/sywtbadd.html">SYWTBADD</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 24 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2009/04/domino-servers-and-anti-virus.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a><a class="meta-category" href="/blog/categories/sywtbadd.html">SYWTBADD</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/domino-servers-and-anti-virus.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/how-to-explain-what-is-server-virtualization.html">How to explain "What is Server Virtualization"</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/how-to-explain-what-is-server-virtualization.html">How to explain "What is Server Virtualization"</a></h2>
 										<a href="/blog/2009/04/how-to-explain-what-is-server-virtualization.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/how-to-explain-what-is-server-virtualization.webp" alt="Hero image for How to explain &quot;What is Server Virtualization&quot;" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -192,22 +236,19 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 <br><b>Update</b>: There is a nice article on developeworks explaining more about virtualization in the context of <a hrefhttp:="" www.ibm.com="" eveloperworks="" otus="" ibrary="" omino-linux="">Domino on Linux on zOS</a></div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 21 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/how-to-explain-what-is-server-virtualization.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/software.html">Software</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 21 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2009/04/how-to-explain-what-is-server-virtualization.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/software.html">Software</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/how-to-explain-what-is-server-virtualization.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/building-a-high-performance-domino-server.html">Building a high performance Domino Server</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/building-a-high-performance-domino-server.html">Building a high performance Domino Server</a></h2>
 										<a href="/blog/2009/04/building-a-high-performance-domino-server.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/building-a-high-performance-domino-server.webp" alt="Hero image for Building a high performance Domino Server" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -238,22 +279,19 @@ categories:  <a href="/blog/categories/software.html">Software</a>
 <br><b>Update 3</b>: Added the separate drive for the full-text index</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 21 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/building-a-high-performance-domino-server.html#comments">Comments (10)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a>  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 21 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2009/04/building-a-high-performance-domino-server.html#comments">16 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a><a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/building-a-high-performance-domino-server.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/professional-traveller.html">Professional Traveller</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/professional-traveller.html">Professional Traveller</a></h2>
 										<a href="/blog/2009/04/professional-traveller.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/professional-traveller.webp" alt="Hero image for Professional Traveller" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -305,22 +343,19 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
  What city is this?</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 19 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/professional-traveller.html#comments">Comments (4)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 19 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2009/04/professional-traveller.html#comments">4 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/professional-traveller.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/code-quality-and-decomposition.html">Code Quality and Decomposition</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/code-quality-and-decomposition.html">Code Quality and Decomposition</a></h2>
 										<a href="/blog/2009/04/code-quality-and-decomposition.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/code-quality-and-decomposition.webp" alt="Hero image for Code Quality and Decomposition" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -380,22 +415,17 @@ End Sub
 <p>As usual YMMV</p></div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 19 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/code-quality-and-decomposition.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/blog/categories/sywtbadd.html">SYWTBADD</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 19 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/software.html">Software</a><a class="meta-category" href="/blog/categories/sywtbadd.html">SYWTBADD</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/code-quality-and-decomposition.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/self-portrait.html">Self Portrait</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/self-portrait.html">Self Portrait</a></h2>
 										<a href="/blog/2009/04/self-portrait.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/self-portrait.webp" alt="Hero image for Self Portrait" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -407,22 +437,17 @@ categories:  <a href="/blog/categories/software.html">Software</a>  <a href="/bl
  Create your own at <a href="http://www.mrpicassohead.com/">Mr. Picasso Head</a></div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 18 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/self-portrait.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 18 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/self-portrait.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/noreader-and-noauthor-fields.html">NoReader and NoAuthor Fields</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/noreader-and-noauthor-fields.html">NoReader and NoAuthor Fields</a></h2>
 										<a href="/blog/2009/04/noreader-and-noauthor-fields.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/noreader-and-noauthor-fields.webp" alt="Hero image for NoReader and NoAuthor Fields" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -447,22 +472,19 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>
  As usual: YMMV.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 15 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/noreader-and-noauthor-fields.html#comments">Comments (4)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 15 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2009/04/noreader-and-noauthor-fields.html#comments">4 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/noreader-and-noauthor-fields.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/reader-fields-extreme-edition-update.html">Reader Fields - extreme Edition (update)</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/reader-fields-extreme-edition-update.html">Reader Fields - extreme Edition (update)</a></h2>
 										<a href="/blog/2009/04/reader-fields-extreme-edition-update.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/reader-fields-extreme-edition-update.webp" alt="Hero image for Reader Fields - extreme Edition (update)" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -872,22 +894,19 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 					<hr />
  <a href="/blog/2009/04/reader-fields-extreme-edition-update.html">Read more</a>
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 15 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/reader-fields-extreme-edition-update.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 15 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2009/04/reader-fields-extreme-edition-update.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/reader-fields-extreme-edition-update.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/lotus-domino-and-rfc.html">Lotus Domino and RFC</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/lotus-domino-and-rfc.html">Lotus Domino and RFC</a></h2>
 										<a href="/blog/2009/04/lotus-domino-and-rfc.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/lotus-domino-and-rfc.webp" alt="Hero image for Lotus Domino and RFC" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -1016,22 +1035,19 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 </table></div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 13 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/lotus-domino-and-rfc.html#comments">Comments (5)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 13 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2009/04/lotus-domino-and-rfc.html#comments">5 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/lotus-domino-and-rfc.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/before-you-blink-the-feature-is-there-add-geo-location-information-to-your-ajax-applications.html">Before you blink the feature is there - add geo location information to your Ajax applications.</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/before-you-blink-the-feature-is-there-add-geo-location-information-to-your-ajax-applications.html">Before you blink the feature is there - add geo location information to your Ajax applications.</a></h2>
 										<a href="/blog/2009/04/before-you-blink-the-feature-is-there-add-geo-location-information-to-your-ajax-applications.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/before-you-blink-the-feature-is-there-add-geo-location-information-to-your-ajax-applications.webp" alt="Hero image for Before you blink the feature is there - add geo location information to your Ajax applications." class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -1041,22 +1057,17 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 					<div>If you want to know where an IP address belongs to, you now can use a <a href="http://www.iplocationtools.com/">free service</a>. As Volker <a href="http://vowe.net/archives/010428.html">lets us know</a>, you could have the whole database at your <a href="http://www.iplocationtools.com/sql_database.php">(local) service</a>. But why do all the heavy lifting if you just need an IP address from time to time? iplocationtools offers a simple REST API to query an IP address returning a XML or CVS result. The only thing missing was a JSON return value (and JSON _is_ the flavor of the day isn't it?). So <a href="http://www.iplocationtools.com/forum/viewtopic.php?f=7&amp;t=12">I asked nicely</a> and about 7 hours later (given the difference in time zones: that is pretty instantly after getting the first coffee into your face), the interface <a href="http://www.iplocationtools.com/ip_location_api_json.php">is ready</a>. Now I wish <a href="http://www.ideajam.net/">other ideas</a> would be implemented with the same speed.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 12 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/before-you-blink-the-feature-is-there-add-geo-location-information-to-your-ajax-applications.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/software.html">Software</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 12 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/software.html">Software</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/before-you-blink-the-feature-is-there-add-geo-location-information-to-your-ajax-applications.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/dxlmagic-using-the-designextractor.html">DXLMagic - using the DesignExtractor</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/dxlmagic-using-the-designextractor.html">DXLMagic - using the DesignExtractor</a></h2>
 										<a href="/blog/2009/04/dxlmagic-using-the-designextractor.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/dxlmagic-using-the-designextractor.webp" alt="Hero image for DXLMagic - using the DesignExtractor" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -1101,22 +1112,17 @@ resources/db2accessview,single,/d:database/d:db2accessview
 </pre> Happy extracting. I'll continue that series with some of the stylesheets we have written. Stylesheets are not only good for reports, but also to whip your code into shape. Stay tuned.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 11 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/dxlmagic-using-the-designextractor.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/dxlmagic.html">DXLMagic</a>  <a href="/blog/categories/lotusphere.html">Lotusphere</a>  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 11 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/dxlmagic.html">DXLMagic</a><a class="meta-category" href="/blog/categories/lotusphere.html">Lotusphere</a><a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/dxlmagic-using-the-designextractor.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/enemy-of-the-state-it-system-1-complexity.html">Enemy of the <s>state</s> IT system #1 : complexity</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/enemy-of-the-state-it-system-1-complexity.html">Enemy of the <s>state</s> IT system #1 : complexity</a></h2>
 										<a href="/blog/2009/04/enemy-1-of-systems-complexity.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/enemy-1-of-systems-complexity.webp" alt="Hero image for Enemy of the &lt;s&gt;state&lt;/s&gt; IT system #1 : complexity" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -1147,22 +1153,19 @@ categories:  <a href="/blog/categories/dxlmagic.html">DXLMagic</a>  <a href="/bl
 </ul> * On the other hand: Any sufficiently advanced incompetence is indistinguishable from malice.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 10 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/enemy-of-the-state-it-system-1-complexity.html#comments">Comments (8)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 10 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2009/04/enemy-of-the-state-it-system-1-complexity.html#comments">8 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/enemy-of-the-state-it-system-1-complexity.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/xpages-workshop-impressions-from-bangkok.html">XPages Workshop Impressions from Bangkok</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/xpages-workshop-impressions-from-bangkok.html">XPages Workshop Impressions from Bangkok</a></h2>
 										<a href="/blog/2009/04/xpages-workshop-impressions-from-bangkok.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/xpages-workshop-impressions-from-bangkok.webp" alt="Hero image for XPages Workshop Impressions from Bangkok" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -1180,22 +1183,19 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 </ul> For business partners the workshop run as "bring your own laptop". To my surprise quite a number had Windows <strike> ME 2009 Edition </strike> Vista on their machines and quite some trouble getting the local preview of Domino designer to work. This is a <a href="http://www-10.lotus.com/ldd/nd85forum.nsf/7756aedc25e6d81285256324005ac76c/2dc7e702d41b7b6c852575510065ad9e?OpenDocument">known problem</a> that plagued <a href="http://blog.majkilde.com/2009/02/error-unable-to-bind-port-80-port-may.html">others too</a> but has been <a href="http://www-10.lotus.com/ldd/nd85forum.nsf/7756aedc25e6d81285256324005ac76c/2b9de53af273fd83852575520030e9ef?OpenDocument">solved</a> one way or <a href="http://www-10.lotus.com/ldd/nd8forum.nsf/7756aedc25e6d81285256324005ac76c/fdeb3098b62d6ebb852573e6004354a6?OpenDocument">another</a>. Just keep in mind: Never ever install a data directory inside the place where programs go (I think we need to adjust our installer defaults) and be clear what runs/blocks Port 80. Look out for Skype (can be switched off in the settings), Firewalls, Webservers etc.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 09 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/xpages-workshop-impressions-from-bangkok.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/xpages.html">XPages</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 09 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2009/04/xpages-workshop-impressions-from-bangkok.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/xpages.html">XPages</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/xpages-workshop-impressions-from-bangkok.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/lotus-top-gun-singapore-11-15-may-2009.html">Lotus Top Gun Singapore, 11 -15 May, 2009</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/lotus-top-gun-singapore-11-15-may-2009.html">Lotus Top Gun Singapore, 11 -15 May, 2009</a></h2>
 										<a href="/blog/2009/04/lotus-top-gun-singapore-11-15-may-2009.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/lotus-top-gun-singapore-11-15-may-2009.webp" alt="Hero image for Lotus Top Gun Singapore, 11 -15 May, 2009" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -1220,22 +1220,19 @@ This intense, fast-paced class provides the very latest training on Lotus produc
 </ul>You can <a href="http://www-03.ibm.com/systems/education/topgun/lotustop.html">enroll for Lotus Top Gun here</a>. Complete logistics information will be sent after your enrolment is confirmed. If you have any questions, please contact the Class Manager, <a href="mailto:darlene_shamsid-deen_at_us_dot_ibm_dot_com">Darlene Shamsid-Deen</a>.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 07 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/lotus-top-gun-singapore-11-15-may-2009.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmlotus.html">IBM - Lotus</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 07 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2009/04/lotus-top-gun-singapore-11-15-may-2009.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmlotus.html">IBM - Lotus</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/lotus-top-gun-singapore-11-15-may-2009.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/xpages-custom-controls-parameter-definitions.html">XPages Custom controls parameter definitions</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/xpages-custom-controls-parameter-definitions.html">XPages Custom controls parameter definitions</a></h2>
 										<a href="/blog/2009/04/xpages-custom-controls-parameter-definitions.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/xpages-custom-controls-parameter-definitions.webp" alt="Hero image for XPages Custom controls parameter definitions" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -1250,22 +1247,19 @@ categories:  <a href="/blog/categories/ibmlotus.html">IBM - Lotus</a>
 </ul> When you look at the source code of a page you can clearly see the parameters you might have set for a custom control. However when you look at the source code of your custom control, you won't see any definition. Puzzled me for a moment, so I asked the master. At the very end XPages is a JFS application. In JFS a custom control has 2 files (at least): the code and the definition. XPages shields you from the complexity by allowing you to edit everything in one UI. But if you *really* want to have a look, add the Navigator window to your Domino Designer perspective and navigate to the custom control directory. Here you will find MyControl.xsp as well as MyControl.xsp-config. If you want to understand what the containing XML is all about, take a peek at a <a href="http://java.sun.com/developer/technicalArticles/GUI/JavaServerFaces/" title="JSF tutorial @ SUN">JSF tutorial</a></div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 04 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/xpages-custom-controls-parameter-definitions.html#comments">Comments (7)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/xpages.html">XPages</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 04 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2009/04/xpages-custom-controls-parameter-definitions.html#comments">7 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/xpages.html">XPages</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/xpages-custom-controls-parameter-definitions.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/accessing-sametime-unyte-from-your-notes-client.html">Accessing Sametime Unyte from your Notes Client</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/accessing-sametime-unyte-from-your-notes-client.html">Accessing Sametime Unyte from your Notes Client</a></h2>
 										<a href="/blog/2009/04/accessing-sametime-unyte-from-your-notes-client.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/accessing-sametime-unyte-from-your-notes-client.webp" alt="Hero image for Accessing Sametime Unyte from your Notes Client" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -1278,22 +1272,17 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
 <br></div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 03 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/accessing-sametime-unyte-from-your-notes-client.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotus.html">Lotus</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 03 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotus.html">Lotus</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/accessing-sametime-unyte-from-your-notes-client.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/interesting-challenge-or-lack-of-platform-understanding.html">Interesting Challenge or lack of platform understanding?</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/interesting-challenge-or-lack-of-platform-understanding.html">Interesting Challenge or lack of platform understanding?</a></h2>
 										<a href="/blog/2009/04/interesting-challenge-or-lack-of-platform-understanding.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/interesting-challenge-or-lack-of-platform-understanding.webp" alt="Hero image for Interesting Challenge or lack of platform understanding?" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -1310,22 +1299,19 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 <br></div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 02 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/interesting-challenge-or-lack-of-platform-understanding.html#comments">Comments (6)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmlotus.html">IBM - Lotus</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 02 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2009/04/interesting-challenge-or-lack-of-platform-understanding.html#comments">6 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmlotus.html">IBM - Lotus</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/interesting-challenge-or-lack-of-platform-understanding.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/ibm-lotus-domino-85-performance-for-inotes-users.html">IBM Lotus Domino 8.5 performance for iNotes users</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/ibm-lotus-domino-85-performance-for-inotes-users.html">IBM Lotus Domino 8.5 performance for iNotes users</a></h2>
 										<a href="/blog/2009/04/ibm-lotus-domino-85-performance-for-inotes-users.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/ibm-lotus-domino-85-performance-for-inotes-users.webp" alt="Hero image for IBM Lotus Domino 8.5 performance for iNotes users" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -1337,22 +1323,17 @@ categories:  <a href="/blog/categories/ibmlotus.html">IBM - Lotus</a>
 <br></div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 02 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/ibm-lotus-domino-85-performance-for-inotes-users.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 02 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/ibm-lotus-domino-85-performance-for-inotes-users.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/what-makes-a-good-april-fools-story.html">What makes a good April fools story?</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/what-makes-a-good-april-fools-story.html">What makes a good April fools story?</a></h2>
 										<a href="/blog/2009/04/what-makes-a-good-april-fools-story.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/what-makes-a-good-april-fools-story.webp" alt="Hero image for What makes a good April fools story?" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -1376,22 +1357,19 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 </ul>Of course: Funniness is in the eye of the beholder</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 02 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/what-makes-a-good-april-fools-story.html#comments">Comments (1)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 02 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2009/04/what-makes-a-good-april-fools-story.html#comments">1 comment</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/what-makes-a-good-april-fools-story.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/my-new-ibm-role.html">My new IBM role</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/my-new-ibm-role.html">My new IBM role</a></h2>
 										<a href="/blog/2009/04/my-new-ibm-role.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/my-new-ibm-role.webp" alt="Hero image for My new IBM role" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -1403,22 +1381,19 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>
 					<hr />
  <a href="/blog/2009/04/my-new-ibm-role.html">Read more</a>
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 01 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/my-new-ibm-role.html#comments">Comments (11)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmlotus.html">IBM - Lotus</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 01 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2009/04/my-new-ibm-role.html#comments">17 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmlotus.html">IBM - Lotus</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/my-new-ibm-role.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/upcoming-xpages-workshops-in-ap.html">Upcoming XPages workshops in AP</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/upcoming-xpages-workshops-in-ap.html">Upcoming XPages workshops in AP</a></h2>
 										<a href="/blog/2009/04/upcoming-xpages-workshops-in-ap.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/upcoming-xpages-workshops-in-ap.webp" alt="Hero image for Upcoming XPages workshops in AP" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -1437,22 +1412,19 @@ categories:  <a href="/blog/categories/ibmlotus.html">IBM - Lotus</a>
 </ul> Places are limited, so be quick.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 01 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/upcoming-xpages-workshops-in-ap.html#comments">Comments (7)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/xpages.html">XPages</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 01 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2009/04/upcoming-xpages-workshops-in-ap.html#comments">7 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/xpages.html">XPages</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/upcoming-xpages-workshops-in-ap.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2009/04/manage-your-ibm-servers-use-the-ibm-tools-center.html">Manage your IBM servers - use the IBM Tools Center</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2009/04/manage-your-ibm-servers-use-the-ibm-tools-center.html">Manage your IBM servers - use the IBM Tools Center</a></h2>
 										<a href="/blog/2009/04/manage-your-ibm-servers-use-the-ibm-tools-center.prompt" title="View AI image prompt">
 						<img src="/blog/2009/04/manage-your-ibm-servers-use-the-ibm-tools-center.webp" alt="Hero image for Manage your IBM servers - use the IBM Tools Center" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -1464,267 +1436,217 @@ categories:  <a href="/blog/categories/xpages.html">XPages</a>
  You will find a lot of gems there: Server Guide, Bootable Media Creator, Scripting Toolkits and more.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 01 April 2009
-<span class="divider">|</span>
-<a href="/blog/2009/04/manage-your-ibm-servers-use-the-ibm-tools-center.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibm.html">IBM</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 01 April 2009
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibm.html">IBM</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2009/04/manage-your-ibm-servers-use-the-ibm-tools-center.html";
 						</script>
 					</p>
 				</article>
-				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2009/03/index.html"><i class="icon-hand-left"></i>By Date: March 2009</a>
-						<span class="divider">|</span></li>
-					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2009/05/index.html">By Date: May 2009<i class="icon-hand-right"></i></a>
-					</li>
-				</ul>
+				<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2009/03/index.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> By Date: March 2009</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	<a href="/blog/2009/05/index.html" rel="next">By Date: May 2009 <wa-icon name="arrow-right"></wa-icon></a>
+</nav>
 
 
-			</div>
-			<div class="span3">
-			    <aside id="sidebar_spreadshirt" class="well">
-	<h5>Shop</h5>
-	<a href="https://notessensei.myspreadshop.com/not+my+circus+not+my+monkeys-A61e1903cc8668379f1573899?productType=812&sellable=wQz9l23aJJcROmVm4nLX-812-7&appearance=2" title="Notessensei's Spreadshop"><img width="300" src="https://image.spreadshirtmedia.com/image-server/v1/products/T812A2PA4267PT17X58Y49D1043393171W23114H22690/views/1,width=650,height=650,appearanceId=2/sometimes-things-go-over-board-and-you-ask-yourself-whos-circus-is-that-not-yours.jpg" /></a>
-</aside>
-
-				<aside id="sidebar_reference" class="well">
-					<h5>Reference</h5>
-					<ol style="list-style-type: upper-roman; padding-left: 30px;">
-						<li><a style="display: inline;"
-							href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-1.html">Use
-								XSL:FO rendering (Domino)</a></li>
-						<li><a target="_blank" href="https://wissel.net/blog/imprint.html">old references (IBM)</a></li>
-					</ol>
-				</aside>
-
-				<aside id="sidebar_categoriesArchive" class="well">
-					<ul class="nav nav-list">
-						<li class="nav-header">Categories</li>
-						<li ><a href="/blog/categories/afterhours.html">After hours</a></li>
-						<li ><a href="/blog/categories/agile.html">Agile</a></li>
-						<li ><a href="/blog/categories/ai.html">AI</a></li>
-						<li ><a href="/blog/categories/apex.html">Apex</a></li>
-						<li ><a href="/blog/categories/api.html">API</a></li>
-						<li ><a href="/blog/categories/blog.html">Blog</a></li>
-						<li ><a href="/blog/categories/bluemix.html">Bluemix</a></li>
-						<li ><a href="/blog/categories/buddhakids.html">Buddhakids</a></li>
-						<li ><a href="/blog/categories/business.html">Business</a></li>
-						<li ><a href="/blog/categories/buyingbroadband.html">Buying Broadband</a></li>
-						<li ><a href="/blog/categories/caldav.html">calDAV</a></li>
-						<li ><a href="/blog/categories/cloudcomputing.html">Cloud Computing</a></li>
-						<li ><a href="/blog/categories/cloudflare.html">Cloudflare</a></li>
-						<li ><a href="/blog/categories/container.html">Container</a></li>
-						<li ><a href="/blog/categories/continuousintegration.html">Continuous integration</a></li>
-						<li ><a href="/blog/categories/couchdb.html">CouchDB</a></li>
-						<li ><a href="/blog/categories/coursera.html">Coursera</a></li>
-						<li ><a href="/blog/categories/curl.html">Curl</a></li>
-						<li ><a href="/blog/categories/cycling.html">Cycling</a></li>
-						<li ><a href="/blog/categories/development.html">Development</a></li>
-						<li ><a href="/blog/categories/docker.html">Docker</a></li>
-						<li ><a href="/blog/categories/domino.html">Domino</a></li>
-						<li ><a href="/blog/categories/drapi.html">DRAPI</a></li>
-						<li ><a href="/blog/categories/dxlmagic.html">DXLMagic</a></li>
-						<li ><a href="/blog/categories/elearning.html">eLearning</a></li>
-						<li ><a href="/blog/categories/github.html">GitHub</a></li>
-						<li ><a href="/blog/categories/gonephisching.html">Gone Phisching</a></li>
-						<li ><a href="/blog/categories/graalvm.html">GraalVM</a></li>
-						<li ><a href="/blog/categories/grpc.html">gRPC</a></li>
-						<li ><a href="/blog/categories/gtd.html">GTD</a></li>
-						<li ><a href="/blog/categories/hclnotes.html">HCL Notes</a></li>
-						<li ><a href="/blog/categories/heroku.html">Heroku</a></li>
-						<li ><a href="/blog/categories/https.html">HTTP(S)</a></li>
-						<li ><a href="/blog/categories/ibm.html">IBM</a></li>
-						<li ><a href="/blog/categories/ibmlotus.html">IBM - Lotus</a></li>
-						<li ><a href="/blog/categories/ibmnotes.html">IBM Notes</a></li>
-						<li ><a href="/blog/categories/identitymanagement.html">Identity Management</a></li>
-						<li ><a href="/blog/categories/intercultural.html">Intercultural</a></li>
-						<li ><a href="/blog/categories/java.html">Java</a></li>
-						<li ><a href="/blog/categories/javascript.html">JavaScript</a></li>
-						<li ><a href="/blog/categories/junit.html">jUnit</a></li>
-						<li ><a href="/blog/categories/jwt.html">JWT</a></li>
-						<li ><a href="/blog/categories/k8s.html">K8S</a></li>
-						<li ><a href="/blog/categories/learning.html">Learning</a></li>
-						<li ><a href="/blog/categories/lightning.html">Lightning</a></li>
-						<li ><a href="/blog/categories/linux.html">Linux</a></li>
-						<li ><a href="/blog/categories/lotus.html">Lotus</a></li>
-						<li ><a href="/blog/categories/lotusnotes.html">Lotus Notes</a></li>
-						<li ><a href="/blog/categories/lotusphere.html">Lotusphere</a></li>
-						<li ><a href="/blog/categories/macos.html">macOS</a></li>
-						<li ><a href="/blog/categories/maven.html">Maven</a></li>
-						<li ><a href="/blog/categories/mobile.html">Mobile</a></li>
-						<li ><a href="/blog/categories/networking.html">Networking</a></li>
-						<li ><a href="/blog/categories/nginx.html">nginx</a></li>
-						<li ><a href="/blog/categories/nodejs.html">NodeJS</a></li>
-						<li ><a href="/blog/categories/nodered.html">NodeRED</a></li>
-						<li ><a href="/blog/categories/nokia.html">Nokia</a></li>
-						<li ><a href="/blog/categories/nosql.html">NoSQL</a></li>
-						<li ><a href="/blog/categories/omnisophie.html">Omnisophie</a></li>
-						<li ><a href="/blog/categories/openapi.html">OpenAPI</a></li>
-						<li ><a href="/blog/categories/opensource.html">OpenSource</a></li>
-						<li ><a href="/blog/categories/pmd.html">PMD</a></li>
-						<li ><a href="/blog/categories/protocols.html">Protocols</a></li>
-						<li ><a href="/blog/categories/quarkus.html">Quarkus</a></li>
-						<li ><a href="/blog/categories/reactive.html">Reactive</a></li>
-						<li ><a href="/blog/categories/rust.html">Rust</a></li>
-						<li ><a href="/blog/categories/salesforce.html">Salesforce</a></li>
-						<li ><a href="/blog/categories/sametime.html">Sametime</a></li>
-						<li ><a href="/blog/categories/sfdx.html">SFDX</a></li>
-						<li ><a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a></li>
-						<li ><a href="/blog/categories/singapore.html">Singapore</a></li>
-						<li ><a href="/blog/categories/socialbusiness.html">SocialBusiness</a></li>
-						<li ><a href="/blog/categories/software.html">Software</a></li>
-						<li ><a href="/blog/categories/sql.html">SQL</a></li>
-						<li ><a href="/blog/categories/sywtbadd.html">SYWTBADD</a></li>
-						<li ><a href="/blog/categories/tdd.html">TDD</a></li>
-						<li ><a href="/blog/categories/technology.html">Technology</a></li>
-						<li ><a href="/blog/categories/travel.html">Travel</a></li>
-						<li ><a href="/blog/categories/twins.html">Twins</a></li>
-						<li ><a href="/blog/categories/typescript.html">TypeScript</a></li>
-						<li ><a href="/blog/categories/umsys.html">UMsys</a></li>
-						<li ><a href="/blog/categories/unittesting.html">UnitTesting</a></li>
-						<li ><a href="/blog/categories/vertx.html">vert.x</a></li>
-						<li ><a href="/blog/categories/webcomponents.html">WebComponents</a></li>
-						<li ><a href="/blog/categories/webdevelopment.html">WebDevelopment</a></li>
-						<li ><a href="/blog/categories/workflow.html">Workflow</a></li>
-						<li ><a href="/blog/categories/writingchinese.html">Writing Chinese</a></li>
-						<li ><a href="/blog/categories/xml.html">XML</a></li>
-						<li ><a href="/blog/categories/xpages.html">XPages</a></li>
-						<li class="nav-header">Archives</li>
-						<li ><a href="/blog/2002/">2002</a></li>
-						<li ><a href="/blog/2003/">2003</a></li>
-						<li ><a href="/blog/2004/">2004</a></li>
-						<li ><a href="/blog/2005/">2005</a></li>
-						<li ><a href="/blog/2006/">2006</a></li>
-						<li ><a href="/blog/2007/">2007</a></li>
-						<li ><a href="/blog/2008/">2008</a></li>
-						<li ><a href="/blog/2009/">2009</a></li>
-						<li ><a href="/blog/2010/">2010</a></li>
-						<li ><a href="/blog/2011/">2011</a></li>
-						<li ><a href="/blog/2012/">2012</a></li>
-						<li ><a href="/blog/2013/">2013</a></li>
-						<li ><a href="/blog/2014/">2014</a></li>
-						<li ><a href="/blog/2015/">2015</a></li>
-						<li ><a href="/blog/2016/">2016</a></li>
-						<li ><a href="/blog/2017/">2017</a></li>
-						<li ><a href="/blog/2018/">2018</a></li>
-						<li ><a href="/blog/2019/">2019</a></li>
-						<li ><a href="/blog/2020/">2020</a></li>
-						<li ><a href="/blog/2021/">2021</a></li>
-						<li ><a href="/blog/2022/">2022</a></li>
-						<li ><a href="/blog/2023/">2023</a></li>
-						<li ><a href="/blog/2024/">2024</a></li>
-						<li ><a href="/blog/2025/">2025</a></li>
-						<li ><a href="/blog/2026/">2026</a></li>
-						<li ><a href="/blog/all.html" title="That's a long list!">Complete archive</a></li>
-					</ul>
-				</aside>
-
-			</div>
-		</div>
 		
 
-	</div>
-		<footer>
-		<div class="container">
-			<div class="row">
-				<div class="span2">
-					<h4>About Me</h4>
-					<p>
-						I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.
-						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
-					</p>
-					<a href="//stackoverflow.com/users/131021/stwissel">
-					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
-				</a>
-				</div>
-				<div class="span2">
-					<h4>Contact</h4>
-					<ul>
-						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
-						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
-						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
-						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
-						<li><a href="https://github.com/Stwissel">GitHub</a></li>
-						<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
-					</ul>
-				</div>
-				<div class="span8">
-					<h4>Disclaimer</h4>
-					<p>This site is in no way affiliated, endorsed, sanctioned,
-						supported, nor enlightened by my current or previous employers.
-						I may be an employee, but the opinions, theories, facts, etc.
-						presented here are my own and are in now way given in any official
-						capacity. In short, these are my words and this is my site, not
-						my current or former employers' - and don't even begin to think otherwise.</p>
-					<p>
-						<b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as
-						listed here: <a rel="license"
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
-							alt="Creative Commons License" style="border-width: 0"
-							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
-						Unless otherwise labeled by its originating author, the content
-						found on this site is made available under the terms of an <a
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
-							target="_blank"
-							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
-							Creative Commons License</a>, with the exception that no rights are
-						granted -- since they are not mine to grant -- in any logo,
-						graphic design, trademarks or trade names of any type. Code
-						samples and code downloads on this site are, unless otherwise
-						labeled, made available under an <a
-							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
-							2.0</a> license. Other license models are available on written
-						request and written confirmation.
-					</p>
-				</div>
-			</div>
-		</div>
-	</footer>
+	</main>
+	<aside slot="aside">
+	<wa-card class="sidebar-module" with-header appearance="filled-outlined">
+	<h2 slot="header">Categories</h2>
+	<ul class="sidebar-list">
+		<li><a href="/blog/categories/afterhours.html">After hours</a> <span class="sidebar-count">228</span></li>
+		<li><a href="/blog/categories/agile.html">Agile</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/ai.html">AI</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/apex.html">Apex</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/blog.html">Blog</a> <span class="sidebar-count">11</span></li>
+		<li><a href="/blog/categories/bluemix.html">Bluemix</a> <span class="sidebar-count">13</span></li>
+		<li><a href="/blog/categories/buddhakids.html">Buddhakids</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/business.html">Business</a> <span class="sidebar-count">71</span></li>
+		<li><a href="/blog/categories/buyingbroadband.html">Buying Broadband</a> <span class="sidebar-count">29</span></li>
+		<li><a href="/blog/categories/caldav.html">calDAV</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/cloudcomputing.html">Cloud Computing</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/cloudflare.html">Cloudflare</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/container.html">Container</a> <span class="sidebar-count">9</span></li>
+		<li><a href="/blog/categories/continuousintegration.html">Continuous integration</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/couchdb.html">CouchDB</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/coursera.html">Coursera</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/curl.html">Curl</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/cycling.html">Cycling</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/development.html">Development</a> <span class="sidebar-count">13</span></li>
+		<li><a href="/blog/categories/docker.html">Docker</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/domino.html">Domino</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/drapi.html">DRAPI</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/dxlmagic.html">DXLMagic</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/elearning.html">eLearning</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/github.html">GitHub</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/gonephisching.html">Gone Phisching</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/graalvm.html">GraalVM</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/gtd.html">GTD</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/hclnotes.html">HCL Notes</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/heroku.html">Heroku</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/https.html">HTTP(S)</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/ibm.html">IBM</a> <span class="sidebar-count">19</span></li>
+		<li><a href="/blog/categories/ibmlotus.html">IBM - Lotus</a> <span class="sidebar-count">42</span></li>
+		<li><a href="/blog/categories/ibmnotes.html">IBM Notes</a> <span class="sidebar-count">161</span></li>
+		<li><a href="/blog/categories/identitymanagement.html">Identity Management</a> <span class="sidebar-count">9</span></li>
+		<li><a href="/blog/categories/intercultural.html">Intercultural</a> <span class="sidebar-count">16</span></li>
+		<li><a href="/blog/categories/java.html">Java</a> <span class="sidebar-count">55</span></li>
+		<li><a href="/blog/categories/javascript.html">JavaScript</a> <span class="sidebar-count">20</span></li>
+		<li><a href="/blog/categories/jwt.html">JWT</a> <span class="sidebar-count">11</span></li>
+		<li><a href="/blog/categories/k8s.html">K8S</a> <span class="sidebar-count">6</span></li>
+		<li><a href="/blog/categories/learning.html">Learning</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/lightning.html">Lightning</a> <span class="sidebar-count">16</span></li>
+		<li><a href="/blog/categories/linux.html">Linux</a> <span class="sidebar-count">25</span></li>
+		<li><a href="/blog/categories/lotus.html">Lotus</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/lotusnotes.html">Lotus Notes</a> <span class="sidebar-count">115</span></li>
+		<li><a href="/blog/categories/lotusphere.html">Lotusphere</a> <span class="sidebar-count">54</span></li>
+		<li><a href="/blog/categories/macos.html">macOS</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/maven.html">Maven</a> <span class="sidebar-count">21</span></li>
+		<li><a href="/blog/categories/mobile.html">Mobile</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/networking.html">Networking</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/nginx.html">nginx</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/nodejs.html">NodeJS</a> <span class="sidebar-count">6</span></li>
+		<li><a href="/blog/categories/nodered.html">NodeRED</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/nokia.html">Nokia</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/nosql.html">NoSQL</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/omnisophie.html">Omnisophie</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/openapi.html">OpenAPI</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/opensource.html">OpenSource</a> <span class="sidebar-count">6</span></li>
+		<li><a href="/blog/categories/pmd.html">PMD</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/protocols.html">Protocols</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/quarkus.html">Quarkus</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/reactive.html">Reactive</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/rust.html">Rust</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/salesforce.html">Salesforce</a> <span class="sidebar-count">51</span></li>
+		<li><a href="/blog/categories/sametime.html">Sametime</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/sfdx.html">SFDX</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> <span class="sidebar-count">189</span></li>
+		<li><a href="/blog/categories/singapore.html">Singapore</a> <span class="sidebar-count">84</span></li>
+		<li><a href="/blog/categories/socialbusiness.html">SocialBusiness</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/software.html">Software</a> <span class="sidebar-count">211</span></li>
+		<li><a href="/blog/categories/sql.html">SQL</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/sywtbadd.html">SYWTBADD</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/tdd.html">TDD</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/technology.html">Technology</a> <span class="sidebar-count">35</span></li>
+		<li><a href="/blog/categories/travel.html">Travel</a> <span class="sidebar-count">24</span></li>
+		<li><a href="/blog/categories/twins.html">Twins</a> <span class="sidebar-count">28</span></li>
+		<li><a href="/blog/categories/typescript.html">TypeScript</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/umsys.html">UMsys</a> <span class="sidebar-count">6</span></li>
+		<li><a href="/blog/categories/unittesting.html">UnitTesting</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/vertx.html">vert.x</a> <span class="sidebar-count">18</span></li>
+		<li><a href="/blog/categories/webcomponents.html">WebComponents</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/webdevelopment.html">WebDevelopment</a> <span class="sidebar-count">52</span></li>
+		<li><a href="/blog/categories/workflow.html">Workflow</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/writingchinese.html">Writing Chinese</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/xml.html">XML</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/xpages.html">XPages</a> <span class="sidebar-count">116</span></li>
+	</ul>
+</wa-card>
 
+	<wa-card class="sidebar-module" with-header appearance="filled-outlined">
+	<h2 slot="header">Archive</h2>
+	<ul class="sidebar-list">
+		<li><a href="/blog/2002/">2002</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/2003/">2003</a> <span class="sidebar-count">19</span></li>
+		<li><a href="/blog/2004/">2004</a> <span class="sidebar-count">75</span></li>
+		<li><a href="/blog/2005/">2005</a> <span class="sidebar-count">123</span></li>
+		<li><a href="/blog/2006/">2006</a> <span class="sidebar-count">130</span></li>
+		<li><a href="/blog/2007/">2007</a> <span class="sidebar-count">101</span></li>
+		<li><a href="/blog/2008/">2008</a> <span class="sidebar-count">111</span></li>
+		<li><a href="/blog/2009/">2009</a> <span class="sidebar-count">168</span></li>
+		<li><a href="/blog/2010/">2010</a> <span class="sidebar-count">151</span></li>
+		<li><a href="/blog/2011/">2011</a> <span class="sidebar-count">137</span></li>
+		<li><a href="/blog/2012/">2012</a> <span class="sidebar-count">71</span></li>
+		<li><a href="/blog/2013/">2013</a> <span class="sidebar-count">51</span></li>
+		<li><a href="/blog/2014/">2014</a> <span class="sidebar-count">66</span></li>
+		<li><a href="/blog/2015/">2015</a> <span class="sidebar-count">28</span></li>
+		<li><a href="/blog/2016/">2016</a> <span class="sidebar-count">14</span></li>
+		<li><a href="/blog/2017/">2017</a> <span class="sidebar-count">22</span></li>
+		<li><a href="/blog/2018/">2018</a> <span class="sidebar-count">28</span></li>
+		<li><a href="/blog/2019/">2019</a> <span class="sidebar-count">31</span></li>
+		<li><a href="/blog/2020/">2020</a> <span class="sidebar-count">19</span></li>
+		<li><a href="/blog/2021/">2021</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/2022/">2022</a> <span class="sidebar-count">13</span></li>
+		<li><a href="/blog/2023/">2023</a> <span class="sidebar-count">19</span></li>
+		<li><a href="/blog/2024/">2024</a> <span class="sidebar-count">12</span></li>
+		<li><a href="/blog/2025/">2025</a> <span class="sidebar-count">12</span></li>
+		<li><a href="/blog/2026/">2026</a> <span class="sidebar-count">16</span></li>
+	</ul>
+	<a slot="footer" href="/blog/all.html" title="Every post, one page">Complete archive</a>
+</wa-card>
+
+</aside>
+
+	<footer slot="footer" class="site-footer">
+	<div class="site-footer-inner wa-grid">
+		<section>
+			<h2>About me</h2>
+			<p>I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.</p>
+			<a href="https://stackoverflow.com/users/131021/stwissel">
+				<img src="https://stackoverflow.com/users/flair/131021.png" width="208" height="58"
+				     alt="Stack Overflow profile for stwissel" loading="lazy" />
+			</a>
+		</section>
+
+		<section>
+			<h2>Contact</h2>
+			<ul class="footer-links">
+				<li><a rel="me" href="https://chaos.social/@stw">Mastodon</a></li>
+				<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+				<li><a href="https://notessensei.myspreadshop.com">Spreadshirt shop</a></li>
+				<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers</a></li>
+				<li><a href="https://github.com/Stwissel">GitHub</a></li>
+				<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
+			</ul>
+		</section>
+
+		<section class="footer-disclaimer">
+			<h2>Disclaimer</h2>
+			<p>This site is in no way affiliated, endorsed, sanctioned, supported, nor
+				enlightened by my current or previous employers. I may be an employee, but the
+				opinions, theories, facts, etc. presented here are my own and are in no way
+				given in any official capacity. In short, these are my words and this is my
+				site, not my current or former employers' &ndash; and don't even begin to think
+				otherwise.</p>
+			<p><b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as listed
+				here: <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/3.0/">Creative
+				Commons Attribution/NonCommercial/ShareAlike</a>, with the exception that no
+				rights are granted &ndash; since they are not mine to grant &ndash; in any logo,
+				graphic design, trademark or trade name of any type. Code samples and downloads
+				are, unless otherwise labeled, made available under an
+				<a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0</a>
+				license. Other license models are available on written request and written
+				confirmation.</p>
+		</section>
+	</div>
+</footer>
+
+</wa-page>
 	
 	
 <script>
 (function () {
   "use strict";
-  /*
-   * Navbar: Bootstrap 2's collapse plugin, minus Bootstrap and jQuery.
-   *
-   * /why inline height, not just the "in" class: bootstrap-responsive.css
-   * pins `.nav-collapse{height:0;overflow:hidden}` unconditionally (the
-   * element never carries the generic "collapse" class), so there is no
-   * `.nav-collapse.in{height:auto}` rule to win a specificity fight -- the
-   * real collapse.js plugin got around this the same way, by writing a
-   * pixel height directly to the element's style, which always outranks an
-   * external stylesheet rule without !important. Toggling the class alone
-   * leaves the menu at height:0 and invisible.
-   */
-  var navToggle = document.querySelector("[data-nav-toggle]");
-  if (navToggle) {
-    navToggle.addEventListener("click", function () {
-      var nav = document.getElementById("main-nav");
-      if (!nav) return;
-      var open = nav.classList.toggle("in");
-      nav.style.height = open ? "auto" : "";
-      navToggle.setAttribute("aria-expanded", String(open));
-    });
-  }
-  /* Comment form reveal. */
+    /* The comment editor is fetched on the first click of the reveal button.
+     /why a click and not a disclosure's show event: the form is injected into
+     the DOM only when this fires, and that is deliberate -- a spam bot that
+     never clicks never sees a form. A disclosure would also fire on
+     programmatic opening, on keyboard activation, and when the browser expands
+     it for find-in-page, each of which puts the form in the DOM without anyone
+     choosing to comment. A click is the narrowest trigger that still works. */
   var commentToggle = document.querySelector("[data-comment-toggle]");
   if (commentToggle) {
     commentToggle.addEventListener("click", function () {
-      var target = document.getElementById(commentToggle.getAttribute("data-comment-toggle"));
-      if (!target) return;
-      var open = target.classList.toggle("in");
-      commentToggle.setAttribute("aria-expanded", String(open));
-      if (open) window.dispatchEvent(new Event("blog:comments-requested"));
-    });
+      window.dispatchEvent(new Event("blog:comments-requested"));
+      commentToggle.remove();
+    }, { once: true });
   }
+
   /* Tier 3: content-derived needs, asked of the rendered DOM.
      /why: month indexes and the front page inherit code blocks from the
      excerpts they render, so page type alone cannot answer this. */

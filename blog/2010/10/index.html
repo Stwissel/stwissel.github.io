@@ -1,5 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="wa-theme-default wa-palette-default wa-light wa-cloak">
+<script>
+/* Appearance: system by default, overridable to light or dark, remembered in a
+   cookie.
+
+   /why inline and first: Web Awesome switches theme on a class, not a media
+   query, so the class must be on <html> before the first paint or the page
+   flashes light and then turns dark. This is the one script on the site that
+   cannot be deferred, and the cookie has to be read synchronously here.
+
+   /why a cookie rather than localStorage: it is sent with the request, so if
+   this ever becomes server-rendered the preference is already available before
+   a byte of HTML is written. Nothing is stored until a reader actually chooses:
+   "system" deletes the cookie rather than recording a third value, so the
+   majority who never touch the control carry no state at all. */
+(function () {
+	var NAME = "appearance";
+	var MODES = ["system", "light", "dark"];
+	var ICONS = { system: "circle-half-stroke", light: "sun", dark: "moon" };
+	var media = window.matchMedia("(prefers-color-scheme: dark)");
+	var mode = (document.cookie.match(/(?:^|;\s*)appearance=(light|dark)(?:;|$)/) || [])[1] || "system";
+
+	function apply() {
+		var dark = mode === "dark" || (mode === "system" && media.matches);
+		var c = document.documentElement.classList;
+		c.toggle("wa-dark", dark);
+		c.toggle("wa-light", !dark);
+	}
+	function remember() {
+		document.cookie = mode === "system"
+			? NAME + "=; Max-Age=0; Path=/; SameSite=Lax"
+			: NAME + "=" + mode + "; Max-Age=31536000; Path=/; SameSite=Lax";
+	}
+	apply();
+	/* Only follow the OS while the reader has not overridden it. */
+	media.addEventListener("change", function () { if (mode === "system") { apply(); } });
+
+	document.addEventListener("DOMContentLoaded", function () {
+		var btn = document.getElementById("appearance-toggle");
+		if (!btn) { return; }
+		var icon = document.getElementById("appearance-icon");
+		function sync() {
+			icon.setAttribute("name", ICONS[mode]);
+			btn.setAttribute("aria-label", "Appearance: " + mode + ". Activate to change.");
+			btn.setAttribute("title", "Appearance: " + mode);
+		}
+		sync();
+		btn.addEventListener("click", function () {
+			mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+			remember();
+			apply();
+			sync();
+		});
+	});
+})();
+</script>
 <head>
 <title>NotesSensei's Blog by month: By Date: October 2010</title>
 <meta name="robots" content="index,follow" />
@@ -17,82 +72,82 @@
 <meta name="description"
 	content="Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included:  Salesforce, IBM, JEE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins" />
 
-<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.14.0/styles/webawesome.css" />
+<script type="module" src="https://ka-f.webawesome.com/webawesome@3.14.0/webawesome.loader.js"></script>
+<link rel="stylesheet" type="text/css" href="/blog/style/palette.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/site.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/admonition.css" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
-
 
 <link rel="alternate" type="application/rss+xml" title="wissel.net RSS feed" href="https://wissel.net/blog/stories.rss" />
 
 
 </head>
 <body>
-	<div class="navbar navbar-inverse navbar-fixed-top">
-		<div class="navbar-inner">
-			<button class="btn btn-navbar" type="button" data-nav-toggle aria-expanded="false"
-			        aria-controls="main-nav" aria-label="Toggle navigation">
-				<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
-			</button>
-			<a class="brand" href="/">wissel.net</a>
-			<div class="nav-collapse" id="main-nav">
-				<ul class="nav">
-					<li><a href="/index.html">Home</a></li>
-					<li><a href="/blog/">Blog</a></li>
-					<li><a href="/blog/series.html">Series</a></li>
-					<li><a href="/blog/downloads/">Downloads</a></li>
-					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
-					<li><a href="/blog/imprint.html">About / Imprint</a></li>
-					<li><a href="/mealplan.html">Food</a></li>
-				</ul>
-				<form action="//www.google.com/cse" id="cse-search-box"
-					class="navbar-search pull-right">
-					<div>
-						<input type="hidden" name="cx"
-							value="partner-pub-4562257798204150:muo14ionenw" /> <input
-							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
-							name="q" class="search-query span2" placeholder="Search" />
-						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
-					</div>
-				</form>
-			</div>
+<wa-page disable-sticky="subheader aside">
+	<header slot="header" class="site-header">
+	<div class="site-header-inner wa-split">
+		<a class="site-brand" href="/">wissel.net</a>
+		<div class="site-header-end wa-cluster wa-gap-m">
+		<nav class="header-nav wa-cluster wa-gap-l" aria-label="Main">
+			<a href="/index.html">Home</a>
+			<a href="/blog/">Blog</a>
+			<a href="/blog/series.html">Series</a>
+			<a href="/blog/downloads/">Downloads</a>
+			<a href="https://stwissel.github.io/presentations/">Presentations</a>
+			<a href="/blog/imprint.html">About</a>
+			<a href="/mealplan.html">Food</a>
+		</nav>
+		
+		<form class="header-search site-search" action="https://www.google.com/cse" role="search">
+			<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+			<input type="hidden" name="ie" value="UTF-8" />
+			<input type="search" name="q" aria-label="Search this site" placeholder="Search" />
+		</form>
+		
+		<wa-button id="appearance-toggle" appearance="plain" class="site-theme-toggle"
+		           aria-label="Appearance: system. Activate to change." title="Appearance: system">
+			<wa-icon id="appearance-icon" name="circle-half-stroke" label=""></wa-icon>
+		</wa-button>
+		<wa-button data-toggle-nav appearance="plain" class="wa-mobile-only site-nav-toggle" aria-label="Open menu">
+			<wa-icon name="bars" label="Menu"></wa-icon>
+		</wa-button>
 		</div>
 	</div>
-<div class="navbar-spacer"></div>
+</header>
+<nav slot="navigation" class="wa-stack wa-gap-2xs" aria-label="Main">
+	<a href="/index.html" data-drawer="close">Home</a>
+	<a href="/blog/" data-drawer="close">Blog</a>
+	<a href="/blog/series.html" data-drawer="close">Series</a>
+	<a href="/blog/downloads/" data-drawer="close">Downloads</a>
+	<a href="https://stwissel.github.io/presentations/" data-drawer="close">Presentations</a>
+	<a href="/blog/imprint.html" data-drawer="close">About</a>
+	<a href="/mealplan.html" data-drawer="close">Food</a>
+	<form class="site-search" action="https://www.google.com/cse" role="search">
+		<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+		<input type="hidden" name="ie" value="UTF-8" />
+		<wa-input type="search" name="q" size="s" placeholder="Search" label="Search this site" with-label></wa-input>
+	</form>
+</nav>
 
-	<div class="container">
-			<br />
-		<header>
-			<div id="main" class="hero-unit">
-				<h1 id="jumbotron">wissel.net
-				</h1>
-				<p class="lead">Usability - Productivity - Business - The web -
-					Singapore &amp; Twins</p>
-			</div>
-		</header>
+	<div slot="subheader" class="site-hero site-hero-large">
+	<div class="site-hero-inner">
+		<h1>wissel.net</h1>
+		<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+	</div>
+</div>
 
-			<div class="row-fluid">
-			<div class="span9">
-								<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2010/09/index.html"><i class="icon-hand-left"></i>By Date: September 2010</a>
-						<span class="divider">|</span></li>
-					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2010/11/index.html">By Date: November 2010<i class="icon-hand-right"></i></a>
-					</li>
-				</ul>
+	<main>
+								<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2010/09/index.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> By Date: September 2010</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	<a href="/blog/2010/11/index.html" rel="next">By Date: November 2010 <wa-icon name="arrow-right"></wa-icon></a>
+</nav>
 
-				<div class="well well-raised">
-					<h1>By Date: October 2010</h1>
-				</div>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2010/10/protect-your-domino-applications-from-firesheep.html">Protect your Domino applications from Firesheep</a></small>
-					</h1>
+				<h1 class="page-title">By Date: October 2010</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2010/10/protect-your-domino-applications-from-firesheep.html">Protect your Domino applications from Firesheep</a></h2>
 										<a href="/blog/2010/10/protect-your-domino-applications-from-firesheep.prompt" title="View AI image prompt">
 						<img src="/blog/2010/10/protect-your-domino-applications-from-firesheep.webp" alt="Hero image for Protect your Domino applications from Firesheep" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -117,22 +172,17 @@
 </ol> As usual YMMV</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 31 October 2010
-<span class="divider">|</span>
-<a href="/blog/2010/10/protect-your-domino-applications-from-firesheep.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>  <a href="/blog/categories/software.html">Software</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 31 October 2010
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a><a class="meta-category" href="/blog/categories/software.html">Software</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2010/10/protect-your-domino-applications-from-firesheep.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2010/10/grandstream-gxv3140-voip-phone-and-skype-fail.html">Grandstream GXV3140 VoiP Phone and Skype #fail</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2010/10/grandstream-gxv3140-voip-phone-and-skype-fail.html">Grandstream GXV3140 VoiP Phone and Skype #fail</a></h2>
 										<a href="/blog/2010/10/grandstream-gxv3140-voip-phone-and-skype-#fail.prompt" title="View AI image prompt">
 						<img src="/blog/2010/10/grandstream-gxv3140-voip-phone-and-skype-#fail.webp" alt="Hero image for Grandstream GXV3140 VoiP Phone and Skype #fail" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -153,22 +203,19 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
 </ul> So currently it feels Skype is "bolted on" rather than integrated. To be fair: the Firmware is still labelled beta, so there is hope.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 30 October 2010
-<span class="divider">|</span>
-<a href="/blog/2010/10/grandstream-gxv3140-voip-phone-and-skype-fail.html#comments">Comments (2)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/software.html">Software</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 30 October 2010
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2010/10/grandstream-gxv3140-voip-phone-and-skype-fail.html#comments">2 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/software.html">Software</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2010/10/grandstream-gxv3140-voip-phone-and-skype-fail.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2010/10/ibm-lotus-sametime-8-essentials-user-guide-review-coming-soon.html">IBM Lotus Sametime 8 Essentials User Guide - review coming soon</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2010/10/ibm-lotus-sametime-8-essentials-user-guide-review-coming-soon.html">IBM Lotus Sametime 8 Essentials User Guide - review coming soon</a></h2>
 										<a href="/blog/2010/10/ibm-lotus-sametime-8-essentials-user-guide-review-coming-soon.prompt" title="View AI image prompt">
 						<img src="/blog/2010/10/ibm-lotus-sametime-8-essentials-user-guide-review-coming-soon.webp" alt="Hero image for IBM Lotus Sametime 8 Essentials User Guide - review coming soon" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -178,22 +225,17 @@ categories:  <a href="/blog/categories/software.html">Software</a>
 					<div><img src="/blog/images/2010/Sametime8Userguide.jpg" border="0" alt="Sametime8Userguide.jpg" style="float:right"> Snehman Kohli from Pact Publishing asked me to review <a href="http://link.packtpub.com/MAVoQE">IBM Lotus Sametime 8 Essentials: A User's Guide</a>. I'm downloading the eBook to read it on one of my upcoming flights (hopefully with the <a href="http://europe.nokia.com/find-products/accessories/all-accessories/headsets/bluetooth-stereo-headsets/nokia-bluetooth-stereo-headset-bh-905i ">Nokia BH-905i</a> provided for test by <a href="http://www.womworld.com/nokia/">WOMWorldNokia</a>). You can read a <a href="https://www.packtpub.com/sites/default/files/0608EN-Chapter-7-iNotes-and-Sametime%3FChatting-from-the-Web.pdf">free sample chapter (Chapter No. 7 – iNotes and Sametime – Chatting from the Web)</a>, check <a href="http://www.eknori.de/2010-10-17/book-review-ibm-lotus-sametime-8-essentials/">Eknori's review</a>, browse through <a href="http://www.johndavidhead.com/jhead/johnhead.nsf/dx/time-for-another-review-...-ibm-lotus-sametime-8-essentials-a-users-guide-">John D. Head's verdict</a>, look at <a href="http://www.conxsys.com/blog/2010/09/27/book-review-ibm-lotus-sametime-8-essentials/">Core Davis' summary</a> or <a href="http://www.amazon.com/gp/product/1849680604?ie=UTF8&amp;tag=wissenetblog-20&amp;linkCode=as2&amp;camp=1789&amp;creative=390957&amp;creativeASIN=1849680604">buy it from Amazon</a> <img src="https://www.assoc-amazon.com/e/ir?t=wissenetblog-20&amp;l=as2&amp;o=1&amp;a=1849680604" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;">. More details coming soon.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 29 October 2010
-<span class="divider">|</span>
-<a href="/blog/2010/10/ibm-lotus-sametime-8-essentials-user-guide-review-coming-soon.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/lotus.html">Lotus</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 29 October 2010
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/lotus.html">Lotus</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2010/10/ibm-lotus-sametime-8-essentials-user-guide-review-coming-soon.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2010/10/microsoft-office-vs-openoffice-vs-lotus-symphony.html">Microsoft Office vs. OpenOffice vs. Lotus Symphony</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2010/10/microsoft-office-vs-openoffice-vs-lotus-symphony.html">Microsoft Office vs. OpenOffice vs. Lotus Symphony</a></h2>
 										<a href="/blog/2010/10/microsoft-office-vs-openoffice-vs-lotus-symphony.prompt" title="View AI image prompt">
 						<img src="/blog/2010/10/microsoft-office-vs-openoffice-vs-lotus-symphony.webp" alt="Hero image for Microsoft Office vs. OpenOffice vs. Lotus Symphony" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -205,22 +247,19 @@ categories:  <a href="/blog/categories/lotus.html">Lotus</a>
  However your <b>real</b> effort should go into a review: what office documents can be eradicated from your organisation. All these stand-alone documents, living on users hard drives or in document repositories form little islands of poorly structured information that are more and more difficult to manage and maintain. We have tons of tools, beginning with eMail, who try to make these office blobs flow nicely instead of starting with information flow in the beginning. All these macro-infested spreadsheets that form the backbone of your monthly reporting would be better replaced by a dashboard, the tons of text document forming the requirements for that software project live happily in a WIKI and the progress reports are just fine in that blog. Need to have a spreadsheet front-end to a database with concurrent editing capabilities? Try <a href="http://www.zkoss.org/product/zkspreadsheet.dsp">ZK Spreadsheet</a>. Need a list? Try <a href="http://www-01.ibm.com/software/lotus/products/quickr/">Quickr</a> or <a href="http://www.rememberthemilk.com/ ">this</a>. While you are on it make sure all this tooling works well on mobile devices (office documents don't work <b>well</b>). You will reach the point where your remaining document needs will be rather simple. Then go and revisit your Office decision again.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 18 October 2010
-<span class="divider">|</span>
-<a href="/blog/2010/10/microsoft-office-vs-openoffice-vs-lotus-symphony.html#comments">Comments (9)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/software.html">Software</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 18 October 2010
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2010/10/microsoft-office-vs-openoffice-vs-lotus-symphony.html#comments">9 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/software.html">Software</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2010/10/microsoft-office-vs-openoffice-vs-lotus-symphony.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2010/10/progress-in-data-structures.html">Progress in data structures</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2010/10/progress-in-data-structures.html">Progress in data structures</a></h2>
 										<a href="/blog/2010/10/progress-in-data-structures.prompt" title="View AI image prompt">
 						<img src="/blog/2010/10/progress-in-data-structures.webp" alt="Hero image for Progress in data structures" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -353,22 +392,19 @@ categories:  <a href="/blog/categories/software.html">Software</a>
  Now can someone explain how to do a <a href="http://www.google.com/search?q=cobol+redefines">redefines</a> or a <a href="http://www.google.com/search?q=cobol+move+corresponding ">move corresponding</a> in JSON?</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 17 October 2010
-<span class="divider">|</span>
-<a href="/blog/2010/10/progress-in-data-structures.html#comments">Comments (3)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/afterhours.html">After hours</a>  <a href="/blog/categories/software.html">Software</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 17 October 2010
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2010/10/progress-in-data-structures.html#comments">3 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/afterhours.html">After hours</a><a class="meta-category" href="/blog/categories/software.html">Software</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2010/10/progress-in-data-structures.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2010/10/the-elearning-dilemma.html">The eLearning dilemma</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2010/10/the-elearning-dilemma.html">The eLearning dilemma</a></h2>
 										<a href="/blog/2010/10/the-elearning-dilemma.prompt" title="View AI image prompt">
 						<img src="/blog/2010/10/the-elearning-dilemma.webp" alt="Hero image for The eLearning dilemma" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -380,22 +416,19 @@ categories:  <a href="/blog/categories/afterhours.html">After hours</a>  <a href
  From my exposure to eLearning projects, admittingly mostly in the corporate space, I had to conclude that most managers sense the magnitude but rather opt to ignore it, based on "we have a 4 month eLearning project and need to deliver" type of pressure. So the usual way out is to implement a Learning Management System (LMS) and then hope for a miracle that makes content appear. There are <a href="http://moodle.org/ ">very good LMS</a> systems at the market, a lot of them <a href="http://www.techworld.com.au/article/223565/10_open_source_e-learning_projects_watch">Open Source</a> (you need to google the commercial ones yourself) that manage the courses rather well. They don't help in structuring and creating materials, they just look after them. They also don't tie it back to the official curriculum, since there isn't a hook to tie to. Then there are <a href="http://www.khanacademy.org/">outstanding Learning providers</a>, lot of <a href="http://www.google.com/search?q=open+source+textbooks ">Open Source text books</a> and <a href="http://grockit.com/">Learning communities</a>. On the other side is the official curriculum (e.g. <a href="http://www.moe.gov.sg/education/primary/curriculum/">Singapore primary</a>) and the vast experience of teachers and the materials they hold (in their heads, on paper or their harddrives). The dream in for eLearning would be a system that links and connects all these sources into a single blended learning experience. This experience needs to be deliverable for learning institutions (students are supposed to treat learning as their primary activity) as well as corporations (learning is ad-hock as-needed). eLearning could answer the "why do I need Phytagoras" (just watch your carpenter) and "what does compound interest do in the real world". Unfortunately these links don't exist today. Classroom learning is disconnected from online, disconnected from the curriculum, disconnected from corporate learning. The technology is there, someone needs (I would say literally) to connect the dots. Step one would be to make a curriculum machine readable and deep linkable. Unless there is an agreed upon specific format for a curriculum OPML could be a good candidate. Your feed reader already understands it. Who educates the educators about it?</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 17 October 2010
-<span class="divider">|</span>
-<a href="/blog/2010/10/the-elearning-dilemma.html#comments">Comments (3)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/elearning.html">eLearning</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 17 October 2010
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2010/10/the-elearning-dilemma.html#comments">3 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/elearning.html">eLearning</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2010/10/the-elearning-dilemma.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2010/10/create-an-enterprise-event-calendar-on-the-cheap.html">Create an Enterprise Event Calendar on the Cheap</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2010/10/create-an-enterprise-event-calendar-on-the-cheap.html">Create an Enterprise Event Calendar on the Cheap</a></h2>
 										<a href="/blog/2010/10/create-an-enterprise-event-calendar-on-the-cheap.prompt" title="View AI image prompt">
 						<img src="/blog/2010/10/create-an-enterprise-event-calendar-on-the-cheap.webp" alt="Hero image for Create an Enterprise Event Calendar on the Cheap" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -421,22 +454,19 @@ categories:  <a href="/blog/categories/elearning.html">eLearning</a>
  As usual: YMMV</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 15 October 2010
-<span class="divider">|</span>
-<a href="/blog/2010/10/create-an-enterprise-event-calendar-on-the-cheap.html#comments">Comments (4)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 15 October 2010
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2010/10/create-an-enterprise-event-calendar-on-the-cheap.html#comments">4 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2010/10/create-an-enterprise-event-calendar-on-the-cheap.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2010/10/teaching-singapore-style.html">Teaching - Singapore style</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2010/10/teaching-singapore-style.html">Teaching - Singapore style</a></h2>
 										<a href="/blog/2010/10/teaching-singapore-style.prompt" title="View AI image prompt">
 						<img src="/blog/2010/10/teaching-singapore-style.webp" alt="Hero image for Teaching - Singapore style" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -453,22 +483,17 @@ categories:  <a href="/blog/categories/showntellthursday.html">Show-N-Tell Thurs
  An learning solution that improves the learning delivery needs to tie back into this flow. Ultimately MOE will need to go ahead and turn the curriculum into something that can be deep linked. Currently MOE is working with <a href="http://beta.jotterlab.com/">Jotterlab</a> to provide eLearning for the schools. They plan to start with the new school year with a pilot. You can follow them <a href="http://twitter.com/#!/jotterlab">on Twitter</a> or keep updated on <a href="http://jotterlab.com/blog/">their blog</a>. I'm curious how they will incorporate modern learning sources like the <a href="http://www.khanacademy.org/ ">Khan Academy</a>, <a href="http://www.opentextbook.org/ ">The Open Textbook Repository</a>, <a href="http://www.ck12.org/flexr/">cK12 Flexbooks</a> or <a href="http://www.opensourcetext.org/">COSTP</a> (There are many more, I'll cover them in due time). Also interesting will be how they include the <a href="http://www.tuitionexpert.com.sg/">Singapore Tuition</a> Industry and stack up against their competitors like <a href="http://grockit.com/">Grokit</a>.</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 14 October 2010
-<span class="divider">|</span>
-<a href="/blog/2010/10/teaching-singapore-style.html#comments">Comments (0)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/elearning.html">eLearning</a>  <a href="/blog/categories/singapore.html">Singapore</a>  <a href="/blog/categories/twins.html">Twins</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 14 October 2010
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/elearning.html">eLearning</a><a class="meta-category" href="/blog/categories/singapore.html">Singapore</a><a class="meta-category" href="/blog/categories/twins.html">Twins</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2010/10/teaching-singapore-style.html";
 						</script>
 					</p>
 				</article>
-				<article class="well well-raised">
-					<h1>
-						<small><a href="/blog/2010/10/what-is-holding-back-xpages-adoption.html">What is holding back XPages adoption</a></small>
-					</h1>
+				<article class="entry-card">
+					<h2><a href="/blog/2010/10/what-is-holding-back-xpages-adoption.html">What is holding back XPages adoption</a></h2>
 										<a href="/blog/2010/10/what-is-holding-back-xpages-adoption.prompt" title="View AI image prompt">
 						<img src="/blog/2010/10/what-is-holding-back-xpages-adoption.webp" alt="Hero image for What is holding back XPages adoption" class="hero-image"
 						     loading="lazy" fetchpriority="auto" />
@@ -481,267 +506,219 @@ categories:  <a href="/blog/categories/elearning.html">eLearning</a>  <a href="/
  Until the new paradigm is backed by a similar level of competencies and skills doubt will exist if "that new thing" is really the way to go. With increasing adoption of XPages the skill level in classic Domino will gently decline (people retire or simply forget) while XPages skills will rise. Now the graph for XPages isn't fully accurate once you take developers into account who haven't developed on Domino before. After all XPages embraces and (horrible IBM word:) leverages existing technologies and open standards. Unless you live under a rock you have (at least as a consumer of the results) encountered HTML, CSS and JavaScript by now. Also XPages' foundation in JSF is well established. Of couese it very much depends on the "readiness for innovation" in the individual companies' development team if they want to contribute to the growing body of knowledge around XPages or wait until the moment where late adopters move. IMHO XPages' early adopter phase is coming to an end and XPages enters Domino mainstream. Very soon the question will change from "Why XPages" to "Why stay back".</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 08 October 2010
-<span class="divider">|</span>
-<a href="/blog/2010/10/what-is-holding-back-xpages-adoption.html#comments">Comments (4)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/xpages.html">XPages</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 08 October 2010
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2010/10/what-is-holding-back-xpages-adoption.html#comments">4 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/xpages.html">XPages</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2010/10/what-is-holding-back-xpages-adoption.html";
 						</script>
 					</p>
 				</article>
-				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2010/09/index.html"><i class="icon-hand-left"></i>By Date: September 2010</a>
-						<span class="divider">|</span></li>
-					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2010/11/index.html">By Date: November 2010<i class="icon-hand-right"></i></a>
-					</li>
-				</ul>
+				<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2010/09/index.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> By Date: September 2010</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	<a href="/blog/2010/11/index.html" rel="next">By Date: November 2010 <wa-icon name="arrow-right"></wa-icon></a>
+</nav>
 
 
-			</div>
-			<div class="span3">
-			    <aside id="sidebar_spreadshirt" class="well">
-	<h5>Shop</h5>
-	<a href="https://notessensei.myspreadshop.com/not+my+circus+not+my+monkeys-A61e1903cc8668379f1573899?productType=812&sellable=wQz9l23aJJcROmVm4nLX-812-7&appearance=2" title="Notessensei's Spreadshop"><img width="300" src="https://image.spreadshirtmedia.com/image-server/v1/products/T812A2PA4267PT17X58Y49D1043393171W23114H22690/views/1,width=650,height=650,appearanceId=2/sometimes-things-go-over-board-and-you-ask-yourself-whos-circus-is-that-not-yours.jpg" /></a>
-</aside>
-
-				<aside id="sidebar_reference" class="well">
-					<h5>Reference</h5>
-					<ol style="list-style-type: upper-roman; padding-left: 30px;">
-						<li><a style="display: inline;"
-							href="/blog/2012/04/extracting-data-from-domino-into-pdf-using-xslt-and-xslfo-part-1.html">Use
-								XSL:FO rendering (Domino)</a></li>
-						<li><a target="_blank" href="https://wissel.net/blog/imprint.html">old references (IBM)</a></li>
-					</ol>
-				</aside>
-
-				<aside id="sidebar_categoriesArchive" class="well">
-					<ul class="nav nav-list">
-						<li class="nav-header">Categories</li>
-						<li ><a href="/blog/categories/afterhours.html">After hours</a></li>
-						<li ><a href="/blog/categories/agile.html">Agile</a></li>
-						<li ><a href="/blog/categories/ai.html">AI</a></li>
-						<li ><a href="/blog/categories/apex.html">Apex</a></li>
-						<li ><a href="/blog/categories/api.html">API</a></li>
-						<li ><a href="/blog/categories/blog.html">Blog</a></li>
-						<li ><a href="/blog/categories/bluemix.html">Bluemix</a></li>
-						<li ><a href="/blog/categories/buddhakids.html">Buddhakids</a></li>
-						<li ><a href="/blog/categories/business.html">Business</a></li>
-						<li ><a href="/blog/categories/buyingbroadband.html">Buying Broadband</a></li>
-						<li ><a href="/blog/categories/caldav.html">calDAV</a></li>
-						<li ><a href="/blog/categories/cloudcomputing.html">Cloud Computing</a></li>
-						<li ><a href="/blog/categories/cloudflare.html">Cloudflare</a></li>
-						<li ><a href="/blog/categories/container.html">Container</a></li>
-						<li ><a href="/blog/categories/continuousintegration.html">Continuous integration</a></li>
-						<li ><a href="/blog/categories/couchdb.html">CouchDB</a></li>
-						<li ><a href="/blog/categories/coursera.html">Coursera</a></li>
-						<li ><a href="/blog/categories/curl.html">Curl</a></li>
-						<li ><a href="/blog/categories/cycling.html">Cycling</a></li>
-						<li ><a href="/blog/categories/development.html">Development</a></li>
-						<li ><a href="/blog/categories/docker.html">Docker</a></li>
-						<li ><a href="/blog/categories/domino.html">Domino</a></li>
-						<li ><a href="/blog/categories/drapi.html">DRAPI</a></li>
-						<li ><a href="/blog/categories/dxlmagic.html">DXLMagic</a></li>
-						<li ><a href="/blog/categories/elearning.html">eLearning</a></li>
-						<li ><a href="/blog/categories/github.html">GitHub</a></li>
-						<li ><a href="/blog/categories/gonephisching.html">Gone Phisching</a></li>
-						<li ><a href="/blog/categories/graalvm.html">GraalVM</a></li>
-						<li ><a href="/blog/categories/grpc.html">gRPC</a></li>
-						<li ><a href="/blog/categories/gtd.html">GTD</a></li>
-						<li ><a href="/blog/categories/hclnotes.html">HCL Notes</a></li>
-						<li ><a href="/blog/categories/heroku.html">Heroku</a></li>
-						<li ><a href="/blog/categories/https.html">HTTP(S)</a></li>
-						<li ><a href="/blog/categories/ibm.html">IBM</a></li>
-						<li ><a href="/blog/categories/ibmlotus.html">IBM - Lotus</a></li>
-						<li ><a href="/blog/categories/ibmnotes.html">IBM Notes</a></li>
-						<li ><a href="/blog/categories/identitymanagement.html">Identity Management</a></li>
-						<li ><a href="/blog/categories/intercultural.html">Intercultural</a></li>
-						<li ><a href="/blog/categories/java.html">Java</a></li>
-						<li ><a href="/blog/categories/javascript.html">JavaScript</a></li>
-						<li ><a href="/blog/categories/junit.html">jUnit</a></li>
-						<li ><a href="/blog/categories/jwt.html">JWT</a></li>
-						<li ><a href="/blog/categories/k8s.html">K8S</a></li>
-						<li ><a href="/blog/categories/learning.html">Learning</a></li>
-						<li ><a href="/blog/categories/lightning.html">Lightning</a></li>
-						<li ><a href="/blog/categories/linux.html">Linux</a></li>
-						<li ><a href="/blog/categories/lotus.html">Lotus</a></li>
-						<li ><a href="/blog/categories/lotusnotes.html">Lotus Notes</a></li>
-						<li ><a href="/blog/categories/lotusphere.html">Lotusphere</a></li>
-						<li ><a href="/blog/categories/macos.html">macOS</a></li>
-						<li ><a href="/blog/categories/maven.html">Maven</a></li>
-						<li ><a href="/blog/categories/mobile.html">Mobile</a></li>
-						<li ><a href="/blog/categories/networking.html">Networking</a></li>
-						<li ><a href="/blog/categories/nginx.html">nginx</a></li>
-						<li ><a href="/blog/categories/nodejs.html">NodeJS</a></li>
-						<li ><a href="/blog/categories/nodered.html">NodeRED</a></li>
-						<li ><a href="/blog/categories/nokia.html">Nokia</a></li>
-						<li ><a href="/blog/categories/nosql.html">NoSQL</a></li>
-						<li ><a href="/blog/categories/omnisophie.html">Omnisophie</a></li>
-						<li ><a href="/blog/categories/openapi.html">OpenAPI</a></li>
-						<li ><a href="/blog/categories/opensource.html">OpenSource</a></li>
-						<li ><a href="/blog/categories/pmd.html">PMD</a></li>
-						<li ><a href="/blog/categories/protocols.html">Protocols</a></li>
-						<li ><a href="/blog/categories/quarkus.html">Quarkus</a></li>
-						<li ><a href="/blog/categories/reactive.html">Reactive</a></li>
-						<li ><a href="/blog/categories/rust.html">Rust</a></li>
-						<li ><a href="/blog/categories/salesforce.html">Salesforce</a></li>
-						<li ><a href="/blog/categories/sametime.html">Sametime</a></li>
-						<li ><a href="/blog/categories/sfdx.html">SFDX</a></li>
-						<li ><a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a></li>
-						<li ><a href="/blog/categories/singapore.html">Singapore</a></li>
-						<li ><a href="/blog/categories/socialbusiness.html">SocialBusiness</a></li>
-						<li ><a href="/blog/categories/software.html">Software</a></li>
-						<li ><a href="/blog/categories/sql.html">SQL</a></li>
-						<li ><a href="/blog/categories/sywtbadd.html">SYWTBADD</a></li>
-						<li ><a href="/blog/categories/tdd.html">TDD</a></li>
-						<li ><a href="/blog/categories/technology.html">Technology</a></li>
-						<li ><a href="/blog/categories/travel.html">Travel</a></li>
-						<li ><a href="/blog/categories/twins.html">Twins</a></li>
-						<li ><a href="/blog/categories/typescript.html">TypeScript</a></li>
-						<li ><a href="/blog/categories/umsys.html">UMsys</a></li>
-						<li ><a href="/blog/categories/unittesting.html">UnitTesting</a></li>
-						<li ><a href="/blog/categories/vertx.html">vert.x</a></li>
-						<li ><a href="/blog/categories/webcomponents.html">WebComponents</a></li>
-						<li ><a href="/blog/categories/webdevelopment.html">WebDevelopment</a></li>
-						<li ><a href="/blog/categories/workflow.html">Workflow</a></li>
-						<li ><a href="/blog/categories/writingchinese.html">Writing Chinese</a></li>
-						<li ><a href="/blog/categories/xml.html">XML</a></li>
-						<li ><a href="/blog/categories/xpages.html">XPages</a></li>
-						<li class="nav-header">Archives</li>
-						<li ><a href="/blog/2002/">2002</a></li>
-						<li ><a href="/blog/2003/">2003</a></li>
-						<li ><a href="/blog/2004/">2004</a></li>
-						<li ><a href="/blog/2005/">2005</a></li>
-						<li ><a href="/blog/2006/">2006</a></li>
-						<li ><a href="/blog/2007/">2007</a></li>
-						<li ><a href="/blog/2008/">2008</a></li>
-						<li ><a href="/blog/2009/">2009</a></li>
-						<li ><a href="/blog/2010/">2010</a></li>
-						<li ><a href="/blog/2011/">2011</a></li>
-						<li ><a href="/blog/2012/">2012</a></li>
-						<li ><a href="/blog/2013/">2013</a></li>
-						<li ><a href="/blog/2014/">2014</a></li>
-						<li ><a href="/blog/2015/">2015</a></li>
-						<li ><a href="/blog/2016/">2016</a></li>
-						<li ><a href="/blog/2017/">2017</a></li>
-						<li ><a href="/blog/2018/">2018</a></li>
-						<li ><a href="/blog/2019/">2019</a></li>
-						<li ><a href="/blog/2020/">2020</a></li>
-						<li ><a href="/blog/2021/">2021</a></li>
-						<li ><a href="/blog/2022/">2022</a></li>
-						<li ><a href="/blog/2023/">2023</a></li>
-						<li ><a href="/blog/2024/">2024</a></li>
-						<li ><a href="/blog/2025/">2025</a></li>
-						<li ><a href="/blog/2026/">2026</a></li>
-						<li ><a href="/blog/all.html" title="That's a long list!">Complete archive</a></li>
-					</ul>
-				</aside>
-
-			</div>
-		</div>
 		
 
-	</div>
-		<footer>
-		<div class="container">
-			<div class="row">
-				<div class="span2">
-					<h4>About Me</h4>
-					<p>
-						I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.
-						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
-					</p>
-					<a href="//stackoverflow.com/users/131021/stwissel">
-					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
-				</a>
-				</div>
-				<div class="span2">
-					<h4>Contact</h4>
-					<ul>
-						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
-						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
-						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
-						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
-						<li><a href="https://github.com/Stwissel">GitHub</a></li>
-						<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
-					</ul>
-				</div>
-				<div class="span8">
-					<h4>Disclaimer</h4>
-					<p>This site is in no way affiliated, endorsed, sanctioned,
-						supported, nor enlightened by my current or previous employers.
-						I may be an employee, but the opinions, theories, facts, etc.
-						presented here are my own and are in now way given in any official
-						capacity. In short, these are my words and this is my site, not
-						my current or former employers' - and don't even begin to think otherwise.</p>
-					<p>
-						<b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as
-						listed here: <a rel="license"
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
-							alt="Creative Commons License" style="border-width: 0"
-							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
-						Unless otherwise labeled by its originating author, the content
-						found on this site is made available under the terms of an <a
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
-							target="_blank"
-							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
-							Creative Commons License</a>, with the exception that no rights are
-						granted -- since they are not mine to grant -- in any logo,
-						graphic design, trademarks or trade names of any type. Code
-						samples and code downloads on this site are, unless otherwise
-						labeled, made available under an <a
-							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
-							2.0</a> license. Other license models are available on written
-						request and written confirmation.
-					</p>
-				</div>
-			</div>
-		</div>
-	</footer>
+	</main>
+	<aside slot="aside">
+	<wa-card class="sidebar-module" with-header appearance="filled-outlined">
+	<h2 slot="header">Categories</h2>
+	<ul class="sidebar-list">
+		<li><a href="/blog/categories/afterhours.html">After hours</a> <span class="sidebar-count">228</span></li>
+		<li><a href="/blog/categories/agile.html">Agile</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/ai.html">AI</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/apex.html">Apex</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/blog.html">Blog</a> <span class="sidebar-count">11</span></li>
+		<li><a href="/blog/categories/bluemix.html">Bluemix</a> <span class="sidebar-count">13</span></li>
+		<li><a href="/blog/categories/buddhakids.html">Buddhakids</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/business.html">Business</a> <span class="sidebar-count">71</span></li>
+		<li><a href="/blog/categories/buyingbroadband.html">Buying Broadband</a> <span class="sidebar-count">29</span></li>
+		<li><a href="/blog/categories/caldav.html">calDAV</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/cloudcomputing.html">Cloud Computing</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/cloudflare.html">Cloudflare</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/container.html">Container</a> <span class="sidebar-count">9</span></li>
+		<li><a href="/blog/categories/continuousintegration.html">Continuous integration</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/couchdb.html">CouchDB</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/coursera.html">Coursera</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/curl.html">Curl</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/cycling.html">Cycling</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/development.html">Development</a> <span class="sidebar-count">13</span></li>
+		<li><a href="/blog/categories/docker.html">Docker</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/domino.html">Domino</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/drapi.html">DRAPI</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/dxlmagic.html">DXLMagic</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/elearning.html">eLearning</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/github.html">GitHub</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/gonephisching.html">Gone Phisching</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/graalvm.html">GraalVM</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/gtd.html">GTD</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/hclnotes.html">HCL Notes</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/heroku.html">Heroku</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/https.html">HTTP(S)</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/ibm.html">IBM</a> <span class="sidebar-count">19</span></li>
+		<li><a href="/blog/categories/ibmlotus.html">IBM - Lotus</a> <span class="sidebar-count">42</span></li>
+		<li><a href="/blog/categories/ibmnotes.html">IBM Notes</a> <span class="sidebar-count">161</span></li>
+		<li><a href="/blog/categories/identitymanagement.html">Identity Management</a> <span class="sidebar-count">9</span></li>
+		<li><a href="/blog/categories/intercultural.html">Intercultural</a> <span class="sidebar-count">16</span></li>
+		<li><a href="/blog/categories/java.html">Java</a> <span class="sidebar-count">55</span></li>
+		<li><a href="/blog/categories/javascript.html">JavaScript</a> <span class="sidebar-count">20</span></li>
+		<li><a href="/blog/categories/jwt.html">JWT</a> <span class="sidebar-count">11</span></li>
+		<li><a href="/blog/categories/k8s.html">K8S</a> <span class="sidebar-count">6</span></li>
+		<li><a href="/blog/categories/learning.html">Learning</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/lightning.html">Lightning</a> <span class="sidebar-count">16</span></li>
+		<li><a href="/blog/categories/linux.html">Linux</a> <span class="sidebar-count">25</span></li>
+		<li><a href="/blog/categories/lotus.html">Lotus</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/lotusnotes.html">Lotus Notes</a> <span class="sidebar-count">115</span></li>
+		<li><a href="/blog/categories/lotusphere.html">Lotusphere</a> <span class="sidebar-count">54</span></li>
+		<li><a href="/blog/categories/macos.html">macOS</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/maven.html">Maven</a> <span class="sidebar-count">21</span></li>
+		<li><a href="/blog/categories/mobile.html">Mobile</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/networking.html">Networking</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/nginx.html">nginx</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/nodejs.html">NodeJS</a> <span class="sidebar-count">6</span></li>
+		<li><a href="/blog/categories/nodered.html">NodeRED</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/nokia.html">Nokia</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/nosql.html">NoSQL</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/omnisophie.html">Omnisophie</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/openapi.html">OpenAPI</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/opensource.html">OpenSource</a> <span class="sidebar-count">6</span></li>
+		<li><a href="/blog/categories/pmd.html">PMD</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/protocols.html">Protocols</a> <span class="sidebar-count">5</span></li>
+		<li><a href="/blog/categories/quarkus.html">Quarkus</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/reactive.html">Reactive</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/rust.html">Rust</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/salesforce.html">Salesforce</a> <span class="sidebar-count">51</span></li>
+		<li><a href="/blog/categories/sametime.html">Sametime</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/sfdx.html">SFDX</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/showntellthursday.html">Show-N-Tell Thursday</a> <span class="sidebar-count">189</span></li>
+		<li><a href="/blog/categories/singapore.html">Singapore</a> <span class="sidebar-count">84</span></li>
+		<li><a href="/blog/categories/socialbusiness.html">SocialBusiness</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/software.html">Software</a> <span class="sidebar-count">211</span></li>
+		<li><a href="/blog/categories/sql.html">SQL</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/sywtbadd.html">SYWTBADD</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/tdd.html">TDD</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/technology.html">Technology</a> <span class="sidebar-count">35</span></li>
+		<li><a href="/blog/categories/travel.html">Travel</a> <span class="sidebar-count">24</span></li>
+		<li><a href="/blog/categories/twins.html">Twins</a> <span class="sidebar-count">28</span></li>
+		<li><a href="/blog/categories/typescript.html">TypeScript</a> <span class="sidebar-count">2</span></li>
+		<li><a href="/blog/categories/umsys.html">UMsys</a> <span class="sidebar-count">6</span></li>
+		<li><a href="/blog/categories/unittesting.html">UnitTesting</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/categories/vertx.html">vert.x</a> <span class="sidebar-count">18</span></li>
+		<li><a href="/blog/categories/webcomponents.html">WebComponents</a> <span class="sidebar-count">7</span></li>
+		<li><a href="/blog/categories/webdevelopment.html">WebDevelopment</a> <span class="sidebar-count">52</span></li>
+		<li><a href="/blog/categories/workflow.html">Workflow</a> <span class="sidebar-count">3</span></li>
+		<li><a href="/blog/categories/writingchinese.html">Writing Chinese</a> <span class="sidebar-count">4</span></li>
+		<li><a href="/blog/categories/xml.html">XML</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/categories/xpages.html">XPages</a> <span class="sidebar-count">116</span></li>
+	</ul>
+</wa-card>
 
+	<wa-card class="sidebar-module" with-header appearance="filled-outlined">
+	<h2 slot="header">Archive</h2>
+	<ul class="sidebar-list">
+		<li><a href="/blog/2002/">2002</a> <span class="sidebar-count">1</span></li>
+		<li><a href="/blog/2003/">2003</a> <span class="sidebar-count">19</span></li>
+		<li><a href="/blog/2004/">2004</a> <span class="sidebar-count">75</span></li>
+		<li><a href="/blog/2005/">2005</a> <span class="sidebar-count">123</span></li>
+		<li><a href="/blog/2006/">2006</a> <span class="sidebar-count">130</span></li>
+		<li><a href="/blog/2007/">2007</a> <span class="sidebar-count">101</span></li>
+		<li><a href="/blog/2008/">2008</a> <span class="sidebar-count">111</span></li>
+		<li><a href="/blog/2009/">2009</a> <span class="sidebar-count">168</span></li>
+		<li><a href="/blog/2010/">2010</a> <span class="sidebar-count">151</span></li>
+		<li><a href="/blog/2011/">2011</a> <span class="sidebar-count">137</span></li>
+		<li><a href="/blog/2012/">2012</a> <span class="sidebar-count">71</span></li>
+		<li><a href="/blog/2013/">2013</a> <span class="sidebar-count">51</span></li>
+		<li><a href="/blog/2014/">2014</a> <span class="sidebar-count">66</span></li>
+		<li><a href="/blog/2015/">2015</a> <span class="sidebar-count">28</span></li>
+		<li><a href="/blog/2016/">2016</a> <span class="sidebar-count">14</span></li>
+		<li><a href="/blog/2017/">2017</a> <span class="sidebar-count">22</span></li>
+		<li><a href="/blog/2018/">2018</a> <span class="sidebar-count">28</span></li>
+		<li><a href="/blog/2019/">2019</a> <span class="sidebar-count">31</span></li>
+		<li><a href="/blog/2020/">2020</a> <span class="sidebar-count">19</span></li>
+		<li><a href="/blog/2021/">2021</a> <span class="sidebar-count">8</span></li>
+		<li><a href="/blog/2022/">2022</a> <span class="sidebar-count">13</span></li>
+		<li><a href="/blog/2023/">2023</a> <span class="sidebar-count">19</span></li>
+		<li><a href="/blog/2024/">2024</a> <span class="sidebar-count">12</span></li>
+		<li><a href="/blog/2025/">2025</a> <span class="sidebar-count">12</span></li>
+		<li><a href="/blog/2026/">2026</a> <span class="sidebar-count">16</span></li>
+	</ul>
+	<a slot="footer" href="/blog/all.html" title="Every post, one page">Complete archive</a>
+</wa-card>
+
+</aside>
+
+	<footer slot="footer" class="site-footer">
+	<div class="site-footer-inner wa-grid">
+		<section>
+			<h2>About me</h2>
+			<p>I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.</p>
+			<a href="https://stackoverflow.com/users/131021/stwissel">
+				<img src="https://stackoverflow.com/users/flair/131021.png" width="208" height="58"
+				     alt="Stack Overflow profile for stwissel" loading="lazy" />
+			</a>
+		</section>
+
+		<section>
+			<h2>Contact</h2>
+			<ul class="footer-links">
+				<li><a rel="me" href="https://chaos.social/@stw">Mastodon</a></li>
+				<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+				<li><a href="https://notessensei.myspreadshop.com">Spreadshirt shop</a></li>
+				<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers</a></li>
+				<li><a href="https://github.com/Stwissel">GitHub</a></li>
+				<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
+			</ul>
+		</section>
+
+		<section class="footer-disclaimer">
+			<h2>Disclaimer</h2>
+			<p>This site is in no way affiliated, endorsed, sanctioned, supported, nor
+				enlightened by my current or previous employers. I may be an employee, but the
+				opinions, theories, facts, etc. presented here are my own and are in no way
+				given in any official capacity. In short, these are my words and this is my
+				site, not my current or former employers' &ndash; and don't even begin to think
+				otherwise.</p>
+			<p><b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as listed
+				here: <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/3.0/">Creative
+				Commons Attribution/NonCommercial/ShareAlike</a>, with the exception that no
+				rights are granted &ndash; since they are not mine to grant &ndash; in any logo,
+				graphic design, trademark or trade name of any type. Code samples and downloads
+				are, unless otherwise labeled, made available under an
+				<a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0</a>
+				license. Other license models are available on written request and written
+				confirmation.</p>
+		</section>
+	</div>
+</footer>
+
+</wa-page>
 	
 	
 <script>
 (function () {
   "use strict";
-  /*
-   * Navbar: Bootstrap 2's collapse plugin, minus Bootstrap and jQuery.
-   *
-   * /why inline height, not just the "in" class: bootstrap-responsive.css
-   * pins `.nav-collapse{height:0;overflow:hidden}` unconditionally (the
-   * element never carries the generic "collapse" class), so there is no
-   * `.nav-collapse.in{height:auto}` rule to win a specificity fight -- the
-   * real collapse.js plugin got around this the same way, by writing a
-   * pixel height directly to the element's style, which always outranks an
-   * external stylesheet rule without !important. Toggling the class alone
-   * leaves the menu at height:0 and invisible.
-   */
-  var navToggle = document.querySelector("[data-nav-toggle]");
-  if (navToggle) {
-    navToggle.addEventListener("click", function () {
-      var nav = document.getElementById("main-nav");
-      if (!nav) return;
-      var open = nav.classList.toggle("in");
-      nav.style.height = open ? "auto" : "";
-      navToggle.setAttribute("aria-expanded", String(open));
-    });
-  }
-  /* Comment form reveal. */
+    /* The comment editor is fetched on the first click of the reveal button.
+     /why a click and not a disclosure's show event: the form is injected into
+     the DOM only when this fires, and that is deliberate -- a spam bot that
+     never clicks never sees a form. A disclosure would also fire on
+     programmatic opening, on keyboard activation, and when the browser expands
+     it for find-in-page, each of which puts the form in the DOM without anyone
+     choosing to comment. A click is the narrowest trigger that still works. */
   var commentToggle = document.querySelector("[data-comment-toggle]");
   if (commentToggle) {
     commentToggle.addEventListener("click", function () {
-      var target = document.getElementById(commentToggle.getAttribute("data-comment-toggle"));
-      if (!target) return;
-      var open = target.classList.toggle("in");
-      commentToggle.setAttribute("aria-expanded", String(open));
-      if (open) window.dispatchEvent(new Event("blog:comments-requested"));
-    });
+      window.dispatchEvent(new Event("blog:comments-requested"));
+      commentToggle.remove();
+    }, { once: true });
   }
+
   /* Tier 3: content-derived needs, asked of the rendered DOM.
      /why: month indexes and the front page inherit code blocks from the
      excerpts they render, so page type alone cannot answer this. */

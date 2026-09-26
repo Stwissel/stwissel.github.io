@@ -1,5 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="wa-theme-default wa-palette-default wa-light wa-cloak">
+<script>
+/* Appearance: system by default, overridable to light or dark, remembered in a
+   cookie.
+
+   /why inline and first: Web Awesome switches theme on a class, not a media
+   query, so the class must be on <html> before the first paint or the page
+   flashes light and then turns dark. This is the one script on the site that
+   cannot be deferred, and the cookie has to be read synchronously here.
+
+   /why a cookie rather than localStorage: it is sent with the request, so if
+   this ever becomes server-rendered the preference is already available before
+   a byte of HTML is written. Nothing is stored until a reader actually chooses:
+   "system" deletes the cookie rather than recording a third value, so the
+   majority who never touch the control carry no state at all. */
+(function () {
+	var NAME = "appearance";
+	var MODES = ["system", "light", "dark"];
+	var ICONS = { system: "circle-half-stroke", light: "sun", dark: "moon" };
+	var media = window.matchMedia("(prefers-color-scheme: dark)");
+	var mode = (document.cookie.match(/(?:^|;\s*)appearance=(light|dark)(?:;|$)/) || [])[1] || "system";
+
+	function apply() {
+		var dark = mode === "dark" || (mode === "system" && media.matches);
+		var c = document.documentElement.classList;
+		c.toggle("wa-dark", dark);
+		c.toggle("wa-light", !dark);
+	}
+	function remember() {
+		document.cookie = mode === "system"
+			? NAME + "=; Max-Age=0; Path=/; SameSite=Lax"
+			: NAME + "=" + mode + "; Max-Age=31536000; Path=/; SameSite=Lax";
+	}
+	apply();
+	/* Only follow the OS while the reader has not overridden it. */
+	media.addEventListener("change", function () { if (mode === "system") { apply(); } });
+
+	document.addEventListener("DOMContentLoaded", function () {
+		var btn = document.getElementById("appearance-toggle");
+		if (!btn) { return; }
+		var icon = document.getElementById("appearance-icon");
+		function sync() {
+			icon.setAttribute("name", ICONS[mode]);
+			btn.setAttribute("aria-label", "Appearance: " + mode + ". Activate to change.");
+			btn.setAttribute("title", "Appearance: " + mode);
+		}
+		sync();
+		btn.addEventListener("click", function () {
+			mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+			remember();
+			apply();
+			sync();
+		});
+	});
+})();
+</script>
 <head>
 <title>Moving a NSF from one server to another - NotesSensei's Blog</title>
 <meta name="robots" content="index,follow" />
@@ -17,15 +72,13 @@
 <meta name="description"
 	content="Moving a NSF from one server to another - And no copying with Explorer or SSH either. Moving from one server to another is called replication. If it doesn&#39;t work as you expected you have a problem at hand that you need to fix that moment or it will bite you soon enough! (Picture courtesy of Bart Simpson Generator)" />
 
-<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.14.0/styles/webawesome.css" />
+<script type="module" src="https://ka-f.webawesome.com/webawesome@3.14.0/webawesome.loader.js"></script>
+<link rel="stylesheet" type="text/css" href="/blog/style/palette.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/site.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/admonition.css" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
-
 
 <link rel="alternate" type="application/rss+xml" title="wissel.net RSS feed" href="https://wissel.net/blog/stories.rss" />
 
@@ -43,75 +96,80 @@
 </script>
 </head>
 <body>
-	<div class="navbar navbar-inverse navbar-fixed-top">
-		<div class="navbar-inner">
-			<button class="btn btn-navbar" type="button" data-nav-toggle aria-expanded="false"
-			        aria-controls="main-nav" aria-label="Toggle navigation">
-				<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
-			</button>
-			<a class="brand" href="/">wissel.net</a>
-			<div class="nav-collapse" id="main-nav">
-				<ul class="nav">
-					<li><a href="/index.html">Home</a></li>
-					<li class="active"><a href="/blog/">Blog</a></li>
-					<li><a href="/blog/series.html">Series</a></li>
-					<li><a href="/blog/downloads/">Downloads</a></li>
-					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
-					<li><a href="/blog/imprint.html">About / Imprint</a></li>
-					<li><a href="/mealplan.html">Food</a></li>
-				</ul>
-				<form action="//www.google.com/cse" id="cse-search-box"
-					class="navbar-search pull-right">
-					<div>
-						<input type="hidden" name="cx"
-							value="partner-pub-4562257798204150:muo14ionenw" /> <input
-							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
-							name="q" class="search-query span2" placeholder="Search" />
-						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
-					</div>
-				</form>
-			</div>
+<wa-page disable-sticky="subheader aside">
+	<header slot="header" class="site-header">
+	<div class="site-header-inner wa-split">
+		<a class="site-brand" href="/">wissel.net</a>
+		<div class="site-header-end wa-cluster wa-gap-m">
+		<nav class="header-nav wa-cluster wa-gap-l" aria-label="Main">
+			<a href="/index.html">Home</a>
+			<a href="/blog/" aria-current="page">Blog</a>
+			<a href="/blog/series.html">Series</a>
+			<a href="/blog/downloads/">Downloads</a>
+			<a href="https://stwissel.github.io/presentations/">Presentations</a>
+			<a href="/blog/imprint.html">About</a>
+			<a href="/mealplan.html">Food</a>
+		</nav>
+		
+		<form class="header-search site-search" action="https://www.google.com/cse" role="search">
+			<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+			<input type="hidden" name="ie" value="UTF-8" />
+			<input type="search" name="q" aria-label="Search this site" placeholder="Search" />
+		</form>
+		
+		<wa-button id="appearance-toggle" appearance="plain" class="site-theme-toggle"
+		           aria-label="Appearance: system. Activate to change." title="Appearance: system">
+			<wa-icon id="appearance-icon" name="circle-half-stroke" label=""></wa-icon>
+		</wa-button>
+		<wa-button data-toggle-nav appearance="plain" class="wa-mobile-only site-nav-toggle" aria-label="Open menu">
+			<wa-icon name="bars" label="Menu"></wa-icon>
+		</wa-button>
 		</div>
 	</div>
-<div class="navbar-spacer"></div>
+</header>
+<nav slot="navigation" class="wa-stack wa-gap-2xs" aria-label="Main">
+	<a href="/index.html" data-drawer="close">Home</a>
+	<a href="/blog/" data-drawer="close">Blog</a>
+	<a href="/blog/series.html" data-drawer="close">Series</a>
+	<a href="/blog/downloads/" data-drawer="close">Downloads</a>
+	<a href="https://stwissel.github.io/presentations/" data-drawer="close">Presentations</a>
+	<a href="/blog/imprint.html" data-drawer="close">About</a>
+	<a href="/mealplan.html" data-drawer="close">Food</a>
+	<form class="site-search" action="https://www.google.com/cse" role="search">
+		<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+		<input type="hidden" name="ie" value="UTF-8" />
+		<wa-input type="search" name="q" size="s" placeholder="Search" label="Search this site" with-label></wa-input>
+	</form>
+</nav>
 
-	<div class="container">
-	    		<br />
-		<header>
-			<div id="mainsmall"  class="hero-unit">
-				<h2>wissel.net</h2>
-				<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
-			</div>
-		</header>
+	    <div slot="subheader" class="site-hero site-hero-small">
+	<div class="site-hero-inner">
+		<h2>wissel.net</h2>
+		<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+	</div>
+</div>
 
-    <ul class="breadcrumb">
-  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2011/">2011</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2011/10/">October</a></li>
-  <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/ibmnotes.html">IBM Notes</a>
-  </li>
-  <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/lotusnotes.html">Lotus Notes</a>
-  </li>
-	<li class="pull-right">
-	<span class="divider">|</span><a href="/blog/d6plinks/SHWL-8MZDTB" title="originally published at /blog/d6plinks/SHWL-8MZDTB">SHWL-8MZDTB</a>
-	</li>
-</ul>
+	<main>
+								<div class="entry-meta-row wa-cluster">
+	<wa-breadcrumb>
+		<wa-breadcrumb-item href="/blog/">Blog</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2011/">2011</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2011/10/">October</wa-breadcrumb-item>
+	</wa-breadcrumb>
+	<div class="entry-tags wa-cluster">
+		<a class="entry-tag" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="entry-tag" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
+		<a class="entry-tag entry-tag-legacy" href="/blog/d6plinks/SHWL-8MZDTB" title="originally published at /blog/d6plinks/SHWL-8MZDTB">SHWL-8MZDTB</a>
+	</div>
+</div>
 
-			<div class="row-fluid">
-			<div class="span12">
-								
-				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2011/10/upcoming-xpages-training-2011.html"><i class="icon-hand-left"></i>Upcoming XPages Training 2011</a>
-						<span class="divider">|</span></li>
-					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2011/11/balsamiq-mockups-in-xpages.html">Balsamiq Mockups in XPages<i class="icon-hand-right"></i></a>
-					</li>
-				</ul>
+				
+				<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2011/10/upcoming-xpages-training-2011.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> Upcoming XPages Training 2011</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	<a href="/blog/2011/11/balsamiq-mockups-in-xpages.html" rel="next">Balsamiq Mockups in XPages <wa-icon name="arrow-right"></wa-icon></a>
+</nav>
 
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h1><small>Moving a NSF from one server to another</small></h1>
 										<a href="/blog/2011/10/moving-a-nsf-from-one-server-to-another.prompt" title="View AI image prompt">
 						<img src="/blog/2011/10/moving-a-nsf-from-one-server-to-another.webp" alt="Hero image for Moving a NSF from one server to another" class="hero-image"
@@ -124,201 +182,193 @@
  And no copying with Explorer or SSH either. Moving from one server to another is called replication. If it doesn't work as you expected you have a problem at hand that you need to fix that moment or it will bite you soon enough! (Picture courtesy of <a href="http://www.addletters.com/pictures/bart-simpson-generator/1813603.htm">Bart Simpson Generator</a>)</div>
 					<hr />
 					<p>
-						Posted by <a rel="author" href="https://plus.google.com/u/0/+StephanWissel">
-Stephan H Wissel</a> on 26 October 2011
-<span class="divider">|</span>
-<a href="/blog/2011/10/moving-a-nsf-from-one-server-to-another.html#comments">Comments (d)</a>
-<span class="divider">|</span>
-categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/blog/categories/lotusnotes.html">Lotus Notes</a> 
+						Posted by <span rel="author">Stephan H Wissel</span> on 26 October 2011
+<span class="meta-sep" aria-hidden="true">|</span>
+<a href="/blog/2011/10/moving-a-nsf-from-one-server-to-another.html#comments">13 comments</a>
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="meta-category" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
 
 						<script type="text/javascript">
 							var permaLink = "https://wissel.net/blog/2011/10/moving-a-nsf-from-one-server-to-another.html";
 						</script>
 					</p>
 				</article>
-				<a name="comments"></a>
-				<div class="well well-raised" style="text-align : center">
-				<button class="btn btn-info" type="button"
-				        data-comment-toggle="commentform_50A2366209F4C97248257935003744EC" aria-expanded="false">
-		            Add your comment...&nbsp;&nbsp;<i class="icon-comment"></i>
-	            </button>
-	            </div>
-				<div id="commentform_50A2366209F4C97248257935003744EC"  class="collapse"></div>
-				<div class="well well-raised">
-					<h4>Comments</h4>
-					<ol id="commentList">
-						<li>
-							posted by <b>Fredrik Norling</b> on <i>Wednesday 26 October 2011 AD</i>:<br /> 
+<a name="comments"></a>
+<div class="comment-reveal">
+	<wa-button variant="brand" data-comment-toggle="commentform_50A2366209F4C97248257935003744EC">
+		Add your comment&hellip;
+	</wa-button>
+	<div id="commentform_50A2366209F4C97248257935003744EC"></div>
+</div>
+<wa-card class="comment-list" with-header appearance="filled-outlined">
+	<h4 slot="header">Comments</h4>
+	<ol id="commentList">
+		<li>
+			
+			posted by <b>Fredrik Norling</b> on <i>Wednesday 26 October 2011 AD</i>:<br /> 
   I has been many times some administrator thought he be clever and done this. And later removed all documents in the old file 
   <img alt="Emoticon biggrin.gif" src="/blog/images/emoticons/biggrin.gif" border="0" /> because that is a copy 
   <img alt="Emoticon laugh.gif" src="/blog/images/emoticons/laugh.gif" border="0" />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Richard Moy</b> on <i>Wednesday 26 October 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Richard Moy</b> on <i>Wednesday 26 October 2011 AD</i>:<br /> 
   Ran into this problem a few times when customers did not understand Domino.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Gernot Hummer</b> on <i>Wednesday 26 October 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Gernot Hummer</b> on <i>Wednesday 26 October 2011 AD</i>:<br /> 
   Similar to my early challenge during designing forms as a fresh Notes dev to keep in mind that hide-whens actually hide stuff when they return @True. 
   <br /> 
   <br />I had my own fair share of problems with admins copying nsf - files on file system level *grml* 
   <img alt="Emoticon biggrin.gif" src="/blog/images/emoticons/biggrin.gif" border="0" />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Cristian</b> on <i>Wednesday 26 October 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Cristian</b> on <i>Wednesday 26 October 2011 AD</i>:<br /> 
   I will never FTP a NSF from one server to another.... 
   <br />WHILE the Domino server is still running 
   <img alt="Emoticon wink.gif" src="/blog/images/emoticons/wink.gif" border="0" />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Stephan H. Wissel</b> on <i>Wednesday 26 October 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Stephan H. Wissel</b> on <i>Wednesday 26 October 2011 AD</i>:<br /> 
   @Christian: NEVER, Domino running or not
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Craig Wiseman</b> on <i>Thursday 27 October 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Craig Wiseman</b> on <i>Thursday 27 October 2011 AD</i>:<br /> 
   Unless you're moving the whole server....
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Rob Novak</b> on <i>Thursday 27 October 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Rob Novak</b> on <i>Thursday 27 October 2011 AD</i>:<br /> 
   Stephan, do you have suggestions for troubleshooting production databases in a staging environment? I run across this all the time with Quickr Domino, and the supported method of moving these nsfs is to just move them over Windows/whatever OS, then register and install them on a target server. Same with place moves.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>mark myers</b> on <i>Thursday 27 October 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>mark myers</b> on <i>Thursday 27 October 2011 AD</i>:<br /> 
   if you want to make an admin commit suicide, set the data directories of 2 domino servers to the sync via dropbox, then run like hell.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Keith Brooks</b> on <i>Thursday 27 October 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Keith Brooks</b> on <i>Thursday 27 October 2011 AD</i>:<br /> 
   Did FTP once many years ago but prefer normal OS copy or some similar way when replication is not possible. 
   <br />We used to send out CDs back before better bandwidth. 
   <br />Rob, That's how I do it as well for Quickr because you have to. 
   <br />Regular nsf from Prod to I have 1 ID which is shared between both domains and is NOT an Admin ID just a generic user.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Stephan H. Wissel</b> on <i>Saturday 29 October 2011 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Stephan H. Wissel</b> on <i>Saturday 29 October 2011 AD</i>:<br /> 
   @Rob: Take a Notes Admin Client and replicate it over to the other server, then register on the target server. 
   <br /> 
   <br />@Keith: FTP or OS Level copy are equally bad. What we did when sending CDs (which we had to do a lot): put them on a local machine and as final leg replicate them up to the server 
   <br /> 
   <br />@Craig: if there is no &quot;another server&quot; involved you can. If you have another one (even temp) replication is the safer option
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>harkpabst_meliantrop</b> on <i>Friday 31 May 2013 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>harkpabst_meliantrop</b> on <i>Friday 31 May 2013 AD</i>:<br /> 
   Just had to stop by and mention, that &quot;CD-ROM publishing date&quot; is still there in a database's replication settings ... oops, meant to say &quot;Replication Options for this Application&quot; of course ... 
   <br /> 
   <br />... and at least as of Notes 8.5.3 it is really still called &quot; 
   <b>CD-ROM</b> publishing date&quot;. 
   <img alt="Emoticon tongue.gif" src="/blog/images/emoticons/tongue.gif" border="0" />
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Don Mottolo</b> on <i>Wednesday 19 February 2014 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Don Mottolo</b> on <i>Wednesday 19 February 2014 AD</i>:<br /> 
   Stephan, Could you explain more of the &quot;why&quot; an OS level or FTP copy is a problem? What are the symptoms/problems you've seen? I can see that at the OS level it would be copying everything bit by bit , including whitespace, deletion stubs, view indexes, corrupted docs/notes, etc. So, a new rep would be cleaner.
  
-							<hr style="clear : both" />
-						</li> 						<li>
-							posted by <b>Stephan H. Wissel</b> on <i>Wednesday 19 February 2014 AD</i>:<br /> 
+		</li>
+		<li>
+			
+			posted by <b>Stephan H. Wissel</b> on <i>Wednesday 19 February 2014 AD</i>:<br /> 
   @Don: you explained it nicely. Only thing to add: each NSF contains an internal master index (actually 2) that keeps track which binary blobs constitute what in the NSF. Think of it as the file allocation table. If both copies get damaged you can throw the NSF away. Creating a new replica creates a new clean index (and doesn't copy view indexes or white space as you pointed out)
  
-							<hr style="clear : both" />
-						</li> 					</ol>
-				</div>
+		</li>
+	</ol>
+</wa-card>
 
-				<ul class="breadcrumb pull-centre">
-					<li><a href="/blog/2011/10/upcoming-xpages-training-2011.html"><i class="icon-hand-left"></i>Upcoming XPages Training 2011</a>
-						<span class="divider">|</span></li>
-					<li><a href="/blog/"><i class="icon-hand-up"></i>Main</a></li>
-					<span class="divider">|</span>
-					<li><a href="/blog/2011/11/balsamiq-mockups-in-xpages.html">Balsamiq Mockups in XPages<i class="icon-hand-right"></i></a>
-					</li>
-				</ul>
+				<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2011/10/upcoming-xpages-training-2011.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> Upcoming XPages Training 2011</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	<a href="/blog/2011/11/balsamiq-mockups-in-xpages.html" rel="next">Balsamiq Mockups in XPages <wa-icon name="arrow-right"></wa-icon></a>
+</nav>
 
 
-			</div>
-		</div>
-				<ul class="breadcrumb">
-  <li><a href="/blog/">Blog</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2011/">2011</a> <span class="divider">/</span></li>
-  <li><a href="/blog/2011/10/">October</a></li>
-  <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/ibmnotes.html">IBM Notes</a>
-  </li>
-  <li class="pull-right">
-    <span class="divider">|</span><a href="/blog/categories/lotusnotes.html">Lotus Notes</a>
-  </li>
-	<li class="pull-right">
-	<span class="divider">|</span><a href="/blog/d6plinks/SHWL-8MZDTB" title="originally published at /blog/d6plinks/SHWL-8MZDTB">SHWL-8MZDTB</a>
-	</li>
-</ul>
-
-
+				<div class="entry-meta-row wa-cluster">
+	<wa-breadcrumb>
+		<wa-breadcrumb-item href="/blog/">Blog</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2011/">2011</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2011/10/">October</wa-breadcrumb-item>
+	</wa-breadcrumb>
+	<div class="entry-tags wa-cluster">
+		<a class="entry-tag" href="/blog/categories/ibmnotes.html">IBM Notes</a><a class="entry-tag" href="/blog/categories/lotusnotes.html">Lotus Notes</a>
+		<a class="entry-tag entry-tag-legacy" href="/blog/d6plinks/SHWL-8MZDTB" title="originally published at /blog/d6plinks/SHWL-8MZDTB">SHWL-8MZDTB</a>
 	</div>
-		<footer>
-		<div class="container">
-			<div class="row">
-				<div class="span2">
-					<h4>About Me</h4>
-					<p>
-						I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.
-						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
-					</p>
-					<a href="//stackoverflow.com/users/131021/stwissel">
-					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
-				</a>
-				</div>
-				<div class="span2">
-					<h4>Contact</h4>
-					<ul>
-						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
-						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
-						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
-						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
-						<li><a href="https://github.com/Stwissel">GitHub</a></li>
-						<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
-					</ul>
-				</div>
-				<div class="span8">
-					<h4>Disclaimer</h4>
-					<p>This site is in no way affiliated, endorsed, sanctioned,
-						supported, nor enlightened by my current or previous employers.
-						I may be an employee, but the opinions, theories, facts, etc.
-						presented here are my own and are in now way given in any official
-						capacity. In short, these are my words and this is my site, not
-						my current or former employers' - and don't even begin to think otherwise.</p>
-					<p>
-						<b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as
-						listed here: <a rel="license"
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
-							alt="Creative Commons License" style="border-width: 0"
-							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
-						Unless otherwise labeled by its originating author, the content
-						found on this site is made available under the terms of an <a
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
-							target="_blank"
-							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
-							Creative Commons License</a>, with the exception that no rights are
-						granted -- since they are not mine to grant -- in any logo,
-						graphic design, trademarks or trade names of any type. Code
-						samples and code downloads on this site are, unless otherwise
-						labeled, made available under an <a
-							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
-							2.0</a> license. Other license models are available on written
-						request and written confirmation.
-					</p>
-				</div>
-			</div>
-		</div>
-	</footer>
+</div>
 
+
+	</main>
+	
+	<footer slot="footer" class="site-footer">
+	<div class="site-footer-inner wa-grid">
+		<section>
+			<h2>About me</h2>
+			<p>I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.</p>
+			<a href="https://stackoverflow.com/users/131021/stwissel">
+				<img src="https://stackoverflow.com/users/flair/131021.png" width="208" height="58"
+				     alt="Stack Overflow profile for stwissel" loading="lazy" />
+			</a>
+		</section>
+
+		<section>
+			<h2>Contact</h2>
+			<ul class="footer-links">
+				<li><a rel="me" href="https://chaos.social/@stw">Mastodon</a></li>
+				<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+				<li><a href="https://notessensei.myspreadshop.com">Spreadshirt shop</a></li>
+				<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers</a></li>
+				<li><a href="https://github.com/Stwissel">GitHub</a></li>
+				<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
+			</ul>
+		</section>
+
+		<section class="footer-disclaimer">
+			<h2>Disclaimer</h2>
+			<p>This site is in no way affiliated, endorsed, sanctioned, supported, nor
+				enlightened by my current or previous employers. I may be an employee, but the
+				opinions, theories, facts, etc. presented here are my own and are in no way
+				given in any official capacity. In short, these are my words and this is my
+				site, not my current or former employers' &ndash; and don't even begin to think
+				otherwise.</p>
+			<p><b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as listed
+				here: <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/3.0/">Creative
+				Commons Attribution/NonCommercial/ShareAlike</a>, with the exception that no
+				rights are granted &ndash; since they are not mine to grant &ndash; in any logo,
+				graphic design, trademark or trade name of any type. Code samples and downloads
+				are, unless otherwise labeled, made available under an
+				<a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0</a>
+				license. Other license models are available on written request and written
+				confirmation.</p>
+		</section>
+	</div>
+</footer>
+
+</wa-page>
 		<script type="text/javascript">
 		var permaLink = "https://wissel.net/blog/2011/10/moving-a-nsf-from-one-server-to-another.html";
 	</script>
@@ -330,6 +380,20 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 	  var loaded = false;
 	  /* /why: the editor stack is ~157 KB that most readers never open.
 	     It is fetched on the first click of the reveal button instead. */
+	  /* /why markdown.css is loaded here and not in head_styles: it styles the
+	     wmd editor -- .wmd-button-bar, .wmd-input, .wmd-preview -- which exists
+	     only once this form is injected. An audit of the rendered pages called
+	     the file dead because no static page contains that markup, and deleting
+	     it left the editor toolbar as bare bullets and the preview unstyled.
+	     It is not dead, it is late: it belongs with the code that creates the
+	     markup it styles, so it costs nothing on the pages that never open a
+	     comment form. */
+	  function loadCss(href) {
+	    var l = document.createElement("link");
+	    l.rel = "stylesheet";
+	    l.href = href;
+	    document.head.appendChild(l);
+	  }
 	  var SCRIPTS = [
 	    "/blog/js2/mustache.js",
 	    "/blog/js2/Markdown.Converter.js",
@@ -358,6 +422,7 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 	  window.addEventListener("blog:comments-requested", function () {
 	    if (loaded) return;
 	    loaded = true;
+	    loadCss("/blog/style/markdown.css");
 	    loadSequential(SCRIPTS, function () { renderComment(SITE_KEY, PARENT_ID); });
 	  });
 	})();
@@ -367,39 +432,21 @@ categories:  <a href="/blog/categories/ibmnotes.html">IBM Notes</a>  <a href="/b
 <script>
 (function () {
   "use strict";
-  /*
-   * Navbar: Bootstrap 2's collapse plugin, minus Bootstrap and jQuery.
-   *
-   * /why inline height, not just the "in" class: bootstrap-responsive.css
-   * pins `.nav-collapse{height:0;overflow:hidden}` unconditionally (the
-   * element never carries the generic "collapse" class), so there is no
-   * `.nav-collapse.in{height:auto}` rule to win a specificity fight -- the
-   * real collapse.js plugin got around this the same way, by writing a
-   * pixel height directly to the element's style, which always outranks an
-   * external stylesheet rule without !important. Toggling the class alone
-   * leaves the menu at height:0 and invisible.
-   */
-  var navToggle = document.querySelector("[data-nav-toggle]");
-  if (navToggle) {
-    navToggle.addEventListener("click", function () {
-      var nav = document.getElementById("main-nav");
-      if (!nav) return;
-      var open = nav.classList.toggle("in");
-      nav.style.height = open ? "auto" : "";
-      navToggle.setAttribute("aria-expanded", String(open));
-    });
-  }
-  /* Comment form reveal. */
+    /* The comment editor is fetched on the first click of the reveal button.
+     /why a click and not a disclosure's show event: the form is injected into
+     the DOM only when this fires, and that is deliberate -- a spam bot that
+     never clicks never sees a form. A disclosure would also fire on
+     programmatic opening, on keyboard activation, and when the browser expands
+     it for find-in-page, each of which puts the form in the DOM without anyone
+     choosing to comment. A click is the narrowest trigger that still works. */
   var commentToggle = document.querySelector("[data-comment-toggle]");
   if (commentToggle) {
     commentToggle.addEventListener("click", function () {
-      var target = document.getElementById(commentToggle.getAttribute("data-comment-toggle"));
-      if (!target) return;
-      var open = target.classList.toggle("in");
-      commentToggle.setAttribute("aria-expanded", String(open));
-      if (open) window.dispatchEvent(new Event("blog:comments-requested"));
-    });
+      window.dispatchEvent(new Event("blog:comments-requested"));
+      commentToggle.remove();
+    }, { once: true });
   }
+
   /* Tier 3: content-derived needs, asked of the rendered DOM.
      /why: month indexes and the front page inherit code blocks from the
      excerpts they render, so page type alone cannot answer this. */

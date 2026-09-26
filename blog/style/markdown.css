@@ -1,22 +1,35 @@
+/* The wmd markdown editor's stylesheet.
+ *
+ * /why it is in this repo at all: it styles .wmd-button-bar, .wmd-input and
+ * .wmd-preview, which exist only after the comment form is injected. An audit
+ * of the rendered pages found no such markup and called the file dead; deleting
+ * it left the editor toolbar as bare bullets and the preview unstyled. It is
+ * loaded lazily alongside the editor scripts, so it costs nothing on the pages
+ * nobody comments on.
+ *
+ * Its four hardcoded colours -- a bright yellow preview, a red rule, two greys --
+ * are mapped onto palette tokens so the editor does not introduce colours from
+ * outside the site's eight. The literals remain as fallbacks.
+ */
 .wmd-button-bar 
 {
 	width: 100%;
-	background-color: Silver; 
+	background-color: var(--wa-color-neutral-fill-quiet, #E1DDDB); 
 }
 
 .wmd-input 
 { 
 	height: 180px;
 	width: 95%;
-	background-color: #E6EEF2;
+	background-color: var(--wa-color-surface-default, #F0EEE9);
 	border: 1px solid #285C73;
 }
 
 .wmd-preview 
 { 
     width: 95%;
-	background-color: #FFFCBB;
-	border-left : 4px solid red;
+	background-color: var(--wa-color-warning-95, #F4F0D2);
+	border-inline-start: 4px solid var(--wa-color-warning-border-loud, #8D8233);
 	padding : 4px;
 	margin-bottom : 4px;
 }
@@ -39,7 +52,7 @@
 	margin-left: 14px;
 	
 	position: absolute;
-	background-color: Silver;
+	background-color: var(--wa-color-neutral-fill-quiet, #E1DDDB);
 	display: inline-block; 
 	list-style: none;
 }
@@ -107,4 +120,76 @@
 	font-family: trebuchet MS, helvetica, sans-serif;
 	font-size: 0.8em;
 	font-weight: bold;
+}
+
+/* ---------------------------------------------------------------------------
+ * Editor panel corrections
+ *
+ * 1. The preview used to start 35px higher than the textarea, because the left
+ *    cell carries a toolbar between its label and its input and the right cell
+ *    does not. Measured at 35px on the live site too -- a bug in both. One
+ *    variable now sets the toolbar's height and the preview's top offset, so
+ *    the two panels start level by construction rather than by coincidence.
+ *
+ * 2. Both panels were width:95% on content-box, so with padding and a border
+ *    the preview used 89% of its cell and the textarea 94%. They now fill the
+ *    50% cells they are given, which is what makes the form use the horizontal
+ *    space it has.
+ *
+ * 3. The two cells stack below 40rem. The layout is a table in comment.mustache,
+ *    so side-by-side panels on a phone would each be ~170px wide.
+ * ------------------------------------------------------------------------- */
+#wmd-panel { --wmd-toolbar-height: 1.9rem; }
+
+/* /why the labels become blocks: as inline-blocks each sat in a line box, and
+   the block that followed started after that box's leading. On the left that
+   block is the toolbar, on the right it is the preview, and the two did not
+   clear the same amount -- 10px of the original 35px misalignment survived
+   even after the toolbar's height was compensated for. As blocks both columns
+   advance identically and the panels line up by construction. */
+#wmd-panel label { display: block; }
+
+/* Reclaim the cells' 12px padding as a gap between the columns instead, so the
+   panels use the full half-width they are given. */
+#wmd-panel table { border-collapse: separate; border-spacing: var(--wa-space-m, 1rem) 0; }
+#wmd-panel td { padding: 0; }
+
+#wmd-button-bar {
+	block-size: var(--wmd-toolbar-height);
+	margin-block-end: var(--wa-space-2xs, .25rem);
+}
+
+/* /why this zeroes a margin rather than compensating for it: .wmd-button-row
+   carried margin-top:10px, and with nothing between it and the bar that margin
+   collapsed through and moved the whole left column down 10px. The right column
+   had no equivalent, which is the last of the original 35px misalignment. The
+   bar's own block-size now supplies all the space the toolbar needs. */
+.wmd-button-row { margin-block: 0; }
+
+.wmd-input,
+.wmd-preview {
+	box-sizing: border-box;
+	inline-size: 100%;
+	min-block-size: 14rem;
+}
+
+.wmd-preview {
+	/* The toolbar's height plus its margin: what the left column spends between
+	   its label and its input, and the right column otherwise does not. */
+	margin-block-start: calc(var(--wmd-toolbar-height) + var(--wa-space-2xs, .25rem));
+}
+
+#wmd-panel table,
+#wmd-panel td { box-sizing: border-box; }
+
+@media (max-width: 40rem) {
+	#wmd-panel table,
+	#wmd-panel tbody,
+	#wmd-panel tr,
+	#wmd-panel td {
+		display: block;
+		inline-size: 100% !important;
+	}
+	/* Stacked, the preview no longer needs to clear a toolbar beside it. */
+	.wmd-preview { margin-block-start: var(--wa-space-m, 1rem); }
 }

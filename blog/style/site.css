@@ -1,291 +1,596 @@
 /*
- * site.css — the blog's own styles, authored against Web Awesome tokens.
+ * site.css — wissel.net's own layer on top of Web Awesome.
  *
- * This file replaces wisselblog.css, of which only about 1.1KB of 78KB was
- * genuine site identity; the rest was Bootstrap overrides and an unused Font
- * Awesome glyph set.
+ * Everything here is either a wa-page behaviour that has to be configured, or
+ * one of the handful of things this blog does that the design system has no
+ * opinion about. Colours, spacing and radii come from --wa-* tokens so the
+ * light/dark switch and the palette both keep working.
  */
 
 /* ---------------------------------------------------------------------------
- * Site header
+ * Page frame
  *
- * A flex row that wraps, rather than a navbar with a JS-driven drawer. At phone
- * widths the brand stays on the first line and the links wrap beneath it, so
- * there is no hidden state, no toggle and no script.
+ * /why --site-measure is a raw length: it is a layout dimension like
+ * --menu-width and --aside-width, not a value on the spacing scale. Stephan
+ * chose ~1120px so the site centres on a wide monitor instead of the gap
+ * between main and sidebar growing without limit.
  * ------------------------------------------------------------------------- */
-.site-header {
-	display: flex;
-	flex-wrap: wrap;
+:root { --site-measure: 70rem; }
+
+wa-page {
+	--aside-width: 18rem;
+	/* /why the :has() below: the aside column's width is governed only by
+	   --aside-width, never by whether anything is slotted into it -- the same
+	   trap the docs call out for --menu-width. Article pages slot no aside at
+	   all, so without this they reserved an empty 18rem band on the right and
+	   the article sat off-centre. */
+	/* --menu-width stays at auto: the desktop sidebar is hidden by the
+	   header/drawer recipe, and hiding it collapses its content but never its
+	   grid track. A fixed value here reserves an empty band down the left. */
+}
+
+wa-page:not(:has([slot="aside"])) { --aside-width: auto; }
+
+/* Cap and centre the content region. header and footer stay full-bleed so their
+   colour bands reach the viewport edge; their inner wrappers match this width. */
+wa-page::part(body) {
+	max-width: var(--site-measure);
+	margin-inline: auto;
+	width: 100%;
+}
+
+/* ---------------------------------------------------------------------------
+ * The gap between main and the sidebar
+ *
+ * It was 64px, and none of it was a grid gap: wa-page's two columns touch, and
+ * the space came from main's 48px right padding plus the slotted aside's own
+ * 16px. Dropping it to roughly a third means taking it off both.
+ *
+ * --wa-space-l is 24px, the nearest step on the spacing scale to a third of 64;
+ * the exact third, 21.33px, is not on the scale and inventing a value for it
+ * would put this one measurement outside the system for 3px.
+ * ------------------------------------------------------------------------- */
+/* One inset, used everywhere: main's two sides, the sidebar's outer side, and
+   the gap between the columns are all --wa-space-l. The left gutter was 48px
+   against the sidebar's 16px, so content sat 32px off-centre inside a container
+   that is itself centred. */
+main { padding-inline: var(--wa-space-l); }
+[slot="aside"] {
+	padding-inline-start: 0;
+	padding-inline-end: var(--wa-space-l);
+}
+
+/* ---------------------------------------------------------------------------
+ * The two columns start on the same line
+ *
+ * They were 56px apart: both column boxes begin at the same y, but main added
+ * 48px of padding and then the first card's own 24px top margin, while the
+ * aside added only 16px. Equalising the padding is half the fix -- the other
+ * half is the first child's margin, which has nothing above it to separate
+ * itself from.
+ * ------------------------------------------------------------------------- */
+main,
+[slot="aside"] { padding-block-start: var(--wa-space-l); }
+main > :first-child,
+[slot="aside"] > :first-child { margin-block-start: 0; }
+
+/* ---------------------------------------------------------------------------
+ * Menu bar — Blue Fusion
+ * ------------------------------------------------------------------------- */
+/* /why padding is zeroed twice: wa-page pads the header REGION and also the
+   element you slot into it -- the slotted <header> came out with 16px of its
+   own, which is the same trap as the default padding on main. Between them the
+   bar was 88px tall for a 20px brand. Both are cleared so the inner wrapper
+   sets the height: a lean 44px bar, like the navbar it replaces. */
+wa-page::part(header) {
+	background-color: var(--site-menu-fill);
+	padding: 0;
+}
+.site-header { padding: 0; }
+
+.site-header-inner {
+	max-width: var(--site-measure);
+	margin-inline: auto;
+	padding-block: var(--wa-space-2xs);
+	padding-inline: var(--wa-space-l);
+	gap: var(--wa-space-m);
 	align-items: center;
-	gap: var(--wa-space-m, 1rem);
-	padding: var(--wa-space-s, .5rem) var(--wa-space-l, 1.5rem);
-	background: var(--wa-color-neutral-fill-quiet);
-	border-bottom: 1px solid var(--wa-color-surface-border);
+	min-block-size: 2.75rem;
 }
 
 .site-brand {
-	font-weight: 700;
-	font-size: 1.125rem;
+	font-size: var(--wa-font-size-m);
+	font-weight: var(--wa-font-weight-bold);
+	text-decoration: none;
+	color: var(--site-menu-on);
+	white-space: nowrap;
+}
+
+.header-nav a {
+	text-decoration: none;
+	color: var(--site-menu-on);
+	font-size: var(--wa-font-size-s);
+	opacity: .85;
+	padding-block: var(--wa-space-3xs);
+}
+.header-nav a:hover { opacity: 1; }
+.header-nav a[aria-current="page"] {
+	opacity: 1;
+	font-weight: var(--wa-font-weight-semibold);
+	box-shadow: inset 0 -2px 0 currentColor;
+}
+
+.site-theme-toggle::part(button),
+.site-nav-toggle::part(button) {
+	color: var(--site-menu-on);
+	min-block-size: 2rem;
+	padding-block: 0;
+}
+
+/* Steps 3 and 4 of the header/drawer recipe. Without the second rule the same
+   links render in the header AND in a desktop left sidebar. */
+wa-page[view="mobile"] .header-nav,
+wa-page[view="mobile"] .header-search { display: none; }
+wa-page[view="desktop"]::part(navigation) { display: none; }
+
+/* The drawer copy */
+[slot="navigation"] a {
 	text-decoration: none;
 	color: var(--wa-color-text-normal);
+	padding-block: var(--wa-space-2xs);
 }
+[slot="navigation"] .site-search { margin-block-start: var(--wa-space-m); }
 
-.site-nav {
-	flex: 1 1 auto;
-}
-
-.site-nav ul {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--wa-space-xs, .25rem) var(--wa-space-m, 1rem);
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-.site-nav a {
-	text-decoration: none;
-	color: var(--wa-color-text-quiet);
-	padding: var(--wa-space-2xs, .125rem) 0;
-}
-
-.site-nav a:hover {
-	color: var(--wa-color-text-normal);
-}
-
-/* /why aria-current rather than a class: the renderer already knows which
- * section is active, and aria-current states it to assistive technology as well
- * as to the stylesheet. One attribute, two jobs. */
-.site-nav a[aria-current="page"] {
-	color: var(--wa-color-brand-on-quiet);
-	font-weight: 600;
-	box-shadow: inset 0 -2px 0 var(--wa-color-brand-border-loud);
-}
-
-.site-search input[type="search"] {
-	font: inherit;
-	padding: var(--wa-space-2xs, .25rem) var(--wa-space-s, .5rem);
-	border: 1px solid var(--wa-color-surface-border);
-	border-radius: var(--wa-border-radius-m, .25rem);
-	background: var(--wa-color-surface-default);
-	color: var(--wa-color-text-normal);
-	min-width: 8rem;
-}
+.site-header-end { align-items: center; }
+.header-search input[type="search"] { inline-size: 9rem; }
 
 /* ---------------------------------------------------------------------------
- * Layout
+ * Hero — in the subheader region, below the menu
  * ------------------------------------------------------------------------- */
-main { padding-inline: var(--wa-space-l, 1.5rem); }
-main > * { max-width: 62rem; }
+wa-page::part(subheader) { background-color: var(--wa-color-surface-default); }
 
-/* /why not a Bootstrap grid: the only multi-column rows left after the navbar
- * and sidebar went were the footer and the downloads table. Two auto-fitting
- * grids replace twelve span classes. */
-.footer-columns {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-	gap: var(--wa-space-l, 1.5rem);
-}
-
-/* ---------------------------------------------------------------------------
- * The hero, and the site's own identity
- *
- * The old .hero-unit carried two background photographs (stw1.jpg / stw2.jpg)
- * behind the title. They are kept: they are the most recognisable thing about
- * the site. What goes is Bootstrap's 60px padding and 4px radius.
- * ------------------------------------------------------------------------- */
 .site-hero {
-	background: var(--wa-color-neutral-fill-quiet) center / cover no-repeat;
-	background-blend-mode: normal;
-	border-radius: var(--wa-border-radius-l, .5rem);
-	padding: var(--wa-space-xl, 2rem);
-	margin-block: var(--wa-space-l, 1.5rem);
+	background-size: cover;
+	background-repeat: no-repeat;
+	/* Deliberate literals: this text sits on a photograph, not on a themed
+	   surface. A semantic colour would invert in dark mode and vanish against
+	   an image that does not. The shadow is what makes it readable now that the
+	   picture is no longer dimmed. */
+	color: #fff;
+	text-shadow: 0 1px 2px rgb(0 0 0 / .9), 0 2px 12px rgb(0 0 0 / .7);
 }
-.site-hero h1, .site-hero h2 { margin: 0; }
-.site-hero p { margin: var(--wa-space-s, .5rem) 0 0; font-size: 1.125rem; }
-
-/* /why aspect-ratio plus object-fit: hero covers are authored at two sizes --
- * 1792x1024 for 88% of posts and 1536x1024 for the rest. A fixed ratio with
- * object-fit: cover crops both consistently; without object-fit the default
- * `fill` would stretch roughly 170 of them. */
-.hero-image {
+/* /why no overlay: the photographs are the point, and a scrim over the whole
+   frame dulled them. Legibility comes from the text instead -- a shadow tight
+   enough to hold against the light regions of either image without dimming the
+   picture behind it. */
+.site-hero-large {
+	background-image: url(/blog/img/stw1.jpg);
+	/* /why 20% and not top: the photo is 1303x977 with the horizon around 40%
+	   down. Anchored at the very top the strip was almost entirely sky;
+	   anchored at the centre it cut the sky off and led with the subject's
+	   midriff. 20% keeps sky above the title and brings the horizon, the lake
+	   and the head into the frame. */
+	background-position: center 20%;
+	min-height: 24rem;
+	display: flex;
+	align-items: flex-end;
+}
+.site-hero-small {
+	background-image: url(/blog/img/stw2.jpg);
+	/* /why top, not center: the photo is 1200x533 and the head sits at the very
+	   top of the frame. Cropped to a thin strip from the centre, the banner
+	   showed a t-shirt. */
+	background-position: center top;
+}
+.site-hero-inner {
+	max-width: var(--site-measure);
+	margin-inline: auto;
 	width: 100%;
-	aspect-ratio: 7 / 4;
-	object-fit: cover;
-	border-radius: var(--wa-border-radius-l, .5rem);
+	padding: var(--wa-space-l);
 }
+.site-hero-large h1 { margin: 0; font-size: var(--wa-font-size-3xl); }
+.site-hero-small h2 { margin: 0; font-size: var(--wa-font-size-l); }
+.site-hero p { margin-block: var(--wa-space-2xs) 0; color: #fff; }
+.site-hero-small p { font-size: var(--wa-font-size-s); }
 
 /* ---------------------------------------------------------------------------
- * Entry cards -- the listing unit on index, year, month and category pages.
- *
- * article stays an article: wrapping it in wa-card would have buried the
- * semantics a post listing depends on, so the card look is applied directly.
- * The shadow is wisselblog.css's own .well-raised, kept verbatim: it is on
- * every content box on the site and is the one purely decorative decision
- * worth carrying over.
+ * Footer — Hematite, separated from the content by its own band
  * ------------------------------------------------------------------------- */
-.entry-card {
-	display: block;
-	background: var(--wa-color-surface-default);
-	border: 1px solid var(--wa-color-surface-border);
-	border-radius: var(--wa-border-radius-l, .5rem);
-	padding: var(--wa-space-l, 1.5rem);
-	margin-block: var(--wa-space-l, 1.5rem);
-	box-shadow: 0 2px 4px rgb(0 0 0 / .12), 0 4px 8px rgb(0 0 0 / .06);
+wa-page::part(footer) {
+	background-color: var(--site-footer-fill);
+	color: var(--site-footer-on);
+	border-block-start: var(--wa-border-width-m) solid var(--wa-color-surface-border);
+	margin-block-start: var(--wa-space-2xl);
 }
+.site-footer-inner {
+	max-width: var(--site-measure);
+	margin-inline: auto;
+	padding: var(--wa-space-xl) var(--wa-space-l);
+	--min-column-size: 14rem;
+	min-width: 0;
+	gap: var(--wa-space-xl);
+}
+
+/* /why an explicit template instead of wa-grid's equal auto-fit columns: the
+   three footer sections are not equal in content. Contact is six short links
+   and needs no more than half a column; the disclaimer is two paragraphs of
+   licence text and was being wrapped into a narrow ribbon beside them. 1 / 0.5
+   / 1.5 gives the space Contact does not use to the column that does.
+   Below the breakpoint wa-grid's own auto-fit takes over and they stack. */
+@media (min-width: 48rem) {
+	.site-footer-inner { grid-template-columns: 1fr 0.5fr 1.5fr; }
+}
+.site-footer h2 { font-size: var(--wa-font-size-m); margin-block: 0 var(--wa-space-s); }
+.site-footer a { color: var(--site-footer-on); }
+.site-footer a:visited { color: var(--site-footer-on); }
+.footer-links { list-style: none; margin: 0; padding: 0; }
+.footer-disclaimer { font-size: var(--wa-font-size-s); }
 
 /* ---------------------------------------------------------------------------
  * Post furniture
  * ------------------------------------------------------------------------- */
-.entry-tags { display: flex; flex-wrap: wrap; gap: var(--wa-space-xs, .5rem); margin-block: var(--wa-space-s, .5rem); }
+
+/* ---------------------------------------------------------------------------
+ * The two control strips
+ *
+ * Breadcrumb-plus-categories and previous/main/next each read as one bar rather
+ * than as loose links, so each gets a band of its own. The band is on the strip,
+ * not on the category tags inside it -- tags with their own fill inside an
+ * unfilled row looked like the only thing that mattered there.
+ * ------------------------------------------------------------------------- */
+.entry-meta-row,
+.entry-nav {
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--wa-space-s) var(--wa-space-l);
+	margin-block: var(--wa-space-m);
+	padding: var(--wa-space-2xs) var(--wa-space-m);
+	/* /why surface-raised and not neutral-fill-quiet: this site's page ground IS
+	   neutral-95, and fill-quiet resolves to exactly that, so the band was the
+	   same colour as the page and invisible. The raised surface is what the
+	   cards use, so the strips read as part of the same family. */
+	background-color: var(--wa-color-surface-raised);
+	border: var(--wa-border-width-s) solid var(--wa-color-surface-border);
+	border-radius: var(--wa-border-radius-m);
+}
+/* /why the separator is a pseudo-element and not a character in the markup:
+   it is punctuation between links, not content, so it stays out of the
+   accessibility tree and out of anything that copies the text. The gap is
+   split either side of the rule so the spacing reads as even. */
+.entry-tags { gap: 0; }
+.entry-tag + .entry-tag::before {
+	content: "";
+	display: inline-block;
+	inline-size: var(--wa-border-width-s);
+	block-size: 1em;
+	margin-inline: var(--wa-space-s);
+	vertical-align: -0.15em;
+	background-color: var(--wa-color-surface-border);
+}
 .entry-tag {
-	font-size: .8125rem;
-	padding: .125rem .5rem;
-	border-radius: var(--wa-border-radius-pill, 999px);
-	background: var(--wa-color-brand-fill-quiet);
 	color: var(--wa-color-brand-on-quiet);
 	text-decoration: none;
+	font-size: var(--wa-font-size-s);
 }
-.entry-tag-legacy { background: var(--wa-color-neutral-fill-quiet); color: var(--wa-color-neutral-on-quiet); }
-
-.entry-nav {
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: space-between;
-	gap: var(--wa-space-m, 1rem);
-	margin-block: var(--wa-space-l, 1.5rem);
-}
+.entry-tag:hover { text-decoration: underline; }
+.entry-tag:visited { color: var(--site-visited); }
+.entry-tag-legacy { color: var(--wa-color-text-quiet); }
 .entry-nav a { text-decoration: none; }
 .entry-nav-up { color: var(--wa-color-text-quiet); }
 
-.meta-sep { color: var(--wa-color-text-quiet); margin-inline: .35rem; }
-.gravatarimg { float: right; width: 88px; height: 88px; border-radius: var(--wa-border-radius-m, .25rem); margin-inline-start: var(--wa-space-m, 1rem); }
-#commentList { list-style: none; padding: 0; }
-#commentList > li { border-bottom: 1px solid var(--wa-color-surface-border); padding-block: var(--wa-space-m, 1rem); }
-#commentList > li::after { content: ""; display: block; clear: both; }
-
-.series-list li[aria-current] { font-weight: 700; }
-
-/* ---------------------------------------------------------------------------
- * Sidebar modules
- * ------------------------------------------------------------------------- */
-.sidebar-module { margin-block-end: var(--wa-space-l, 1.5rem); display: block; }
-.sidebar-list { list-style: none; margin: 0; padding: 0; max-height: 22rem; overflow-y: auto; }
-.sidebar-list li { display: flex; justify-content: space-between; gap: var(--wa-space-s, .5rem); padding-block: .125rem; }
-.sidebar-list li[aria-current] a { font-weight: 700; }
-.sidebar-count { color: var(--wa-color-text-quiet); font-size: .8125rem; font-variant-numeric: tabular-nums; }
-
-/* ---------------------------------------------------------------------------
- * Content
- *
- * /why blockquote keeps a left rule: it is the one piece of wisselblog.css's
- * prose styling that carries meaning rather than decoration.
- * ------------------------------------------------------------------------- */
-blockquote { border-inline-start: 4px solid var(--wa-color-surface-border); margin-inline-start: 0; padding-inline-start: var(--wa-space-m, 1rem); }
-main img { max-width: 100%; height: auto; }
-main table { width: 100%; border-collapse: collapse; }
-
-/* /why this rule exists at all: inline code was styled only by
- * blogcodedisplay.css, which script_core loads ONLY when legacy GeSHi markup is
- * present. Every modern post therefore rendered inline code unstyled. */
-:not(pre) > code, kbd {
-	font-family: var(--wa-font-family-code, ui-monospace, monospace);
-	font-size: .875em;
-	padding: .1em .35em;
-	border-radius: var(--wa-border-radius-s, .1875rem);
-	background: var(--wa-color-neutral-fill-quiet);
+.entry-card {
+	display: block;
+	background-color: var(--wa-color-surface-raised);
+	border: var(--wa-border-width-s) solid var(--wa-color-surface-border);
+	border-radius: var(--wa-border-radius-l);
+	padding: var(--wa-space-l);
+	margin-block: var(--wa-space-l);
+	box-shadow: var(--wa-shadow-s);
 }
-
-/* ---------------------------------------------------------------------------
- * The last of the twelve-column grid
- *
- * Only the 404 page, the imprint and the cycling category still laid content
- * out in columns. auto-fit means they collapse to one column on narrow screens
- * without a single media query -- responsive.css needed seven.
- * ------------------------------------------------------------------------- */
-.grid-row {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-	gap: var(--wa-space-l, 1.5rem);
-	align-items: start;
-}
-.grid-row:has(> .grid-wide + .grid-narrow),
-.grid-row:has(> .grid-narrow + .grid-wide) { grid-template-columns: 2fr 1fr; }
-@media (max-width: 48rem) {
-	.grid-row:has(> .grid-wide) { grid-template-columns: 1fr; }
-}
-.align-end { justify-self: end; text-align: end; }
-
-/* ---------------------------------------------------------------------------
- * The two banner sizes
- *
- * /why IDs rather than classes: the renderer emits id="main" on index-style
- * pages and id="mainsmall" on entries, and that is the only signal in the markup
- * for which banner a page wants. These were ID rules in main.css too, which is
- * why they outranked .site-hero and flattened the banner to 37px until main.css
- * was retired.
- *
- * The large banner puts the title at the foot of the image rather than pushing
- * it down with 250px of padding, which is what it was doing before.
- * ------------------------------------------------------------------------- */
-#main.site-hero {
-	display: flex;
-	flex-direction: column;
-	justify-content: flex-end;
-	min-height: 20rem;
-	color: #fff;
-	text-shadow: 0 1px 3px rgb(0 0 0 / .6);
-}
-#main.site-hero h1 { font-size: clamp(2rem, 5vw, 3rem); }
-
-/* /why a scrim: both banner images are photographs with light and dark regions
- * in the same frame, so no single text colour is legible across them. A dark
- * gradient over the image gives the text a consistent ground to sit on. */
-#mainsmall.site-hero, #main.site-hero {
-	background-image:
-		linear-gradient(to right, rgb(0 0 0 / .72) 0%, rgb(0 0 0 / .45) 60%, rgb(0 0 0 / .25) 100%),
-		var(--site-hero-photo);
-	color: #fff;
-}
-#main.site-hero    { --site-hero-photo: url(/blog/img/stw1.jpg); }
-#mainsmall.site-hero { --site-hero-photo: url(/blog/img/stw2.jpg); }
-
-#mainsmall.site-hero {
-	display: flex;
-	align-items: baseline;
-	gap: var(--wa-space-m, 1rem);
-	min-height: 0;
-	padding: var(--wa-space-s, .75rem) var(--wa-space-l, 1.5rem);
-}
-#mainsmall.site-hero h2 { font-size: 1.25rem; }
-#mainsmall.site-hero p { font-size: .875rem; margin: 0; color: rgb(255 255 255 / .85); }
-@media (max-width: 40rem) {
-	#mainsmall.site-hero { display: block; }
-	#mainsmall.site-hero p { display: none; }
-}
-
-/* ---------------------------------------------------------------------------
- * Typographic scale
- *
- * wa-card slots its header into a region that inherits the document's heading
- * sizes, so an h2 inside a sidebar card rendered at full page-heading size.
- * These rules size headings by their role on the page rather than by tag.
- * ------------------------------------------------------------------------- */
-.sidebar-module h2 { font-size: 1rem; margin: 0; letter-spacing: .02em; text-transform: uppercase; color: var(--wa-color-text-quiet); }
-.series-box h3, .comment-list h4 { font-size: 1.125rem; margin: 0; }
-
-.entry-card h1, .entry-card h2 { margin-block-start: 0; }
+.entry-card > :first-child { margin-block-start: 0; }
 .entry-card h1 a, .entry-card h2 a { text-decoration: none; }
 .entry-card h1 a:hover, .entry-card h2 a:hover { text-decoration: underline; }
 
-/* /why visited links get their own colour: on an archive of 1,430 posts,
- * knowing which ones you have already read is genuinely useful navigation.
- * The site already did this -- the old colour was #8d32a4. */
-main a:visited { color: var(--wa-color-visited, #8d32a4); }
+.hero-image {
+	width: 100%;
+	aspect-ratio: 7 / 4;
+	object-fit: cover;
+	border-radius: var(--wa-border-radius-m);
+}
 
-/* Archive years collapse to months; the summary carries the year's post count. */
-.archive-year { margin-block-end: var(--wa-space-2xs, .25rem); }
-.archive-year .sidebar-list { max-height: none; }
-.sidebar-note { margin: 0 0 var(--wa-space-s, .5rem); font-size: .875rem; color: var(--wa-color-text-quiet); }
-.toc-sub { padding-inline-start: var(--wa-space-m, 1rem); }
-#post-toc .sidebar-list ul { list-style: none; margin: 0; padding: 0; }
+.gravatarimg {
+	float: inline-end;
+	inline-size: 88px;
+	block-size: 88px;
+	border-radius: var(--wa-border-radius-m);
+	margin-inline-start: var(--wa-space-m);
+}
+/* /why the same rebinding as the sidebar and series cards: wa-card's filled
+   appearances resolve to --wa-color-neutral-fill-quiet, which this palette
+   points at neutral-95 -- the page ground. Pointed at surface-raised instead,
+   the comments sit on the same white the article sits on, which is what makes
+   them read as part of the post rather than as loose text beneath it. Only the
+   branch that actually lists comments is filled; the "be the first" card stays
+   outlined, since an empty panel should not look as substantial as a full one. */
+.comment-list {
+	display: block;
+	--wa-color-neutral-fill-quiet: var(--wa-color-surface-raised);
+	margin-block: var(--wa-space-l);
+}
+
+#commentList { list-style: none; margin: 0; padding: 0; }
+#commentList > li {
+	border-block-end: var(--wa-border-width-s) solid var(--wa-color-surface-border);
+	padding-block: var(--wa-space-m);
+}
+#commentList > li::after { content: ""; display: block; clear: both; }
+.meta-sep { color: var(--wa-color-text-quiet); margin-inline: var(--wa-space-3xs); }
+
+/* /why a hairline and not the "|" used elsewhere in this line: the byline
+   already separates its three parts with pipes, and a fourth level of pipes
+   between the categories would compete with them. A 1px rule at 45% reads as
+   grouping rather than as punctuation. It is a pseudo-element so it stays out
+   of the accessibility tree and out of copied text. */
+/* /why nowrap: the rule is a ::before inside the link, and a line can break
+   between that box and the link's text -- leaving the separator stranded at
+   the end of one line with its category on the next. Keeping each link
+   unbreakable moves the rule down with the word it belongs to. Category names
+   containing a space, like "HCL Notes", stay whole for the same reason. */
+.meta-category { white-space: nowrap; }
+
+.meta-category + .meta-category::before {
+	content: "";
+	display: inline-block;
+	inline-size: 1px;
+	block-size: .75em;
+	margin-inline: var(--wa-space-xs);
+	vertical-align: -0.05em;
+	background-color: var(--wa-color-text-quiet);
+	opacity: .45;
+}
+
+/* ---------------------------------------------------------------------------
+ * Sidebar
+ *
+ * Stephan's rules: show every category (no scroll box), years only in the
+ * archive, and use a palette colour for the items.
+ * ------------------------------------------------------------------------- */
+/* /why a scoped token override rather than appearance="filled": wa-card's
+   filled appearances resolve to --wa-color-neutral-fill-quiet, and this
+   palette puts neutral-95 -- Cloud Dancer -- at both that token and the page
+   ground, so every filled appearance came out exactly the colour of the page
+   and only the card's border was visible. Rebinding the token for these cards
+   keeps the component's own API doing the painting; it just paints with a step
+   of the palette that is not the background. Blue Fusion's lightest tint ties
+   the boxes to the headings and links already inside them. */
+.sidebar-module {
+	display: block;
+	/* /why no margin at all: wa-page lays the slotted aside out as a flex
+	   column with its own 16px gap, so a margin here was added to that -- the
+	   real distance between boxes was 40px, not the 24 the margin suggested.
+	   Deleting it leaves the component's own gap as the single source of that
+	   spacing: 40px becomes 16px. */
+	margin-block-end: 0;
+	--wa-color-neutral-fill-quiet: var(--wa-color-brand-95);
+	--wa-color-surface-border: var(--wa-color-brand-90);
+}
+.sidebar-module h2 {
+	font-size: var(--wa-font-size-s);
+	letter-spacing: .04em;
+	text-transform: uppercase;
+	margin: 0;
+	color: var(--wa-color-brand-on-quiet);
+}
+.sidebar-list { list-style: none; margin: 0; padding: 0; }
+.sidebar-list li {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--wa-space-s);
+	padding-block: var(--wa-space-3xs);
+}
+.sidebar-list a { color: var(--wa-color-brand-on-quiet); text-decoration: none; }
+.sidebar-list a:hover { text-decoration: underline; }
+.sidebar-list a:visited { color: var(--site-visited); }
+.sidebar-list li[aria-current] a { font-weight: var(--wa-font-weight-bold); }
+.sidebar-count {
+	color: var(--wa-color-text-quiet);
+	font-size: var(--wa-font-size-xs);
+	font-variant-numeric: tabular-nums;
+}
+.sidebar-shop img { width: 100%; height: auto; border-radius: var(--wa-border-radius-m); }
+
+/* ---------------------------------------------------------------------------
+ * Mobile: the aside goes below the content
+ *
+ * wa-page has no stacking behaviour for the aside -- on mobile its body grid is
+ * still three side-by-side columns (measured: 0px 0px 390px, with main squeezed
+ * to nothing), which is why the component's own guidance is to display:none the
+ * aside below the breakpoint.
+ *
+ * /why not display:none: this aside is the category and archive navigation. On a
+ * phone, hiding it removes the only way to browse the blog by topic.
+ *
+ * /why restate the grid rather than switch to flex: setting display:flex on the
+ * body part made ::part(aside) collapse to zero height, so the slotted content
+ * escaped its box and drew on top of the footer. Keeping the grid and restating
+ * it with the component's own area names -- menu, main, aside -- stacks the
+ * regions without taking the layout away from the component. The menu row
+ * collapses on its own because its content lives in the drawer at this width.
+ * ------------------------------------------------------------------------- */
+wa-page[view="mobile"] { --aside-width: auto; }
+wa-page[view="mobile"]::part(body) {
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-areas: "menu" "main" "aside";
+	grid-template-rows: auto auto auto;
+}
+
+/* ---------------------------------------------------------------------------
+ * Content
+ * ------------------------------------------------------------------------- */
+main a:visited { color: var(--site-visited); }
+main img { max-width: 100%; height: auto; }
+blockquote {
+	border-inline-start: var(--wa-border-width-l) solid var(--wa-color-surface-border);
+	margin-inline-start: 0;
+	padding-inline-start: var(--wa-space-m);
+}
+
+/* /why this exists: inline code was styled only by blogcodedisplay.css, which
+ * script_core loads ONLY when legacy GeSHi markup is on the page, so every
+ * modern post rendered inline code unstyled. */
+:not(pre) > code, kbd {
+	font-family: var(--wa-font-family-code);
+	font-size: .875em;
+	padding: var(--wa-space-3xs) var(--wa-space-2xs);
+	border-radius: var(--wa-border-radius-s);
+	background-color: var(--wa-color-neutral-fill-quiet);
+}
+
+/* ---------------------------------------------------------------------------
+ * Overflow containment
+ *
+ * Three things in this site's content are wider than a phone and cannot be
+ * reflowed: code blocks (a bash one-liner is 807px of unbreakable text), tables
+ * authored in markdown, and the footer's column grid. Each scrolls inside its
+ * own box rather than pushing the page sideways -- a horizontally scrolling
+ * document is the single worst thing that can happen to a phone layout.
+ * ------------------------------------------------------------------------- */
+pre {
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+main table {
+	display: block;
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+/* /why min-width: 0 -- wa-page's footer region is a flex container, and a flex
+ * item defaults to min-width:auto, which refuses to shrink below its content's
+ * min-content width. The grid inside therefore sized itself to two 234px columns
+ * on a 390px phone and pushed the document 206px wide. min-width:0 lets it
+ * shrink, and the grid then falls to one column on its own. Capping
+ * --min-column-size looked like it should fix this and does not: the floor was
+ * never the problem, the flex item's refusal to shrink was. */
+.site-footer-inner { min-width: 0; }
+
+/* Long unbroken strings in post content -- URLs, IDs, command output. */
+main :is(p, li, td, th, dd) { overflow-wrap: break-word; }
+
+/* List-page headings. These were .well boxes in the Bootstrap markup, which the
+   conversion turned into cards -- a page title in a large empty panel. They are
+   headings, so they look like headings. */
+.page-title { font-size: var(--wa-font-size-2xl); margin-block: var(--wa-space-l) var(--wa-space-s); }
+.group-title {
+	font-size: var(--wa-font-size-l);
+	margin-block: var(--wa-space-xl) var(--wa-space-xs);
+	padding-block-end: var(--wa-space-2xs);
+	border-block-end: var(--wa-border-width-s) solid var(--wa-color-surface-border);
+	color: var(--wa-color-text-quiet);
+}
+
+/* The comment reveal. The button is replaced by the form it loads, so the block
+   keeps its own spacing rather than the button carrying it. */
+.comment-reveal { margin-block: var(--wa-space-l); }
+
+/* ---------------------------------------------------------------------------
+ * The comment form
+ *
+ * The form is injected at runtime, so it inherits nothing from the card styling
+ * around it. It gets the same surface as any other panel on the page, and the
+ * editor's own two regions -- the markdown input and its live preview -- are
+ * given a readable ground of their own. markdown.css supplies the toolbar; this
+ * supplies the frame around it.
+ * ------------------------------------------------------------------------- */
+.comment-reveal > div:not(:empty) {
+	background-color: var(--wa-color-surface-raised);
+	border: var(--wa-border-width-s) solid var(--wa-color-surface-border);
+	border-radius: var(--wa-border-radius-l);
+	padding: var(--wa-space-l);
+	box-shadow: var(--wa-shadow-s);
+}
+.comment-reveal input[type="text"],
+.comment-reveal input[type="email"],
+.comment-reveal input[type="url"],
+.comment-reveal textarea,
+.wmd-input {
+	inline-size: 100%;
+	font: inherit;
+	padding: var(--wa-space-2xs) var(--wa-space-s);
+	border: var(--wa-border-width-s) solid var(--wa-color-surface-border);
+	border-radius: var(--wa-border-radius-m);
+	background-color: var(--wa-color-surface-default);
+	color: var(--wa-color-text-normal);
+}
+.wmd-input { font-family: var(--wa-font-family-code); }
+/* /why nothing else here: markdown.css owns the editor's two panels -- their
+   size, their alignment and their colours -- and it loads after this file, so
+   rules duplicated here would silently lose. */
+.wmd-preview { overflow-wrap: break-word; }
+.wmd-preview :first-child { margin-block-start: 0; }
+
+/* /why min-inline-size:0 on the fieldset: a fieldset's default is min-content,
+   so it refuses to shrink below the widest thing inside it and pushed the page
+   33px wide once the comment form opened on a phone. Same family as the footer
+   grid's min-width:auto -- an element that will not shrink is the most common
+   cause of horizontal overflow, and neither shows up until you look at a narrow
+   viewport with the content actually present. */
+.comment-reveal fieldset {
+	min-inline-size: 0;
+	box-sizing: border-box;
+	max-inline-size: 100%;
+	margin: 0;
+}
+.comment-reveal legend { padding-inline: 0; }
+
+/* ---------------------------------------------------------------------------
+ * Mobile gutters
+ *
+ * wa-page pads main by 48px a side. On a desktop column that is right; on a
+ * 390px phone it is a quarter of the screen, and it stacks with every nested
+ * padding below it -- main 48, the comment card 24, the fieldset 24, which left
+ * the markdown editor 194px wide inside a 390px viewport. Half the screen was
+ * gutter. These trim the nesting at phone widths only; the desktop measure is
+ * untouched.
+ * ------------------------------------------------------------------------- */
+wa-page[view="mobile"] main { padding: var(--wa-space-m); }
+
+@media (max-width: 40rem) {
+	.comment-reveal > div:not(:empty) { padding: var(--wa-space-m); }
+	.comment-reveal fieldset { padding: var(--wa-space-m) 0 0; }
+	.entry-card { padding: var(--wa-space-m); }
+	.site-hero-inner { padding: var(--wa-space-m); }
+	.site-footer-inner { padding: var(--wa-space-l) var(--wa-space-m); }
+}
+
+/* ---------------------------------------------------------------------------
+ * The mini-series box
+ *
+ * Same treatment as the sidebar cards: wa-card's filled appearances resolve to
+ * --wa-color-neutral-fill-quiet, and this palette puts neutral-95 -- Cloud
+ * Dancer -- at both that token and the page ground, so a filled card comes out
+ * exactly the colour of the page. Rebinding the token for this card lets the
+ * component's own API paint it, with a step that is actually visible. The
+ * header takes a stronger step again so the series name reads as a heading
+ * rather than as the first line of the box.
+ * ------------------------------------------------------------------------- */
+.series-box {
+	--wa-color-neutral-fill-quiet: var(--wa-color-brand-95);
+	--wa-color-surface-border: var(--wa-color-brand-90);
+	margin-block: var(--wa-space-l);
+	display: block;
+}
+.series-box::part(header) {
+	background-color: var(--wa-color-brand-90);
+	border-block-end: var(--wa-border-width-s) solid var(--wa-color-brand-80);
+}
+.series-box h3 { color: var(--wa-color-brand-on-quiet); }
+.wa-dark .series-box {
+	--wa-color-neutral-fill-quiet: var(--wa-color-brand-10);
+	--wa-color-surface-border: var(--wa-color-brand-20);
+}
+.wa-dark .series-box::part(header) {
+	background-color: var(--wa-color-brand-20);
+	border-block-end-color: var(--wa-color-brand-30);
+}

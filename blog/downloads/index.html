@@ -1,5 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="wa-theme-default wa-palette-default wa-light wa-cloak">
+<script>
+/* Appearance: system by default, overridable to light or dark, remembered in a
+   cookie.
+
+   /why inline and first: Web Awesome switches theme on a class, not a media
+   query, so the class must be on <html> before the first paint or the page
+   flashes light and then turns dark. This is the one script on the site that
+   cannot be deferred, and the cookie has to be read synchronously here.
+
+   /why a cookie rather than localStorage: it is sent with the request, so if
+   this ever becomes server-rendered the preference is already available before
+   a byte of HTML is written. Nothing is stored until a reader actually chooses:
+   "system" deletes the cookie rather than recording a third value, so the
+   majority who never touch the control carry no state at all. */
+(function () {
+	var NAME = "appearance";
+	var MODES = ["system", "light", "dark"];
+	var ICONS = { system: "circle-half-stroke", light: "sun", dark: "moon" };
+	var media = window.matchMedia("(prefers-color-scheme: dark)");
+	var mode = (document.cookie.match(/(?:^|;\s*)appearance=(light|dark)(?:;|$)/) || [])[1] || "system";
+
+	function apply() {
+		var dark = mode === "dark" || (mode === "system" && media.matches);
+		var c = document.documentElement.classList;
+		c.toggle("wa-dark", dark);
+		c.toggle("wa-light", !dark);
+	}
+	function remember() {
+		document.cookie = mode === "system"
+			? NAME + "=; Max-Age=0; Path=/; SameSite=Lax"
+			: NAME + "=" + mode + "; Max-Age=31536000; Path=/; SameSite=Lax";
+	}
+	apply();
+	/* Only follow the OS while the reader has not overridden it. */
+	media.addEventListener("change", function () { if (mode === "system") { apply(); } });
+
+	document.addEventListener("DOMContentLoaded", function () {
+		var btn = document.getElementById("appearance-toggle");
+		if (!btn) { return; }
+		var icon = document.getElementById("appearance-icon");
+		function sync() {
+			icon.setAttribute("name", ICONS[mode]);
+			btn.setAttribute("aria-label", "Appearance: " + mode + ". Activate to change.");
+			btn.setAttribute("title", "Appearance: " + mode);
+		}
+		sync();
+		btn.addEventListener("click", function () {
+			mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+			remember();
+			apply();
+			sync();
+		});
+	});
+})();
+</script>
 <head>
 <title>NotesSensei - Downloads</title>
 <meta name="robots" content="index,follow" />
@@ -17,75 +72,82 @@
 <meta name="description"
 	content="Thoughts, Insights and Opinions of Stephan H. Wissel. Topics included:  Salesforce, IBM, JEE, .Net, Software Archtecture, Personcentric Development, Agile Software, SDLC, Singapore and my Twins" />
 
-<link rel="stylesheet" type="text/css" href="/blog/style/bootstrap.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/responsive.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/wisselblog.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/main.css" />
-<link rel="stylesheet" type="text/css" href="/blog/style/markdown.css" />
+<link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.14.0/styles/webawesome.css" />
+<script type="module" src="https://ka-f.webawesome.com/webawesome@3.14.0/webawesome.loader.js"></script>
+<link rel="stylesheet" type="text/css" href="/blog/style/palette.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/site.css" />
 <link rel="stylesheet" type="text/css" href="/blog/style/admonition.css" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
 <link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
-
 
 <link rel="alternate" type="application/rss+xml" title="wissel.net RSS feed" href="https://wissel.net/blog/stories.rss" />
 
 
 </head>
 <body>
-	<div class="navbar navbar-inverse navbar-fixed-top">
-		<div class="navbar-inner">
-			<button class="btn btn-navbar" type="button" data-nav-toggle aria-expanded="false"
-			        aria-controls="main-nav" aria-label="Toggle navigation">
-				<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
-			</button>
-			<a class="brand" href="/">wissel.net</a>
-			<div class="nav-collapse" id="main-nav">
-				<ul class="nav">
-					<li><a href="/index.html">Home</a></li>
-					<li><a href="/blog/">Blog</a></li>
-					<li><a href="/blog/series.html">Series</a></li>
-					<li class="active"><a href="/blog/downloads/">Downloads</a></li>
-					<li><a href="https://stwissel.github.io/presentations/" title="Presentations maintained on GitHub">Presentations</a></li>
-					<li><a href="/blog/imprint.html">About / Imprint</a></li>
-					<li><a href="/mealplan.html">Food</a></li>
-				</ul>
-				<form action="//www.google.com/cse" id="cse-search-box"
-					class="navbar-search pull-right">
-					<div>
-						<input type="hidden" name="cx"
-							value="partner-pub-4562257798204150:muo14ionenw" /> <input
-							type="hidden" name="ie" value="ISO-8859-1" /> <input type="text"
-							name="q" class="search-query span2" placeholder="Search" />
-						<!-- input type="submit" name="sa" value="Search" class="btn btn-small"/-->
-					</div>
-				</form>
-			</div>
+<wa-page disable-sticky="subheader aside">
+	<header slot="header" class="site-header">
+	<div class="site-header-inner wa-split">
+		<a class="site-brand" href="/">wissel.net</a>
+		<div class="site-header-end wa-cluster wa-gap-m">
+		<nav class="header-nav wa-cluster wa-gap-l" aria-label="Main">
+			<a href="/index.html">Home</a>
+			<a href="/blog/">Blog</a>
+			<a href="/blog/series.html">Series</a>
+			<a href="/blog/downloads/" aria-current="page">Downloads</a>
+			<a href="https://stwissel.github.io/presentations/">Presentations</a>
+			<a href="/blog/imprint.html">About</a>
+			<a href="/mealplan.html">Food</a>
+		</nav>
+		
+		<form class="header-search site-search" action="https://www.google.com/cse" role="search">
+			<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+			<input type="hidden" name="ie" value="UTF-8" />
+			<input type="search" name="q" aria-label="Search this site" placeholder="Search" />
+		</form>
+		
+		<wa-button id="appearance-toggle" appearance="plain" class="site-theme-toggle"
+		           aria-label="Appearance: system. Activate to change." title="Appearance: system">
+			<wa-icon id="appearance-icon" name="circle-half-stroke" label=""></wa-icon>
+		</wa-button>
+		<wa-button data-toggle-nav appearance="plain" class="wa-mobile-only site-nav-toggle" aria-label="Open menu">
+			<wa-icon name="bars" label="Menu"></wa-icon>
+		</wa-button>
 		</div>
 	</div>
-<div class="navbar-spacer"></div>
+</header>
+<nav slot="navigation" class="wa-stack wa-gap-2xs" aria-label="Main">
+	<a href="/index.html" data-drawer="close">Home</a>
+	<a href="/blog/" data-drawer="close">Blog</a>
+	<a href="/blog/series.html" data-drawer="close">Series</a>
+	<a href="/blog/downloads/" data-drawer="close">Downloads</a>
+	<a href="https://stwissel.github.io/presentations/" data-drawer="close">Presentations</a>
+	<a href="/blog/imprint.html" data-drawer="close">About</a>
+	<a href="/mealplan.html" data-drawer="close">Food</a>
+	<form class="site-search" action="https://www.google.com/cse" role="search">
+		<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+		<input type="hidden" name="ie" value="UTF-8" />
+		<wa-input type="search" name="q" size="s" placeholder="Search" label="Search this site" with-label></wa-input>
+	</form>
+</nav>
 
-	<div class="container">
-			<br />
-		<header>
-			<div id="main" class="hero-unit">
-				<h1 id="jumbotron">wissel.net
-				</h1>
-				<p class="lead">Usability - Productivity - Business - The web -
-					Singapore &amp; Twins</p>
-			</div>
-		</header>
+	<div slot="subheader" class="site-hero site-hero-large">
+	<div class="site-hero-inner">
+		<h1>wissel.net</h1>
+		<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+	</div>
+</div>
 
-			<div class="row-fluid">
-			<div class="span12">
+	<main>
 								<h1 data-bind="title">Downloads</h1>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>Attachmentsizes.zip</h5>
 					<pre></code></pre>
 					<ul>
 					 <li><a href="/blog/downloads/2007/Attachmentsizes.zip">Attachmentsizes.zip</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>CoreHandler</h5>
 					<pre>Part of the brute force view tuning
 </code></pre>
@@ -93,14 +155,14 @@
 					 <li><a href="/blog/downloads/2011/CoreHandlerLibrary.lss">CoreHandlerLibrary.lss</a></li>  <li><a href="/blog/downloads/2011/AgentSupport.lss">AgentSupport.lss</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>DXL2WSDLv0.1.xslt</h5>
 					<pre></code></pre>
 					<ul>
 					 <li><a href="/blog/downloads/2006/DXL2WSDLv0.1.xslt">DXL2WSDLv0.1.xslt</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>Burn Chart in Dojo</h5>
 					<pre>A burn chart implementation in Dojo
 </code></pre>
@@ -108,21 +170,21 @@
 					 <li><a href="/blog/downloads/2010/burnchart.html">burnchart.html</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>NotesClientEventExample.zip</h5>
 					<pre></code></pre>
 					<ul>
 					 <li><a href="/blog/downloads/2007/NotesClientEventExample.zip">NotesClientEventExample.zip</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>Form2LS.zip</h5>
 					<pre></code></pre>
 					<ul>
 					 <li><a href="/blog/downloads/2007/Form2LS.zip">Form2LS.zip</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>NotesMetrics</h5>
 					<pre>Source and Binary code for Java based tools
 to calculate Notes metrics
@@ -131,7 +193,7 @@ to calculate Notes metrics
 					 <li><a href="/blog/downloads/2008/NotesMetricsTool.zip">NotesMetricsTool.zip</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>Fetch the Lotusphere Presentations on one go</h5>
 					<pre>You need to replace the user name and password
 with what you have on your Lotusphere batch.
@@ -140,7 +202,7 @@ with what you have on your Lotusphere batch.
 					 <li><a href="/blog/downloads/2008/getLotuspherePresentations.cmd">getLotuspherePresentations.cmd</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>ViewToXPage</h5>
 					<pre>Sample Stylesheet to transform a NotesView
 into a xPage
@@ -149,7 +211,7 @@ into a xPage
 					 <li><a href="/blog/downloads/2008/ViewtoXPage.xslt">ViewtoXPage.xslt</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>InspectDesign.java</h5>
 					<pre>Sample code to scan a database for design
 artifacts
@@ -158,7 +220,7 @@ artifacts
 					 <li><a href="/blog/downloads/2008/InspectDesign.java">InspectDesign.java</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>Read Protection Sample Database</h5>
 					<pre>Shows example code for efficient handling
 of multi category read access protected documents
@@ -167,7 +229,7 @@ of multi category read access protected documents
 					 <li><a href="/blog/downloads/2009/ReadprotectionSample.nsf.zip">ReadprotectionSample.nsf.zip</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>OneUIDummy.css</h5>
 					<pre>Helper File to get all class names that
 are used in Domino 8.5 OneUI theme
@@ -176,7 +238,7 @@ are used in Domino 8.5 OneUI theme
 					 <li><a href="/blog/downloads/2009/OneUIDummy.css">OneUIDummy.css</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>Large ReaderFields &amp;amp;gt; 32k members</h5>
 					<pre>Class that simulateses large reader fields
 by dynamically creating groups for them
@@ -185,7 +247,7 @@ by dynamically creating groups for them
 					 <li><a href="/blog/downloads/2009/largeReaderFields.lss">largeReaderFields.lss</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>Stylesheets for Connections 2.5</h5>
 					<pre>XSLT Stylesheets for the ATOM content emitted
 by Lotus Connections 2.5. One style creates a table with custom fields
@@ -197,7 +259,7 @@ and download link
 					 <li><a href="/blog/downloads/2009/ConnectionsStyles.zip">ConnectionsStyles.zip</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>XPages 8.5.1 Server side API</h5>
 					<pre>Server side API
 </code></pre>
@@ -205,7 +267,7 @@ and download link
 					 <li><a href="/blog/downloads/2010/XPagesAPI_8.5.1.txt">XPagesAPI_8.5.1.txt</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>OneUI V2 CSS</h5>
 					<pre>OneUI V2 CSS files &nbsp;- no style definition
 </code></pre>
@@ -213,7 +275,7 @@ and download link
 					 <li><a href="/blog/downloads/2010/OneUIV2css.zip">OneUIV2css.zip</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>HTTPReader Class for Java</h5>
 					<pre>Dependencies on:
 
@@ -222,7 +284,7 @@ and download link
 					 <li><a href="/blog/downloads/2010/HTTPReader.java">HTTPReader.java</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>Compare documents of 2 databases</h5>
 					<pre>Compares documents in databases that are
 related (e.g. replicas, backups, create with &quot;new copy&quot;) and
@@ -232,7 +294,7 @@ finds additions, deletions and alterations
 					 <li><a href="/blog/downloads/2011/CompareDatabases.lss">CompareDatabases.lss</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>Simple XML Document</h5>
 					<pre>Java Class for XML
 </code></pre>
@@ -240,7 +302,7 @@ finds additions, deletions and alterations
 					 <li><a href="/blog/downloads/2011/SimpleXMLDoc.java">SimpleXMLDoc.java</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>XSLTTools</h5>
 					<pre>Tools to make your XSLT Day easier. Including
 extraction of media from a feed
@@ -249,7 +311,7 @@ extraction of media from a feed
 					 <li><a href="/blog/downloads/2012/XSLTHelper.jar">XSLTHelper.jar</a></li>  <li><a href="/blog/downloads/2012/feedburner2curl.xslt">feedburner2curl.xslt</a></li>  <li><a href="/blog/downloads/2012/xslt">xslt</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>Import MIME / EML messages into Notes</h5>
 					<pre>Classes to run imports:
 package&nbsp;com.notessensei.mimeimport;
@@ -363,7 +425,7 @@ e)&nbsp;{
 					 <li><a href="/blog/downloads/2012/Tester.java">Tester.java</a></li>  <li><a href="/blog/downloads/2012/MimePartInfo.java">MimePartInfo.java</a></li>  <li><a href="/blog/downloads/2012/Mime2Doc.java">Mime2Doc.java</a></li>  <li><a href="/blog/downloads/2012/DocContentHandler.java">DocContentHandler.java</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>Java source for PDF Output</h5>
 					<pre>Source code - use on your own risk
 </code></pre>
@@ -371,7 +433,7 @@ e)&nbsp;{
 					 <li><a href="/blog/downloads/2012/SimpleXMLDoc.java">SimpleXMLDoc.java</a></li>  <li><a href="/blog/downloads/2012/Form2XMLDefinition.java">Form2XMLDefinition.java</a></li>  <li><a href="/blog/downloads/2012/Field2XMLDefinition.java">Field2XMLDefinition.java</a></li>  <li><a href="/blog/downloads/2012/PDFReport.java">PDFReport.java</a></li>  <li><a href="/blog/downloads/2012/Notes2XML.java">Notes2XML.java</a></li>  <li><a href="/blog/downloads/2012/Notes2XMLImpl.java">Notes2XMLImpl.java</a></li>  <li><a href="/blog/downloads/2012/DefaultFo.xslt">DefaultFo.xslt</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>LDAP extensions for Domino</h5>
 					<pre>OpenNTF LDAP Compatibility Directory Extensions
 
@@ -428,7 +490,7 @@ LDAP for authentication on Posix systems.
 					 <li><a href="/blog/downloads/2012/pubnames.ntf.dxl-.DemoDirectory.nsf.dxl.xml-ComparisonReportShort.xslt.html">pubnames.ntf.dxl-.DemoDirectory.nsf.dxl.xml-ComparisonReportShort.xslt.html</a></li>  <li><a href="/blog/downloads/2012/pubnames.ntf.dxl-.DemoDirectory.nsf.dxl.xml-ComparisonReportDetail.xslt.html">pubnames.ntf.dxl-.DemoDirectory.nsf.dxl.xml-ComparisonReportDetail.xslt.html</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>Wissel.net Chrome app</h5>
 					<pre>CRX File to wissel.net
 </code></pre>
@@ -436,7 +498,7 @@ LDAP for authentication on Posix systems.
 					 <li><a href="/blog/downloads/2012/wisselblog.crx">wisselblog.crx</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>GMail2Notes</h5>
 					<pre>Source code for the migration tool demo
 gMail to IBM Notes
@@ -445,7 +507,7 @@ gMail to IBM Notes
 					 <li><a href="/blog/downloads/2014/gmail2notes_src_20140115.zip">gmail2notes_src_20140115.zip</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>On Disk Project Cocomo</h5>
 					<pre>Run this tool against your OnDisk Project
 for a CoCoMo Analysis
@@ -454,56 +516,56 @@ for a CoCoMo Analysis
 					 <li><a href="/blog/downloads/2014/cocomo.jar">cocomo.jar</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>Demo for an Angular.js timeline</h5>
 					<pre></code></pre>
 					<ul>
 					 <li><a href="/blog/downloads/2014/demo.zip">demo.zip</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>Object Cleaner</h5>
 					<pre></code></pre>
 					<ul>
 					 <li><a href="/blog/downloads/2015/objectcleaner.zip">objectcleaner.zip</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>SpringClean.xslt</h5>
 					<pre></code></pre>
 					<ul>
 					 <li><a href="/blog/downloads/2007/SpringClean.xslt">SpringClean.xslt</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>VistaCost.zip</h5>
 					<pre></code></pre>
 					<ul>
 					 <li><a href="/blog/downloads/2007/VistaCost.zip">VistaCost.zip</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>ZENDomino.zip</h5>
 					<pre></code></pre>
 					<ul>
 					 <li><a href="/blog/downloads/2007/ZENDomino.zip">ZENDomino.zip</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>CSS and JS for Bootstrap layout</h5>
 					<pre></code></pre>
 					<ul>
 					 <li><a href="/blog/downloads/2012/bootstrap.js">bootstrap.js</a></li>  <li><a href="/blog/downloads/2012/bootstrap.min.js">bootstrap.min.js</a></li>  <li><a href="/blog/downloads/2012/bootstrap-fileupload.js">bootstrap-fileupload.js</a></li>  <li><a href="/blog/downloads/2012/jquery.fittext.js">jquery.fittext.js</a></li>  <li><a href="/blog/downloads/2012/main.js">main.js</a></li>  <li><a href="/blog/downloads/2012/jquery-1.8.2.min.js">jquery-1.8.2.min.js</a></li>  <li><a href="/blog/downloads/2012/fontawesome-webfont.eot">fontawesome-webfont.eot</a></li>  <li><a href="/blog/downloads/2012/fontawesome-webfont.svg">fontawesome-webfont.svg</a></li>  <li><a href="/blog/downloads/2012/fontawesome-webfont.ttf">fontawesome-webfont.ttf</a></li>  <li><a href="/blog/downloads/2012/fontawesome-webfont.woff">fontawesome-webfont.woff</a></li>  <li><a href="/blog/downloads/2012/bootstrap.min.css">bootstrap.min.css</a></li>  <li><a href="/blog/downloads/2012/distinctive.css">distinctive.css</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>CSS used to render my code display</h5>
 					<pre></code></pre>
 					<ul>
 					 <li><a href="/blog/downloads/2011/blogcodedisplay.css">blogcodedisplay.css</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>LS4EE</h5>
 					<pre>LotusScript for embedded experiences eMails
 </code></pre>
@@ -511,14 +573,14 @@ for a CoCoMo Analysis
 					 <li><a href="/blog/downloads/2012/LS4EE.html">LS4EE.html</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>replicateall.lss</h5>
 					<pre></code></pre>
 					<ul>
 					 <li><a href="/blog/downloads/2006/replicateall.lss">replicateall.lss</a></li> 
 					</ul>
 				</article>
-				<article class="well well-raised">
+				<article class="entry-card">
 					<h5>Unsorted Sourcecode of Sametime Stuff</h5>
 					<pre>Agent code to create a batch file to extract
 all buddy lists using the Sametime
@@ -529,7 +591,7 @@ Java code to concatenate them and run a report. Sample report included.
 					 <li><a href="/blog/downloads/2010/BuddyListTool.zip">BuddyListTool.zip</a></li> 
 					</ul>
 				</article>
-				<div class="well">
+				<wa-card>
 					<script type="text/javascript">
 					<!--
 					amazon_ad_tag="wissenetblog-20"; amazon_ad_width="728"; amazon_ad_height="90"; amazon_color_background="FFF0CB"; amazon_color_border="E38100"; amazon_color_logo="FFFFFF"; amazon_color_link="0007D3"; amazon_ad_logo="hide"; amazon_ad_title="Books and Tools I can recommend"; //-->
@@ -537,108 +599,77 @@ Java code to concatenate them and run a report. Sample report included.
 					</script>
 					<script type="text/javascript"
 						src="//www.assoc-amazon.com/s/asw.js"></script>
-				</div>
+				</wa-card>
 
-			</div>
-		</div>
 		
 
-	</div>
-		<footer>
-		<div class="container">
-			<div class="row">
-				<div class="span2">
-					<h4>About Me</h4>
-					<p>
-						I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.
-						<g:plusone size="small" href="https://wissel.net/blog/"></g:plusone>
-					</p>
-					<a href="//stackoverflow.com/users/131021/stwissel">
-					<img src="//stackoverflow.com/users/flair/131021.png" width="208" height="58" alt="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer" title="profile for stwissel at Stack Overflow, Q&amp;A for professional and enthusiast programmer">
-				</a>
-				</div>
-				<div class="span2">
-					<h4>Contact</h4>
-					<ul>
-						<li><a rel="me" href="https://chaos.social/@stw">Chat on Mastodon</a></li>
-						<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
-						<li><a href="https://notessensei.myspreadshop.com">NotesSensei's Spreadshirt shop</a></li>
-						<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers from Stickermule</a></li>
-						<li><a href="https://github.com/Stwissel">GitHub</a></li>
-						<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
-					</ul>
-				</div>
-				<div class="span8">
-					<h4>Disclaimer</h4>
-					<p>This site is in no way affiliated, endorsed, sanctioned,
-						supported, nor enlightened by my current or previous employers.
-						I may be an employee, but the opinions, theories, facts, etc.
-						presented here are my own and are in now way given in any official
-						capacity. In short, these are my words and this is my site, not
-						my current or former employers' - and don't even begin to think otherwise.</p>
-					<p>
-						<b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as
-						listed here: <a rel="license"
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"><img
-							alt="Creative Commons License" style="border-width: 0"
-							src="//licensebuttons.net/l/by-nc-sa/3.0/88x31.png" /></a>
-						Unless otherwise labeled by its originating author, the content
-						found on this site is made available under the terms of an <a
-							href="//creativecommons.org/licenses/by-nc-sa/3.0/"
-							target="_blank"
-							title="Learn more about the creative commons  Attribution-ShareAlike License">Attribution/NonCommercial/ShareAlike
-							Creative Commons License</a>, with the exception that no rights are
-						granted -- since they are not mine to grant -- in any logo,
-						graphic design, trademarks or trade names of any type. Code
-						samples and code downloads on this site are, unless otherwise
-						labeled, made available under an <a
-							href="//www.apache.org/licenses/LICENSE-2.0.html">Apache
-							2.0</a> license. Other license models are available on written
-						request and written confirmation.
-					</p>
-				</div>
-			</div>
-		</div>
-	</footer>
+	</main>
+	
+	<footer slot="footer" class="site-footer">
+	<div class="site-footer-inner wa-grid">
+		<section>
+			<h2>About me</h2>
+			<p>I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.</p>
+			<a href="https://stackoverflow.com/users/131021/stwissel">
+				<img src="https://stackoverflow.com/users/flair/131021.png" width="208" height="58"
+				     alt="Stack Overflow profile for stwissel" loading="lazy" />
+			</a>
+		</section>
 
+		<section>
+			<h2>Contact</h2>
+			<ul class="footer-links">
+				<li><a rel="me" href="https://chaos.social/@stw">Mastodon</a></li>
+				<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+				<li><a href="https://notessensei.myspreadshop.com">Spreadshirt shop</a></li>
+				<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers</a></li>
+				<li><a href="https://github.com/Stwissel">GitHub</a></li>
+				<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
+			</ul>
+		</section>
+
+		<section class="footer-disclaimer">
+			<h2>Disclaimer</h2>
+			<p>This site is in no way affiliated, endorsed, sanctioned, supported, nor
+				enlightened by my current or previous employers. I may be an employee, but the
+				opinions, theories, facts, etc. presented here are my own and are in no way
+				given in any official capacity. In short, these are my words and this is my
+				site, not my current or former employers' &ndash; and don't even begin to think
+				otherwise.</p>
+			<p><b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as listed
+				here: <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/3.0/">Creative
+				Commons Attribution/NonCommercial/ShareAlike</a>, with the exception that no
+				rights are granted &ndash; since they are not mine to grant &ndash; in any logo,
+				graphic design, trademark or trade name of any type. Code samples and downloads
+				are, unless otherwise labeled, made available under an
+				<a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0</a>
+				license. Other license models are available on written request and written
+				confirmation.</p>
+		</section>
+	</div>
+</footer>
+
+</wa-page>
 	
 	
 <script>
 (function () {
   "use strict";
-  /*
-   * Navbar: Bootstrap 2's collapse plugin, minus Bootstrap and jQuery.
-   *
-   * /why inline height, not just the "in" class: bootstrap-responsive.css
-   * pins `.nav-collapse{height:0;overflow:hidden}` unconditionally (the
-   * element never carries the generic "collapse" class), so there is no
-   * `.nav-collapse.in{height:auto}` rule to win a specificity fight -- the
-   * real collapse.js plugin got around this the same way, by writing a
-   * pixel height directly to the element's style, which always outranks an
-   * external stylesheet rule without !important. Toggling the class alone
-   * leaves the menu at height:0 and invisible.
-   */
-  var navToggle = document.querySelector("[data-nav-toggle]");
-  if (navToggle) {
-    navToggle.addEventListener("click", function () {
-      var nav = document.getElementById("main-nav");
-      if (!nav) return;
-      var open = nav.classList.toggle("in");
-      nav.style.height = open ? "auto" : "";
-      navToggle.setAttribute("aria-expanded", String(open));
-    });
-  }
-  /* Comment form reveal. */
+    /* The comment editor is fetched on the first click of the reveal button.
+     /why a click and not a disclosure's show event: the form is injected into
+     the DOM only when this fires, and that is deliberate -- a spam bot that
+     never clicks never sees a form. A disclosure would also fire on
+     programmatic opening, on keyboard activation, and when the browser expands
+     it for find-in-page, each of which puts the form in the DOM without anyone
+     choosing to comment. A click is the narrowest trigger that still works. */
   var commentToggle = document.querySelector("[data-comment-toggle]");
   if (commentToggle) {
     commentToggle.addEventListener("click", function () {
-      var target = document.getElementById(commentToggle.getAttribute("data-comment-toggle"));
-      if (!target) return;
-      var open = target.classList.toggle("in");
-      commentToggle.setAttribute("aria-expanded", String(open));
-      if (open) window.dispatchEvent(new Event("blog:comments-requested"));
-    });
+      window.dispatchEvent(new Event("blog:comments-requested"));
+      commentToggle.remove();
+    }, { once: true });
   }
+
   /* Tier 3: content-derived needs, asked of the rendered DOM.
      /why: month indexes and the front page inherit code blocks from the
      excerpts they render, so page type alone cannot answer this. */
