@@ -177,14 +177,14 @@
 					</a>
 
 					<hr />
-					<div>I wrote about using <a href="http://axis.apache.org/axis/">Apache AXIS</a> to connect to a web service <a href="/blog/2011/01/apache-axis-and-sharepoint-webservices.html">before</a>. It worked like a charm when you import the AXIS library into the NSF. In the past few days I tried to move this code into an extension library and I had initially very little success. Here is what I tried and what finally worked: 
+					<div>I wrote about using <a href="https://axis.apache.org/axis/">Apache AXIS</a> to connect to a web service <a href="/blog/2011/01/apache-axis-and-sharepoint-webservices.html">before</a>. It worked like a charm when you import the AXIS library into the NSF. In the past few days I tried to move this code into an extension library and I had initially very little success. Here is what I tried and what finally worked: 
 <br>
 <ol>
  <li>The AXIS libraries are provided as a plug-in in the Domino server, so my first take was to declare a dependency in my plug-in to that plug-in. To successfully create a Extension Library I had to declare dependencies to <code>com.ibm.commons</code> and <code>com.ibm.xsp.core</code> to be able to extend <code>com.ibm.commons.Extension</code>. Unfortunately the plug-ins expose Java commons logging, so the classloader complaint and didn't load the AXIS classes</li>
  <li>Second attempt was to split the code into two plug-ins: one that depended on the AXIS plug-in and another one that depended on the former and <code>com.ibm.commons</code> and <code>com.ibm.xsp.core</code>. This didn't yield any better result</li>
  <li>3rd test was to import the AXIS jars into a plug-in and only depend on <code>com.ibm.commons</code> and <code>com.ibm.xsp.core</code> but not the AXIS plug-in. Didn't work either</li>
- <li>Finally I tried to switch from AXIS to the newer and more flexible <a href="http://cxf.apache.org/">Apache CXF</a>. CXF is able to provide transport over many protocols, not only SOAP and REST but JMS and others too. Initially I felt it was too complex for my little requirement, especially since the list of jar dependencies is quite long.<br>
-   Turns out CXF is the optimal solution. I used CXF 2.5.2 and the provided <a href="http://cxf.apache.org/docs/wsdl-to-java.html">wsdl2java</a> utility. The command line I used is <code>[path-to-cxf-install]/bin/wsdl2java -frontend jaxws21 -client your.wsdl</code>. The <code>-client</code> parameter is optional, but generates a nice sample client that shows the call parameters for all web service methods.<br>
+ <li>Finally I tried to switch from AXIS to the newer and more flexible <a href="https://cxf.apache.org/">Apache CXF</a>. CXF is able to provide transport over many protocols, not only SOAP and REST but JMS and others too. Initially I felt it was too complex for my little requirement, especially since the list of jar dependencies is quite long.<br>
+   Turns out CXF is the optimal solution. I used CXF 2.5.2 and the provided <a href="https://cxf.apache.org/docs/wsdl-to-java.html">wsdl2java</a> utility. The command line I used is <code>[path-to-cxf-install]/bin/wsdl2java -frontend jaxws21 -client your.wsdl</code>. The <code>-client</code> parameter is optional, but generates a nice sample client that shows the call parameters for all web service methods.<br>
    I found I either need to include the WSDL file in the jar or point to the URL where the WSDL file is available online to get CXF to run. Now for the best part: <b>All</b> dependencies including CXF are available in Domino (I tested on 8.5.3), so other than the Java code generated I didn't had to import, depend etc. on anything (it actually might work even in a Java agent). So CXF is the way to go.</li>
 </ol><b>Update</b>: As <a href="">Bernd</a> pointed out in the comments, it is important to update the permissions ( [Notes program directroy]/jvm/lib/security/java.policy ): 
 <br><code><b>grant { <br>
@@ -192,7 +192,7 @@
    permission java.lang.reflect.ReflectPermission "suppressAccessChecks"; <br>
   };</b></code>
 <br>
-For testing I used a <a href="http://services.aonaware.com/DictService/DictService.asmx?WSDL">dictionary service</a> that returns the definitions found for a given word. My class (the part I had to write myself) is rather short: 
+For testing I used a <a href="https://web.archive.org/web/20120203090127/http://services.aonaware.com/DictService/DictService.asmx?WSDL">dictionary service</a> that returns the definitions found for a given word. My class (the part I had to write myself) is rather short: 
 <div class="java">
  <span class="kw1">package</span> <span class="co2">demo</span> <span class="sy0">;</span>
  <br>
@@ -318,7 +318,7 @@ For testing I used a <a href="http://services.aonaware.com/DictService/DictServi
  <br>
   &nbsp; &nbsp; <span class="sc3"><span class="re1">&lt;managed-bean-scope<span class="re2">&gt;</span></span></span>request <span class="sc3"><span class="re1">&lt;/managed-bean-scope<span class="re2">&gt;</span></span></span>
  <br><span class="sc3"><span class="re1">&lt;/managed-bean<span class="re2">&gt;</span></span></span>
-</div> and created an <a href="blog/d6plinks/shwl-7mgfbn">XAgent</a> with the following codein the BeforeRenderResponse event: 
+</div> and created an <a href="/blog/2008/12/xagents-web-agents-xpages-style.html">XAgent</a> with the following codein the BeforeRenderResponse event: 
 <div class="javascript">
  <span class="kw2">var</span> proceedWithBeanCall <span class="sy0">=</span> <span class="kw2">true</span> <span class="sy0">;</span>
  <br><span class="kw2">var</span> x <span class="sy0">=</span> context. <span class="me1">getUrlParameter</span> <span class="br0">(</span> <span class="st0">"word"</span> <span class="br0">)</span> <span class="sy0">;</span>
@@ -378,7 +378,7 @@ For testing I used a <a href="http://services.aonaware.com/DictService/DictServi
   facesContext. <span class="me1">responseComplete</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
  <br>
   out. <span class="kw3">close</span> <span class="br0">(</span> <span class="br0">)</span> <span class="sy0">;</span>
-</div> Note the signature of the working method. By using the output stream as a parameter the function can be easily tested outside of XPages (see the main() function in the class) as well as integrated into XPages (the approach is called <a href="http://en.wikipedia.org/wiki/Dependency_injection">dependency injection</a>). 
+</div> Note the signature of the working method. By using the output stream as a parameter the function can be easily tested outside of XPages (see the main() function in the class) as well as integrated into XPages (the approach is called <a href="https://en.wikipedia.org/wiki/Dependency_injection">dependency injection</a>). 
 <br>
  As usual: YMMV</div>
 					<hr />
@@ -597,7 +597,6 @@ categories: <a class="meta-category" href="/blog/categories/xpages.html">XPages<
 				<li><a rel="me" href="https://chaos.social/@stw">Mastodon</a></li>
 				<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
 				<li><a href="https://notessensei.myspreadshop.com">Spreadshirt shop</a></li>
-				<li><a href="https://www.stickermule.com/u/43c09fe6343315f">Stickers</a></li>
 				<li><a href="https://github.com/Stwissel">GitHub</a></li>
 				<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
 			</ul>
