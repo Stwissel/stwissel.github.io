@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en" class="wa-theme-default wa-palette-default wa-light wa-cloak">
+<script>
+/* Appearance: system by default, overridable to light or dark, remembered in a
+   cookie.
+
+   /why inline and first: Web Awesome switches theme on a class, not a media
+   query, so the class must be on <html> before the first paint or the page
+   flashes light and then turns dark. This is the one script on the site that
+   cannot be deferred, and the cookie has to be read synchronously here.
+
+   /why a cookie rather than localStorage: it is sent with the request, so if
+   this ever becomes server-rendered the preference is already available before
+   a byte of HTML is written. Nothing is stored until a reader actually chooses:
+   "system" deletes the cookie rather than recording a third value, so the
+   majority who never touch the control carry no state at all. */
+(function () {
+	var NAME = "appearance";
+	var MODES = ["system", "light", "dark"];
+	var ICONS = { system: "circle-half-stroke", light: "sun", dark: "moon" };
+	var media = window.matchMedia("(prefers-color-scheme: dark)");
+	var mode = (document.cookie.match(/(?:^|;\s*)appearance=(light|dark)(?:;|$)/) || [])[1] || "system";
+
+	function apply() {
+		var dark = mode === "dark" || (mode === "system" && media.matches);
+		var c = document.documentElement.classList;
+		c.toggle("wa-dark", dark);
+		c.toggle("wa-light", !dark);
+	}
+	function remember() {
+		document.cookie = mode === "system"
+			? NAME + "=; Max-Age=0; Path=/; SameSite=Lax"
+			: NAME + "=" + mode + "; Max-Age=31536000; Path=/; SameSite=Lax";
+	}
+	apply();
+	/* Only follow the OS while the reader has not overridden it. */
+	media.addEventListener("change", function () { if (mode === "system") { apply(); } });
+
+	document.addEventListener("DOMContentLoaded", function () {
+		var btn = document.getElementById("appearance-toggle");
+		if (!btn) { return; }
+		var icon = document.getElementById("appearance-icon");
+		function sync() {
+			icon.setAttribute("name", ICONS[mode]);
+			btn.setAttribute("aria-label", "Appearance: " + mode + ". Activate to change.");
+			btn.setAttribute("title", "Appearance: " + mode);
+		}
+		sync();
+		btn.addEventListener("click", function () {
+			mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+			remember();
+			apply();
+			sync();
+		});
+	});
+})();
+</script>
+<head>
+<title>Builder pattern with flexible defaults - NotesSensei's Blog</title>
+<meta name="robots" content="index,follow" />
+<link rel="canonical" href="https://wissel.net/blog/2026/10/builder-pattern-with-flexible-defaults.html" />
+<meta property="og:url"       content="https://wissel.net/blog/2026/10/builder-pattern-with-flexible-defaults.html" /><meta property="og:title"     content="Builder pattern with flexible defaults" />
+<meta property="og:type"      content="article" />
+<meta property="og:image"     content="https://wissel.net/blog/2026/10/builder-pattern-with-flexible-defaults.webp" />
+<meta property="og:site_name" content="wissel.net" />
+<meta name="twitter:site"     content="@notessensei" />
+<meta name="twitter:card"     content="summary_large_image" />
+<meta charset="utf-8" />
+<meta name="viewport"         content="width=device-width, initial-scale=1.0" />
+<meta name="Author"           content="Stephan H. Wissel" />
+<meta name="xing:author"      content="https://www.xing.com/profile/StephanH_Wissel" />
+<meta name="description"
+	content="Builder pattern with flexible defaults - objects in real life are complex with many optionalities (my spell checker claims that isn&#39;t a word), that leave their imprint on their digital twins. To avoid exposing endless list of parameters you can use the builder pattern described by the GoF. It is the digital version of This is what I know, " />
+
+<link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.14.0/styles/webawesome.css" />
+<script type="module" src="https://ka-f.webawesome.com/webawesome@3.14.0/webawesome.loader.js"></script>
+<link rel="stylesheet" type="text/css" href="/blog/style/palette.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/site.css" />
+<link rel="stylesheet" type="text/css" href="/blog/style/admonition.css" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-32x32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="/blog/img/favicon-16x16.png" sizes="16x16" />
+
+<link rel="alternate" type="application/rss+xml" title="wissel.net RSS feed" href="https://wissel.net/blog/stories.rss" />
+
+<script type="application/ld+json">
+{
+	"@context": "https://schema.org",
+	"@type": "BlogPosting",
+	"headline": "Builder pattern with flexible defaults",
+	"image": "https://wissel.net/blog/2026/10/builder-pattern-with-flexible-defaults.webp",
+	"datePublished": "2026-10",
+	"author": { "@type": "Person", "name": "Stephan H. Wissel", "url": "https://wissel.net/blog/imprint.html" },
+	"publisher": { "@type": "Person", "name": "Stephan H. Wissel" },
+	"mainEntityOfPage": "https://wissel.net/blog/2026/10/builder-pattern-with-flexible-defaults.html"
+}
+</script>
+</head>
+<body>
+<wa-page disable-sticky="subheader aside">
+	<header slot="header" class="site-header">
+	<div class="site-header-inner wa-split">
+		<a class="site-brand" href="/">wissel.net</a>
+		<div class="site-header-end wa-cluster wa-gap-m">
+		<nav class="header-nav wa-cluster wa-gap-l" aria-label="Main">
+			<a href="/index.html">Home</a>
+			<a href="/blog/" aria-current="page">Blog</a>
+			<a href="/blog/series.html">Series</a>
+			<a href="/blog/downloads/">Downloads</a>
+			<a href="https://stwissel.github.io/presentations/">Presentations</a>
+			<a href="/blog/imprint.html">About</a>
+			<a href="/mealplan.html">Food</a>
+		</nav>
+		
+		<form class="header-search site-search" action="https://www.google.com/cse" role="search">
+			<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+			<input type="hidden" name="ie" value="UTF-8" />
+			<input type="search" name="q" aria-label="Search this site" placeholder="Search" />
+		</form>
+		
+		<wa-button id="appearance-toggle" appearance="plain" class="site-theme-toggle"
+		           aria-label="Appearance: system. Activate to change." title="Appearance: system">
+			<wa-icon id="appearance-icon" name="circle-half-stroke" label=""></wa-icon>
+		</wa-button>
+		<wa-button data-toggle-nav appearance="plain" class="wa-mobile-only site-nav-toggle" aria-label="Open menu">
+			<wa-icon name="bars" label="Menu"></wa-icon>
+		</wa-button>
+		</div>
+	</div>
+</header>
+<nav slot="navigation" class="wa-stack wa-gap-2xs" aria-label="Main">
+	<a href="/index.html" data-drawer="close">Home</a>
+	<a href="/blog/" data-drawer="close">Blog</a>
+	<a href="/blog/series.html" data-drawer="close">Series</a>
+	<a href="/blog/downloads/" data-drawer="close">Downloads</a>
+	<a href="https://stwissel.github.io/presentations/" data-drawer="close">Presentations</a>
+	<a href="/blog/imprint.html" data-drawer="close">About</a>
+	<a href="/mealplan.html" data-drawer="close">Food</a>
+	<form class="site-search" action="https://www.google.com/cse" role="search">
+		<input type="hidden" name="cx" value="partner-pub-4562257798204150:muo14ionenw" />
+		<input type="hidden" name="ie" value="UTF-8" />
+		<wa-input type="search" name="q" size="s" placeholder="Search" label="Search this site" with-label></wa-input>
+	</form>
+</nav>
+
+	    <div slot="subheader" class="site-hero site-hero-small">
+	<div class="site-hero-inner">
+		<h2>wissel.net</h2>
+		<p>Usability - Productivity - Business - The web - Singapore &amp; Twins</p>
+	</div>
+</div>
+
+	<main>
+								<div class="entry-meta-row wa-cluster">
+	<wa-breadcrumb>
+		<wa-breadcrumb-item href="/blog/">Blog</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2026/">2026</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2026/10/">October</wa-breadcrumb-item>
+	</wa-breadcrumb>
+	<div class="entry-tags wa-cluster">
+		<a class="entry-tag" href="/blog/categories/java.html">Java</a><a class="entry-tag" href="/blog/categories/rust.html">Rust</a>
+		
+	</div>
+</div>
+
+				
+				<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2026/09/jwt-for-machine-to-machine-communication.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> JWT for machine to machine communication</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	
+</nav>
+
+				<article class="entry-card">
+					<h1><small>Builder pattern with flexible defaults</small></h1>
+										<a href="/blog/2026/10/builder-pattern-with-flexible-defaults.prompt" title="View AI image prompt">
+						<img src="/blog/2026/10/builder-pattern-with-flexible-defaults.webp" alt="Hero image for Builder pattern with flexible defaults" class="hero-image"
+						     loading="eager" fetchpriority="high" />
+					</a>
+
+					<hr />
+					<div><p>objects in real life are complex with many optionalities (my spell checker claims that isn't a word), that leave their imprint on their digital twins. To avoid exposing endless list of parameters you can use the <a href="https://www.gofpattern.com/creational/patterns/builder-pattern.php">builder pattern</a> described by the <a href="https://en.wikipedia.org/wiki/Design_Patterns">GoF</a>. It is the digital version of</p>
+<h2><a href="#this-is-what-i-know-lets-work-with-that" id="this-is-what-i-know-lets-work-with-that"></a>This is what I know, let's work with that</h2>
+<p>You might want to go with the flow, and just pick a size and for the rest pick what everyone else is picking. The builder pattern does both gracefully.</p>
+<pre><code class="language-java">Ring r1 = Ring.builder().size(9)build();
+
+Ring r2 = Ring.builder()
+              .material(Material.PLATINUM)
+              .size(9)
+              .diamonds(3)
+              .carats(0.75)
+              .engraving("forever")
+              .build();
+</code></pre>
+<p>or if Rust rocks your boat</p>
+<pre><code class="language-rust">let r3 = RingBuilder::builder()
+                     .material(Material::Platinum)
+                     .size(9)
+                     .diamonds(3)
+                     .carats(0.75)
+                     .engraving("forever")
+                     .build();
+</code></pre>
+<p>So I was wondering what it would take using defaults from a configuration file instead hard coding them in the builder.</p><p>Turns out, not much (using <a href="https://quarkus.io/">Quarkus</a>):</p>
+<pre><code class="language-java">@Inject
+RingDefaults defaults;
+
+Ring r3 = Ring.builder(defaults).size(9)build();
+</code></pre>
+<p>with <a href="https://download.eclipse.org/microprofile/microprofile-config-3.0/microprofile-config-spec-3.0.html">Micrprofile</a> config doing the heavy lifting.</p>
+<pre><code class="language-java">@JsonIgnoreProperties(ignoreUnknown = true)
+public record RingDefaults(
+        Material material,
+        Integer size,
+        Integer diamonds,
+        Double carats,
+        String engraving) {
+
+    public static final RingDefaults NONE = new RingDefaults(null, null, null, null, null);
+}
+
+public class RingDefaultsProducer {
+
+    @Produces
+    @Singleton
+    RingDefaults ringDefaults(
+            ObjectMapper mapper,
+            @ConfigProperty(name = "wr.defaults.path") Path path) {
+        try {
+            if (!Files.exists(path)) {
+                return RingDefaults.NONE;
+            }
+            var json = Files.readString(path);
+            return json.isBlank() ? RingDefaults.NONE : mapper.readValue(json, RingDefaults.class);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Cannot read ring defaults from " + path, e);
+        }
+    }
+}
+</code></pre>
+<p>Rust takes a similar approach</p>
+<pre><code class="language-rust">use derive_builder::Builder;
+use serde::Deserialize;
+use std::{error::Error, fs, io, path::Path};
+
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+
+let path =  "ring_defaults.json";
+let defaults = RingDefaults::load(&amp;path)?;
+let r4 = RingBuilder::from_defaults(&amp;defaults).size(12).build();
+
+#[derive(Debug, Builder)]
+#[builder(pattern = "owned", build_fn(validate = "Self::validate"))]
+pub struct Ring {
+    #[builder(default = Material::Gold])
+    pub material: Material,
+    pub size: u8,           // required: no built-in default
+    #[builder(default = "0")]
+    pub diamonds: u8,
+    #[builder(default = "0.0")]
+    pub carats: f32,
+    #[builder(setter(into, strip_option), default)]
+    pub engraving: Option&lt;String&gt;,
+}
+</code></pre>
+<p>As usual YMMV</p></div>
+					<hr />
+					<p>
+						Posted by <span rel="author">Stephan H Wissel</span> on 14 October 2026
+<span class="meta-sep" aria-hidden="true">|</span>
+categories: <a class="meta-category" href="/blog/categories/java.html">Java</a><a class="meta-category" href="/blog/categories/rust.html">Rust</a>
+
+						<script type="text/javascript">
+							var permaLink = "https://wissel.net/blog/2026/10/builder-pattern-with-flexible-defaults.html";
+						</script>
+					</p>
+				</article>
+<a name="comments"></a>
+<div class="comment-reveal">
+	<wa-button variant="brand" data-comment-toggle="commentform_f2d3ce20-c316-11f1-91a8-9d7aeaead3fb">
+		Add your comment&hellip;
+	</wa-button>
+	<div id="commentform_f2d3ce20-c316-11f1-91a8-9d7aeaead3fb"></div>
+</div>
+<wa-card class="comment-list" with-header>
+	<h4 slot="header">Comments</h4>
+	<ol id="commentList">
+		<li id="nocomments"><h5>No comments yet, be the first to comment</h5></li>
+	</ol>
+</wa-card>
+
+				<nav class="entry-nav wa-cluster" aria-label="Post navigation">
+	<a href="/blog/2026/09/jwt-for-machine-to-machine-communication.html" rel="prev"><wa-icon name="arrow-left"></wa-icon> JWT for machine to machine communication</a>
+	<a class="entry-nav-up" href="/blog/"><wa-icon name="arrow-up"></wa-icon> Main</a>
+	
+</nav>
+
+
+				<div class="entry-meta-row wa-cluster">
+	<wa-breadcrumb>
+		<wa-breadcrumb-item href="/blog/">Blog</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2026/">2026</wa-breadcrumb-item>
+		<wa-breadcrumb-item href="/blog/2026/10/">October</wa-breadcrumb-item>
+	</wa-breadcrumb>
+	<div class="entry-tags wa-cluster">
+		<a class="entry-tag" href="/blog/categories/java.html">Java</a><a class="entry-tag" href="/blog/categories/rust.html">Rust</a>
+		
+	</div>
+</div>
+
+
+	</main>
+	
+	<footer slot="footer" class="site-footer">
+	<div class="site-footer-inner wa-grid">
+		<section>
+			<h2>About me</h2>
+			<p>I work as "Solution Director Innovation" for HCL Software. I'm based in ASEAN.</p>
+			<a href="https://stackoverflow.com/users/131021/stwissel">
+				<img src="https://stackoverflow.com/users/flair/131021.png" width="208" height="58"
+				     alt="Stack Overflow profile for stwissel" loading="lazy" />
+			</a>
+		</section>
+
+		<section>
+			<h2>Contact</h2>
+			<ul class="footer-links">
+				<li><a rel="me" href="https://chaos.social/@stw">Mastodon</a></li>
+				<li><a href="https://sg.linkedin.com/in/notessensei">LinkedIn</a></li>
+				<li><a href="https://notessensei.myspreadshop.com">Spreadshirt shop</a></li>
+				<li><a href="https://github.com/Stwissel">GitHub</a></li>
+				<li><a href="https://bsky.app/profile/stwissel.bsky.social">Bluesky</a></li>
+			</ul>
+		</section>
+
+		<section class="footer-disclaimer">
+			<h2>Disclaimer</h2>
+			<p>This site is in no way affiliated, endorsed, sanctioned, supported, nor
+				enlightened by my current or previous employers. I may be an employee, but the
+				opinions, theories, facts, etc. presented here are my own and are in no way
+				given in any official capacity. In short, these are my words and this is my
+				site, not my current or former employers' &ndash; and don't even begin to think
+				otherwise.</p>
+			<p><b>&copy; 2003 - 2026 Stephan H. Wissel - some rights reserved</b> as listed
+				here: <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/3.0/">Creative
+				Commons Attribution/NonCommercial/ShareAlike</a>, with the exception that no
+				rights are granted &ndash; since they are not mine to grant &ndash; in any logo,
+				graphic design, trademark or trade name of any type. Code samples and downloads
+				are, unless otherwise labeled, made available under an
+				<a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0</a>
+				license. Other license models are available on written request and written
+				confirmation.</p>
+		</section>
+	</div>
+</footer>
+
+</wa-page>
+		<script type="text/javascript">
+		var permaLink = "https://wissel.net/blog/2026/10/builder-pattern-with-flexible-defaults.html";
+	</script>
+		<script>
+	(function () {
+	  "use strict";
+	  var SITE_KEY = "0x4AAAAAAE25gdzD6xM57Gw2";
+	  var PARENT_ID = "f2d3ce20-c316-11f1-91a8-9d7aeaead3fb";
+	  var loaded = false;
+	  /* /why: the editor stack is ~157 KB that most readers never open.
+	     It is fetched on the first click of the reveal button instead. */
+	  /* /why markdown.css is loaded here and not in head_styles: it styles the
+	     wmd editor -- .wmd-button-bar, .wmd-input, .wmd-preview -- which exists
+	     only once this form is injected. An audit of the rendered pages called
+	     the file dead because no static page contains that markup, and deleting
+	     it left the editor toolbar as bare bullets and the preview unstyled.
+	     It is not dead, it is late: it belongs with the code that creates the
+	     markup it styles, so it costs nothing on the pages that never open a
+	     comment form. */
+	  function loadCss(href) {
+	    var l = document.createElement("link");
+	    l.rel = "stylesheet";
+	    l.href = href;
+	    document.head.appendChild(l);
+	  }
+	  var SCRIPTS = [
+	    "/blog/js2/mustache.js",
+	    "/blog/js2/Markdown.Converter.js",
+	    "/blog/js2/Markdown.Sanitizer.js",
+	    "/blog/js2/Markdown.Editor.js",
+	    "/blog/js2/blogcomments.js?v=3-lazy",
+	    "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+	  ];
+	  /* /why sequential, not parallel: blogcomments.js calls Mustache.render
+	     and `new Markdown.Editor(...)` at renderComment() time, and Turnstile's
+	     api.js must have defined window.turnstile before renderComment calls
+	     turnstile.render(...). Each script only starts once the previous one
+	     has finished executing, so by the time `done()` runs every global the
+	     stack needs is guaranteed to exist. */
+	  function loadSequential(list, done) {
+	    if (list.length === 0) { done(); return; }
+	    var s = document.createElement("script");
+	    s.src = list[0];
+	    s.onload = function () { loadSequential(list.slice(1), done); };
+	    s.onerror = function () {
+	      var host = document.getElementById("commentform_" + PARENT_ID);
+	      if (host) host.textContent = "The comment form could not be loaded. Please reload the page.";
+	    };
+	    document.head.appendChild(s);
+	  }
+	  window.addEventListener("blog:comments-requested", function () {
+	    if (loaded) return;
+	    loaded = true;
+	    loadCss("/blog/style/markdown.css");
+	    loadSequential(SCRIPTS, function () { renderComment(SITE_KEY, PARENT_ID); });
+	  });
+	})();
+	</script>
+
+	
+<script>
+(function () {
+  "use strict";
+    /* The comment editor is fetched on the first click of the reveal button.
+     /why a click and not a disclosure's show event: the form is injected into
+     the DOM only when this fires, and that is deliberate -- a spam bot that
+     never clicks never sees a form. A disclosure would also fire on
+     programmatic opening, on keyboard activation, and when the browser expands
+     it for find-in-page, each of which puts the form in the DOM without anyone
+     choosing to comment. A click is the narrowest trigger that still works. */
+  var commentToggle = document.querySelector("[data-comment-toggle]");
+  if (commentToggle) {
+    commentToggle.addEventListener("click", function () {
+      window.dispatchEvent(new Event("blog:comments-requested"));
+      commentToggle.remove();
+    }, { once: true });
+  }
+
+  /* Tier 3: content-derived needs, asked of the rendered DOM.
+     /why: month indexes and the front page inherit code blocks from the
+     excerpts they render, so page type alone cannot answer this. */
+  function loadScript(src, onload) {
+    var s = document.createElement("script");
+    s.src = src;
+    s.defer = true;
+    if (onload) s.onload = onload;
+    document.head.appendChild(s);
+  }
+  function loadCss(href) {
+    var l = document.createElement("link");
+    l.rel = "stylesheet";
+    l.href = href;
+    document.head.appendChild(l);
+  }
+  if (document.querySelector('pre code[class*="language-"]')) {
+    document.body.classList.add("line-numbers");
+    loadCss("/blog/style/prism.css");
+    /* /why manual mode + onload trigger instead of Prism's own
+       auto-highlight: Prism core decides whether to run highlightAll by
+       checking document.readyState at the moment ITS OWN code executes.
+       Because this script loads asynchronously well after the initial
+       parse, that moment can land after DOMContentLoaded already fired
+       (true on any image-heavy entry, since DOMContentLoaded does not
+       wait for the hero image) -- Prism then attaches a listener for an
+       event that will never fire again, and silently never highlights.
+       Verified empirically (CDP against a page with code): with Prism's
+       default auto-detect, tokenSpans stayed at 0 indefinitely; calling
+       highlightAll() explicitly produced full tokenization immediately.
+       Forcing manual mode and triggering on load sidesteps that race
+       entirely. */
+    window.Prism = window.Prism || {};
+    window.Prism.manual = true;
+    loadScript("/blog/js/prism-1.30-slim.js", function () {
+      window.Prism.highlightAll();
+    });
+  }
+  /* ~60 pages from the GeSHi era carry these classes as static markup.
+     /why the xmlverb attribute selector: unlike the other five lexers,
+     GeSHi's XML "verbatim" formatter (xmlverbatim.xsl) never emits a bare
+     class="xmlverb" element -- every node it touches is compounded, e.g.
+     <div class="xmlverb-default">, <span class="xmlverb-element-name">.
+     A plain `.xmlverb` selector (as for the other five languages) matches
+     nothing on real pages and the sheet would silently never load.
+     Verified against blog/2009/07/building-a-fieldset-custom-control.html:
+     zero elements carry the exact token "xmlverb"; the wrapper div carries
+     "xmlverb-default". [class*="xmlverb-"] matches that wrapper (and every
+     other xmlverb-* token) reliably. */
+  if (document.querySelector('.java5, .lotusscript, .lotusformulas, .html4strict, [class*="xmlverb-"], .cobol')) {
+    loadCss("/blog/style/blogcodedisplay.css");
+  }
+})();
+</script>
+
+</body>
+</html>
